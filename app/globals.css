@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+@theme {
+  /* Soft Professional Blue - Primary */
+  --color-primary-50: #f0f9ff;
+  --color-primary-100: #e0f2fe;
+  --color-primary-200: #bae6fd;
+  --color-primary-300: #7dd3fc;
+  --color-primary-400: #38bdf8;
+  --color-primary-500: #0ea5e9;
+  --color-primary-600: #0284c7;
+  --color-primary-700: #0369a1;
+  --color-primary-800: #075985;
+  --color-primary-900: #0c4a6e;
+
+  /* Soft, Professional Colors for Dental SaaS */
+  --color-dental-blue: #0891b2;      /* Soft cyan-blue - calming */
+  --color-dental-lightblue: #67e8f9; /* Very light cyan - friendly */
+  --color-dental-teal: #5eead4;      /* Soft teal - fresh */
+  --color-dental-purple: #a78bfa;    /* Muted purple - premium */
+  --color-dental-green: #6ee7b7;     /* Soft green - success */
+  --color-dental-slate: #64748b;     /* Professional slate gray */
+
+  /* Professional Dark Blues for Auth Pages */
+  --color-auth-blue: #1e40af;        /* Deep professional blue */
+  --color-auth-blue-dark: #1e3a8a;   /* Darker blue */
+  --color-auth-blue-light: #2563eb;  /* Brighter blue for accents */
+}
+
+:root {
+  --foreground-rgb: 15, 23, 42;
+  --background-start-rgb: 255, 255, 255;
+  --background-end-rgb: 255, 255, 255;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: #ffffff;
+}
+
+/* Soft, Professional gradient backgrounds */
+.gradient-primary {
+  background: linear-gradient(135deg, #0891b2 0%, #5eead4 100%);
+}
+
+.gradient-soft {
+  background: linear-gradient(135deg, #f0fdfa 0%, #ecfeff 100%);
+}
+
+.gradient-premium {
+  background: linear-gradient(135deg, #0891b2 0%, #a78bfa 100%);
+}
+
+.gradient-hero {
+  background: linear-gradient(135deg, #06b6d4 0%, #5eead4 100%);
+}
+
+/* Professional Dark Blue Gradients for Auth Pages */
+.gradient-auth-bg {
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #06b6d4 100%);
+}
+
+.gradient-auth-card {
+  background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.6s ease-out;
+}
