@@ -1,23 +1,21 @@
+// Server Component - Home Page
 import Navbar from '@/components/landing/Navbar'
 import Hero from '@/components/landing/Hero'
-import Features from '@/components/landing/Features'
-import Benefits from '@/components/landing/Benefits'
-import Pricing from '@/components/landing/Pricing'
-import CTA from '@/components/landing/CTA'
+import Services from '@/components/landing/Services'
+import About from '@/components/landing/About'
+import Diplomas from '@/components/landing/Diplomas'
+import Appointment from '@/components/landing/Appointment'
 import Footer from '@/components/landing/Footer'
 
 export default function Home() {
-  // This is a Server Component by default in Next.js App Router
-  // It will be rendered on the server (SSR)
-
   return (
     <main className="min-h-screen">
       <Navbar />
       <Hero />
-      <Features />
-      <Benefits />
-      <Pricing />
-      <CTA />
+      <Services />
+      <About />
+      <Diplomas />
+      <Appointment />
       <Footer />
     </main>
   )

@@ -90,3 +90,155 @@ html {
 .animate-fadeIn {
   animation: fadeIn 0.6s ease-out;
 }
+
+/* ===== 3D Teeth Animation Styles ===== */
+
+/* 3D Scene Container */
+.teeth-scene {
+  perspective: 1200px;
+  perspective-origin: center;
+  position: relative;
+  width: 100%;
+  height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Container for all teeth */
+.teeth-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 10%;
+}
+
+/* Individual tooth styling */
+.tooth-3d {
+  position: relative;
+  width: 60px;
+  height: 100px;
+  transform-style: preserve-3d;
+  animation: toothFloat 3s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* Staggered animation delays for each tooth */
+.tooth-3d:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.tooth-3d:nth-child(2) {
+  animation-delay: 0.3s;
+}
+
+.tooth-3d:nth-child(3) {
+  animation-delay: 0.6s;
+}
+
+.tooth-3d:nth-child(4) {
+  animation-delay: 0.9s;
+}
+
+.tooth-3d:nth-child(5) {
+  animation-delay: 1.2s;
+}
+
+/* Floating animation with rotation */
+@keyframes toothFloat {
+  0%, 100% {
+    transform: translateY(0) translateZ(0) rotateY(0deg);
+  }
+  50% {
+    transform: translateY(-30px) translateZ(50px) rotateY(15deg);
+  }
+}
+
+/* Tooth Crown (main part) */
+.tooth-crown {
+  position: absolute;
+  width: 100%;
+  height: 70%;
+  background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
+  border-radius: 50% 50% 45% 45% / 60% 60% 40% 40%;
+  box-shadow:
+    0 4px 8px rgba(0, 0, 0, 0.1),
+    inset -2px -2px 8px rgba(0, 0, 0, 0.05),
+    inset 2px 2px 8px rgba(255, 255, 255, 0.8);
+  transform: translateZ(30px);
+}
+
+/* Tooth Root */
+.tooth-root {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%) translateZ(15px);
+  width: 40%;
+  height: 35%;
+  background: linear-gradient(180deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-radius: 0 0 50% 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Tooth Shine Effect */
+.tooth-shine {
+  position: absolute;
+  top: 15%;
+  left: 25%;
+  width: 30%;
+  height: 40%;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, transparent 100%);
+  border-radius: 50%;
+  transform: translateZ(35px);
+  animation: toothShine 2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Shine pulsing animation */
+@keyframes toothShine {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .teeth-scene {
+    perspective: 800px;
+    height: 300px;
+  }
+
+  .tooth-3d {
+    width: 40px;
+    height: 70px;
+  }
+
+  @keyframes toothFloat {
+    0%, 100% {
+      transform: translateY(0) translateZ(0) rotateY(0deg);
+    }
+    50% {
+      transform: translateY(-20px) translateZ(30px) rotateY(10deg);
+    }
+  }
+}
+
+/* Accessibility: Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .tooth-3d {
+    animation: none;
+  }
+
+  .tooth-shine {
+    animation: none;
+    opacity: 0.5;
+  }
+}
