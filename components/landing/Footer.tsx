@@ -1,22 +1,24 @@
-import Link from 'next/link'
+import { MapPin, Phone, Mail, ChevronRight } from "lucide-react";
+import Link from "next/link";
+import { FaTooth } from "react-icons/fa";
 
 // Server Component - Footer
 export default function Footer() {
-  const currentYear = new Date().getFullYear()
+  const currentYear = new Date().getFullYear();
 
   const quickLinks = [
-    { href: '#about', label: 'About Us' },
-    { href: '#services', label: 'Services' },
-    { href: '#credentials', label: 'Credentials' },
-    { href: '#appointment', label: 'Book Appointment' },
-    { href: '/login', label: 'Patient Portal' },
-  ]
+    { href: "#about", label: "About Us" },
+    { href: "#services", label: "Services" },
+    { href: "#credentials", label: "Credentials" },
+    { href: "/book-appointment", label: "Book Appointment" },
+    { href: "/login", label: "Patient Portal" },
+  ];
 
   const officeHours = [
-    { day: 'Mon - Fri', hours: '8:00 AM - 6:00 PM' },
-    { day: 'Saturday', hours: '9:00 AM - 2:00 PM' },
-    { day: 'Sunday', hours: 'Closed' },
-  ]
+    { day: "Mon - Fri", hours: "8:00 AM - 6:00 PM" },
+    { day: "Saturday", hours: "9:00 AM - 2:00 PM" },
+    { day: "Sunday", hours: "Closed" },
+  ];
 
   return (
     <footer className="bg-gray-900 text-gray-300">
@@ -39,7 +41,7 @@ export default function Footer() {
         <BottomBar currentYear={currentYear} />
       </div>
     </footer>
-  )
+  );
 }
 
 // Reusable Clinic Info Component
@@ -48,45 +50,35 @@ function ClinicInfo() {
     <div className="md:col-span-1">
       <div className="flex items-center space-x-2 mb-4">
         <div className="w-8 h-8 bg-gradient-to-br from-dental-blue to-dental-teal rounded-lg flex items-center justify-center">
-          <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6z" />
-          </svg>
+          <FaTooth className="text-white text-lg" />
         </div>
         <span className="text-xl font-bold text-white">BrightSmile</span>
       </div>
       <p className="text-sm text-gray-400 mb-4">
-        Your trusted partner in comprehensive dental care. Serving the community with excellence since 2010.
+        Your trusted partner in comprehensive dental care. Serving the community
+        with excellence since 2010.
       </p>
       <SocialMediaLinks />
     </div>
-  )
+  );
 }
 
 // Reusable Social Media Links Component
 function SocialMediaLinks() {
   const socialLinks = [
     {
-      name: 'Facebook',
-      href: '#',
-      icon: (
-        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-      )
+      name: "Facebook",
+      href: "#",
     },
     {
-      name: 'Instagram',
-      href: '#',
-      icon: (
-        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-      )
+      name: "Instagram",
+      href: "#",
     },
     {
-      name: 'Twitter',
-      href: '#',
-      icon: (
-        <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
-      )
-    }
-  ]
+      name: "Twitter",
+      href: "#",
+    },
+  ];
 
   return (
     <div className="flex space-x-4">
@@ -94,38 +86,47 @@ function SocialMediaLinks() {
         <Link
           key={social.name}
           href={social.href}
-          className="text-gray-400 hover:text-white transition-colors"
+          className="text-gray-400 hover:text-white transition-colors text-sm"
           aria-label={social.name}
         >
-          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-            {social.icon}
-          </svg>
+          {social.name}
         </Link>
       ))}
     </div>
-  )
+  );
 }
 
 // Reusable Quick Links Section
-function QuickLinksSection({ links }: { links: Array<{ href: string; label: string }> }) {
+function QuickLinksSection({
+  links,
+}: {
+  links: Array<{ href: string; label: string }>;
+}) {
   return (
     <div>
       <h3 className="text-white font-semibold mb-4">Quick Links</h3>
       <ul className="space-y-2 text-sm">
         {links.map((link) => (
           <li key={link.href}>
-            <Link href={link.href} className="hover:text-white transition-colors">
+            <Link
+              href={link.href}
+              className="hover:text-white transition-colors"
+            >
               {link.label}
             </Link>
           </li>
         ))}
       </ul>
     </div>
-  )
+  );
 }
 
 // Reusable Office Hours Section
-function OfficeHoursSection({ hours }: { hours: Array<{ day: string; hours: string }> }) {
+function OfficeHoursSection({
+  hours,
+}: {
+  hours: Array<{ day: string; hours: string }>;
+}) {
   return (
     <div>
       <h3 className="text-white font-semibold mb-4">Office Hours</h3>
@@ -137,38 +138,34 @@ function OfficeHoursSection({ hours }: { hours: Array<{ day: string; hours: stri
           </li>
         ))}
         <li className="pt-2 border-t border-gray-800">
-          <span className="text-dental-teal font-semibold">24/7 Emergency Care</span>
+          <span className="text-dental-teal font-semibold">
+            24/7 Emergency Care
+          </span>
         </li>
       </ul>
     </div>
-  )
+  );
 }
 
 // Reusable Contact Section
 function ContactSection() {
   const contactItems = [
     {
-      icon: (
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-      ),
-      text: '(555) 123-4567',
-      href: 'tel:+15551234567',
+      icon: <Phone className="w-5 h-5 flex-shrink-0 mt-0.5" />,
+      text: "+961 1 234 567",
+      href: "tel:+9611234567",
     },
     {
-      icon: (
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-      ),
-      text: 'contact@brightsmile.com',
-      href: 'mailto:contact@brightsmile.com',
+      icon: <Mail className="w-5 h-5 flex-shrink-0 mt-0.5" />,
+      text: "contact@brightsmile.com",
+      href: "mailto:contact@brightsmile.com",
     },
     {
-      icon: (
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-      ),
-      text: '123 Main St, Suite 100\nYour City, ST 12345',
-      href: 'https://maps.google.com/?q=123+Main+Street+Your+City',
+      icon: <MapPin className="w-5 h-5 flex-shrink-0 mt-0.5" />,
+      text: "Hamra Street, Beirut\nLebanon",
+      href: "https://maps.google.com/?q=Hamra+Street+Beirut+Lebanon",
     },
-  ]
+  ];
 
   return (
     <div>
@@ -178,29 +175,29 @@ function ContactSection() {
           <li key={index}>
             <a
               href={item.href}
-              target={item.href.startsWith('http') ? '_blank' : undefined}
-              rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+              target={item.href.startsWith("http") ? "_blank" : undefined}
+              rel={
+                item.href.startsWith("http") ? "noopener noreferrer" : undefined
+              }
               className="flex items-start space-x-2 hover:text-white transition-colors"
             >
-              <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                {item.icon}
-              </svg>
+              {item.icon}
               <span className="whitespace-pre-line">{item.text}</span>
             </a>
           </li>
         ))}
       </ul>
     </div>
-  )
+  );
 }
 
 // Reusable Bottom Bar Component
 function BottomBar({ currentYear }: { currentYear: number }) {
   const legalLinks = [
-    { href: '#', label: 'Privacy Policy' },
-    { href: '#', label: 'Terms of Service' },
-    { href: '#', label: 'HIPAA Compliance' },
-  ]
+    { href: "#", label: "Privacy Policy" },
+    { href: "#", label: "Terms of Service" },
+    { href: "#", label: "HIPAA Compliance" },
+  ];
 
   return (
     <div className="border-t border-gray-800 pt-8 mt-8">
@@ -209,9 +206,9 @@ function BottomBar({ currentYear }: { currentYear: number }) {
           © {currentYear} BrightSmile Dental Clinic. All rights reserved.
         </p>
         <div className="flex space-x-6 text-sm">
-          {legalLinks.map((link) => (
+          {legalLinks.map((link, index) => (
             <Link
-              key={link.href}
+              key={index}
               href={link.href}
               className="text-gray-400 hover:text-white transition-colors"
             >
@@ -221,5 +218,5 @@ function BottomBar({ currentYear }: { currentYear: number }) {
         </div>
       </div>
     </div>
-  )
+  );
 }

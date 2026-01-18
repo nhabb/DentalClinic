@@ -1,13 +1,14 @@
-import Link from 'next/link'
+import Link from "next/link";
+import { FaTooth } from "react-icons/fa";
+import { Menu } from "lucide-react";
 
 // Server Component - Navigation Bar
 export default function Navbar() {
   const navLinks = [
-    { href: '#about', label: 'About' },
-    { href: '#services', label: 'Services' },
-    { href: '#credentials', label: 'Credentials' },
-    { href: '#appointment', label: 'Contact' },
-  ]
+    { href: "#services", label: "Services" },
+    { href: "#about", label: "About" },
+    { href: "#credentials", label: "Credentials" },
+  ];
 
   return (
     <nav className="fixed w-full bg-white/95 backdrop-blur-sm z-50 border-b border-gray-200">
@@ -24,30 +25,28 @@ export default function Navbar() {
         </div>
       </div>
     </nav>
-  )
+  );
 }
 
 // Reusable Logo Component
-function Logo() {
+export function Logo() {
   return (
     <div className="flex items-center">
       <Link href="/" className="flex items-center space-x-2">
         <div className="w-8 h-8 bg-gradient-to-br from-dental-blue to-dental-teal rounded-lg flex items-center justify-center">
-          <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6z" />
-          </svg>
+          <FaTooth className="text-white text-lg" />
         </div>
         <span className="text-xl font-bold text-gray-900">BrightSmile</span>
       </Link>
     </div>
-  )
+  );
 }
 
 // Reusable Desktop Navigation Component
 function DesktopNav({
-  navLinks
+  navLinks,
 }: {
-  navLinks: Array<{ href: string; label: string }>
+  navLinks: Array<{ href: string; label: string }>;
 }) {
   return (
     <div className="hidden md:flex items-center space-x-8">
@@ -67,18 +66,19 @@ function DesktopNav({
         Patient Portal
       </Link>
     </div>
-  )
+  );
 }
 
 // Reusable Mobile Menu Button Component
 function MobileMenuButton() {
   return (
     <div className="md:hidden">
-      <button className="text-gray-700 hover:text-dental-blue" aria-label="Open menu">
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
+      <button
+        className="text-gray-700 hover:text-dental-blue"
+        aria-label="Open menu"
+      >
+        <Menu className="w-6 h-6" />
       </button>
     </div>
-  )
+  );
 }

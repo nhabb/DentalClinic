@@ -1,51 +1,58 @@
+import { Sparkles, User } from "lucide-react";
 // Server Component (default in Next.js App Router)
 export default function About() {
   const stats = [
     {
-      number: '15+',
-      label: 'Years Experience',
-      description: 'Serving the community since 2010',
+      number: "15+",
+      label: "Years Experience",
+      description: "Serving the community since 2010",
     },
     {
-      number: '10,000+',
-      label: 'Happy Patients',
-      description: 'Trusted by families',
+      number: "10,000+",
+      label: "Happy Patients",
+      description: "Trusted by families",
     },
     {
-      number: '98%',
-      label: 'Satisfaction Rate',
-      description: 'Highly rated care',
+      number: "98%",
+      label: "Satisfaction Rate",
+      description: "Highly rated care",
     },
     {
-      number: '24/7',
-      label: 'Emergency Care',
-      description: 'Always here for you',
+      number: "24/7",
+      label: "Emergency Care",
+      description: "Always here for you",
     },
-  ]
+  ];
 
   const teamMembers = [
     {
-      name: 'Dr. Sarah Mitchell',
-      role: 'Lead Dentist',
-      education: 'DDS, Harvard School of Dental Medicine',
-      description: 'Specializing in cosmetic and restorative dentistry with over 15 years of experience.',
+      name: "Dr. Sarah Mitchell",
+      role: "Lead Dentist",
+      education: "DDS, Harvard School of Dental Medicine",
+      description:
+        "Specializing in cosmetic and restorative dentistry with over 15 years of experience.",
     },
     {
-      name: 'Dr. James Chen',
-      role: 'Orthodontist',
-      education: 'DMD, University of Pennsylvania',
-      description: 'Expert in orthodontics and clear aligner therapy for children and adults.',
+      name: "Dr. James Chen",
+      role: "Orthodontist",
+      education: "DMD, University of Pennsylvania",
+      description:
+        "Expert in orthodontics and clear aligner therapy for children and adults.",
     },
     {
-      name: 'Dr. Emily Rodriguez',
-      role: 'Pediatric Dentist',
-      education: 'DDS, UCSF School of Dentistry',
-      description: 'Dedicated to making dental visits fun and comfortable for young patients.',
+      name: "Dr. Emily Rodriguez",
+      role: "Pediatric Dentist",
+      education: "DDS, UCSF School of Dentistry",
+      description:
+        "Dedicated to making dental visits fun and comfortable for young patients.",
     },
-  ]
+  ];
 
   return (
-    <section id="about" className="py-20 bg-gradient-to-b from-white to-gray-50">
+    <section
+      id="about"
+      className="py-20 bg-gradient-to-b from-white to-gray-50"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Clinic Story */}
         <div className="text-center mb-16">
@@ -53,13 +60,15 @@ export default function About() {
             About BrightSmile Dental
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-4">
-            Since 2010, we've been dedicated to providing exceptional dental care to our community.
-            Our state-of-the-art facility and experienced team ensure you receive the highest quality
-            treatment in a comfortable, welcoming environment.
+            Since 2010, we've been dedicated to providing exceptional dental
+            care to our community. Our state-of-the-art facility and experienced
+            team ensure you receive the highest quality treatment in a
+            comfortable, welcoming environment.
           </p>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-            We believe everyone deserves a healthy, beautiful smile. That's why we offer comprehensive
-            services for the whole family, from preventive care to advanced cosmetic procedures.
+            We believe everyone deserves a healthy, beautiful smile. That's why
+            we offer comprehensive services for the whole family, from
+            preventive care to advanced cosmetic procedures.
           </p>
         </div>
 
@@ -81,11 +90,13 @@ export default function About() {
         {/* Values Section */}
         <div className="mt-20 grid md:grid-cols-2 gap-8">
           <div className="bg-white p-8 rounded-xl shadow-md">
-            <h4 className="text-xl font-bold text-gray-900 mb-4">Our Mission</h4>
+            <h4 className="text-xl font-bold text-gray-900 mb-4">
+              Our Mission
+            </h4>
             <p className="text-gray-600">
-              To provide personalized, gentle dental care that exceeds expectations. We combine
-              advanced technology with a compassionate approach to create positive experiences
-              for every patient.
+              To provide personalized, gentle dental care that exceeds
+              expectations. We combine advanced technology with a compassionate
+              approach to create positive experiences for every patient.
             </p>
           </div>
           <div className="bg-white p-8 rounded-xl shadow-md">
@@ -112,35 +123,43 @@ export default function About() {
         </div>
       </div>
     </section>
-  )
+  );
 }
 
 // Reusable Stats Section Component
-function StatsSection({ stats }: { stats: Array<{ number: string; label: string; description: string }> }) {
+function StatsSection({
+  stats,
+}: {
+  stats: Array<{ number: string; label: string; description: string }>;
+}) {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
       {stats.map((stat, index) => (
         <StatCard key={index} {...stat} />
       ))}
     </div>
-  )
+  );
 }
 
 // Reusable Stat Card Component
-function StatCard({ number, label, description }: { number: string; label: string; description: string }) {
+function StatCard({
+  number,
+  label,
+  description,
+}: {
+  number: string;
+  label: string;
+  description: string;
+}) {
   return (
     <div className="text-center p-6 bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow">
       <div className="text-4xl md:text-5xl font-bold text-dental-blue mb-2">
         {number}
       </div>
-      <div className="text-lg font-semibold text-gray-900 mb-1">
-        {label}
-      </div>
-      <p className="text-gray-600 text-sm">
-        {description}
-      </p>
+      <div className="text-lg font-semibold text-gray-900 mb-1">{label}</div>
+      <p className="text-gray-600 text-sm">{description}</p>
     </div>
-  )
+  );
 }
 
 // Reusable Team Member Card Component
@@ -148,21 +167,19 @@ function TeamMemberCard({
   name,
   role,
   education,
-  description
+  description,
 }: {
-  name: string
-  role: string
-  education: string
-  description: string
+  name: string;
+  role: string;
+  education: string;
+  description: string;
 }) {
   return (
     <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow">
       {/* Placeholder for team member photo */}
       <div className="h-64 gradient-hero flex items-center justify-center">
         <div className="w-32 h-32 bg-white rounded-full flex items-center justify-center">
-          <svg className="w-16 h-16 text-dental-blue" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-          </svg>
+          <User className="w-16 h-16 text-dental-blue" />
         </div>
       </div>
       <div className="p-6">
@@ -172,5 +189,5 @@ function TeamMemberCard({
         <p className="text-gray-600 text-sm">{description}</p>
       </div>
     </div>
-  )
+  );
 }
