@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,39 +25,6 @@ import {
 import { ChevronDownIcon } from "lucide-react";
 
 export default function Form() {
-  const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>(undefined);
-  const [calendarOpen, setCalendarOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    address: "",
-    city: "",
-    state: "",
-    zipCode: "",
-    emergencyContact: "",
-    emergencyPhone: "",
-    insuranceProvider: "",
-    insurancePolicy: "",
-    medicalConditions: "",
-    allergies: "",
-    currentMedications: "",
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Patient Info:", { ...formData, dateOfBirth });
-    // Handle form submission
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
   return (
     <div className="min-h-screen w-full flex items-center justify-center px-4 sm:px-6 lg:px-8 gradient-auth-bg py-12">
       <div className="w-full max-w-2xl">
@@ -78,7 +44,7 @@ export default function Form() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form className="space-y-6">
           {/* Personal Information */}
           <FieldSet className="border-2 border-dental-blue/20 rounded-xl p-6 bg-white shadow-xl">
             <FieldLegend className="text-2xl font-bold text-dental-blue px-3 bg-white tracking-tight">
@@ -101,8 +67,6 @@ export default function Form() {
                     name="firstName"
                     type="text"
                     placeholder="Ahmad"
-                    value={formData.firstName}
-                    onChange={handleChange}
                     required
                     className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
                   />
@@ -119,8 +83,6 @@ export default function Form() {
                     name="lastName"
                     type="text"
                     placeholder="Khoury"
-                    value={formData.lastName}
-                    onChange={handleChange}
                     required
                     className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
                   />
@@ -157,8 +119,6 @@ export default function Form() {
                     name="phone"
                     type="tel"
                     placeholder="+961 3 123 456"
-                    value={formData.phone}
-                    onChange={handleChange}
                     required
                     className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
                   />
@@ -170,16 +130,14 @@ export default function Form() {
                   >
                     Date of Birth
                   </FieldLabel>
-                  <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                  <Popover>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
                         id="dateOfBirth"
                         className="w-full justify-between font-normal"
                       >
-                        {dateOfBirth
-                          ? dateOfBirth.toLocaleDateString()
-                          : "Select date"}
+                        Select date
                         <ChevronDownIcon />
                       </Button>
                     </PopoverTrigger>
@@ -193,15 +151,9 @@ export default function Form() {
                     >
                       <Calendar
                         mode="single"
-                        selected={dateOfBirth}
                         captionLayout="dropdown"
                         fromYear={1920}
                         toYear={new Date().getFullYear()}
-                        defaultMonth={dateOfBirth || new Date()}
-                        onSelect={(date) => {
-                          setDateOfBirth(date);
-                          setCalendarOpen(false);
-                        }}
                         className="rounded-md border text-base"
                         classNames={{
                           months: "space-y-4",
@@ -252,8 +204,6 @@ export default function Form() {
                   name="address"
                   type="text"
                   placeholder="Hamra Street, Building 123"
-                  value={formData.address}
-                  onChange={handleChange}
                   required
                   className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
                 />
@@ -271,8 +221,6 @@ export default function Form() {
                     name="city"
                     type="text"
                     placeholder="Beirut"
-                    value={formData.city}
-                    onChange={handleChange}
                     required
                     className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
                   />
@@ -289,8 +237,6 @@ export default function Form() {
                     name="state"
                     type="text"
                     placeholder="Beirut"
-                    value={formData.state}
-                    onChange={handleChange}
                     required
                     className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
                   />
@@ -321,8 +267,6 @@ export default function Form() {
                     name="emergencyContact"
                     type="text"
                     placeholder="Layla Khoury"
-                    value={formData.emergencyContact}
-                    onChange={handleChange}
                     required
                     className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
                   />
@@ -339,8 +283,6 @@ export default function Form() {
                     name="emergencyPhone"
                     type="tel"
                     placeholder="+961 3 987 654"
-                    value={formData.emergencyPhone}
-                    onChange={handleChange}
                     required
                     className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
                   />
@@ -371,8 +313,6 @@ export default function Form() {
                     name="insuranceProvider"
                     type="text"
                     placeholder="Globemed"
-                    value={formData.insuranceProvider}
-                    onChange={handleChange}
                     className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
                   />
                 </Field>
@@ -388,8 +328,6 @@ export default function Form() {
                     name="insurancePolicy"
                     type="text"
                     placeholder="ABC123456789"
-                    value={formData.insurancePolicy}
-                    onChange={handleChange}
                     className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
                   />
                 </Field>
@@ -418,8 +356,6 @@ export default function Form() {
                   name="medicalConditions"
                   type="text"
                   placeholder="e.g., Diabetes, Hypertension"
-                  value={formData.medicalConditions}
-                  onChange={handleChange}
                   className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
                 />
               </Field>
@@ -435,8 +371,6 @@ export default function Form() {
                   name="allergies"
                   type="text"
                   placeholder="e.g., Penicillin, Latex"
-                  value={formData.allergies}
-                  onChange={handleChange}
                   className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
                 />
               </Field>
@@ -452,8 +386,6 @@ export default function Form() {
                   name="currentMedications"
                   type="text"
                   placeholder="e.g., Aspirin, Lisinopril"
-                  value={formData.currentMedications}
-                  onChange={handleChange}
                   className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
                 />
               </Field>
