@@ -26,128 +26,19 @@ import {
   FaShieldAlt,
 } from "react-icons/fa";
 
-const inventoryItems = [
-  {
-    id: 1,
-    name: "Dental Gloves (M)",
-    category: "Disposables",
-    currentStock: 50,
-    minimumStock: 100,
-    unit: "boxes",
-    costPerUnit: 25000,
-    supplier: "MedEquip Lebanon",
-    lastRestocked: "2026-01-10",
-    status: "low",
-  },
-  {
-    id: 2,
-    name: "Dental Gloves (L)",
-    category: "Disposables",
-    currentStock: 120,
-    minimumStock: 100,
-    unit: "boxes",
-    costPerUnit: 25000,
-    supplier: "MedEquip Lebanon",
-    lastRestocked: "2026-01-10",
-    status: "ok",
-  },
-  {
-    id: 3,
-    name: "Composite Resin (A2)",
-    category: "Materials",
-    currentStock: 3,
-    minimumStock: 10,
-    unit: "syringes",
-    costPerUnit: 150000,
-    supplier: "DentalPro",
-    lastRestocked: "2025-12-20",
-    status: "low",
-  },
-  {
-    id: 4,
-    name: "Composite Resin (A3)",
-    category: "Materials",
-    currentStock: 8,
-    minimumStock: 10,
-    unit: "syringes",
-    costPerUnit: 150000,
-    supplier: "DentalPro",
-    lastRestocked: "2025-12-20",
-    status: "ok",
-  },
-  {
-    id: 5,
-    name: "Anesthetic Cartridges",
-    category: "Medications",
-    currentStock: 15,
-    minimumStock: 30,
-    unit: "cartridges",
-    costPerUnit: 8000,
-    supplier: "PharmaDent",
-    lastRestocked: "2026-01-05",
-    status: "low",
-  },
-  {
-    id: 6,
-    name: "Disposable Syringes",
-    category: "Disposables",
-    currentStock: 200,
-    minimumStock: 100,
-    unit: "pieces",
-    costPerUnit: 2000,
-    supplier: "MedEquip Lebanon",
-    lastRestocked: "2026-01-15",
-    status: "ok",
-  },
-  {
-    id: 7,
-    name: "Dental Mirrors",
-    category: "Instruments",
-    currentStock: 25,
-    minimumStock: 20,
-    unit: "pieces",
-    costPerUnit: 15000,
-    supplier: "DentalPro",
-    lastRestocked: "2025-11-10",
-    status: "ok",
-  },
-  {
-    id: 8,
-    name: "Prophy Paste",
-    category: "Materials",
-    currentStock: 12,
-    minimumStock: 10,
-    unit: "jars",
-    costPerUnit: 45000,
-    supplier: "DentalPro",
-    lastRestocked: "2026-01-08",
-    status: "ok",
-  },
-  {
-    id: 9,
-    name: "Face Masks",
-    category: "Disposables",
-    currentStock: 500,
-    minimumStock: 200,
-    unit: "pieces",
-    costPerUnit: 500,
-    supplier: "MedEquip Lebanon",
-    lastRestocked: "2026-01-12",
-    status: "ok",
-  },
-  {
-    id: 10,
-    name: "Sterilization Pouches",
-    category: "Disposables",
-    currentStock: 300,
-    minimumStock: 150,
-    unit: "pieces",
-    costPerUnit: 1500,
-    supplier: "MedEquip Lebanon",
-    lastRestocked: "2026-01-14",
-    status: "ok",
-  },
-];
+// TODO: Fetch from API
+const inventoryItems: {
+  id: number;
+  name: string;
+  category: string;
+  currentStock: number;
+  minimumStock: number;
+  unit: string;
+  costPerUnit: number;
+  supplier: string;
+  lastRestocked: string;
+  status: string;
+}[] = [];
 
 const categories = ["All", "Disposables", "Materials", "Medications", "Instruments"];
 

@@ -6,22 +6,18 @@ import { Spinner } from "@/components/ui/spinner";
 import { FaTooth } from "react-icons/fa";
 import axios from "axios";
 import { useState } from "react";
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = process.env.DEFAULT_API_URL;
 
 export default function LoginPage() {
-  const [email,setEmail] = useState("");
-  const [password,setPassword] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const onLogin = async () => {
     //need this to check if we show the continue login page,api required to see if user is succesfully(completed the login proccess) authed.
-    const checkUserAuthed = async() =>
-    {
-        const response = await axios.get(`${API_URL}/api/login`,
-          {
-
-          // if (response )
-        }
-        )
-    }
+    const checkUserAuthed = async () => {
+      const response = await axios.get(`${API_URL}/api/login`, {
+        // if (response )
+      });
+    };
     try {
       const response = await axios.post(`${API_URL}/api/login`, {
         email: `${email}`,
@@ -31,8 +27,8 @@ export default function LoginPage() {
     } catch (error) {
       console.error(error);
     }
-    console.log(email)
-    console.log(password)
+    console.log(email);
+    console.log(password);
   };
   return (
     <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 gradient-auth-bg">
@@ -70,7 +66,7 @@ export default function LoginPage() {
                 </label>
                 <input
                   value={email}
-                  onChange={(e)=>setEmail(e.target.value)}
+                  onChange={(e) => setEmail(e.target.value)}
                   id="email"
                   name="email"
                   type="email"
@@ -94,7 +90,7 @@ export default function LoginPage() {
                   name="password"
                   type="password"
                   value={password}
-                  onChange={(e)=>setPassword(e.target.value)}
+                  onChange={(e) => setPassword(e.target.value)}
                   autoComplete="current-password"
                   required
                   className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-auth-blue focus:border-transparent transition-all"

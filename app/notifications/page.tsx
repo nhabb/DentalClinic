@@ -27,56 +27,14 @@ type Notification = {
 export default function PatientNotifications() {
   const router = useRouter();
   const [filter, setFilter] = useState<"all" | "unread">("all");
+  // TODO: Fetch from API
   const [user] = useState({
-    name: "John Doe",
-    email: "john.doe@example.com",
+    name: "",
+    email: "",
   });
 
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: 1,
-      type: "success",
-      title: "Appointment Confirmed",
-      message:
-        "Your appointment on January 20, 2026 at 10:00 AM has been confirmed with Dr. Sarah Johnson",
-      time: "2 hours ago",
-      read: false,
-    },
-    {
-      id: 2,
-      type: "info",
-      title: "Appointment Reminder",
-      message:
-        "You have an upcoming appointment tomorrow at 10:00 AM. Please arrive 10 minutes early.",
-      time: "1 day ago",
-      read: false,
-    },
-    {
-      id: 3,
-      type: "success",
-      title: "Payment Successful",
-      message: "Your payment of LBP 250,000 has been processed successfully",
-      time: "2 days ago",
-      read: true,
-    },
-    {
-      id: 4,
-      type: "info",
-      title: "Prescription Ready",
-      message: "Your prescription for pain medication is ready for pickup",
-      time: "3 days ago",
-      read: true,
-    },
-    {
-      id: 5,
-      type: "warning",
-      title: "Upcoming Checkup",
-      message:
-        "It's time for your 6-month dental checkup. Book your appointment today!",
-      time: "5 days ago",
-      read: true,
-    },
-  ]);
+  // TODO: Fetch from API
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   const handleLogout = () => {
     localStorage.removeItem("patientAuth");

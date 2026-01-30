@@ -36,7 +36,8 @@ export default function PatientInfoPage() {
 
   return (
     <div className="min-h-screen gradient-soft py-16">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg
+      :px-8">
         {/* Header */}
         <FormHeader />
 

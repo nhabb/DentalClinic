@@ -27,134 +27,27 @@ import {
   FaUserMd,
 } from "react-icons/fa";
 
-const appointments = [
-  {
-    id: 1,
-    date: "2026-01-18",
-    time: "09:00 AM",
-    patient: "Ahmad Khoury",
-    phone: "+961 3 123 456",
-    type: "Regular Checkup",
-    duration: 30,
-    status: "completed",
-    notes: "Routine checkup, patient in good health",
-    doctor: "Dr. Sarah Haddad",
-  },
-  {
-    id: 2,
-    date: "2026-01-18",
-    time: "10:00 AM",
-    patient: "Sara Mansour",
-    phone: "+961 3 234 567",
-    type: "Teeth Cleaning",
-    duration: 45,
-    status: "completed",
-    notes: "",
-    doctor: "Dr. Sarah Haddad",
-  },
-  {
-    id: 3,
-    date: "2026-01-18",
-    time: "11:00 AM",
-    patient: "Rami Haddad",
-    phone: "+961 3 345 678",
-    type: "Cavity Filling",
-    duration: 60,
-    status: "completed",
-    notes: "Filling on tooth #14",
-    doctor: "Dr. Michel Khoury",
-  },
-  {
-    id: 4,
-    date: "2026-01-18",
-    time: "02:00 PM",
-    patient: "Nadia Khalil",
-    phone: "+961 3 456 789",
-    type: "Teeth Whitening",
-    duration: 90,
-    status: "completed",
-    notes: "",
-    doctor: "Dr. Layla Nassar",
-  },
-  {
-    id: 5,
-    date: "2026-01-18",
-    time: "03:30 PM",
-    patient: "Karim Nassar",
-    phone: "+961 3 567 890",
-    type: "Root Canal",
-    duration: 90,
-    status: "in_progress",
-    notes: "Root canal on tooth #19",
-    doctor: "Dr. Michel Khoury",
-  },
-  {
-    id: 6,
-    date: "2026-01-18",
-    time: "05:00 PM",
-    patient: "Lina Aoun",
-    phone: "+961 3 678 901",
-    type: "Crown Fitting",
-    duration: 60,
-    status: "upcoming",
-    notes: "",
-    doctor: "Dr. Layla Nassar",
-  },
-  {
-    id: 7,
-    date: "2026-01-19",
-    time: "09:00 AM",
-    patient: "Fadi Karam",
-    phone: "+961 3 789 012",
-    type: "Regular Checkup",
-    duration: 30,
-    status: "upcoming",
-    notes: "",
-    doctor: "Dr. Sarah Haddad",
-  },
-  {
-    id: 8,
-    date: "2026-01-19",
-    time: "10:00 AM",
-    patient: "Maya Rizk",
-    phone: "+961 3 890 123",
-    type: "Extraction",
-    duration: 45,
-    status: "upcoming",
-    notes: "Wisdom tooth extraction",
-    doctor: "Dr. Michel Khoury",
-  },
-  {
-    id: 9,
-    date: "2026-01-19",
-    time: "11:30 AM",
-    patient: "Jad Salameh",
-    phone: "+961 3 901 234",
-    type: "Teeth Cleaning",
-    duration: 45,
-    status: "upcoming",
-    notes: "",
-    doctor: "Dr. Sarah Haddad",
-  },
-  {
-    id: 10,
-    date: "2026-01-17",
-    time: "02:00 PM",
-    patient: "Rana Abboud",
-    phone: "+961 3 012 345",
-    type: "Regular Checkup",
-    duration: 30,
-    status: "cancelled",
-    notes: "Patient cancelled - rescheduling",
-    doctor: "Dr. Sarah Haddad",
-  },
-];
+// TODO: Fetch from API
+const appointments: {
+  id: number;
+  date: string;
+  time: string;
+  patient: string;
+  phone: string;
+  type: string;
+  duration: number;
+  status: string;
+  notes: string;
+  doctor: string;
+}[] = [];
 
-const doctors = [
-  { id: 1, name: "Dr. Sarah Haddad", specialty: "General Dentistry", color: "bg-blue-500" },
-  { id: 2, name: "Dr. Michel Khoury", specialty: "Orthodontics", color: "bg-purple-500" },
-  { id: 3, name: "Dr. Layla Nassar", specialty: "Cosmetic Dentistry", color: "bg-pink-500" },
-];
+// TODO: Fetch from API
+const doctors: {
+  id: number;
+  name: string;
+  specialty: string;
+  color: string;
+}[] = [];
 
 export default function AppointmentsManagement() {
   const [selectedDate, setSelectedDate] = useState(new Date("2026-01-18"));

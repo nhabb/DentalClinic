@@ -27,11 +27,12 @@ import {
 export default function AdminSettings() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const router = useRouter();
+  // TODO: Fetch from API
   const [settings, setSettings] = useState({
-    clinicName: "BrightSmile Dental Clinic",
-    email: "contact@brightsmile.com",
-    phone: "+961 1 234 567",
-    address: "Hamra Street, Beirut, Lebanon",
+    clinicName: "",
+    email: "",
+    phone: "",
+    address: "",
     language: "en",
     timezone: "Asia/Beirut",
     currency: "LBP",

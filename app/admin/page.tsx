@@ -24,120 +24,43 @@ import {
   FaChevronRight,
 } from "react-icons/fa";
 
-// Clinic funds and stats
+// TODO: Fetch from API
 const clinicStats = {
-  totalFunds: 45750000,
-  monthlyRevenue: 12500000,
-  monthlyExpenses: 3200000,
-  pendingPayments: 2850000,
-  todayAppointments: 8,
-  completedToday: 5,
-  lowStockItems: 3,
-  totalPatients: 234,
+  totalFunds: 0,
+  monthlyRevenue: 0,
+  monthlyExpenses: 0,
+  pendingPayments: 0,
+  todayAppointments: 0,
+  completedToday: 0,
+  lowStockItems: 0,
+  totalPatients: 0,
 };
 
-const recentTransactions = [
-  {
-    id: 1,
-    type: "income",
-    description: "Payment - Ahmad Khoury",
-    amount: 300000,
-    date: "2026-01-18",
-  },
-  {
-    id: 2,
-    type: "income",
-    description: "Payment - Layla Nassar",
-    amount: 150000,
-    date: "2026-01-18",
-  },
-  {
-    id: 3,
-    type: "expense",
-    description: "Dental Supplies - MedEquip",
-    amount: -450000,
-    date: "2026-01-17",
-  },
-  {
-    id: 4,
-    type: "income",
-    description: "Payment - Michel Haddad",
-    amount: 800000,
-    date: "2026-01-17",
-  },
-  {
-    id: 5,
-    type: "expense",
-    description: "Equipment Maintenance",
-    amount: -200000,
-    date: "2026-01-16",
-  },
-];
+// TODO: Fetch from API
+const recentTransactions: {
+  id: number;
+  type: string;
+  description: string;
+  amount: number;
+  date: string;
+}[] = [];
 
-const todayAppointments = [
-  {
-    id: 1,
-    time: "09:00 AM",
-    patient: "Ahmad Khoury",
-    type: "Checkup",
-    status: "completed",
-  },
-  {
-    id: 2,
-    time: "10:00 AM",
-    patient: "Sara Mansour",
-    type: "Cleaning",
-    status: "completed",
-  },
-  {
-    id: 3,
-    time: "11:00 AM",
-    patient: "Rami Haddad",
-    type: "Filling",
-    status: "completed",
-  },
-  {
-    id: 4,
-    time: "12:00 PM",
-    patient: "Nadia Khalil",
-    type: "Whitening",
-    status: "completed",
-  },
-  {
-    id: 5,
-    time: "02:00 PM",
-    patient: "Karim Nassar",
-    type: "Checkup",
-    status: "completed",
-  },
-  {
-    id: 6,
-    time: "03:00 PM",
-    patient: "Lina Aoun",
-    type: "Root Canal",
-    status: "in_progress",
-  },
-  {
-    id: 7,
-    time: "04:00 PM",
-    patient: "Fadi Karam",
-    type: "Crown",
-    status: "upcoming",
-  },
-  {
-    id: 8,
-    time: "05:00 PM",
-    patient: "Maya Rizk",
-    type: "Extraction",
-    status: "upcoming",
-  },
-];
+// TODO: Fetch from API
+const todayAppointments: {
+  id: number;
+  time: string;
+  patient: string;
+  type: string;
+  status: string;
+}[] = [];
 
-const lowStockAlerts = [
-  { id: 1, item: "Dental Gloves (M)", current: 50, minimum: 100 },
-  { id: 2, item: "Composite Resin", current: 3, minimum: 10 },
-  { id: 3, item: "Anesthetic Cartridges", current: 15, minimum: 30 },
-];
+// TODO: Fetch from API
+const lowStockAlerts: {
+  id: number;
+  item: string;
+  current: number;
+  minimum: number;
+}[] = [];
 
 export default function AdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true);

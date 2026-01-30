@@ -29,143 +29,35 @@ import {
   FaExclamationCircle,
 } from "react-icons/fa";
 
-// Clinic funds state
+// TODO: Fetch from API
 const clinicFunds = {
-  currentBalance: 45750000,
-  monthlyIncome: 12500000,
-  monthlyExpenses: 3200000,
-  pendingPayments: 2850000,
+  currentBalance: 0,
+  monthlyIncome: 0,
+  monthlyExpenses: 0,
+  pendingPayments: 0,
 };
 
-const transactions = [
-  {
-    id: 1,
-    date: "2026-01-18",
-    time: "14:30",
-    type: "income",
-    category: "Patient Payment",
-    description: "Payment from Ahmad Khoury - Dental Cleaning",
-    amount: 150000,
-    paymentMethod: "Cash",
-    reference: "PAY-2026-0125",
-    status: "completed",
-  },
-  {
-    id: 2,
-    date: "2026-01-18",
-    time: "11:15",
-    type: "income",
-    category: "Patient Payment",
-    description: "Payment from Sara Mansour - Teeth Whitening",
-    amount: 500000,
-    paymentMethod: "Credit Card",
-    reference: "PAY-2026-0124",
-    status: "completed",
-  },
-  {
-    id: 3,
-    date: "2026-01-17",
-    time: "16:00",
-    type: "expense",
-    category: "Supplies",
-    description: "Dental supplies order - MedEquip Lebanon",
-    amount: 450000,
-    paymentMethod: "Bank Transfer",
-    reference: "EXP-2026-0089",
-    status: "completed",
-  },
-  {
-    id: 4,
-    date: "2026-01-17",
-    time: "10:30",
-    type: "income",
-    category: "Patient Payment",
-    description: "Payment from Michel Haddad - Root Canal",
-    amount: 800000,
-    paymentMethod: "Bank Transfer",
-    reference: "PAY-2026-0123",
-    status: "completed",
-  },
-  {
-    id: 5,
-    date: "2026-01-16",
-    time: "15:45",
-    type: "expense",
-    category: "Maintenance",
-    description: "Equipment maintenance - X-Ray machine",
-    amount: 200000,
-    paymentMethod: "Cash",
-    reference: "EXP-2026-0088",
-    status: "completed",
-  },
-  {
-    id: 6,
-    date: "2026-01-16",
-    time: "09:00",
-    type: "expense",
-    category: "Utilities",
-    description: "Electricity bill - January 2026",
-    amount: 350000,
-    paymentMethod: "Bank Transfer",
-    reference: "EXP-2026-0087",
-    status: "completed",
-  },
-  {
-    id: 7,
-    date: "2026-01-15",
-    time: "14:00",
-    type: "income",
-    category: "Patient Payment",
-    description: "Payment from Nadia Khalil - Crown Fitting",
-    amount: 800000,
-    paymentMethod: "Credit Card",
-    reference: "PAY-2026-0122",
-    status: "completed",
-  },
-  {
-    id: 8,
-    date: "2026-01-15",
-    time: "11:30",
-    type: "expense",
-    category: "Salary",
-    description: "Staff salary - January (partial)",
-    amount: 1500000,
-    paymentMethod: "Bank Transfer",
-    reference: "EXP-2026-0086",
-    status: "completed",
-  },
-  {
-    id: 9,
-    date: "2026-01-18",
-    time: "16:00",
-    type: "income",
-    category: "Patient Payment",
-    description: "Pending payment from Karim Nassar - Root Canal",
-    amount: 650000,
-    paymentMethod: "Pending",
-    reference: "PAY-2026-0126",
-    status: "pending",
-  },
-  {
-    id: 10,
-    date: "2026-01-14",
-    time: "10:00",
-    type: "income",
-    category: "Insurance",
-    description: "Insurance reimbursement - Globemed",
-    amount: 400000,
-    paymentMethod: "Bank Transfer",
-    reference: "INS-2026-0045",
-    status: "completed",
-  },
-];
+// TODO: Fetch from API
+const transactions: {
+  id: number;
+  date: string;
+  time: string;
+  type: string;
+  category: string;
+  description: string;
+  amount: number;
+  paymentMethod: string;
+  reference: string;
+  status: string;
+}[] = [];
 
-const expenseCategories = [
-  { name: "Supplies", icon: FaShoppingCart, color: "bg-blue-500", total: 1250000 },
-  { name: "Maintenance", icon: FaTools, color: "bg-orange-500", total: 450000 },
-  { name: "Utilities", icon: FaMoneyBillWave, color: "bg-yellow-500", total: 650000 },
-  { name: "Salary", icon: FaUserMd, color: "bg-purple-500", total: 3000000 },
-];
+// TODO: Fetch from API
+const expenseCategories: {
+  name: string;
+  icon: typeof FaShoppingCart;
+  color: string;
+  total: number;
+}[] = [];
 
 export default function TransactionsPage() {
   const [searchQuery, setSearchQuery] = useState("");

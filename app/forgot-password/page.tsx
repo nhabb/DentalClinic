@@ -4,17 +4,40 @@ import Link from "next/link";
 import { useState } from "react";
 import { FaTooth } from "react-icons/fa";
 import { ArrowLeft, CheckCircle } from "lucide-react";
+import axios, { Axios } from "axios";
 
 export default function ForgotPasswordPage() {
   const [submitted, setSubmitted] = useState(false);
-  const [email, setEmail] = useState("");
+  const API_URL = process.env.DEFAULT_API_UTL;
+  const [password, setPassword] = useState({
+    oldPass: "",
+    newPass: "",
+    confirmPass: "",
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // TODO: Handle password reset request
+  const handleSubmit = () => {
+    try {
+      const response = axios.post(`${API_URL}/forgot-password`);
+    } catch (err) {
+      console.log(err);
+    }
     setSubmitted(true);
+    console.log(password);
+    console.log("test");
   };
-
+  const handleChange = (e: any) => {
+    setPassword({
+      ...password,
+      [e.target.name]: e.target.value,
+    });
+  };
+  // const checkPass=()=>
+  // {
+  //     if (password.confirmPass === password.newPass)
+  //         //
+  //     else
+  //       //
+  // }
   return (
     <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 gradient-auth-bg">
       <div className="max-w-md w-full">
@@ -40,8 +63,7 @@ export default function ForgotPasswordPage() {
                   Forgot Password?
                 </h2>
                 <p className="mt-2 text-sm text-gray-600">
-                  No worries! Enter your email and we'll send you reset
-                  instructions.
+                  No worries! Reset your password.
                 </p>
               </div>
 
@@ -49,31 +71,70 @@ export default function ForgotPasswordPage() {
               <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
                 <div>
                   <label
-                    htmlFor="email"
+                    htmlFor="oldpass"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    Email address
+                    Old Password
                   </label>
                   <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
+                    id="oldPass"
+                    name="oldPass"
+                    type="password"
+                    autoComplete="password"
                     required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    value={password.oldPass}
+                    onChange={handleChange}
+                    className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-auth-blue focus:border-transparent transition-all"
+                    placeholder="Enter your email"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="newPass"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    New Password
+                  </label>
+                  <input
+                    id="newPass"
+                    name="newPass"
+                    type="password"
+                    autoComplete="password"
+                    required
+                    value={password.newPass}
+                    onChange={handleChange}
                     className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-auth-blue focus:border-transparent transition-all"
                     placeholder="Enter your email"
                   />
                 </div>
 
+                <div>
+                  <label
+                    htmlFor="confirmPass"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Confirm Password
+                  </label>
+                  <input
+                    id="confirmPass"
+                    name="confirmPass"
+                    type="password"
+                    autoComplete="email"
+                    required
+                    value={password.confirmPass}
+                    onChange={handleChange}
+                    className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-auth-blue focus:border-transparent transition-all"
+                    placeholder="Enter your email"
+                  />
+                </div>
                 {/* Submit Button */}
                 <div>
                   <button
                     type="submit"
                     className="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white gradient-auth-card hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-auth-blue transition-all transform hover:scale-[1.02]"
+                    onClick={handleSubmit}
                   >
-                    Send Reset Link
+                    Reset Password
                   </button>
                 </div>
 
@@ -95,28 +156,6 @@ export default function ForgotPasswordPage() {
               <div className="text-center space-y-6">
                 <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full">
                   <CheckCircle className="w-8 h-8 text-green-600" />
-                </div>
-
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                    Check your email
-                  </h2>
-                  <p className="text-sm text-gray-600 mb-1">
-                    We've sent password reset instructions to:
-                  </p>
-                  <p className="text-sm font-medium text-auth-blue">{email}</p>
-                </div>
-
-                <div className="bg-blue-50 rounded-lg p-4 text-left">
-                  <p className="text-sm text-gray-700">
-                    Didn't receive the email? Check your spam folder or{" "}
-                    <button
-                      onClick={() => setSubmitted(false)}
-                      className="font-medium text-auth-blue hover:text-auth-blue-light underline"
-                    >
-                      try again
-                    </button>
-                  </p>
                 </div>
 
                 <Link

@@ -14,6 +14,7 @@ import {
   FieldSet,
   FieldTitle,
 } from "@/components/ui/field";
+import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { FaTooth } from "react-icons/fa";
 import { Calendar } from "@/components/ui/calendar";
@@ -23,8 +24,44 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { ChevronDownIcon } from "lucide-react";
+import axios from "axios";
+const API_URL = process.env.DEFAULT_API_URL;
 
 export default function Form() {
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    phone: "",
+    dateOfBirth: null,
+    address: "",
+    city: "",
+    governate: "",
+    emergencyContact: "",
+    emergencyPhone: "",
+    insuranceProvider: "",
+    insurancePolicy: "",
+    medicalConditions: "",
+    allergies: "",
+    currentMedications: "",
+  });
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const submitForm = async () => {
+    try {
+      const response = await axios.post(`${API_URL}/login/continue-login`, {
+        formData,
+      });
+    } catch (err) {
+      console.log(err);
+      // console.log(response)
+    }
+    console.log(formData);
+  };
+  const handleChange = (e: any) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
   return (
     <div className="min-h-screen w-full flex items-center justify-center px-4 sm:px-6 lg:px-8 gradient-auth-bg py-12">
       <div className="w-full max-w-2xl">
@@ -63,6 +100,8 @@ export default function Form() {
                     First Name
                   </FieldLabel>
                   <Input
+                    value={formData.firstName}
+                    onChange={handleChange}
                     id="firstName"
                     name="firstName"
                     type="text"
@@ -71,6 +110,7 @@ export default function Form() {
                     className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
                   />
                 </Field>
+
                 <Field>
                   <FieldLabel
                     htmlFor="lastName"
@@ -79,6 +119,8 @@ export default function Form() {
                     Last Name
                   </FieldLabel>
                   <Input
+                    value={formData.lastName}
+                    onChange={handleChange}
                     id="lastName"
                     name="lastName"
                     type="text"
@@ -88,24 +130,7 @@ export default function Form() {
                   />
                 </Field>
               </div>
-              {/* <Field>
-                <FieldLabel
-                  htmlFor="email"
-                  className="text-gray-900 font-semibold text-sm tracking-wide"
-                >
-                  Email Address
-                </FieldLabel>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="john.doe@example.com"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
-                />
-              </Field> */}
+
               <div className="grid grid-cols-2 gap-4">
                 <Field>
                   <FieldLabel
@@ -115,6 +140,8 @@ export default function Form() {
                     Phone Number
                   </FieldLabel>
                   <Input
+                    value={formData.phone}
+                    onChange={handleChange}
                     id="phone"
                     name="phone"
                     type="tel"
@@ -123,6 +150,7 @@ export default function Form() {
                     className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
                   />
                 </Field>
+
                 <Field>
                   <FieldLabel
                     htmlFor="dateOfBirth"
@@ -130,14 +158,16 @@ export default function Form() {
                   >
                     Date of Birth
                   </FieldLabel>
-                  <Popover>
+                  <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
                         id="dateOfBirth"
                         className="w-full justify-between font-normal"
                       >
-                        Select date
+                        {formData.dateOfBirth
+                          ? new Date(formData.dateOfBirth).toLocaleDateString()
+                          : "Select date"}
                         <ChevronDownIcon />
                       </Button>
                     </PopoverTrigger>
@@ -151,6 +181,18 @@ export default function Form() {
                     >
                       <Calendar
                         mode="single"
+                        selected={
+                          formData.dateOfBirth
+                            ? new Date(formData.dateOfBirth)
+                            : undefined
+                        }
+                        onSelect={(date) => {
+                          setFormData({
+                            ...formData,
+                            dateOfBirth: date ? date.toISOString() : null,
+                          });
+                          setCalendarOpen(false);
+                        }}
                         captionLayout="dropdown"
                         fromYear={1920}
                         toYear={new Date().getFullYear()}
@@ -200,6 +242,8 @@ export default function Form() {
                   Street Address
                 </FieldLabel>
                 <Input
+                  value={formData.address}
+                  onChange={handleChange}
                   id="address"
                   name="address"
                   type="text"
@@ -208,6 +252,7 @@ export default function Form() {
                   className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
                 />
               </Field>
+
               <div className="grid grid-cols-2 gap-4">
                 <Field>
                   <FieldLabel
@@ -217,6 +262,8 @@ export default function Form() {
                     City
                   </FieldLabel>
                   <Input
+                    value={formData.city}
+                    onChange={handleChange}
                     id="city"
                     name="city"
                     type="text"
@@ -225,16 +272,19 @@ export default function Form() {
                     className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
                   />
                 </Field>
+
                 <Field>
                   <FieldLabel
-                    htmlFor="state"
+                    htmlFor="governate"
                     className="text-gray-900 font-semibold text-sm tracking-wide"
                   >
                     Governorate
                   </FieldLabel>
                   <Input
-                    id="state"
-                    name="state"
+                    value={formData.governate}
+                    onChange={handleChange}
+                    id="governate"
+                    name="governate"
                     type="text"
                     placeholder="Beirut"
                     required
@@ -263,6 +313,8 @@ export default function Form() {
                     Contact Name
                   </FieldLabel>
                   <Input
+                    value={formData.emergencyContact}
+                    onChange={handleChange}
                     id="emergencyContact"
                     name="emergencyContact"
                     type="text"
@@ -271,6 +323,7 @@ export default function Form() {
                     className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
                   />
                 </Field>
+
                 <Field>
                   <FieldLabel
                     htmlFor="emergencyPhone"
@@ -279,6 +332,8 @@ export default function Form() {
                     Contact Phone
                   </FieldLabel>
                   <Input
+                    value={formData.emergencyPhone}
+                    onChange={handleChange}
                     id="emergencyPhone"
                     name="emergencyPhone"
                     type="tel"
@@ -309,6 +364,8 @@ export default function Form() {
                     Insurance Provider
                   </FieldLabel>
                   <Input
+                    value={formData.insuranceProvider}
+                    onChange={handleChange}
                     id="insuranceProvider"
                     name="insuranceProvider"
                     type="text"
@@ -316,6 +373,7 @@ export default function Form() {
                     className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
                   />
                 </Field>
+
                 <Field>
                   <FieldLabel
                     htmlFor="insurancePolicy"
@@ -324,6 +382,8 @@ export default function Form() {
                     Policy Number
                   </FieldLabel>
                   <Input
+                    value={formData.insurancePolicy}
+                    onChange={handleChange}
                     id="insurancePolicy"
                     name="insurancePolicy"
                     type="text"
@@ -352,6 +412,8 @@ export default function Form() {
                   Medical Conditions
                 </FieldLabel>
                 <Input
+                  value={formData.medicalConditions}
+                  onChange={handleChange}
                   id="medicalConditions"
                   name="medicalConditions"
                   type="text"
@@ -359,6 +421,7 @@ export default function Form() {
                   className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
                 />
               </Field>
+
               <Field>
                 <FieldLabel
                   htmlFor="allergies"
@@ -367,6 +430,8 @@ export default function Form() {
                   Allergies
                 </FieldLabel>
                 <Input
+                  value={formData.allergies}
+                  onChange={handleChange}
                   id="allergies"
                   name="allergies"
                   type="text"
@@ -374,6 +439,7 @@ export default function Form() {
                   className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
                 />
               </Field>
+
               <Field>
                 <FieldLabel
                   htmlFor="currentMedications"
@@ -382,6 +448,8 @@ export default function Form() {
                   Current Medications
                 </FieldLabel>
                 <Input
+                  value={formData.currentMedications}
+                  onChange={handleChange}
                   id="currentMedications"
                   name="currentMedications"
                   type="text"
@@ -398,6 +466,7 @@ export default function Form() {
               type="submit"
               className="w-full py-6 gradient-auth-card hover:shadow-xl transition-all transform hover:scale-[1.01]"
               size="lg"
+              onClick={submitForm}
             >
               Submit Patient Information
             </Button>

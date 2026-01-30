@@ -22,97 +22,43 @@ import {
   FaFilter,
 } from "react-icons/fa";
 
+// TODO: Fetch from API
 const patientInfo = {
-  name: "Ahmad Khoury",
-  dateOfBirth: "1990-05-15",
-  bloodType: "A+",
-  allergies: ["Penicillin", "Latex"],
-  conditions: ["None"],
-  medications: ["None"],
-  lastVisit: "2025-12-10",
-  nextAppointment: "2026-01-20",
+  name: "",
+  dateOfBirth: "",
+  bloodType: "",
+  allergies: [] as string[],
+  conditions: [] as string[],
+  medications: [] as string[],
+  lastVisit: "",
+  nextAppointment: "",
 };
 
-const visitHistory = [
-  {
-    id: 1,
-    date: "2025-12-10",
-    type: "Dental Cleaning",
-    doctor: "Dr. Sarah Haddad",
-    notes: "Routine cleaning completed. Good oral health maintained. Minor plaque buildup on lower molars addressed.",
-    treatments: ["Professional cleaning", "Fluoride treatment"],
-    cost: "150,000 LBP",
-  },
-  {
-    id: 2,
-    date: "2025-09-05",
-    type: "Cavity Filling",
-    doctor: "Dr. Michel Khoury",
-    notes: "Filled cavity on lower left molar (#19). Local anesthesia administered. Patient tolerated procedure well.",
-    treatments: ["Composite filling", "Local anesthesia"],
-    cost: "300,000 LBP",
-  },
-  {
-    id: 3,
-    date: "2025-06-20",
-    type: "Regular Checkup",
-    doctor: "Dr. Sarah Haddad",
-    notes: "Routine examination. Small cavity detected on tooth #19. Scheduled for filling procedure.",
-    treatments: ["X-ray examination", "Oral examination"],
-    cost: "100,000 LBP",
-  },
-  {
-    id: 4,
-    date: "2025-03-15",
-    type: "Teeth Whitening",
-    doctor: "Dr. Layla Nassar",
-    notes: "In-office whitening procedure completed. Patient achieved 3 shades lighter. Recommended at-home maintenance kit.",
-    treatments: ["Professional whitening", "Take-home kit provided"],
-    cost: "500,000 LBP",
-  },
-];
+// TODO: Fetch from API
+const visitHistory: {
+  id: number;
+  date: string;
+  type: string;
+  doctor: string;
+  notes: string;
+  treatments: string[];
+  cost: string;
+}[] = [];
 
-const documents = [
-  { id: 1, name: "Full Mouth X-Ray", date: "2025-12-10", type: "xray", size: "2.4 MB" },
-  { id: 2, name: "Panoramic X-Ray", date: "2025-06-20", type: "xray", size: "3.1 MB" },
-  { id: 3, name: "Treatment Plan 2025", date: "2025-06-20", type: "document", size: "156 KB" },
-  { id: 4, name: "Insurance Claim Form", date: "2025-09-05", type: "document", size: "89 KB" },
-];
+// TODO: Fetch from API
+const documents: {
+  id: number;
+  name: string;
+  date: string;
+  type: string;
+  size: string;
+}[] = [];
 
-const dentalChart = [
-  { tooth: 1, status: "healthy" },
-  { tooth: 2, status: "healthy" },
-  { tooth: 3, status: "healthy" },
-  { tooth: 4, status: "crown" },
-  { tooth: 5, status: "healthy" },
-  { tooth: 6, status: "healthy" },
-  { tooth: 7, status: "healthy" },
-  { tooth: 8, status: "healthy" },
-  { tooth: 9, status: "healthy" },
-  { tooth: 10, status: "healthy" },
-  { tooth: 11, status: "healthy" },
-  { tooth: 12, status: "healthy" },
-  { tooth: 13, status: "healthy" },
-  { tooth: 14, status: "filling" },
-  { tooth: 15, status: "healthy" },
-  { tooth: 16, status: "healthy" },
-  { tooth: 17, status: "healthy" },
-  { tooth: 18, status: "healthy" },
-  { tooth: 19, status: "filling" },
-  { tooth: 20, status: "healthy" },
-  { tooth: 21, status: "healthy" },
-  { tooth: 22, status: "healthy" },
-  { tooth: 23, status: "healthy" },
-  { tooth: 24, status: "healthy" },
-  { tooth: 25, status: "healthy" },
-  { tooth: 26, status: "healthy" },
-  { tooth: 27, status: "healthy" },
-  { tooth: 28, status: "healthy" },
-  { tooth: 29, status: "healthy" },
-  { tooth: 30, status: "healthy" },
-  { tooth: 31, status: "healthy" },
-  { tooth: 32, status: "extracted" },
-];
+// TODO: Fetch from API
+const dentalChart: {
+  tooth: number;
+  status: string;
+}[] = [];
 
 export default function MedicalRecords() {
   const [expandedVisit, setExpandedVisit] = useState<number | null>(1);

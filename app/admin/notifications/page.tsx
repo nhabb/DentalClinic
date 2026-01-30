@@ -34,58 +34,8 @@ export default function AdminNotifications() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const router = useRouter();
   const [filter, setFilter] = useState<"all" | "unread">("all");
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: 1,
-      type: "success",
-      title: "New Appointment Booked",
-      message:
-        "Sarah Johnson has booked an appointment for January 20, 2026 at 10:00 AM",
-      time: "5 minutes ago",
-      read: false,
-    },
-    {
-      id: 2,
-      type: "warning",
-      title: "Low Stock Alert",
-      message: "Dental Gloves inventory is running low (15 units remaining)",
-      time: "1 hour ago",
-      read: false,
-    },
-    {
-      id: 3,
-      type: "info",
-      title: "Payment Received",
-      message: "Payment of LBP 500,000 received from John Doe",
-      time: "2 hours ago",
-      read: true,
-    },
-    {
-      id: 4,
-      type: "error",
-      title: "Appointment Cancellation",
-      message:
-        "Michael Chen cancelled appointment scheduled for January 22, 2026",
-      time: "3 hours ago",
-      read: true,
-    },
-    {
-      id: 5,
-      type: "info",
-      title: "New Patient Registration",
-      message: "Emma Williams has registered as a new patient",
-      time: "5 hours ago",
-      read: true,
-    },
-    {
-      id: 6,
-      type: "success",
-      title: "Inventory Restocked",
-      message: "Dental Mirrors restocked - 100 units added",
-      time: "1 day ago",
-      read: true,
-    },
-  ]);
+  // TODO: Fetch from API
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   const handleLogout = () => {
     localStorage.removeItem("adminAuth");

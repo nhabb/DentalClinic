@@ -16,9 +16,10 @@ import {
 
 export default function PatientDashboard() {
   const router = useRouter();
+  // TODO: Fetch from API
   const [user] = useState({
-    name: "John Doe",
-    email: "john.doe@example.com",
+    name: "",
+    email: "",
   });
 
   const handleLogout = () => {
@@ -27,39 +28,23 @@ export default function PatientDashboard() {
     router.push("/login");
   };
 
-  const upcomingAppointments = [
-    {
-      id: 1,
-      date: "2026-01-20",
-      time: "10:00 AM",
-      type: "Regular Checkup",
-      doctor: "Dr. Sarah Johnson",
-    },
-    {
-      id: 2,
-      date: "2026-02-15",
-      time: "2:30 PM",
-      type: "Teeth Cleaning",
-      doctor: "Dr. Michael Chen",
-    },
-  ];
+  // TODO: Fetch from API
+  const upcomingAppointments: {
+    id: number;
+    date: string;
+    time: string;
+    type: string;
+    doctor: string;
+  }[] = [];
 
-  const recentVisits = [
-    {
-      id: 1,
-      date: "2025-12-10",
-      type: "Dental Cleaning",
-      doctor: "Dr. Sarah Johnson",
-      notes: "Routine cleaning completed. Good oral health.",
-    },
-    {
-      id: 2,
-      date: "2025-09-05",
-      type: "Cavity Filling",
-      doctor: "Dr. Michael Chen",
-      notes: "Filled cavity on lower left molar.",
-    },
-  ];
+  // TODO: Fetch from API
+  const recentVisits: {
+    id: number;
+    date: string;
+    type: string;
+    doctor: string;
+    notes: string;
+  }[] = [];
 
   const quickActions = [
     {

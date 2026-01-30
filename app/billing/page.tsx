@@ -25,143 +25,62 @@ import {
   FaPercentage,
 } from "react-icons/fa";
 
+// TODO: Fetch from API
 const billingSummary = {
-  totalOutstanding: 850000,
-  dueDate: "2026-02-15",
+  totalOutstanding: 0,
+  dueDate: "",
   lastPayment: {
-    amount: 300000,
-    date: "2025-12-15",
+    amount: 0,
+    date: "",
   },
-  insurancePending: 200000,
+  insurancePending: 0,
 };
 
-const invoices = [
-  {
-    id: "INV-2025-0042",
-    date: "2025-12-10",
-    description: "Dental Cleaning + Fluoride Treatment",
-    amount: 150000,
-    insuranceCovered: 100000,
-    patientResponsibility: 50000,
-    status: "paid",
-    paidDate: "2025-12-15",
-  },
-  {
-    id: "INV-2025-0038",
-    date: "2025-09-05",
-    description: "Cavity Filling - Tooth #19",
-    amount: 300000,
-    insuranceCovered: 150000,
-    patientResponsibility: 150000,
-    status: "paid",
-    paidDate: "2025-09-20",
-  },
-  {
-    id: "INV-2025-0035",
-    date: "2025-06-20",
-    description: "Regular Checkup + X-Ray",
-    amount: 100000,
-    insuranceCovered: 80000,
-    patientResponsibility: 20000,
-    status: "paid",
-    paidDate: "2025-06-25",
-  },
-  {
-    id: "INV-2026-0001",
-    date: "2026-01-10",
-    description: "Crown Replacement - Tooth #4",
-    amount: 800000,
-    insuranceCovered: 0,
-    patientResponsibility: 800000,
-    status: "pending",
-    dueDate: "2026-02-10",
-  },
-  {
-    id: "INV-2026-0002",
-    date: "2026-01-15",
-    description: "Deep Cleaning (Scaling)",
-    amount: 250000,
-    insuranceCovered: 200000,
-    patientResponsibility: 50000,
-    status: "insurance_pending",
-    dueDate: "2026-02-15",
-  },
-];
+// TODO: Fetch from API
+const invoices: {
+  id: string;
+  date: string;
+  description: string;
+  amount: number;
+  insuranceCovered: number;
+  patientResponsibility: number;
+  status: string;
+  paidDate?: string;
+  dueDate?: string;
+}[] = [];
 
-const paymentHistory = [
-  {
-    id: 1,
-    date: "2025-12-15",
-    amount: 300000,
-    method: "Credit Card",
-    cardLast4: "4242",
-    invoiceId: "INV-2025-0042, INV-2025-0038",
-    status: "completed",
-  },
-  {
-    id: 2,
-    date: "2025-09-20",
-    amount: 150000,
-    method: "Bank Transfer",
-    reference: "BT-789456",
-    invoiceId: "INV-2025-0038",
-    status: "completed",
-  },
-  {
-    id: 3,
-    date: "2025-06-25",
-    amount: 20000,
-    method: "Cash",
-    invoiceId: "INV-2025-0035",
-    status: "completed",
-  },
-];
+// TODO: Fetch from API
+const paymentHistory: {
+  id: number;
+  date: string;
+  amount: number;
+  method: string;
+  cardLast4?: string;
+  reference?: string;
+  invoiceId: string;
+  status: string;
+}[] = [];
 
-const paymentMethods = [
-  {
-    id: 1,
-    type: "credit_card",
-    name: "Visa ending in 4242",
-    expiry: "12/27",
-    isDefault: true,
-  },
-  {
-    id: 2,
-    type: "bank",
-    name: "Bank Audi - Savings",
-    accountLast4: "7890",
-    isDefault: false,
-  },
-];
+// TODO: Fetch from API
+const paymentMethods: {
+  id: number;
+  type: string;
+  name: string;
+  expiry?: string;
+  accountLast4?: string;
+  isDefault: boolean;
+}[] = [];
 
-const insuranceClaims = [
-  {
-    id: "CLM-2026-001",
-    invoiceId: "INV-2026-0002",
-    submittedDate: "2026-01-15",
-    amount: 200000,
-    status: "processing",
-    provider: "Globemed",
-  },
-  {
-    id: "CLM-2025-042",
-    invoiceId: "INV-2025-0042",
-    submittedDate: "2025-12-10",
-    amount: 100000,
-    status: "approved",
-    provider: "Globemed",
-    paidDate: "2025-12-20",
-  },
-  {
-    id: "CLM-2025-038",
-    invoiceId: "INV-2025-0038",
-    submittedDate: "2025-09-05",
-    amount: 150000,
-    status: "approved",
-    provider: "Globemed",
-    paidDate: "2025-09-15",
-  },
-];
+// TODO: Fetch from API
+const insuranceClaims: {
+  id: string;
+  invoiceId: string;
+  submittedDate: string;
+  amount: number;
+  status: string;
+  provider: string;
+  paidDate?: string;
+}[] = [];
 
 export default function Billing() {
   const [activeTab, setActiveTab] = useState<"invoices" | "payments" | "insurance">("invoices");

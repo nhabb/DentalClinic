@@ -34,165 +34,31 @@ import {
   FaIdCard,
 } from "react-icons/fa";
 
-const patients = [
-  {
-    id: 1,
-    name: "Ahmad Khoury",
-    email: "ahmad.khoury@email.com",
-    phone: "+961 3 123 456",
-    dateOfBirth: "1990-05-15",
-    address: "Hamra Street, Beirut",
-    bloodType: "A+",
-    allergies: ["Penicillin", "Latex"],
-    insurance: "Globemed",
-    registeredDate: "2024-03-15",
-    lastVisit: "2026-01-18",
-    totalVisits: 12,
-    totalSpent: 2850000,
-    status: "active",
-    notes: "Regular patient, prefers morning appointments",
-  },
-  {
-    id: 2,
-    name: "Sara Mansour",
-    email: "sara.mansour@email.com",
-    phone: "+961 3 234 567",
-    dateOfBirth: "1985-08-22",
-    address: "Achrafieh, Beirut",
-    bloodType: "O+",
-    allergies: [],
-    insurance: "AXA",
-    registeredDate: "2023-11-20",
-    lastVisit: "2026-01-18",
-    totalVisits: 8,
-    totalSpent: 1650000,
-    status: "active",
-    notes: "",
-  },
-  {
-    id: 3,
-    name: "Michel Haddad",
-    email: "michel.haddad@email.com",
-    phone: "+961 3 345 678",
-    dateOfBirth: "1978-12-03",
-    address: "Jounieh",
-    bloodType: "B+",
-    allergies: ["Aspirin"],
-    insurance: "Globemed",
-    registeredDate: "2022-06-10",
-    lastVisit: "2026-01-17",
-    totalVisits: 24,
-    totalSpent: 5200000,
-    status: "active",
-    notes: "Requires pre-medication for anxiety",
-  },
-  {
-    id: 4,
-    name: "Nadia Khalil",
-    email: "nadia.khalil@email.com",
-    phone: "+961 3 456 789",
-    dateOfBirth: "1992-03-18",
-    address: "Verdun, Beirut",
-    bloodType: "AB+",
-    allergies: [],
-    insurance: "MEDGULF",
-    registeredDate: "2024-01-05",
-    lastVisit: "2026-01-18",
-    totalVisits: 6,
-    totalSpent: 1200000,
-    status: "active",
-    notes: "",
-  },
-  {
-    id: 5,
-    name: "Karim Nassar",
-    email: "karim.nassar@email.com",
-    phone: "+961 3 567 890",
-    dateOfBirth: "1988-07-25",
-    address: "Tripoli",
-    bloodType: "A-",
-    allergies: ["Ibuprofen"],
-    insurance: "Globemed",
-    registeredDate: "2023-05-12",
-    lastVisit: "2026-01-18",
-    totalVisits: 15,
-    totalSpent: 3100000,
-    status: "active",
-    notes: "Travels from Tripoli, prefers weekend appointments",
-  },
-  {
-    id: 6,
-    name: "Lina Aoun",
-    email: "lina.aoun@email.com",
-    phone: "+961 3 678 901",
-    dateOfBirth: "1995-11-30",
-    address: "Baabda",
-    bloodType: "O-",
-    allergies: [],
-    insurance: "AXA",
-    registeredDate: "2024-08-20",
-    lastVisit: "2025-12-15",
-    totalVisits: 3,
-    totalSpent: 450000,
-    status: "active",
-    notes: "",
-  },
-  {
-    id: 7,
-    name: "Fadi Karam",
-    email: "fadi.karam@email.com",
-    phone: "+961 3 789 012",
-    dateOfBirth: "1982-04-10",
-    address: "Sidon",
-    bloodType: "B-",
-    allergies: ["Codeine"],
-    insurance: "NSSF",
-    registeredDate: "2021-09-01",
-    lastVisit: "2025-11-20",
-    totalVisits: 30,
-    totalSpent: 6800000,
-    status: "inactive",
-    notes: "Long-term patient, moved to Sidon",
-  },
-  {
-    id: 8,
-    name: "Maya Rizk",
-    email: "maya.rizk@email.com",
-    phone: "+961 3 890 123",
-    dateOfBirth: "2000-01-14",
-    address: "Hamra, Beirut",
-    bloodType: "A+",
-    allergies: [],
-    insurance: "Globemed",
-    registeredDate: "2025-02-10",
-    lastVisit: "2025-12-28",
-    totalVisits: 4,
-    totalSpent: 520000,
-    status: "active",
-    notes: "University student",
-  },
-];
+// TODO: Fetch from API
+const patients: {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  dateOfBirth: string;
+  address: string;
+  bloodType: string;
+  allergies: string[];
+  insurance: string;
+  registeredDate: string;
+  lastVisit: string;
+  totalVisits: number;
+  totalSpent: number;
+  status: string;
+  notes: string;
+}[] = [];
 
-const patientHistory = {
-  1: {
-    appointments: [
-      { date: "2026-01-18", type: "Regular Checkup", doctor: "Dr. Sarah Haddad", status: "completed", cost: 100000 },
-      { date: "2025-12-10", type: "Dental Cleaning", doctor: "Dr. Sarah Haddad", status: "completed", cost: 150000 },
-      { date: "2025-09-05", type: "Cavity Filling", doctor: "Dr. Michel Khoury", status: "completed", cost: 300000 },
-      { date: "2025-06-20", type: "Regular Checkup", doctor: "Dr. Sarah Haddad", status: "completed", cost: 100000 },
-      { date: "2025-03-15", type: "Teeth Whitening", doctor: "Dr. Layla Nassar", status: "completed", cost: 500000 },
-    ],
-    payments: [
-      { date: "2026-01-18", amount: 100000, method: "Cash", invoice: "INV-2026-0050" },
-      { date: "2025-12-15", amount: 300000, method: "Credit Card", invoice: "INV-2025-0042" },
-      { date: "2025-09-20", amount: 150000, method: "Bank Transfer", invoice: "INV-2025-0038" },
-    ],
-    treatments: [
-      { tooth: "#19", treatment: "Composite Filling", date: "2025-09-05", doctor: "Dr. Michel Khoury" },
-      { tooth: "Full Mouth", treatment: "Professional Whitening", date: "2025-03-15", doctor: "Dr. Layla Nassar" },
-    ],
-  },
-};
+// TODO: Fetch from API
+const patientHistory: Record<number, {
+  appointments: { date: string; type: string; doctor: string; status: string; cost: number }[];
+  payments: { date: string; amount: number; method: string; invoice: string }[];
+  treatments: { tooth: string; treatment: string; date: string; doctor: string }[];
+}> = {};
 
 export default function PatientsPage() {
   const [searchQuery, setSearchQuery] = useState("");

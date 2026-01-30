@@ -23,114 +23,49 @@ import {
   FaCalendarPlus,
 } from "react-icons/fa";
 
-const currentPrescriptions = [
-  {
-    id: 1,
-    name: "Amoxicillin 500mg",
-    purpose: "Post-procedure antibiotic",
-    dosage: "1 capsule",
-    frequency: "3 times daily",
-    duration: "7 days",
-    startDate: "2025-12-10",
-    endDate: "2025-12-17",
-    refillsLeft: 0,
-    prescribedBy: "Dr. Sarah Haddad",
-    instructions: "Take with food. Complete the full course even if you feel better.",
-    status: "active",
-  },
-  {
-    id: 2,
-    name: "Ibuprofen 400mg",
-    purpose: "Pain relief",
-    dosage: "1 tablet",
-    frequency: "Every 6 hours as needed",
-    duration: "5 days",
-    startDate: "2025-12-10",
-    endDate: "2025-12-15",
-    refillsLeft: 2,
-    prescribedBy: "Dr. Sarah Haddad",
-    instructions: "Take with food or milk. Do not exceed 4 tablets in 24 hours.",
-    status: "active",
-  },
-];
+// TODO: Fetch from API
+const currentPrescriptions: {
+  id: number;
+  name: string;
+  purpose: string;
+  dosage: string;
+  frequency: string;
+  duration: string;
+  startDate: string;
+  endDate: string | null;
+  refillsLeft: number | null;
+  prescribedBy: string;
+  instructions: string;
+  status: string;
+}[] = [];
 
-const pastPrescriptions = [
-  {
-    id: 3,
-    name: "Chlorhexidine Mouthwash",
-    purpose: "Antibacterial rinse",
-    dosage: "15ml",
-    frequency: "Twice daily",
-    duration: "14 days",
-    startDate: "2025-09-05",
-    endDate: "2025-09-19",
-    refillsLeft: 0,
-    prescribedBy: "Dr. Michel Khoury",
-    instructions: "Rinse for 30 seconds after brushing. Do not eat or drink for 30 minutes after use.",
-    status: "completed",
-  },
-  {
-    id: 4,
-    name: "Sensodyne Toothpaste",
-    purpose: "Sensitivity treatment",
-    dosage: "Pea-sized amount",
-    frequency: "Twice daily",
-    duration: "Ongoing",
-    startDate: "2025-06-20",
-    endDate: null,
-    refillsLeft: null,
-    prescribedBy: "Dr. Sarah Haddad",
-    instructions: "Use as regular toothpaste. For best results, don't rinse after brushing.",
-    status: "ongoing",
-  },
-  {
-    id: 5,
-    name: "Amoxicillin 500mg",
-    purpose: "Pre-procedure antibiotic",
-    dosage: "2 capsules",
-    frequency: "1 hour before procedure",
-    duration: "Single dose",
-    startDate: "2025-09-05",
-    endDate: "2025-09-05",
-    refillsLeft: 0,
-    prescribedBy: "Dr. Michel Khoury",
-    instructions: "Take 1 hour before your scheduled procedure.",
-    status: "completed",
-  },
-];
+// TODO: Fetch from API
+const pastPrescriptions: {
+  id: number;
+  name: string;
+  purpose: string;
+  dosage: string;
+  frequency: string;
+  duration: string;
+  startDate: string;
+  endDate: string | null;
+  refillsLeft: number | null;
+  prescribedBy: string;
+  instructions: string;
+  status: string;
+}[] = [];
 
-const recommendedProcedures = [
-  {
-    id: 1,
-    procedure: "Deep Cleaning (Scaling)",
-    reason: "Moderate tartar buildup detected during last checkup",
-    urgency: "recommended",
-    recommendedBy: "Dr. Sarah Haddad",
-    date: "2025-12-10",
-    estimatedCost: "250,000 LBP",
-    notes: "Recommended within the next 3 months to prevent gum disease progression.",
-  },
-  {
-    id: 2,
-    procedure: "Wisdom Tooth Evaluation",
-    reason: "X-ray shows partial impaction of lower right wisdom tooth",
-    urgency: "monitor",
-    recommendedBy: "Dr. Michel Khoury",
-    date: "2025-09-05",
-    estimatedCost: "Consultation: 75,000 LBP",
-    notes: "No immediate action needed. Re-evaluate in 6 months or if pain occurs.",
-  },
-  {
-    id: 3,
-    procedure: "Crown Replacement",
-    reason: "Existing crown on tooth #4 showing signs of wear",
-    urgency: "necessary",
-    recommendedBy: "Dr. Layla Nassar",
-    date: "2025-06-20",
-    estimatedCost: "800,000 LBP",
-    notes: "Should be replaced within 2-3 months to prevent further damage.",
-  },
-];
+// TODO: Fetch from API
+const recommendedProcedures: {
+  id: number;
+  procedure: string;
+  reason: string;
+  urgency: string;
+  recommendedBy: string;
+  date: string;
+  estimatedCost: string;
+  notes: string;
+}[] = [];
 
 export default function Prescriptions() {
   const [activeTab, setActiveTab] = useState<"current" | "history" | "procedures">("current");
