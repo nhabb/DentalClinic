@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,39 +12,56 @@ import {
   FaCreditCard,
   FaClock,
   FaBell,
+  FaHospital,
+  FaSignOutAlt,
+  FaChevronDown,
 } from "react-icons/fa";
+
+interface SelectedClinic {
+  id: number;
+  clinicName: string;
+  ownerName: string;
+  city: string;
+  specialty: string;
+}
+
+const SPECIALTY_LABELS: Record<string, string> = {
+  general:      "General Dentistry",
+  orthodontics: "Orthodontics",
+  pediatric:    "Pediatric Dentistry",
+  cosmetic:     "Cosmetic Dentistry",
+  oral_surgery: "Oral Surgery",
+  periodontics: "Periodontics",
+  multi:        "Multi-Specialty",
+};
 
 export default function PatientDashboard() {
   const router = useRouter();
-  // TODO: Fetch from API
-  const [user] = useState({
-    name: "",
-    email: "",
-  });
+  const [clinic, setClinic] = useState<SelectedClinic | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("selectedClinic");
+    if (!stored) {
+      router.replace("/select-clinic");
+      return;
+    }
+    setClinic(JSON.parse(stored));
+    setLoading(false);
+  }, [router]);
 
   const handleLogout = () => {
     localStorage.removeItem("patientAuth");
-    localStorage.removeItem("patientUser");
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("selectedClinic");
     router.push("/login");
   };
 
-  // TODO: Fetch from API
-  const upcomingAppointments: {
-    id: number;
-    date: string;
-    time: string;
-    type: string;
-    doctor: string;
-  }[] = [];
-
-  // TODO: Fetch from API
-  const recentVisits: {
-    id: number;
-    date: string;
-    type: string;
-    doctor: string;
-    notes: string;
-  }[] = [];
+  const handleChangeClinic = () => {
+    localStorage.removeItem("selectedClinic");
+    router.push("/select-clinic");
+  };
 
   const quickActions = [
     {
@@ -73,6 +90,14 @@ export default function PatientDashboard() {
     },
   ];
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-white">
+        <div className="w-8 h-8 border-4 border-dental-blue/30 border-t-dental-blue rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 to-white">
       {/* Header */}
@@ -84,38 +109,43 @@ export default function PatientDashboard() {
               <div className="w-10 h-10 bg-gradient-to-br from-dental-blue to-dental-teal rounded-lg flex items-center justify-center">
                 <FaTooth className="text-white text-xl" />
               </div>
-              <span className="text-xl font-bold text-gray-900">
-                BrightSmile
-              </span>
+              <span className="text-xl font-bold text-gray-900">BrightSmile</span>
             </Link>
 
-            {/* User Info */}
-            <div className="flex items-center space-x-4">
+            {/* Clinic pill + actions */}
+            <div className="flex items-center gap-3">
+              {/* Selected clinic chip */}
+              {clinic && (
+                <button
+                  onClick={handleChangeClinic}
+                  className="hidden sm:flex items-center gap-2 px-3 py-2 bg-dental-blue/8 border border-dental-blue/20 rounded-xl hover:bg-dental-blue/15 transition-all text-sm"
+                >
+                  <FaHospital className="text-dental-blue text-xs" />
+                  <span className="font-medium text-dental-blue">{clinic.clinicName}</span>
+                  <FaChevronDown className="text-dental-blue text-[10px]" />
+                </button>
+              )}
+
               <Link
                 href="/notifications"
                 className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <FaBell className="text-xl" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
               </Link>
-              <div className="text-right hidden sm:block">
-                <p className="text-sm font-medium text-gray-900">{user.name}</p>
-                <p className="text-xs text-gray-500">{user.email}</p>
+
+              {/* Avatar */}
+              <div className="w-10 h-10 bg-gradient-to-r from-dental-blue to-dental-teal rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                P
               </div>
-              <div className="w-10 h-10 bg-gradient-to-r from-dental-blue to-dental-teal rounded-full flex items-center justify-center text-white font-semibold">
-                {user.name
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")}
-              </div>
-              <Button
+
+              <button
                 onClick={handleLogout}
-                variant="outline"
-                size="sm"
-                className="text-gray-600 hover:text-gray-900"
+                className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors"
               >
-                Logout
-              </Button>
+                <FaSignOutAlt />
+                <span className="hidden sm:inline">Logout</span>
+              </button>
             </div>
           </div>
         </div>
@@ -125,12 +155,28 @@ export default function PatientDashboard() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome back, {user.name.split(" ")[0]}!
+          <h1 className="text-3xl font-bold text-gray-900 mb-1">
+            Welcome back!
           </h1>
-          <p className="text-gray-600">
-            Here's an overview of your dental health journey
-          </p>
+          {clinic && (
+            <div className="flex items-center gap-2 mt-2">
+              <FaHospital className="text-dental-blue text-sm" />
+              <span className="text-gray-600 text-sm">
+                Your portal for{" "}
+                <span className="font-semibold text-dental-blue">{clinic.clinicName}</span>
+                {" "}·{" "}
+                <span className="text-gray-500">{SPECIALTY_LABELS[clinic.specialty] || clinic.specialty}</span>
+                {" "}·{" "}
+                <span className="text-gray-500">{clinic.city}</span>
+              </span>
+              <button
+                onClick={handleChangeClinic}
+                className="text-xs text-dental-blue underline hover:no-underline ml-1"
+              >
+                Change clinic
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Quick Actions Grid */}
@@ -157,60 +203,18 @@ export default function PatientDashboard() {
                 Upcoming Appointments
               </h2>
               <Link href="/book-appointment">
-                <Button
-                  size="sm"
-                  className="gradient-auth-card hover:shadow-lg transition-all"
-                >
+                <Button size="sm" className="gradient-auth-card hover:shadow-lg transition-all">
                   Book New
                 </Button>
               </Link>
             </div>
-            <div className="space-y-4">
-              {upcomingAppointments.length > 0 ? (
-                upcomingAppointments.map((appointment) => (
-                  <div
-                    key={appointment.id}
-                    className="border-2 border-dental-blue/20 rounded-lg p-4 hover:border-dental-blue/40 transition-all"
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <h3 className="font-semibold text-gray-900">
-                          {appointment.type}
-                        </h3>
-                        <p className="text-sm text-gray-600">
-                          {appointment.doctor}
-                        </p>
-                      </div>
-                      <span className="bg-dental-blue/10 text-dental-blue text-xs font-medium px-3 py-1 rounded-full">
-                        Confirmed
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-4 text-sm text-gray-700">
-                      <span className="flex items-center gap-1">
-                        <FaCalendarAlt className="text-dental-blue" />
-                        {new Date(appointment.date).toLocaleDateString()}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <FaClock className="text-dental-blue" />
-                        {appointment.time}
-                      </span>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-center text-gray-500 py-8">
-                  No upcoming appointments
-                </p>
-              )}
-            </div>
+            <p className="text-center text-gray-500 py-8">No upcoming appointments</p>
           </div>
 
           {/* Recent Visits */}
           <div className="bg-white rounded-xl shadow-lg p-6">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">
-                Recent Visits
-              </h2>
+              <h2 className="text-2xl font-bold text-gray-900">Recent Visits</h2>
               <Link href="/medical-records">
                 <Button
                   variant="outline"
@@ -221,33 +225,7 @@ export default function PatientDashboard() {
                 </Button>
               </Link>
             </div>
-            <div className="space-y-4">
-              {recentVisits.length > 0 ? (
-                recentVisits.map((visit) => (
-                  <div
-                    key={visit.id}
-                    className="border-2 border-gray-200 rounded-lg p-4 hover:border-dental-blue/40 transition-all"
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <h3 className="font-semibold text-gray-900">
-                          {visit.type}
-                        </h3>
-                        <p className="text-sm text-gray-600">{visit.doctor}</p>
-                      </div>
-                      <span className="text-xs text-gray-500">
-                        {new Date(visit.date).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600 mt-2">{visit.notes}</p>
-                  </div>
-                ))
-              ) : (
-                <p className="text-center text-gray-500 py-8">
-                  No recent visits
-                </p>
-              )}
-            </div>
+            <p className="text-center text-gray-500 py-8">No recent visits</p>
           </div>
         </div>
 

@@ -24,10 +24,12 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { ChevronDownIcon } from "lucide-react";
-import axios from "axios";
-const API_URL = process.env.DEFAULT_API_URL;
+import { useRouter } from "next/navigation";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 export default function Form() {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -45,16 +47,15 @@ export default function Form() {
     currentMedications: "",
   });
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
   const submitForm = async () => {
-    try {
-      const response = await axios.post(`${API_URL}/login/continue-login`, {
-        formData,
-      });
-    } catch (err) {
-      console.log(err);
-      // console.log(response)
-    }
-    console.log(formData);
+    setIsSubmitting(true);
+    setError("");
+    // API call removed
+    console.log("Profile data:", formData);
+    router.push("/patient-dashboard");
   };
   const handleChange = (e: any) => {
     setFormData({

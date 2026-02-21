@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   FaTooth,
@@ -19,7 +20,6 @@ import {
   FaTimes,
   FaChevronLeft,
   FaChevronRight,
-  FaFilter,
   FaPhone,
   FaEllipsisV,
   FaCalendarCheck,
@@ -27,8 +27,9 @@ import {
   FaUserMd,
 } from "react-icons/fa";
 
-// TODO: Fetch from API
-const appointments: {
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
+interface Appointment {
   id: number;
   date: string;
   time: string;
@@ -39,22 +40,79 @@ const appointments: {
   status: string;
   notes: string;
   doctor: string;
-}[] = [];
+  doctorId: number;
+}
 
-// TODO: Fetch from API
-const doctors: {
+interface Doctor {
   id: number;
   name: string;
   specialty: string;
   color: string;
-}[] = [];
+}
 
 export default function AppointmentsManagement() {
-  const [selectedDate, setSelectedDate] = useState(new Date("2026-01-18"));
+  const router = useRouter();
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<"day" | "week">("day");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDoctor, setSelectedDoctor] = useState<string>("all");
   const [showAddModal, setShowAddModal] = useState(false);
+
+  // Role-based state
+  const [userRole, setUserRole] = useState<string>("doctor");
+  const [doctorId, setDoctorId] = useState<number | null>(null);
+  const [assignedDoctorIds, setAssignedDoctorIds] = useState<number[]>([]);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  // Data state
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Check auth and load user data (auth disabled)
+  useEffect(() => {
+    // Auth disabled - allow access
+    // const isAuthenticated = localStorage.getItem("adminAuth") === "true";
+    // if (!isAuthenticated) {
+    //   router.push("/admin/login");
+    //   return;
+    // }
+
+    const role = localStorage.getItem("userRole") || "doctor";
+    const storedDoctorId = localStorage.getItem("doctorId");
+    const storedAssignedIds = localStorage.getItem("assignedDoctorIds");
+    const storedUser = localStorage.getItem("adminUser");
+
+    setUserRole(role);
+    if (storedDoctorId) setDoctorId(parseInt(storedDoctorId));
+    if (storedAssignedIds) setAssignedDoctorIds(JSON.parse(storedAssignedIds));
+    if (storedUser) setCurrentUser(JSON.parse(storedUser));
+  }, [router]);
+
+  // Fetch appointments and doctors
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(false);
+    };
+
+    if (
+      userRole &&
+      (doctorId || assignedDoctorIds.length > 0 || userRole === "admin")
+    ) {
+      fetchData();
+    }
+  }, [selectedDate, userRole, doctorId, assignedDoctorIds]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("adminAuth");
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("adminUser");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("doctorId");
+    localStorage.removeItem("assignedDoctorIds");
+    // Logout disabled - no redirect
+    // router.push("/admin/login");
+  };
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString("en-US", {
@@ -102,21 +160,19 @@ export default function AppointmentsManagement() {
   };
 
   const filteredAppointments = appointments.filter((apt) => {
-    const aptDate = apt.date;
-    const selectedDateStr = selectedDate.toISOString().split("T")[0];
-    const matchesDate = aptDate === selectedDateStr;
     const matchesSearch =
       apt.patient.toLowerCase().includes(searchQuery.toLowerCase()) ||
       apt.type.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesDoctor = selectedDoctor === "all" || apt.doctor === selectedDoctor;
-    return matchesDate && matchesSearch && matchesDoctor;
+    const matchesDoctor =
+      selectedDoctor === "all" || apt.doctor === selectedDoctor;
+    return matchesSearch && matchesDoctor;
   });
 
   const todayStats = {
-    total: appointments.filter((a) => a.date === "2026-01-18").length,
-    completed: appointments.filter((a) => a.date === "2026-01-18" && a.status === "completed").length,
-    upcoming: appointments.filter((a) => a.date === "2026-01-18" && a.status === "upcoming").length,
-    cancelled: appointments.filter((a) => a.date === "2026-01-18" && a.status === "cancelled").length,
+    total: appointments.length,
+    completed: appointments.filter((a) => a.status === "completed").length,
+    upcoming: appointments.filter((a) => a.status === "upcoming").length,
+    cancelled: appointments.filter((a) => a.status === "cancelled").length,
   };
 
   const navigateDate = (direction: "prev" | "next") => {
@@ -124,6 +180,41 @@ export default function AppointmentsManagement() {
     newDate.setDate(newDate.getDate() + (direction === "next" ? 1 : -1));
     setSelectedDate(newDate);
   };
+
+  const handleStartAppointment = async (appointmentId: number) => {
+    // API call removed
+    setAppointments((prev) =>
+      prev.map((apt) =>
+        apt.id === appointmentId ? { ...apt, status: "in_progress" } : apt,
+      ),
+    );
+  };
+
+  const handleCompleteAppointment = async (appointmentId: number) => {
+    // API call removed
+    setAppointments((prev) =>
+      prev.map((apt) =>
+        apt.id === appointmentId ? { ...apt, status: "completed" } : apt,
+      ),
+    );
+  };
+
+  const handleCancelAppointment = async (appointmentId: number) => {
+    // API call removed
+    setAppointments((prev) =>
+      prev.map((apt) =>
+        apt.id === appointmentId ? { ...apt, status: "cancelled" } : apt,
+      ),
+    );
+  };
+
+  // Filter doctors list based on role
+  const visibleDoctors =
+    userRole === "doctor" && doctorId
+      ? doctors.filter((d) => d.id === doctorId)
+      : userRole === "secretary" && assignedDoctorIds.length > 0
+        ? doctors.filter((d) => assignedDoctorIds.includes(d.id))
+        : doctors;
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -165,13 +256,15 @@ export default function AppointmentsManagement() {
             <FaBoxes className="text-lg" />
             <span className="font-medium">Inventory</span>
           </Link>
-          <Link
-            href="/admin/transactions"
-            className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
-          >
-            <FaMoneyBillWave className="text-lg" />
-            <span className="font-medium">Transactions</span>
-          </Link>
+          {userRole === "doctor" && (
+            <Link
+              href="/admin/transactions"
+              className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
+            >
+              <FaMoneyBillWave className="text-lg" />
+              <span className="font-medium">Transactions</span>
+            </Link>
+          )}
           <Link
             href="/admin/patients"
             className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
@@ -183,20 +276,22 @@ export default function AppointmentsManagement() {
 
         {/* Bottom Section */}
         <div className="p-4 border-t border-gray-700 space-y-2">
-          <Link
-            href="/admin/settings"
-            className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
-          >
-            <FaCog className="text-lg" />
-            <span className="font-medium">Settings</span>
-          </Link>
-          <Link
-            href="/"
-            className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-red-500/20 hover:text-red-400 rounded-xl transition-colors"
+          {userRole === "doctor" && (
+            <Link
+              href="/admin/settings"
+              className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
+            >
+              <FaCog className="text-lg" />
+              <span className="font-medium">Settings</span>
+            </Link>
+          )}
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-red-500/20 hover:text-red-400 rounded-xl transition-colors"
           >
             <FaSignOutAlt className="text-lg" />
             <span className="font-medium">Logout</span>
-          </Link>
+          </button>
         </div>
       </aside>
 
@@ -206,9 +301,17 @@ export default function AppointmentsManagement() {
         <header className="bg-white shadow-sm px-8 py-4 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Appointments</h1>
-            <p className="text-gray-500 text-sm">Manage and schedule patient appointments</p>
+            <p className="text-gray-500 text-sm">
+              {currentUser
+                ? `${currentUser.firstName} ${currentUser.lastName}'s`
+                : "Manage"}{" "}
+              appointments
+            </p>
           </div>
-          <Button onClick={() => setShowAddModal(true)} className="bg-dental-blue hover:bg-dental-blue/90">
+          <Button
+            onClick={() => setShowAddModal(true)}
+            className="bg-dental-blue hover:bg-dental-blue/90"
+          >
             <FaPlus className="mr-2" />
             New Appointment
           </Button>
@@ -216,201 +319,258 @@ export default function AppointmentsManagement() {
 
         {/* Content */}
         <main className="flex-1 p-8 overflow-auto">
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                  <FaCalendarAlt className="text-blue-600 text-xl" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-gray-900">{todayStats.total}</p>
-                  <p className="text-sm text-gray-500">Today's Total</p>
-                </div>
-              </div>
+          {isLoading ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="w-8 h-8 border-4 border-dental-blue/30 border-t-dental-blue rounded-full animate-spin"></div>
             </div>
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                  <FaCalendarCheck className="text-green-600 text-xl" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-gray-900">{todayStats.completed}</p>
-                  <p className="text-sm text-gray-500">Completed</p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
-                  <FaClock className="text-yellow-600 text-xl" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-gray-900">{todayStats.upcoming}</p>
-                  <p className="text-sm text-gray-500">Upcoming</p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
-                  <FaCalendarTimes className="text-red-600 text-xl" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-gray-900">{todayStats.cancelled}</p>
-                  <p className="text-sm text-gray-500">Cancelled</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Date Navigation & Filters */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-6">
-            <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
-              {/* Date Navigation */}
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={() => navigateDate("prev")}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <FaChevronLeft className="text-gray-600" />
-                </button>
-                <div className="text-center min-w-[250px]">
-                  <p className="text-lg font-bold text-gray-900">{formatDate(selectedDate)}</p>
-                </div>
-                <button
-                  onClick={() => navigateDate("next")}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <FaChevronRight className="text-gray-600" />
-                </button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSelectedDate(new Date("2026-01-18"))}
-                >
-                  Today
-                </Button>
-              </div>
-
-              {/* Filters */}
-              <div className="flex gap-4">
-                <div className="relative">
-                  <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search patient or type..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue w-64"
-                  />
-                </div>
-                <select
-                  value={selectedDoctor}
-                  onChange={(e) => setSelectedDoctor(e.target.value)}
-                  className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
-                >
-                  <option value="all">All Doctors</option>
-                  {doctors.map((doctor) => (
-                    <option key={doctor.id} value={doctor.name}>
-                      {doctor.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Doctor Legend */}
-          <div className="flex gap-4 mb-6">
-            {doctors.map((doctor) => (
-              <div key={doctor.id} className="flex items-center gap-2">
-                <div className={`w-3 h-3 rounded-full ${doctor.color}`}></div>
-                <span className="text-sm text-gray-600">{doctor.name}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* Appointments List */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            {filteredAppointments.length > 0 ? (
-              <div className="divide-y divide-gray-100">
-                {filteredAppointments.map((apt) => (
-                  <div
-                    key={apt.id}
-                    className={`p-6 hover:bg-gray-50 transition-colors ${
-                      apt.status === "cancelled" ? "opacity-60" : ""
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-6">
-                        {/* Time */}
-                        <div className="text-center min-w-[80px]">
-                          <p className="text-xl font-bold text-gray-900">{apt.time}</p>
-                          <p className="text-xs text-gray-500">{apt.duration} min</p>
-                        </div>
-
-                        {/* Doctor Color Bar */}
-                        <div className={`w-1 h-16 rounded-full ${getDoctorColor(apt.doctor)}`}></div>
-
-                        {/* Patient Info */}
-                        <div>
-                          <div className="flex items-center gap-3 mb-1">
-                            <p className="font-bold text-gray-900 text-lg">{apt.patient}</p>
-                            {getStatusBadge(apt.status)}
-                          </div>
-                          <p className="text-gray-600">{apt.type}</p>
-                          <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-                            <span className="flex items-center gap-1">
-                              <FaPhone className="text-xs" />
-                              {apt.phone}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <FaUserMd className="text-xs" />
-                              {apt.doctor}
-                            </span>
-                          </div>
-                          {apt.notes && (
-                            <p className="text-sm text-gray-400 mt-2 italic">Note: {apt.notes}</p>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex items-center gap-2">
-                        {apt.status === "upcoming" && (
-                          <>
-                            <Button size="sm" className="bg-green-600 hover:bg-green-700">
-                              <FaCheckCircle className="mr-1" /> Start
-                            </Button>
-                            <Button size="sm" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50">
-                              <FaTimes className="mr-1" /> Cancel
-                            </Button>
-                          </>
-                        )}
-                        {apt.status === "in_progress" && (
-                          <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
-                            <FaCheckCircle className="mr-1" /> Complete
-                          </Button>
-                        )}
-                        <button className="p-2 hover:bg-gray-100 rounded-lg text-gray-500">
-                          <FaEllipsisV />
-                        </button>
-                      </div>
+          ) : (
+            <>
+              {/* Stats Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                      <FaCalendarAlt className="text-blue-600 text-xl" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {todayStats.total}
+                      </p>
+                      <p className="text-sm text-gray-500">Today's Total</p>
                     </div>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="p-12 text-center">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <FaCalendarAlt className="text-gray-400 text-2xl" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Appointments</h3>
-                <p className="text-gray-500">No appointments scheduled for this date.</p>
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                      <FaCalendarCheck className="text-green-600 text-xl" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {todayStats.completed}
+                      </p>
+                      <p className="text-sm text-gray-500">Completed</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
+                      <FaClock className="text-yellow-600 text-xl" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {todayStats.upcoming}
+                      </p>
+                      <p className="text-sm text-gray-500">Upcoming</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+                      <FaCalendarTimes className="text-red-600 text-xl" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {todayStats.cancelled}
+                      </p>
+                      <p className="text-sm text-gray-500">Cancelled</p>
+                    </div>
+                  </div>
+                </div>
               </div>
-            )}
-          </div>
+
+              {/* Date Navigation & Filters */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-6">
+                <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
+                  {/* Date Navigation */}
+                  <div className="flex items-center gap-4">
+                    <button
+                      onClick={() => navigateDate("prev")}
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      <FaChevronLeft className="text-gray-600" />
+                    </button>
+                    <div className="text-center min-w-[250px]">
+                      <p className="text-lg font-bold text-gray-900">
+                        {formatDate(selectedDate)}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => navigateDate("next")}
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      <FaChevronRight className="text-gray-600" />
+                    </button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSelectedDate(new Date())}
+                    >
+                      Today
+                    </Button>
+                  </div>
+
+                  {/* Filters */}
+                  <div className="flex gap-4">
+                    <div className="relative">
+                      <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="Search patient or type..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue w-64"
+                      />
+                    </div>
+                    {visibleDoctors.length > 1 && (
+                      <select
+                        value={selectedDoctor}
+                        onChange={(e) => setSelectedDoctor(e.target.value)}
+                        className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
+                      >
+                        <option value="all">All Doctors</option>
+                        {visibleDoctors.map((doctor) => (
+                          <option key={doctor.id} value={doctor.name}>
+                            {doctor.name}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Doctor Legend */}
+              {visibleDoctors.length > 0 && (
+                <div className="flex gap-4 mb-6">
+                  {visibleDoctors.map((doctor) => (
+                    <div key={doctor.id} className="flex items-center gap-2">
+                      <div
+                        className={`w-3 h-3 rounded-full ${doctor.color || "bg-dental-blue"}`}
+                      ></div>
+                      <span className="text-sm text-gray-600">
+                        {doctor.name}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Appointments List */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                {filteredAppointments.length > 0 ? (
+                  <div className="divide-y divide-gray-100">
+                    {filteredAppointments.map((apt) => (
+                      <div
+                        key={apt.id}
+                        className={`p-6 hover:bg-gray-50 transition-colors ${
+                          apt.status === "cancelled" ? "opacity-60" : ""
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-6">
+                            {/* Time */}
+                            <div className="text-center min-w-[80px]">
+                              <p className="text-xl font-bold text-gray-900">
+                                {apt.time}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {apt.duration} min
+                              </p>
+                            </div>
+
+                            {/* Doctor Color Bar */}
+                            <div
+                              className={`w-1 h-16 rounded-full ${getDoctorColor(apt.doctor)}`}
+                            ></div>
+
+                            {/* Patient Info */}
+                            <div>
+                              <div className="flex items-center gap-3 mb-1">
+                                <p className="font-bold text-gray-900 text-lg">
+                                  {apt.patient}
+                                </p>
+                                {getStatusBadge(apt.status)}
+                              </div>
+                              <p className="text-gray-600">{apt.type}</p>
+                              <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+                                <span className="flex items-center gap-1">
+                                  <FaPhone className="text-xs" />
+                                  {apt.phone}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <FaUserMd className="text-xs" />
+                                  {apt.doctor}
+                                </span>
+                              </div>
+                              {apt.notes && (
+                                <p className="text-sm text-gray-400 mt-2 italic">
+                                  Note: {apt.notes}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Actions */}
+                          <div className="flex items-center gap-2">
+                            {apt.status === "upcoming" && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  className="bg-green-600 hover:bg-green-700"
+                                  onClick={() => handleStartAppointment(apt.id)}
+                                >
+                                  <FaCheckCircle className="mr-1" /> Start
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-red-600 border-red-200 hover:bg-red-50"
+                                  onClick={() =>
+                                    handleCancelAppointment(apt.id)
+                                  }
+                                >
+                                  <FaTimes className="mr-1" /> Cancel
+                                </Button>
+                              </>
+                            )}
+                            {apt.status === "in_progress" && (
+                              <Button
+                                size="sm"
+                                className="bg-blue-600 hover:bg-blue-700"
+                                onClick={() =>
+                                  handleCompleteAppointment(apt.id)
+                                }
+                              >
+                                <FaCheckCircle className="mr-1" /> Complete
+                              </Button>
+                            )}
+                            <button className="p-2 hover:bg-gray-100 rounded-lg text-gray-500">
+                              <FaEllipsisV />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-12 text-center">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <FaCalendarAlt className="text-gray-400 text-2xl" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      No Appointments
+                    </h3>
+                    <p className="text-gray-500">
+                      No appointments scheduled for this date.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </main>
       </div>
 
@@ -418,11 +578,15 @@ export default function AppointmentsManagement() {
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">New Appointment</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-6">
+              New Appointment
+            </h2>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Patient Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Patient Name
+                </label>
                 <input
                   type="text"
                   placeholder="Search or enter patient name"
@@ -432,14 +596,18 @@ export default function AppointmentsManagement() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Date
+                  </label>
                   <input
                     type="date"
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Time</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Time
+                  </label>
                   <select className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue">
                     <option>09:00 AM</option>
                     <option>09:30 AM</option>
@@ -460,7 +628,9 @@ export default function AppointmentsManagement() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Appointment Type</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Appointment Type
+                  </label>
                   <select className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue">
                     <option>Regular Checkup</option>
                     <option>Teeth Cleaning</option>
@@ -472,17 +642,23 @@ export default function AppointmentsManagement() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Doctor</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Doctor
+                  </label>
                   <select className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue">
-                    {doctors.map((doctor) => (
-                      <option key={doctor.id}>{doctor.name}</option>
+                    {visibleDoctors.map((doctor) => (
+                      <option key={doctor.id} value={doctor.id}>
+                        {doctor.name}
+                      </option>
                     ))}
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Notes (Optional)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Notes (Optional)
+                </label>
                 <textarea
                   rows={3}
                   placeholder="Add any notes for this appointment"
@@ -492,7 +668,11 @@ export default function AppointmentsManagement() {
             </div>
 
             <div className="flex gap-3 mt-6">
-              <Button variant="outline" className="flex-1" onClick={() => setShowAddModal(false)}>
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setShowAddModal(false)}
+              >
                 Cancel
               </Button>
               <Button className="flex-1 bg-dental-blue hover:bg-dental-blue/90">

@@ -10,17 +10,24 @@ import {
   FaUser,
   FaEye,
   FaEyeSlash,
-  FaShieldAlt,
+  FaUserMd,
+  FaUserTie,
   FaExclamationCircle,
+  FaEnvelope,
 } from "react-icons/fa";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
+type StaffRole = "doctor" | "secretary";
 
 export default function AdminLogin() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [role, setRole] = useState<StaffRole>("doctor");
   const [credentials, setCredentials] = useState({
-    username: "",
+    email: "",
     password: "",
   });
 
@@ -37,30 +44,14 @@ export default function AdminLogin() {
     setError("");
     setIsLoading(true);
 
-    // Simulate authentication delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    // Simple credential check (in production, this would be a real API call)
-    // Default credentials: admin / admin123
-    if (
-      credentials.username === "admin" &&
-      credentials.password === "admin123"
-    ) {
-      // Store auth state in localStorage (in production, use proper auth tokens)
-      localStorage.setItem("adminAuth", "true");
-      localStorage.setItem(
-        "adminUser",
-        JSON.stringify({
-          name: "Dr. Sarah Haddad",
-          role: "Administrator",
-          email: "sarah.haddad@brightsmile.com",
-        }),
-      );
-      router.push("/admin");
-    } else {
-      setError("Invalid username or password");
-    }
-
+    // API call removed
+    localStorage.setItem("adminAuth", "true");
+    localStorage.setItem(
+      "adminUser",
+      JSON.stringify({ email: credentials.email }),
+    );
+    localStorage.setItem("userRole", role);
+    router.push("/admin");
     setIsLoading(false);
   };
 
@@ -88,14 +79,44 @@ export default function AdminLogin() {
 
         {/* Login Card */}
         <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/10">
-          <div className="text-center mb-8">
+          <div className="text-center mb-6">
             <div className="w-16 h-16 bg-gradient-to-br from-dental-blue to-dental-teal rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-              <FaShieldAlt className="text-white text-2xl" />
+              {role === "doctor" ? (
+                <FaUserMd className="text-white text-2xl" />
+              ) : (
+                <FaUserTie className="text-white text-2xl" />
+              )}
             </div>
-            <h1 className="text-2xl font-bold text-white mb-2">Admin Portal</h1>
-            <p className="text-gray-400">
-              Sign in to access the admin dashboard
-            </p>
+            <h1 className="text-2xl font-bold text-white mb-2">Staff Portal</h1>
+            <p className="text-gray-400">Sign in to access your dashboard</p>
+          </div>
+
+          {/* Role Selection */}
+          <div className="flex gap-2 p-1 bg-white/5 rounded-xl mb-6">
+            <button
+              type="button"
+              onClick={() => setRole("doctor")}
+              className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-medium transition-all ${
+                role === "doctor"
+                  ? "bg-gradient-to-r from-dental-blue to-dental-teal text-white shadow-lg"
+                  : "text-gray-400 hover:text-white"
+              }`}
+            >
+              <FaUserMd />
+              Doctor
+            </button>
+            <button
+              type="button"
+              onClick={() => setRole("secretary")}
+              className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-medium transition-all ${
+                role === "secretary"
+                  ? "bg-gradient-to-r from-dental-blue to-dental-teal text-white shadow-lg"
+                  : "text-gray-400 hover:text-white"
+              }`}
+            >
+              <FaUserTie />
+              Secretary
+            </button>
           </div>
 
           {/* Error Message */}
@@ -107,22 +128,22 @@ export default function AdminLogin() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Username Field */}
+            {/* Email Field */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Username
+                Email
               </label>
               <div className="relative">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                  <FaUser />
+                  <FaEnvelope />
                 </div>
                 <input
-                  type="text"
-                  value={credentials.username}
+                  type="email"
+                  value={credentials.email}
                   onChange={(e) =>
-                    setCredentials({ ...credentials, username: e.target.value })
+                    setCredentials({ ...credentials, email: e.target.value })
                   }
-                  placeholder="Enter your username"
+                  placeholder="Enter your email"
                   required
                   className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 text-white placeholder-gray-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/50 focus:border-dental-blue transition-all"
                 />
@@ -187,7 +208,7 @@ export default function AdminLogin() {
                   Signing in...
                 </div>
               ) : (
-                "Sign In"
+                `Sign In as ${role === "doctor" ? "Doctor" : "Secretary"}`
               )}
             </Button>
           </form>
@@ -195,16 +216,20 @@ export default function AdminLogin() {
           {/* Demo Credentials */}
           <div className="mt-6 p-4 bg-white/5 rounded-xl border border-white/10">
             <p className="text-xs text-gray-400 text-center mb-2">
-              Demo Credentials
+              Demo Credentials ({role === "doctor" ? "Doctor" : "Secretary"})
             </p>
             <div className="flex justify-center gap-4 text-sm">
               <div className="text-center">
-                <p className="text-gray-500">Username</p>
-                <p className="text-white font-mono">admin</p>
+                <p className="text-gray-500">Email</p>
+                <p className="text-white font-mono text-xs">
+                  {role === "doctor"
+                    ? "dr.sarah@clinic.com"
+                    : "reception@clinic.com"}
+                </p>
               </div>
               <div className="text-center">
                 <p className="text-gray-500">Password</p>
-                <p className="text-white font-mono">admin123</p>
+                <p className="text-white font-mono">demo123</p>
               </div>
             </div>
           </div>

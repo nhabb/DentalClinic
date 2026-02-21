@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   FaTooth,
@@ -25,67 +25,113 @@ import {
   FaPercentage,
 } from "react-icons/fa";
 
-// TODO: Fetch from API
-const billingSummary = {
-  totalOutstanding: 0,
-  dueDate: "",
-  lastPayment: {
-    amount: 0,
-    date: "",
-  },
-  insurancePending: 0,
-};
-
-// TODO: Fetch from API
-const invoices: {
-  id: string;
-  date: string;
-  description: string;
-  amount: number;
-  insuranceCovered: number;
-  patientResponsibility: number;
-  status: string;
-  paidDate?: string;
-  dueDate?: string;
-}[] = [];
-
-// TODO: Fetch from API
-const paymentHistory: {
-  id: number;
-  date: string;
-  amount: number;
-  method: string;
-  cardLast4?: string;
-  reference?: string;
-  invoiceId: string;
-  status: string;
-}[] = [];
-
-// TODO: Fetch from API
-const paymentMethods: {
-  id: number;
-  type: string;
-  name: string;
-  expiry?: string;
-  accountLast4?: string;
-  isDefault: boolean;
-}[] = [];
-
-// TODO: Fetch from API
-const insuranceClaims: {
-  id: string;
-  invoiceId: string;
-  submittedDate: string;
-  amount: number;
-  status: string;
-  provider: string;
-  paidDate?: string;
-}[] = [];
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 export default function Billing() {
-  const [activeTab, setActiveTab] = useState<"invoices" | "payments" | "insurance">("invoices");
+  const [billingSummary, setBillingSummary] = useState({
+    totalOutstanding: 0,
+    dueDate: "",
+    lastPayment: {
+      amount: 0,
+      date: "",
+    },
+    insurancePending: 0,
+  });
+  const [invoices, setInvoices] = useState<
+    {
+      id: string;
+      date: string;
+      description: string;
+      amount: number;
+      insuranceCovered: number;
+      patientResponsibility: number;
+      status: string;
+      paidDate?: string;
+      dueDate?: string;
+    }[]
+  >([]);
+  const [paymentHistory, setPaymentHistory] = useState<
+    {
+      id: number;
+      date: string;
+      amount: number;
+      method: string;
+      cardLast4?: string;
+      reference?: string;
+      invoiceId: string;
+      status: string;
+    }[]
+  >([]);
+  const [paymentMethods, setPaymentMethods] = useState<
+    {
+      id: number;
+      type: string;
+      name: string;
+      expiry?: string;
+      accountLast4?: string;
+      isDefault: boolean;
+    }[]
+  >([]);
+  const [insuranceClaims, setInsuranceClaims] = useState<
+    {
+      id: string;
+      invoiceId: string;
+      submittedDate: string;
+      amount: number;
+      status: string;
+      provider: string;
+      paidDate?: string;
+    }[]
+  >([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<
+    "invoices" | "payments" | "insurance"
+  >("invoices");
   const [searchQuery, setSearchQuery] = useState("");
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+
+  // Fetch billing summary
+  useEffect(() => {
+    const fetchBillingSummary = async () => {
+      // API call removed
+    };
+    fetchBillingSummary();
+  }, []);
+
+  // Fetch invoices
+  useEffect(() => {
+    const fetchInvoices = async () => {
+      // API call removed
+    };
+    fetchInvoices();
+  }, []);
+
+  // Fetch payment history
+  useEffect(() => {
+    const fetchPaymentHistory = async () => {
+      // API call removed
+    };
+    fetchPaymentHistory();
+  }, []);
+
+  // Fetch insurance claims
+  useEffect(() => {
+    const fetchInsuranceClaims = async () => {
+      setLoading(false);
+    };
+    fetchInsuranceClaims();
+  }, []);
+
+  // Make payment handler
+  const handleMakePayment = async (
+    invoiceId: string,
+    amount: number,
+    method: string,
+  ) => {
+    // API call removed
+    console.log("Payment:", invoiceId, amount, method);
+    setShowPaymentModal(false);
+  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-LB").format(amount) + " LBP";
@@ -136,9 +182,12 @@ export default function Billing() {
   };
 
   const pendingInvoices = invoices.filter(
-    (inv) => inv.status === "pending" || inv.status === "insurance_pending"
+    (inv) => inv.status === "pending" || inv.status === "insurance_pending",
   );
-  const totalPending = pendingInvoices.reduce((sum, inv) => sum + inv.patientResponsibility, 0);
+  const totalPending = pendingInvoices.reduce(
+    (sum, inv) => sum + inv.patientResponsibility,
+    0,
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-primary-50">
@@ -146,11 +195,16 @@ export default function Billing() {
       <header className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
-            <Link href="/patient-dashboard" className="flex items-center space-x-2">
+            <Link
+              href="/patient-dashboard"
+              className="flex items-center space-x-2"
+            >
               <div className="w-10 h-10 bg-gradient-to-br from-dental-blue to-dental-teal rounded-lg flex items-center justify-center">
                 <FaTooth className="text-white text-xl" />
               </div>
-              <span className="text-xl font-bold text-gray-900">BrightSmile</span>
+              <span className="text-xl font-bold text-gray-900">
+                BrightSmile
+              </span>
             </Link>
             <Link
               href="/patient-dashboard"
@@ -167,8 +221,12 @@ export default function Billing() {
         {/* Page Title */}
         <div className="flex justify-between items-start mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Billing & Payments</h1>
-            <p className="text-gray-600">Manage your invoices, payments, and insurance claims</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Billing & Payments
+            </h1>
+            <p className="text-gray-600">
+              Manage your invoices, payments, and insurance claims
+            </p>
           </div>
           {totalPending > 0 && (
             <Button
@@ -190,12 +248,18 @@ export default function Billing() {
               </div>
               {totalPending > 0 && (
                 <span className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded-full font-medium">
-                  Due {new Date(billingSummary.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                  Due{" "}
+                  {new Date(billingSummary.dueDate).toLocaleDateString(
+                    "en-US",
+                    { month: "short", day: "numeric" },
+                  )}
                 </span>
               )}
             </div>
             <p className="text-sm text-gray-500 mb-1">Outstanding Balance</p>
-            <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalPending)}</p>
+            <p className="text-2xl font-bold text-gray-900">
+              {formatCurrency(totalPending)}
+            </p>
           </div>
 
           <div className="bg-white rounded-2xl shadow-sm p-6">
@@ -205,7 +269,9 @@ export default function Billing() {
               </div>
             </div>
             <p className="text-sm text-gray-500 mb-1">Insurance Pending</p>
-            <p className="text-2xl font-bold text-gray-900">{formatCurrency(billingSummary.insurancePending)}</p>
+            <p className="text-2xl font-bold text-gray-900">
+              {formatCurrency(billingSummary.insurancePending)}
+            </p>
           </div>
 
           <div className="bg-white rounded-2xl shadow-sm p-6">
@@ -215,7 +281,9 @@ export default function Billing() {
               </div>
             </div>
             <p className="text-sm text-gray-500 mb-1">Last Payment</p>
-            <p className="text-2xl font-bold text-gray-900">{formatCurrency(billingSummary.lastPayment.amount)}</p>
+            <p className="text-2xl font-bold text-gray-900">
+              {formatCurrency(billingSummary.lastPayment.amount)}
+            </p>
             <p className="text-xs text-gray-400 mt-1">
               {new Date(billingSummary.lastPayment.date).toLocaleDateString()}
             </p>
@@ -244,7 +312,8 @@ export default function Billing() {
                 <div>
                   <h3 className="font-bold text-lg">Outstanding Balance</h3>
                   <p className="text-white/80 text-sm">
-                    You have {pendingInvoices.length} pending invoice(s) totaling {formatCurrency(totalPending)}
+                    You have {pendingInvoices.length} pending invoice(s)
+                    totaling {formatCurrency(totalPending)}
                   </p>
                 </div>
               </div>
@@ -272,13 +341,17 @@ export default function Billing() {
               <div
                 key={method.id}
                 className={`flex items-center justify-between p-4 rounded-xl border-2 ${
-                  method.isDefault ? "border-dental-blue bg-dental-blue/5" : "border-gray-200"
+                  method.isDefault
+                    ? "border-dental-blue bg-dental-blue/5"
+                    : "border-gray-200"
                 }`}
               >
                 <div className="flex items-center gap-4">
                   <div
                     className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                      method.type === "credit_card" ? "bg-blue-100" : "bg-green-100"
+                      method.type === "credit_card"
+                        ? "bg-blue-100"
+                        : "bg-green-100"
                     }`}
                   >
                     {method.type === "credit_card" ? (
@@ -290,7 +363,9 @@ export default function Billing() {
                   <div>
                     <p className="font-semibold text-gray-900">{method.name}</p>
                     <p className="text-sm text-gray-500">
-                      {method.type === "credit_card" ? `Expires ${method.expiry}` : `****${method.accountLast4}`}
+                      {method.type === "credit_card"
+                        ? `Expires ${method.expiry}`
+                        : `****${method.accountLast4}`}
                     </p>
                   </div>
                 </div>
@@ -370,37 +445,66 @@ export default function Billing() {
                 <table className="w-full">
                   <thead className="bg-gray-50 border-b border-gray-200">
                     <tr>
-                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Invoice</th>
-                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Description</th>
-                      <th className="text-right py-4 px-6 text-sm font-semibold text-gray-600">Amount</th>
-                      <th className="text-right py-4 px-6 text-sm font-semibold text-gray-600">Insurance</th>
-                      <th className="text-right py-4 px-6 text-sm font-semibold text-gray-600">Your Cost</th>
-                      <th className="text-center py-4 px-6 text-sm font-semibold text-gray-600">Status</th>
-                      <th className="text-center py-4 px-6 text-sm font-semibold text-gray-600">Actions</th>
+                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">
+                        Invoice
+                      </th>
+                      <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">
+                        Description
+                      </th>
+                      <th className="text-right py-4 px-6 text-sm font-semibold text-gray-600">
+                        Amount
+                      </th>
+                      <th className="text-right py-4 px-6 text-sm font-semibold text-gray-600">
+                        Insurance
+                      </th>
+                      <th className="text-right py-4 px-6 text-sm font-semibold text-gray-600">
+                        Your Cost
+                      </th>
+                      <th className="text-center py-4 px-6 text-sm font-semibold text-gray-600">
+                        Status
+                      </th>
+                      <th className="text-center py-4 px-6 text-sm font-semibold text-gray-600">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {invoices.map((invoice) => (
-                      <tr key={invoice.id} className="hover:bg-gray-50 transition-colors">
+                      <tr
+                        key={invoice.id}
+                        className="hover:bg-gray-50 transition-colors"
+                      >
                         <td className="py-4 px-6">
-                          <p className="font-semibold text-gray-900">{invoice.id}</p>
+                          <p className="font-semibold text-gray-900">
+                            {invoice.id}
+                          </p>
                           <p className="text-xs text-gray-500">
                             {new Date(invoice.date).toLocaleDateString()}
                           </p>
                         </td>
                         <td className="py-4 px-6">
-                          <p className="text-gray-700 text-sm">{invoice.description}</p>
+                          <p className="text-gray-700 text-sm">
+                            {invoice.description}
+                          </p>
                         </td>
                         <td className="py-4 px-6 text-right">
-                          <p className="font-medium text-gray-900">{formatCurrency(invoice.amount)}</p>
+                          <p className="font-medium text-gray-900">
+                            {formatCurrency(invoice.amount)}
+                          </p>
                         </td>
                         <td className="py-4 px-6 text-right">
-                          <p className="text-green-600 text-sm">-{formatCurrency(invoice.insuranceCovered)}</p>
+                          <p className="text-green-600 text-sm">
+                            -{formatCurrency(invoice.insuranceCovered)}
+                          </p>
                         </td>
                         <td className="py-4 px-6 text-right">
-                          <p className="font-bold text-gray-900">{formatCurrency(invoice.patientResponsibility)}</p>
+                          <p className="font-bold text-gray-900">
+                            {formatCurrency(invoice.patientResponsibility)}
+                          </p>
                         </td>
-                        <td className="py-4 px-6 text-center">{getStatusBadge(invoice.status)}</td>
+                        <td className="py-4 px-6 text-center">
+                          {getStatusBadge(invoice.status)}
+                        </td>
                         <td className="py-4 px-6">
                           <div className="flex justify-center gap-2">
                             <button className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-dental-blue transition-colors">
@@ -434,7 +538,9 @@ export default function Billing() {
                       <FaCheckCircle className="text-green-600 text-2xl" />
                     </div>
                     <div>
-                      <p className="font-bold text-gray-900 text-lg">{formatCurrency(payment.amount)}</p>
+                      <p className="font-bold text-gray-900 text-lg">
+                        {formatCurrency(payment.amount)}
+                      </p>
                       <div className="flex items-center gap-3 text-sm text-gray-500 mt-1">
                         <span className="flex items-center gap-1">
                           <FaCalendarAlt className="text-dental-blue" />
@@ -446,9 +552,13 @@ export default function Billing() {
                         </span>
                         <span>•</span>
                         <span>{payment.method}</span>
-                        {payment.cardLast4 && <span>****{payment.cardLast4}</span>}
+                        {payment.cardLast4 && (
+                          <span>****{payment.cardLast4}</span>
+                        )}
                       </div>
-                      <p className="text-xs text-gray-400 mt-1">Invoice: {payment.invoiceId}</p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        Invoice: {payment.invoiceId}
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
@@ -474,9 +584,15 @@ export default function Billing() {
                   <FaShieldAlt className="text-blue-600 text-2xl" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-900 text-lg">Globemed Insurance</h3>
-                  <p className="text-gray-600 text-sm">Policy: GLB-2025-78945 • Coverage: 80%</p>
-                  <p className="text-xs text-gray-500 mt-1">Valid until December 31, 2026</p>
+                  <h3 className="font-bold text-gray-900 text-lg">
+                    Globemed Insurance
+                  </h3>
+                  <p className="text-gray-600 text-sm">
+                    Policy: GLB-2025-78945 • Coverage: 80%
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Valid until December 31, 2026
+                  </p>
                 </div>
               </div>
             </div>
@@ -499,13 +615,17 @@ export default function Billing() {
                       >
                         <FaShieldAlt
                           className={
-                            claim.status === "approved" ? "text-green-600 text-xl" : "text-purple-600 text-xl"
+                            claim.status === "approved"
+                              ? "text-green-600 text-xl"
+                              : "text-purple-600 text-xl"
                           }
                         />
                       </div>
                       <div>
                         <p className="font-bold text-gray-900">{claim.id}</p>
-                        <p className="text-sm text-gray-500">Invoice: {claim.invoiceId}</p>
+                        <p className="text-sm text-gray-500">
+                          Invoice: {claim.invoiceId}
+                        </p>
                       </div>
                     </div>
                     {getStatusBadge(claim.status)}
@@ -514,7 +634,9 @@ export default function Billing() {
                   <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-xl">
                     <div>
                       <p className="text-xs text-gray-500">Claim Amount</p>
-                      <p className="font-semibold text-gray-900">{formatCurrency(claim.amount)}</p>
+                      <p className="font-semibold text-gray-900">
+                        {formatCurrency(claim.amount)}
+                      </p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-500">Submitted</p>
@@ -543,11 +665,15 @@ export default function Billing() {
         {showPaymentModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Make a Payment</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
+                Make a Payment
+              </h2>
 
               <div className="bg-gray-50 rounded-xl p-4 mb-6">
                 <p className="text-sm text-gray-500">Amount Due</p>
-                <p className="text-3xl font-bold text-gray-900">{formatCurrency(totalPending)}</p>
+                <p className="text-3xl font-bold text-gray-900">
+                  {formatCurrency(totalPending)}
+                </p>
               </div>
 
               <div className="space-y-4 mb-6">

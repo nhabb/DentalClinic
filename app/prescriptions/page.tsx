@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   FaTooth,
@@ -23,53 +23,90 @@ import {
   FaCalendarPlus,
 } from "react-icons/fa";
 
-// TODO: Fetch from API
-const currentPrescriptions: {
-  id: number;
-  name: string;
-  purpose: string;
-  dosage: string;
-  frequency: string;
-  duration: string;
-  startDate: string;
-  endDate: string | null;
-  refillsLeft: number | null;
-  prescribedBy: string;
-  instructions: string;
-  status: string;
-}[] = [];
-
-// TODO: Fetch from API
-const pastPrescriptions: {
-  id: number;
-  name: string;
-  purpose: string;
-  dosage: string;
-  frequency: string;
-  duration: string;
-  startDate: string;
-  endDate: string | null;
-  refillsLeft: number | null;
-  prescribedBy: string;
-  instructions: string;
-  status: string;
-}[] = [];
-
-// TODO: Fetch from API
-const recommendedProcedures: {
-  id: number;
-  procedure: string;
-  reason: string;
-  urgency: string;
-  recommendedBy: string;
-  date: string;
-  estimatedCost: string;
-  notes: string;
-}[] = [];
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 export default function Prescriptions() {
-  const [activeTab, setActiveTab] = useState<"current" | "history" | "procedures">("current");
-  const [expandedPrescription, setExpandedPrescription] = useState<number | null>(1);
+  const [currentPrescriptions, setCurrentPrescriptions] = useState<
+    {
+      id: number;
+      name: string;
+      purpose: string;
+      dosage: string;
+      frequency: string;
+      duration: string;
+      startDate: string;
+      endDate: string | null;
+      refillsLeft: number | null;
+      prescribedBy: string;
+      instructions: string;
+      status: string;
+    }[]
+  >([]);
+  const [pastPrescriptions, setPastPrescriptions] = useState<
+    {
+      id: number;
+      name: string;
+      purpose: string;
+      dosage: string;
+      frequency: string;
+      duration: string;
+      startDate: string;
+      endDate: string | null;
+      refillsLeft: number | null;
+      prescribedBy: string;
+      instructions: string;
+      status: string;
+    }[]
+  >([]);
+  const [recommendedProcedures, setRecommendedProcedures] = useState<
+    {
+      id: number;
+      procedure: string;
+      reason: string;
+      urgency: string;
+      recommendedBy: string;
+      date: string;
+      estimatedCost: string;
+      notes: string;
+    }[]
+  >([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch current/active prescriptions
+  useEffect(() => {
+    const fetchCurrentPrescriptions = async () => {
+      // API call removed
+    };
+    fetchCurrentPrescriptions();
+  }, []);
+
+  // Fetch past/completed prescriptions
+  useEffect(() => {
+    const fetchPastPrescriptions = async () => {
+      // API call removed
+    };
+    fetchPastPrescriptions();
+  }, []);
+
+  // Fetch recommended procedures
+  useEffect(() => {
+    const fetchRecommendedProcedures = async () => {
+      setLoading(false);
+    };
+    fetchRecommendedProcedures();
+  }, []);
+
+  // Request prescription refill
+  const handleRequestRefill = async (prescriptionId: number) => {
+    // API call removed
+    console.log("Refill requested for:", prescriptionId);
+  };
+  const [activeTab, setActiveTab] = useState<
+    "current" | "history" | "procedures"
+  >("current");
+  const [expandedPrescription, setExpandedPrescription] = useState<
+    number | null
+  >(1);
   const [searchQuery, setSearchQuery] = useState("");
 
   const getStatusBadge = (status: string) => {
@@ -131,13 +168,13 @@ export default function Prescriptions() {
   const filteredCurrentPrescriptions = currentPrescriptions.filter(
     (p) =>
       p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.purpose.toLowerCase().includes(searchQuery.toLowerCase())
+      p.purpose.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const filteredPastPrescriptions = pastPrescriptions.filter(
     (p) =>
       p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.purpose.toLowerCase().includes(searchQuery.toLowerCase())
+      p.purpose.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (
@@ -146,11 +183,16 @@ export default function Prescriptions() {
       <header className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
-            <Link href="/patient-dashboard" className="flex items-center space-x-2">
+            <Link
+              href="/patient-dashboard"
+              className="flex items-center space-x-2"
+            >
               <div className="w-10 h-10 bg-gradient-to-br from-dental-blue to-dental-teal rounded-lg flex items-center justify-center">
                 <FaTooth className="text-white text-xl" />
               </div>
-              <span className="text-xl font-bold text-gray-900">BrightSmile</span>
+              <span className="text-xl font-bold text-gray-900">
+                BrightSmile
+              </span>
             </Link>
             <Link
               href="/patient-dashboard"
@@ -166,8 +208,12 @@ export default function Prescriptions() {
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Title */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Prescriptions & Procedures</h1>
-          <p className="text-gray-600">Manage your medications and view recommended treatments</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Prescriptions & Procedures
+          </h1>
+          <p className="text-gray-600">
+            Manage your medications and view recommended treatments
+          </p>
         </div>
 
         {/* Summary Cards */}
@@ -178,7 +224,9 @@ export default function Prescriptions() {
                 <FaPills className="text-green-600 text-xl" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900">{currentPrescriptions.length}</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {currentPrescriptions.length}
+                </p>
                 <p className="text-sm text-gray-500">Active Prescriptions</p>
               </div>
             </div>
@@ -190,7 +238,13 @@ export default function Prescriptions() {
               </div>
               <div>
                 <p className="text-2xl font-bold text-gray-900">
-                  {recommendedProcedures.filter((p) => p.urgency === "recommended" || p.urgency === "necessary").length}
+                  {
+                    recommendedProcedures.filter(
+                      (p) =>
+                        p.urgency === "recommended" ||
+                        p.urgency === "necessary",
+                    ).length
+                  }
                 </p>
                 <p className="text-sm text-gray-500">Pending Procedures</p>
               </div>
@@ -203,7 +257,11 @@ export default function Prescriptions() {
               </div>
               <div>
                 <p className="text-2xl font-bold text-gray-900">
-                  {recommendedProcedures.filter((p) => p.urgency === "necessary").length}
+                  {
+                    recommendedProcedures.filter(
+                      (p) => p.urgency === "necessary",
+                    ).length
+                  }
                 </p>
                 <p className="text-sm text-gray-500">Necessary Procedures</p>
               </div>
@@ -220,7 +278,13 @@ export default function Prescriptions() {
             <div className="flex-1">
               <h3 className="font-semibold text-red-800">Action Required</h3>
               <p className="text-sm text-red-700 mt-1">
-                You have {recommendedProcedures.filter((p) => p.urgency === "necessary").length} necessary procedure(s) that require your attention. Please schedule an appointment soon.
+                You have{" "}
+                {
+                  recommendedProcedures.filter((p) => p.urgency === "necessary")
+                    .length
+                }{" "}
+                necessary procedure(s) that require your attention. Please
+                schedule an appointment soon.
               </p>
             </div>
             <Link href="/book-appointment">
@@ -265,9 +329,13 @@ export default function Prescriptions() {
           >
             <FaNotesMedical className="inline mr-2" />
             Procedures
-            {recommendedProcedures.filter((p) => p.urgency === "necessary").length > 0 && (
+            {recommendedProcedures.filter((p) => p.urgency === "necessary")
+              .length > 0 && (
               <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                {recommendedProcedures.filter((p) => p.urgency === "necessary").length}
+                {
+                  recommendedProcedures.filter((p) => p.urgency === "necessary")
+                    .length
+                }
               </span>
             )}
           </button>
@@ -286,7 +354,9 @@ export default function Prescriptions() {
                     <button
                       onClick={() =>
                         setExpandedPrescription(
-                          expandedPrescription === prescription.id ? null : prescription.id
+                          expandedPrescription === prescription.id
+                            ? null
+                            : prescription.id,
                         )
                       }
                       className="w-full p-6 flex items-center justify-between text-left"
@@ -297,16 +367,25 @@ export default function Prescriptions() {
                         </div>
                         <div>
                           <div className="flex items-center gap-3 mb-1">
-                            <h3 className="font-bold text-gray-900 text-lg">{prescription.name}</h3>
+                            <h3 className="font-bold text-gray-900 text-lg">
+                              {prescription.name}
+                            </h3>
                             {getStatusBadge(prescription.status)}
                           </div>
-                          <p className="text-gray-600 text-sm">{prescription.purpose}</p>
+                          <p className="text-gray-600 text-sm">
+                            {prescription.purpose}
+                          </p>
                           <div className="flex items-center gap-4 text-xs text-gray-500 mt-2">
                             <span className="flex items-center gap-1">
                               <FaCalendarAlt className="text-dental-blue" />
-                              {new Date(prescription.startDate).toLocaleDateString()} -{" "}
+                              {new Date(
+                                prescription.startDate,
+                              ).toLocaleDateString()}{" "}
+                              -{" "}
                               {prescription.endDate
-                                ? new Date(prescription.endDate).toLocaleDateString()
+                                ? new Date(
+                                    prescription.endDate,
+                                  ).toLocaleDateString()
                                 : "Ongoing"}
                             </span>
                             <span className="flex items-center gap-1">
@@ -317,11 +396,12 @@ export default function Prescriptions() {
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
-                        {prescription.refillsLeft !== null && prescription.refillsLeft > 0 && (
-                          <span className="text-sm text-dental-blue font-medium hidden sm:block">
-                            {prescription.refillsLeft} refill(s) left
-                          </span>
-                        )}
+                        {prescription.refillsLeft !== null &&
+                          prescription.refillsLeft > 0 && (
+                            <span className="text-sm text-dental-blue font-medium hidden sm:block">
+                              {prescription.refillsLeft} refill(s) left
+                            </span>
+                          )}
                         {expandedPrescription === prescription.id ? (
                           <FaChevronUp className="text-gray-400" />
                         ) : (
@@ -335,15 +415,25 @@ export default function Prescriptions() {
                         <div className="grid md:grid-cols-3 gap-6 mb-6">
                           <div className="bg-gray-50 rounded-xl p-4">
                             <p className="text-xs text-gray-500 mb-1">Dosage</p>
-                            <p className="font-semibold text-gray-900">{prescription.dosage}</p>
+                            <p className="font-semibold text-gray-900">
+                              {prescription.dosage}
+                            </p>
                           </div>
                           <div className="bg-gray-50 rounded-xl p-4">
-                            <p className="text-xs text-gray-500 mb-1">Frequency</p>
-                            <p className="font-semibold text-gray-900">{prescription.frequency}</p>
+                            <p className="text-xs text-gray-500 mb-1">
+                              Frequency
+                            </p>
+                            <p className="font-semibold text-gray-900">
+                              {prescription.frequency}
+                            </p>
                           </div>
                           <div className="bg-gray-50 rounded-xl p-4">
-                            <p className="text-xs text-gray-500 mb-1">Duration</p>
-                            <p className="font-semibold text-gray-900">{prescription.duration}</p>
+                            <p className="text-xs text-gray-500 mb-1">
+                              Duration
+                            </p>
+                            <p className="font-semibold text-gray-900">
+                              {prescription.duration}
+                            </p>
                           </div>
                         </div>
 
@@ -351,20 +441,25 @@ export default function Prescriptions() {
                           <div className="flex items-start gap-3">
                             <FaInfoCircle className="text-blue-600 mt-0.5" />
                             <div>
-                              <p className="text-sm font-medium text-blue-900">Instructions</p>
-                              <p className="text-sm text-blue-800 mt-1">{prescription.instructions}</p>
+                              <p className="text-sm font-medium text-blue-900">
+                                Instructions
+                              </p>
+                              <p className="text-sm text-blue-800 mt-1">
+                                {prescription.instructions}
+                              </p>
                             </div>
                           </div>
                         </div>
 
-                        {prescription.refillsLeft !== null && prescription.refillsLeft > 0 && (
-                          <div className="flex justify-end">
-                            <Button className="bg-dental-blue hover:bg-dental-blue/90">
-                              <FaRedo className="mr-2" />
-                              Request Refill ({prescription.refillsLeft} left)
-                            </Button>
-                          </div>
-                        )}
+                        {prescription.refillsLeft !== null &&
+                          prescription.refillsLeft > 0 && (
+                            <div className="flex justify-end">
+                              <Button className="bg-dental-blue hover:bg-dental-blue/90">
+                                <FaRedo className="mr-2" />
+                                Request Refill ({prescription.refillsLeft} left)
+                              </Button>
+                            </div>
+                          )}
                       </div>
                     )}
                   </div>
@@ -375,8 +470,12 @@ export default function Prescriptions() {
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <FaPills className="text-gray-400 text-2xl" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Active Prescriptions</h3>
-                <p className="text-gray-500">You don't have any active prescriptions at the moment.</p>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  No Active Prescriptions
+                </h3>
+                <p className="text-gray-500">
+                  You don't have any active prescriptions at the moment.
+                </p>
               </div>
             )}
           </div>
@@ -424,12 +523,18 @@ export default function Prescriptions() {
                       </div>
                       <div>
                         <div className="flex items-center gap-3 mb-1">
-                          <h3 className="font-semibold text-gray-900">{prescription.name}</h3>
+                          <h3 className="font-semibold text-gray-900">
+                            {prescription.name}
+                          </h3>
                           {getStatusBadge(prescription.status)}
                         </div>
-                        <p className="text-gray-600 text-sm">{prescription.purpose}</p>
+                        <p className="text-gray-600 text-sm">
+                          {prescription.purpose}
+                        </p>
                         <div className="flex items-center gap-4 text-xs text-gray-500 mt-1">
-                          <span>{prescription.dosage} • {prescription.frequency}</span>
+                          <span>
+                            {prescription.dosage} • {prescription.frequency}
+                          </span>
                           <span>•</span>
                           <span>{prescription.prescribedBy}</span>
                         </div>
@@ -453,8 +558,15 @@ export default function Prescriptions() {
             <div className="space-y-4">
               {recommendedProcedures
                 .sort((a, b) => {
-                  const urgencyOrder = { necessary: 0, recommended: 1, monitor: 2 };
-                  return urgencyOrder[a.urgency as keyof typeof urgencyOrder] - urgencyOrder[b.urgency as keyof typeof urgencyOrder];
+                  const urgencyOrder = {
+                    necessary: 0,
+                    recommended: 1,
+                    monitor: 2,
+                  };
+                  return (
+                    urgencyOrder[a.urgency as keyof typeof urgencyOrder] -
+                    urgencyOrder[b.urgency as keyof typeof urgencyOrder]
+                  );
                 })
                 .map((procedure) => (
                   <div
@@ -463,8 +575,8 @@ export default function Prescriptions() {
                       procedure.urgency === "necessary"
                         ? "border-red-200"
                         : procedure.urgency === "recommended"
-                        ? "border-yellow-200"
-                        : "border-gray-100"
+                          ? "border-yellow-200"
+                          : "border-gray-100"
                     }`}
                   >
                     <div className="p-6">
@@ -475,8 +587,8 @@ export default function Prescriptions() {
                               procedure.urgency === "necessary"
                                 ? "bg-red-100"
                                 : procedure.urgency === "recommended"
-                                ? "bg-yellow-100"
-                                : "bg-blue-100"
+                                  ? "bg-yellow-100"
+                                  : "bg-blue-100"
                             }`}
                           >
                             <FaTooth
@@ -484,22 +596,30 @@ export default function Prescriptions() {
                                 procedure.urgency === "necessary"
                                   ? "text-red-600"
                                   : procedure.urgency === "recommended"
-                                  ? "text-yellow-600"
-                                  : "text-blue-600"
+                                    ? "text-yellow-600"
+                                    : "text-blue-600"
                               }`}
                             />
                           </div>
                           <div>
                             <div className="flex items-center gap-3 mb-1">
-                              <h3 className="font-bold text-gray-900 text-lg">{procedure.procedure}</h3>
+                              <h3 className="font-bold text-gray-900 text-lg">
+                                {procedure.procedure}
+                              </h3>
                               {getUrgencyBadge(procedure.urgency)}
                             </div>
-                            <p className="text-gray-600 text-sm">{procedure.reason}</p>
+                            <p className="text-gray-600 text-sm">
+                              {procedure.reason}
+                            </p>
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="text-lg font-bold text-dental-blue">{procedure.estimatedCost}</p>
-                          <p className="text-xs text-gray-500">Estimated cost</p>
+                          <p className="text-lg font-bold text-dental-blue">
+                            {procedure.estimatedCost}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Estimated cost
+                          </p>
                         </div>
                       </div>
 
@@ -507,7 +627,9 @@ export default function Prescriptions() {
                         <div className="flex items-start gap-3">
                           <FaInfoCircle className="text-gray-500 mt-0.5" />
                           <div>
-                            <p className="text-sm text-gray-700">{procedure.notes}</p>
+                            <p className="text-sm text-gray-700">
+                              {procedure.notes}
+                            </p>
                             <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
                               <span className="flex items-center gap-1">
                                 <FaUserMd className="text-dental-blue" />
@@ -515,7 +637,8 @@ export default function Prescriptions() {
                               </span>
                               <span className="flex items-center gap-1">
                                 <FaCalendarAlt className="text-dental-blue" />
-                                Recommended on {new Date(procedure.date).toLocaleDateString()}
+                                Recommended on{" "}
+                                {new Date(procedure.date).toLocaleDateString()}
                               </span>
                             </div>
                           </div>
@@ -556,16 +679,28 @@ export default function Prescriptions() {
                   <FaInfoCircle className="text-dental-blue" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">Understanding Procedure Urgency</h3>
+                  <h3 className="font-semibold text-gray-900">
+                    Understanding Procedure Urgency
+                  </h3>
                   <div className="mt-3 space-y-2 text-sm text-gray-600">
                     <p>
-                      <span className="font-medium text-red-600">Necessary:</span> Requires immediate attention to prevent further complications
+                      <span className="font-medium text-red-600">
+                        Necessary:
+                      </span>{" "}
+                      Requires immediate attention to prevent further
+                      complications
                     </p>
                     <p>
-                      <span className="font-medium text-yellow-600">Recommended:</span> Should be scheduled within the suggested timeframe
+                      <span className="font-medium text-yellow-600">
+                        Recommended:
+                      </span>{" "}
+                      Should be scheduled within the suggested timeframe
                     </p>
                     <p>
-                      <span className="font-medium text-blue-600">Monitor:</span> Keep an eye on the condition; no immediate action required
+                      <span className="font-medium text-blue-600">
+                        Monitor:
+                      </span>{" "}
+                      Keep an eye on the condition; no immediate action required
                     </p>
                   </div>
                 </div>

@@ -14,10 +14,10 @@ import {
   FaArrowRight,
   FaStethoscope,
   FaTeeth,
+  FaStar,
 } from "react-icons/fa";
-import axios from "axios";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 type ServiceType = "checkup" | "procedure" | null;
 
@@ -31,6 +31,8 @@ interface Doctor {
   name: string;
   specialty: string;
   available: boolean;
+  avatar?: string;
+  bio?: string;
 }
 
 interface Procedure {
@@ -55,9 +57,27 @@ const fallbackTimeSlots = [
 ];
 
 const fallbackDoctors: Doctor[] = [
-  { id: 1, name: "Dr. Sarah Haddad", specialty: "General Dentistry", available: true },
-  { id: 2, name: "Dr. Michel Khoury", specialty: "Orthodontics", available: true },
-  { id: 3, name: "Dr. Layla Nassar", specialty: "Cosmetic Dentistry", available: false },
+  {
+    id: 1,
+    name: "Dr. Sarah Haddad",
+    specialty: "General Dentistry",
+    available: true,
+    bio: "15+ years of experience in general dental care",
+  },
+  {
+    id: 2,
+    name: "Dr. Michel Khoury",
+    specialty: "Orthodontics",
+    available: true,
+    bio: "Specialist in braces and teeth alignment",
+  },
+  {
+    id: 3,
+    name: "Dr. Layla Nassar",
+    specialty: "Cosmetic Dentistry",
+    available: true,
+    bio: "Expert in smile makeovers and veneers",
+  },
 ];
 
 const procedures: Procedure[] = [
@@ -71,11 +91,13 @@ const procedures: Procedure[] = [
 
 export default function BookAppointment() {
   const [step, setStep] = useState(1);
+  const [selectedDoctor, setSelectedDoctor] = useState<number | null>(null);
   const [serviceType, setServiceType] = useState<ServiceType>(null);
-  const [selectedProcedure, setSelectedProcedure] = useState<string | null>(null);
+  const [selectedProcedure, setSelectedProcedure] = useState<string | null>(
+    null,
+  );
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [selectedDoctor, setSelectedDoctor] = useState<number | null>(null);
 
   // API state
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
@@ -88,49 +110,25 @@ export default function BookAppointment() {
 
   const totalSteps = 4;
 
-  // Fetch available time slots when date changes
+  // Fetch doctors on mount
   useEffect(() => {
-    if (selectedDate) {
-      fetchAvailableSlots(selectedDate);
-    }
-  }, [selectedDate]);
+    fetchDoctors();
+  }, []);
 
-  // Fetch doctors when reaching step 4
+  // Fetch available time slots when date changes (filtered by doctor)
   useEffect(() => {
-    if (step === 4) {
-      fetchDoctors();
+    if (selectedDate && selectedDoctor) {
+      fetchAvailableSlots(selectedDate, selectedDoctor);
     }
-  }, [step]);
-
-  const fetchAvailableSlots = async (date: Date) => {
-    setLoadingSlots(true);
-    setError(null);
-    try {
-      const dateStr = date.toISOString().split("T")[0];
-      const response = await axios.get(`${API_URL}/api/appointments/slots`, {
-        params: { date: dateStr },
-      });
-      setTimeSlots(response.data.slots);
-    } catch (err) {
-      console.error("Failed to fetch slots:", err);
-      // Fallback to default slots (all available) if API fails
-      setTimeSlots(fallbackTimeSlots.map((time) => ({ time, available: true })));
-    } finally {
-      setLoadingSlots(false);
-    }
-  };
+  }, [selectedDate, selectedDoctor]);
 
   const fetchDoctors = async () => {
-    setLoadingDoctors(true);
-    try {
-      const response = await axios.get(`${API_URL}/api/doctors`);
-      setDoctors(response.data.doctors);
-    } catch (err) {
-      console.error("Failed to fetch doctors:", err);
-      setDoctors(fallbackDoctors);
-    } finally {
-      setLoadingDoctors(false);
-    }
+    setLoadingDoctors(false);
+  };
+
+  const fetchAvailableSlots = async (date: Date, doctorId: number) => {
+    setLoadingSlots(false);
+    setTimeSlots(fallbackTimeSlots.map((time) => ({ time, available: true })));
   };
 
   const handleBookAppointment = async () => {
@@ -138,35 +136,31 @@ export default function BookAppointment() {
 
     setSubmitting(true);
     setError(null);
-    try {
-      const appointmentData = {
-        serviceType,
-        procedure: selectedProcedure,
-        date: selectedDate.toISOString().split("T")[0],
-        time: selectedTime,
-        doctorId: selectedDoctor,
-      };
-
-      await axios.post(`${API_URL}/api/appointments`, appointmentData);
-      setBookingSuccess(true);
-    } catch (err) {
-      console.error("Failed to book appointment:", err);
-      setError("Failed to book appointment. Please try again.");
-    } finally {
-      setSubmitting(false);
-    }
+    // API call removed
+    console.log("Appointment booked:", {
+      doctorId: selectedDoctor,
+      serviceType,
+      procedure: selectedProcedure,
+      date: selectedDate.toISOString().split("T")[0],
+      time: selectedTime,
+    });
+    setBookingSuccess(true);
+    setSubmitting(false);
   };
 
   const canProceed = () => {
     switch (step) {
       case 1:
-        return serviceType !== null && (serviceType === "checkup" || selectedProcedure !== null);
-      case 2:
-        return selectedDate !== undefined;
-      case 3:
-        return selectedTime !== null;
-      case 4:
         return selectedDoctor !== null;
+      case 2:
+        return (
+          serviceType !== null &&
+          (serviceType === "checkup" || selectedProcedure !== null)
+        );
+      case 3:
+        return selectedDate !== undefined;
+      case 4:
+        return selectedTime !== null;
       default:
         return false;
     }
@@ -184,8 +178,10 @@ export default function BookAppointment() {
     }
   };
 
-  const getSelectedDoctorInfo = () => doctors.find((d) => d.id === selectedDoctor);
-  const getSelectedProcedureInfo = () => procedures.find((p) => p.id === selectedProcedure);
+  const getSelectedDoctorInfo = () =>
+    doctors.find((d) => d.id === selectedDoctor);
+  const getSelectedProcedureInfo = () =>
+    procedures.find((p) => p.id === selectedProcedure);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-primary-50">
@@ -193,11 +189,16 @@ export default function BookAppointment() {
       <header className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
-            <Link href="/patient-dashboard" className="flex items-center space-x-2">
+            <Link
+              href="/patient-dashboard"
+              className="flex items-center space-x-2"
+            >
               <div className="w-10 h-10 bg-gradient-to-br from-dental-blue to-dental-teal rounded-lg flex items-center justify-center">
                 <FaTooth className="text-white text-xl" />
               </div>
-              <span className="text-xl font-bold text-gray-900">BrightSmile</span>
+              <span className="text-xl font-bold text-gray-900">
+                BrightSmile
+              </span>
             </Link>
             <Link
               href="/patient-dashboard"
@@ -213,8 +214,12 @@ export default function BookAppointment() {
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Page Title */}
         <div className="text-center mb-10">
-          <h1 className="text-4xl font-bold text-gray-900 mb-3">Book Your Appointment</h1>
-          <p className="text-gray-600 text-lg">Schedule your visit in just a few simple steps</p>
+          <h1 className="text-4xl font-bold text-gray-900 mb-3">
+            Book Your Appointment
+          </h1>
+          <p className="text-gray-600 text-lg">
+            Schedule your visit in just a few simple steps
+          </p>
         </div>
 
         {/* Progress Steps */}
@@ -227,8 +232,8 @@ export default function BookAppointment() {
                     step > s
                       ? "bg-green-500 text-white"
                       : step === s
-                      ? "bg-dental-blue text-white shadow-lg shadow-dental-blue/30 scale-110"
-                      : "bg-gray-200 text-gray-500"
+                        ? "bg-dental-blue text-white shadow-lg shadow-dental-blue/30 scale-110"
+                        : "bg-gray-200 text-gray-500"
                   }`}
                 >
                   {step > s ? <FaCheckCircle /> : s}
@@ -245,17 +250,33 @@ export default function BookAppointment() {
           </div>
           <div className="flex justify-center mt-4">
             <div className="grid grid-cols-4 gap-4 sm:gap-16 text-center text-sm">
-              <span className={step >= 1 ? "text-dental-blue font-medium" : "text-gray-400"}>
+              <span
+                className={
+                  step >= 1 ? "text-dental-blue font-medium" : "text-gray-400"
+                }
+              >
+                Doctor
+              </span>
+              <span
+                className={
+                  step >= 2 ? "text-dental-blue font-medium" : "text-gray-400"
+                }
+              >
                 Service
               </span>
-              <span className={step >= 2 ? "text-dental-blue font-medium" : "text-gray-400"}>
+              <span
+                className={
+                  step >= 3 ? "text-dental-blue font-medium" : "text-gray-400"
+                }
+              >
                 Date
               </span>
-              <span className={step >= 3 ? "text-dental-blue font-medium" : "text-gray-400"}>
+              <span
+                className={
+                  step >= 4 ? "text-dental-blue font-medium" : "text-gray-400"
+                }
+              >
                 Time
-              </span>
-              <span className={step >= 4 ? "text-dental-blue font-medium" : "text-gray-400"}>
-                Doctor
               </span>
             </div>
           </div>
@@ -263,11 +284,89 @@ export default function BookAppointment() {
 
         {/* Step Content */}
         <div className="bg-white rounded-3xl shadow-xl p-8 sm:p-10 mb-8">
-          {/* Step 1: Service Type */}
+          {/* Step 1: Doctor Selection */}
           {step === 1 && (
             <div className="animate-fadeIn">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">What would you like to book?</h2>
-              <p className="text-gray-600 mb-8">Choose between a routine checkup or a specific procedure</p>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                Choose Your Dentist
+              </h2>
+              <p className="text-gray-600 mb-8">
+                Select the doctor you'd like to see for your appointment
+              </p>
+
+              {loadingDoctors ? (
+                <div className="flex justify-center items-center py-12">
+                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-dental-blue"></div>
+                  <span className="ml-3 text-gray-600">Loading doctors...</span>
+                </div>
+              ) : (
+                <div className="grid md:grid-cols-3 gap-6">
+                  {doctors.map((doctor) => (
+                    <button
+                      key={doctor.id}
+                      onClick={() =>
+                        doctor.available && setSelectedDoctor(doctor.id)
+                      }
+                      disabled={!doctor.available}
+                      className={`relative p-6 rounded-2xl border-2 transition-all text-left ${
+                        !doctor.available
+                          ? "border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed"
+                          : selectedDoctor === doctor.id
+                            ? "border-dental-blue bg-dental-blue/5 shadow-lg"
+                            : "border-gray-200 hover:border-dental-blue/50 hover:shadow-md"
+                      }`}
+                    >
+                      <div className="w-20 h-20 bg-gradient-to-br from-dental-blue to-dental-teal rounded-full flex items-center justify-center text-white text-2xl font-bold mb-4 mx-auto">
+                        {doctor.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")}
+                      </div>
+                      <h3 className="text-lg font-bold text-gray-900 text-center">
+                        {doctor.name}
+                      </h3>
+                      <p className="text-dental-blue text-sm text-center font-medium mb-2">
+                        {doctor.specialty}
+                      </p>
+                      {doctor.bio && (
+                        <p className="text-gray-500 text-xs text-center">
+                          {doctor.bio}
+                        </p>
+                      )}
+                      <div className="flex items-center justify-center gap-1 mt-3">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <FaStar
+                            key={star}
+                            className="text-yellow-400 text-sm"
+                          />
+                        ))}
+                      </div>
+                      {!doctor.available && (
+                        <span className="inline-block mt-3 text-xs font-medium text-red-500 bg-red-50 px-2 py-1 rounded-full w-full text-center">
+                          Not Available Today
+                        </span>
+                      )}
+                      {doctor.available && selectedDoctor === doctor.id && (
+                        <div className="absolute top-4 right-4 w-8 h-8 bg-dental-blue rounded-full flex items-center justify-center">
+                          <FaCheckCircle className="text-white" />
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Step 2: Service Type */}
+          {step === 2 && (
+            <div className="animate-fadeIn">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                What would you like to book?
+              </h2>
+              <p className="text-gray-600 mb-8">
+                Choose between a routine checkup or a specific procedure
+              </p>
 
               <div className="grid md:grid-cols-2 gap-6 mb-8">
                 {/* Checkup Option */}
@@ -291,9 +390,12 @@ export default function BookAppointment() {
                   >
                     <FaStethoscope className="text-3xl" />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Regular Checkup</h3>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                    Regular Checkup
+                  </h3>
                   <p className="text-gray-600">
-                    Routine dental examination to ensure your oral health is in great shape
+                    Routine dental examination to ensure your oral health is in
+                    great shape
                   </p>
                   <span className="inline-block mt-4 text-sm font-medium text-dental-blue">
                     Duration: 30 min
@@ -323,9 +425,12 @@ export default function BookAppointment() {
                   >
                     <FaTeeth className="text-3xl" />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Dental Procedure</h3>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                    Dental Procedure
+                  </h3>
                   <p className="text-gray-600">
-                    Specific treatments like cleaning, whitening, fillings, and more
+                    Specific treatments like cleaning, whitening, fillings, and
+                    more
                   </p>
                   <span className="inline-block mt-4 text-sm font-medium text-dental-blue">
                     Various durations
@@ -341,7 +446,9 @@ export default function BookAppointment() {
               {/* Procedure Selection */}
               {serviceType === "procedure" && (
                 <div className="animate-fadeIn">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Select a procedure</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Select a procedure
+                  </h3>
                   <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {procedures.map((proc) => (
                       <button
@@ -353,21 +460,44 @@ export default function BookAppointment() {
                             : "border-gray-200 hover:border-dental-blue/50"
                         }`}
                       >
-                        <p className="font-semibold text-gray-900">{proc.name}</p>
+                        <p className="font-semibold text-gray-900">
+                          {proc.name}
+                        </p>
                         <p className="text-sm text-gray-500">{proc.duration}</p>
                       </button>
                     ))}
                   </div>
                 </div>
               )}
+
+              {/* Selected Doctor Info */}
+              <div className="mt-8 p-4 bg-gray-50 rounded-xl flex items-center gap-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-dental-blue to-dental-teal rounded-full flex items-center justify-center text-white font-bold">
+                  {getSelectedDoctorInfo()
+                    ?.name.split(" ")
+                    .map((n) => n[0])
+                    .join("")}
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Your selected doctor</p>
+                  <p className="font-semibold text-gray-900">
+                    {getSelectedDoctorInfo()?.name}
+                  </p>
+                </div>
+              </div>
             </div>
           )}
 
-          {/* Step 2: Date Selection */}
-          {step === 2 && (
+          {/* Step 3: Date Selection */}
+          {step === 3 && (
             <div className="animate-fadeIn">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Choose a Date</h2>
-              <p className="text-gray-600 mb-8">Select your preferred appointment date</p>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                Choose a Date
+              </h2>
+              <p className="text-gray-600 mb-8">
+                Select your preferred appointment date with{" "}
+                {getSelectedDoctorInfo()?.name}
+              </p>
 
               <div className="flex justify-center">
                 <Calendar
@@ -382,12 +512,14 @@ export default function BookAppointment() {
                     caption: "flex justify-center pt-1 relative items-center",
                     caption_label: "text-lg font-semibold",
                     nav: "space-x-1 flex items-center",
-                    nav_button: "h-9 w-9 bg-transparent p-0 hover:bg-gray-100 rounded-lg",
+                    nav_button:
+                      "h-9 w-9 bg-transparent p-0 hover:bg-gray-100 rounded-lg",
                     nav_button_previous: "absolute left-1",
                     nav_button_next: "absolute right-1",
                     table: "w-full border-collapse space-y-1",
                     head_row: "flex",
-                    head_cell: "text-gray-500 rounded-md w-12 font-medium text-sm",
+                    head_cell:
+                      "text-gray-500 rounded-md w-12 font-medium text-sm",
                     row: "flex w-full mt-2",
                     cell: "text-center text-sm p-0 relative",
                     day: "h-12 w-12 p-0 font-normal rounded-xl hover:bg-dental-blue/10 transition-colors",
@@ -418,30 +550,39 @@ export default function BookAppointment() {
             </div>
           )}
 
-          {/* Step 3: Time Selection */}
-          {step === 3 && (
+          {/* Step 4: Time Selection */}
+          {step === 4 && (
             <div className="animate-fadeIn">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Select a Time</h2>
-              <p className="text-gray-600 mb-8">Choose an available time slot for your appointment</p>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                Select a Time
+              </h2>
+              <p className="text-gray-600 mb-8">
+                Choose an available time slot with{" "}
+                {getSelectedDoctorInfo()?.name}
+              </p>
 
               {loadingSlots ? (
                 <div className="flex justify-center items-center py-12">
                   <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-dental-blue"></div>
-                  <span className="ml-3 text-gray-600">Loading available slots...</span>
+                  <span className="ml-3 text-gray-600">
+                    Loading {getSelectedDoctorInfo()?.name}'s available slots...
+                  </span>
                 </div>
               ) : (
                 <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-4">
                   {timeSlots.map((slot) => (
                     <button
                       key={slot.time}
-                      onClick={() => slot.available && setSelectedTime(slot.time)}
+                      onClick={() =>
+                        slot.available && setSelectedTime(slot.time)
+                      }
                       disabled={!slot.available}
                       className={`p-4 rounded-xl border-2 font-medium transition-all ${
                         !slot.available
                           ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed line-through"
                           : selectedTime === slot.time
-                          ? "border-dental-blue bg-dental-blue text-white shadow-lg shadow-dental-blue/30"
-                          : "border-gray-200 hover:border-dental-blue/50 text-gray-700 hover:bg-gray-50"
+                            ? "border-dental-blue bg-dental-blue text-white shadow-lg shadow-dental-blue/30"
+                            : "border-gray-200 hover:border-dental-blue/50 text-gray-700 hover:bg-gray-50"
                       }`}
                     >
                       <FaClock
@@ -449,88 +590,39 @@ export default function BookAppointment() {
                           !slot.available
                             ? "text-gray-400"
                             : selectedTime === slot.time
-                            ? "text-white"
-                            : "text-dental-blue"
+                              ? "text-white"
+                              : "text-dental-blue"
                         }`}
                       />
                       {slot.time}
                       {!slot.available && (
-                        <span className="block text-xs mt-1 text-gray-400">Booked</span>
+                        <span className="block text-xs mt-1 text-gray-400">
+                          Booked
+                        </span>
                       )}
                     </button>
                   ))}
                 </div>
               )}
 
-              {selectedTime && (
-                <div className="mt-8 p-4 bg-dental-blue/5 rounded-xl text-center">
-                  <p className="text-lg">
-                    Your appointment:{" "}
-                    <span className="font-semibold text-dental-blue">
-                      {selectedDate?.toLocaleDateString("en-US", {
-                        weekday: "short",
-                        month: "short",
-                        day: "numeric",
-                      })}{" "}
-                      at {selectedTime}
-                    </span>
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Step 4: Doctor Selection */}
-          {step === 4 && (
-            <div className="animate-fadeIn">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Choose Your Dentist</h2>
-              <p className="text-gray-600 mb-8">Select a dentist for your appointment</p>
-
-              {loadingDoctors ? (
-                <div className="flex justify-center items-center py-12">
-                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-dental-blue"></div>
-                  <span className="ml-3 text-gray-600">Loading available doctors...</span>
-                </div>
-              ) : (
-              <div className="grid md:grid-cols-3 gap-6">
-                {doctors.map((doctor) => (
-                  <button
-                    key={doctor.id}
-                    onClick={() => doctor.available && setSelectedDoctor(doctor.id)}
-                    disabled={!doctor.available}
-                    className={`relative p-6 rounded-2xl border-2 transition-all text-left ${
-                      !doctor.available
-                        ? "border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed"
-                        : selectedDoctor === doctor.id
-                        ? "border-dental-blue bg-dental-blue/5 shadow-lg"
-                        : "border-gray-200 hover:border-dental-blue/50 hover:shadow-md"
-                    }`}
-                  >
-                    <div className="w-16 h-16 bg-gradient-to-br from-dental-blue to-dental-teal rounded-full flex items-center justify-center text-white text-2xl font-bold mb-4">
-                      {doctor.name.split(" ")[1][0]}
-                    </div>
-                    <h3 className="text-lg font-bold text-gray-900">{doctor.name}</h3>
-                    <p className="text-gray-600 text-sm">{doctor.specialty}</p>
-                    {!doctor.available && (
-                      <span className="inline-block mt-3 text-xs font-medium text-red-500 bg-red-50 px-2 py-1 rounded-full">
-                        Not Available
-                      </span>
-                    )}
-                    {doctor.available && selectedDoctor === doctor.id && (
-                      <div className="absolute top-4 right-4 w-8 h-8 bg-dental-blue rounded-full flex items-center justify-center">
-                        <FaCheckCircle className="text-white" />
-                      </div>
-                    )}
-                  </button>
-                ))}
-              </div>
-              )}
-
               {/* Appointment Summary */}
-              {selectedDoctor && (
+              {selectedTime && (
                 <div className="mt-8 p-6 bg-gradient-to-r from-dental-blue/5 to-dental-teal/5 rounded-2xl">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">Appointment Summary</h3>
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">
+                    Appointment Summary
+                  </h3>
                   <div className="grid sm:grid-cols-2 gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-dental-blue/10 rounded-lg flex items-center justify-center">
+                        <FaUserMd className="text-dental-blue" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Dentist</p>
+                        <p className="font-semibold text-gray-900">
+                          {getSelectedDoctorInfo()?.name}
+                        </p>
+                      </div>
+                    </div>
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-dental-blue/10 rounded-lg flex items-center justify-center">
                         <FaStethoscope className="text-dental-blue" />
@@ -556,17 +648,6 @@ export default function BookAppointment() {
                             day: "numeric",
                           })}{" "}
                           at {selectedTime}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-dental-blue/10 rounded-lg flex items-center justify-center">
-                        <FaUserMd className="text-dental-blue" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Dentist</p>
-                        <p className="font-semibold text-gray-900">
-                          {getSelectedDoctorInfo()?.name}
                         </p>
                       </div>
                     </div>
@@ -647,7 +728,9 @@ export default function BookAppointment() {
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <FaCheckCircle className="text-green-500 text-4xl" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Appointment Booked!</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              Appointment Booked!
+            </h2>
             <p className="text-gray-600 mb-6">
               Your appointment has been successfully scheduled for{" "}
               <span className="font-semibold">
@@ -661,7 +744,10 @@ export default function BookAppointment() {
               at <span className="font-semibold">{selectedTime}</span>
             </p>
             <p className="text-gray-600 mb-8">
-              with <span className="font-semibold">{getSelectedDoctorInfo()?.name}</span>
+              with{" "}
+              <span className="font-semibold">
+                {getSelectedDoctorInfo()?.name}
+              </span>
             </p>
             <div className="flex gap-4 justify-center">
               <Link href="/patient-dashboard">
@@ -673,11 +759,11 @@ export default function BookAppointment() {
                 variant="outline"
                 onClick={() => {
                   setStep(1);
+                  setSelectedDoctor(null);
                   setServiceType(null);
                   setSelectedProcedure(null);
                   setSelectedDate(undefined);
                   setSelectedTime(null);
-                  setSelectedDoctor(null);
                   setBookingSuccess(false);
                   setTimeSlots([]);
                 }}

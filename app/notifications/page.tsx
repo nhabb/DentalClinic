@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +15,8 @@ import {
   FaCalendarAlt,
 } from "react-icons/fa";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
 type Notification = {
   id: number;
   type: "success" | "warning" | "info" | "error";
@@ -27,22 +29,39 @@ type Notification = {
 export default function PatientNotifications() {
   const router = useRouter();
   const [filter, setFilter] = useState<"all" | "unread">("all");
-  // TODO: Fetch from API
-  const [user] = useState({
+  const [user, setUser] = useState({
     name: "",
     email: "",
   });
-
-  // TODO: Fetch from API
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleLogout = () => {
+  // Fetch user profile
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      // API call removed
+    };
+    fetchUserProfile();
+  }, []);
+
+  // Fetch notifications
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      setLoading(false);
+    };
+    fetchNotifications();
+  }, []);
+
+  const handleLogout = async () => {
     localStorage.removeItem("patientAuth");
     localStorage.removeItem("patientUser");
-    router.push("/login");
+    localStorage.removeItem("authToken");
+    // Logout disabled - no redirect
+    // router.push("/login");
   };
 
-  const markAsRead = (id: number) => {
+  const markAsRead = async (id: number) => {
+    // API call removed
     setNotifications(
       notifications.map((notif) =>
         notif.id === id ? { ...notif, read: true } : notif,
@@ -50,7 +69,8 @@ export default function PatientNotifications() {
     );
   };
 
-  const markAllAsRead = () => {
+  const markAllAsRead = async () => {
+    // API call removed
     setNotifications(notifications.map((notif) => ({ ...notif, read: true })));
   };
 

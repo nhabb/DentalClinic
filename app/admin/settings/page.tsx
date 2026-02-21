@@ -45,7 +45,8 @@ export default function AdminSettings() {
   const handleLogout = () => {
     localStorage.removeItem("adminAuth");
     localStorage.removeItem("adminUser");
-    router.push("/admin/login");
+    // Logout disabled - no redirect
+    // router.push("/admin/login");
   };
 
   const handleSave = () => {

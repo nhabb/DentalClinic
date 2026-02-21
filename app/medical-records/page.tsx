@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   FaTooth,
@@ -22,47 +22,88 @@ import {
   FaFilter,
 } from "react-icons/fa";
 
-// TODO: Fetch from API
-const patientInfo = {
-  name: "",
-  dateOfBirth: "",
-  bloodType: "",
-  allergies: [] as string[],
-  conditions: [] as string[],
-  medications: [] as string[],
-  lastVisit: "",
-  nextAppointment: "",
-};
-
-// TODO: Fetch from API
-const visitHistory: {
-  id: number;
-  date: string;
-  type: string;
-  doctor: string;
-  notes: string;
-  treatments: string[];
-  cost: string;
-}[] = [];
-
-// TODO: Fetch from API
-const documents: {
-  id: number;
-  name: string;
-  date: string;
-  type: string;
-  size: string;
-}[] = [];
-
-// TODO: Fetch from API
-const dentalChart: {
-  tooth: number;
-  status: string;
-}[] = [];
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 export default function MedicalRecords() {
+  const [patientInfo, setPatientInfo] = useState({
+    name: "",
+    dateOfBirth: "",
+    bloodType: "",
+    allergies: [] as string[],
+    conditions: [] as string[],
+    medications: [] as string[],
+    lastVisit: "",
+    nextAppointment: "",
+  });
+  const [visitHistory, setVisitHistory] = useState<
+    {
+      id: number;
+      date: string;
+      type: string;
+      doctor: string;
+      notes: string;
+      treatments: string[];
+      cost: string;
+    }[]
+  >([]);
+  const [documents, setDocuments] = useState<
+    {
+      id: number;
+      name: string;
+      date: string;
+      type: string;
+      size: string;
+    }[]
+  >([]);
+  const [dentalChart, setDentalChart] = useState<
+    {
+      tooth: number;
+      status: string;
+    }[]
+  >([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch patient profile
+  useEffect(() => {
+    const fetchPatientInfo = async () => {
+      // API call removed
+    };
+    fetchPatientInfo();
+  }, []);
+
+  // Fetch visit history (medical records)
+  useEffect(() => {
+    const fetchVisitHistory = async () => {
+      // API call removed
+    };
+    fetchVisitHistory();
+  }, []);
+
+  // Fetch documents
+  useEffect(() => {
+    const fetchDocuments = async () => {
+      // API call removed
+    };
+    fetchDocuments();
+  }, []);
+
+  // Fetch dental chart
+  useEffect(() => {
+    const fetchDentalChart = async () => {
+      setLoading(false);
+    };
+    fetchDentalChart();
+  }, []);
+
+  // Download document handler
+  const handleDownloadDocument = async (docId: number) => {
+    // API call removed
+    console.log("Download document", docId);
+  };
   const [expandedVisit, setExpandedVisit] = useState<number | null>(1);
-  const [activeTab, setActiveTab] = useState<"history" | "documents" | "chart">("history");
+  const [activeTab, setActiveTab] = useState<"history" | "documents" | "chart">(
+    "history",
+  );
   const [searchQuery, setSearchQuery] = useState("");
 
   const getStatusColor = (status: string) => {
@@ -84,7 +125,7 @@ export default function MedicalRecords() {
     (visit) =>
       visit.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
       visit.doctor.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      visit.notes.toLowerCase().includes(searchQuery.toLowerCase())
+      visit.notes.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (
@@ -93,11 +134,16 @@ export default function MedicalRecords() {
       <header className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
-            <Link href="/patient-dashboard" className="flex items-center space-x-2">
+            <Link
+              href="/patient-dashboard"
+              className="flex items-center space-x-2"
+            >
               <div className="w-10 h-10 bg-gradient-to-br from-dental-blue to-dental-teal rounded-lg flex items-center justify-center">
                 <FaTooth className="text-white text-xl" />
               </div>
-              <span className="text-xl font-bold text-gray-900">BrightSmile</span>
+              <span className="text-xl font-bold text-gray-900">
+                BrightSmile
+              </span>
             </Link>
             <Link
               href="/patient-dashboard"
@@ -113,8 +159,12 @@ export default function MedicalRecords() {
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Title */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Medical Records</h1>
-          <p className="text-gray-600">View your complete dental health history</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Medical Records
+          </h1>
+          <p className="text-gray-600">
+            View your complete dental health history
+          </p>
         </div>
 
         {/* Patient Summary Card */}
@@ -123,12 +173,18 @@ export default function MedicalRecords() {
             {/* Patient Info */}
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 bg-gradient-to-br from-dental-blue to-dental-teal rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                {patientInfo.name.split(" ").map((n) => n[0]).join("")}
+                {patientInfo.name
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")}
               </div>
               <div>
-                <h2 className="text-xl font-bold text-gray-900">{patientInfo.name}</h2>
+                <h2 className="text-xl font-bold text-gray-900">
+                  {patientInfo.name}
+                </h2>
                 <p className="text-gray-500">
-                  DOB: {new Date(patientInfo.dateOfBirth).toLocaleDateString()} | Blood Type: {patientInfo.bloodType}
+                  DOB: {new Date(patientInfo.dateOfBirth).toLocaleDateString()}{" "}
+                  | Blood Type: {patientInfo.bloodType}
                 </p>
               </div>
             </div>
@@ -138,19 +194,26 @@ export default function MedicalRecords() {
               <div className="text-center p-3 bg-red-50 rounded-xl">
                 <FaAllergies className="text-red-500 text-xl mx-auto mb-1" />
                 <p className="text-xs text-gray-500">Allergies</p>
-                <p className="text-sm font-semibold text-gray-900">{patientInfo.allergies.length}</p>
+                <p className="text-sm font-semibold text-gray-900">
+                  {patientInfo.allergies.length}
+                </p>
               </div>
               <div className="text-center p-3 bg-blue-50 rounded-xl">
                 <FaCalendarAlt className="text-blue-500 text-xl mx-auto mb-1" />
                 <p className="text-xs text-gray-500">Last Visit</p>
                 <p className="text-sm font-semibold text-gray-900">
-                  {new Date(patientInfo.lastVisit).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                  {new Date(patientInfo.lastVisit).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                  })}
                 </p>
               </div>
               <div className="text-center p-3 bg-green-50 rounded-xl">
                 <FaHeartbeat className="text-green-500 text-xl mx-auto mb-1" />
                 <p className="text-xs text-gray-500">Conditions</p>
-                <p className="text-sm font-semibold text-gray-900">{patientInfo.conditions[0]}</p>
+                <p className="text-sm font-semibold text-gray-900">
+                  {patientInfo.conditions[0]}
+                </p>
               </div>
             </div>
           </div>
@@ -180,8 +243,12 @@ export default function MedicalRecords() {
                 <FaPills className="text-purple-500" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-700">Current Medications</p>
-                <p className="text-sm text-gray-500 mt-1">{patientInfo.medications.join(", ")}</p>
+                <p className="text-sm font-medium text-gray-700">
+                  Current Medications
+                </p>
+                <p className="text-sm text-gray-500 mt-1">
+                  {patientInfo.medications.join(", ")}
+                </p>
               </div>
             </div>
           </div>
@@ -256,7 +323,11 @@ export default function MedicalRecords() {
                 >
                   {/* Visit Header */}
                   <button
-                    onClick={() => setExpandedVisit(expandedVisit === visit.id ? null : visit.id)}
+                    onClick={() =>
+                      setExpandedVisit(
+                        expandedVisit === visit.id ? null : visit.id,
+                      )
+                    }
                     className="w-full p-6 flex items-center justify-between text-left"
                   >
                     <div className="flex items-center gap-4">
@@ -264,7 +335,9 @@ export default function MedicalRecords() {
                         <FaNotesMedical className="text-dental-blue text-xl" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-gray-900 text-lg">{visit.type}</h3>
+                        <h3 className="font-bold text-gray-900 text-lg">
+                          {visit.type}
+                        </h3>
                         <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
                           <span className="flex items-center gap-1">
                             <FaCalendarAlt className="text-dental-blue" />
@@ -282,7 +355,9 @@ export default function MedicalRecords() {
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
-                      <span className="text-dental-blue font-semibold hidden sm:block">{visit.cost}</span>
+                      <span className="text-dental-blue font-semibold hidden sm:block">
+                        {visit.cost}
+                      </span>
                       {expandedVisit === visit.id ? (
                         <FaChevronUp className="text-gray-400" />
                       ) : (
@@ -296,11 +371,17 @@ export default function MedicalRecords() {
                     <div className="px-6 pb-6 border-t border-gray-100 pt-4 animate-fadeIn">
                       <div className="grid md:grid-cols-2 gap-6">
                         <div>
-                          <h4 className="text-sm font-semibold text-gray-700 mb-2">Notes</h4>
-                          <p className="text-gray-600 text-sm leading-relaxed">{visit.notes}</p>
+                          <h4 className="text-sm font-semibold text-gray-700 mb-2">
+                            Notes
+                          </h4>
+                          <p className="text-gray-600 text-sm leading-relaxed">
+                            {visit.notes}
+                          </p>
                         </div>
                         <div>
-                          <h4 className="text-sm font-semibold text-gray-700 mb-2">Treatments Performed</h4>
+                          <h4 className="text-sm font-semibold text-gray-700 mb-2">
+                            Treatments Performed
+                          </h4>
                           <div className="flex flex-wrap gap-2">
                             {visit.treatments.map((treatment) => (
                               <span
@@ -314,7 +395,12 @@ export default function MedicalRecords() {
                         </div>
                       </div>
                       <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center">
-                        <span className="text-sm text-gray-500">Cost: <span className="font-semibold text-gray-900">{visit.cost}</span></span>
+                        <span className="text-sm text-gray-500">
+                          Cost:{" "}
+                          <span className="font-semibold text-gray-900">
+                            {visit.cost}
+                          </span>
+                        </span>
                         <Button variant="outline" size="sm">
                           <FaDownload className="mr-2" />
                           Download Report
@@ -351,7 +437,9 @@ export default function MedicalRecords() {
                         )}
                       </div>
                       <div>
-                        <p className="font-semibold text-gray-900">{doc.name}</p>
+                        <p className="font-semibold text-gray-900">
+                          {doc.name}
+                        </p>
                         <p className="text-sm text-gray-500">
                           {new Date(doc.date).toLocaleDateString()} • {doc.size}
                         </p>
@@ -377,8 +465,12 @@ export default function MedicalRecords() {
           <div className="animate-fadeIn">
             <div className="bg-white rounded-2xl shadow-sm p-8">
               <div className="text-center mb-8">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Your Dental Chart</h3>
-                <p className="text-gray-600">Visual overview of your dental health status</p>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  Your Dental Chart
+                </h3>
+                <p className="text-gray-600">
+                  Visual overview of your dental health status
+                </p>
               </div>
 
               {/* Legend */}
@@ -403,13 +495,15 @@ export default function MedicalRecords() {
 
               {/* Upper Teeth */}
               <div className="mb-4">
-                <p className="text-center text-sm font-medium text-gray-500 mb-3">Upper Teeth</p>
+                <p className="text-center text-sm font-medium text-gray-500 mb-3">
+                  Upper Teeth
+                </p>
                 <div className="flex justify-center gap-1">
                   {dentalChart.slice(0, 16).map((tooth) => (
                     <div
                       key={tooth.tooth}
                       className={`w-8 h-10 sm:w-10 sm:h-12 rounded-b-lg flex items-center justify-center text-xs font-medium cursor-pointer hover:scale-110 transition-transform ${getStatusColor(
-                        tooth.status
+                        tooth.status,
                       )}`}
                       title={`Tooth ${tooth.tooth}: ${tooth.status}`}
                     >
@@ -429,7 +523,7 @@ export default function MedicalRecords() {
                     <div
                       key={tooth.tooth}
                       className={`w-8 h-10 sm:w-10 sm:h-12 rounded-t-lg flex items-center justify-center text-xs font-medium cursor-pointer hover:scale-110 transition-transform ${getStatusColor(
-                        tooth.status
+                        tooth.status,
                       )}`}
                       title={`Tooth ${tooth.tooth}: ${tooth.status}`}
                     >
@@ -437,7 +531,9 @@ export default function MedicalRecords() {
                     </div>
                   ))}
                 </div>
-                <p className="text-center text-sm font-medium text-gray-500 mt-3">Lower Teeth</p>
+                <p className="text-center text-sm font-medium text-gray-500 mt-3">
+                  Lower Teeth
+                </p>
               </div>
 
               {/* Summary Stats */}

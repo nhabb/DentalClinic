@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useState } from "react";
 import { FaTooth } from "react-icons/fa";
 import { ArrowLeft, CheckCircle } from "lucide-react";
-import axios, { Axios } from "axios";
 
 export default function ForgotPasswordPage() {
   const [submitted, setSubmitted] = useState(false);
@@ -16,11 +15,6 @@ export default function ForgotPasswordPage() {
   });
 
   const handleSubmit = () => {
-    try {
-      const response = axios.post(`${API_URL}/forgot-password`);
-    } catch (err) {
-      console.log(err);
-    }
     setSubmitted(true);
     console.log(password);
     console.log("test");

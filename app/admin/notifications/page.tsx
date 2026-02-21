@@ -40,7 +40,8 @@ export default function AdminNotifications() {
   const handleLogout = () => {
     localStorage.removeItem("adminAuth");
     localStorage.removeItem("adminUser");
-    router.push("/admin/login");
+    // Logout disabled - no redirect
+    // router.push("/admin/login");
   };
 
   const markAsRead = (id: number) => {
