@@ -4,11 +4,12 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { safeStorage } from "@/lib/browser-compat";
+import { useTranslation } from "@/lib/i18n";
 import {
   FaTooth,
   FaCalendarAlt,
   FaBoxes,
-  FaMoneyBillWave,
   FaUsers,
   FaChartLine,
   FaCog,
@@ -52,6 +53,7 @@ interface Doctor {
 
 export default function AppointmentsManagement() {
   const router = useRouter();
+  const { t, language, setLanguage } = useTranslation();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<"day" | "week">("day");
   const [searchQuery, setSearchQuery] = useState("");
@@ -72,16 +74,16 @@ export default function AppointmentsManagement() {
   // Check auth and load user data (auth disabled)
   useEffect(() => {
     // Auth disabled - allow access
-    // const isAuthenticated = localStorage.getItem("adminAuth") === "true";
+    // const isAuthenticated = safeStorage.getItem("adminAuth") === "true";
     // if (!isAuthenticated) {
     //   router.push("/admin/login");
     //   return;
     // }
 
-    const role = localStorage.getItem("userRole") || "doctor";
-    const storedDoctorId = localStorage.getItem("doctorId");
-    const storedAssignedIds = localStorage.getItem("assignedDoctorIds");
-    const storedUser = localStorage.getItem("adminUser");
+    const role = safeStorage.getItem("userRole") || "doctor";
+    const storedDoctorId = safeStorage.getItem("doctorId");
+    const storedAssignedIds = safeStorage.getItem("assignedDoctorIds");
+    const storedUser = safeStorage.getItem("adminUser");
 
     setUserRole(role);
     if (storedDoctorId) setDoctorId(parseInt(storedDoctorId));
@@ -104,14 +106,13 @@ export default function AppointmentsManagement() {
   }, [selectedDate, userRole, doctorId, assignedDoctorIds]);
 
   const handleLogout = () => {
-    localStorage.removeItem("adminAuth");
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("adminUser");
-    localStorage.removeItem("userRole");
-    localStorage.removeItem("doctorId");
-    localStorage.removeItem("assignedDoctorIds");
-    // Logout disabled - no redirect
-    // router.push("/admin/login");
+    safeStorage.removeItem("adminAuth");
+    safeStorage.removeItem("authToken");
+    safeStorage.removeItem("adminUser");
+    safeStorage.removeItem("userRole");
+    safeStorage.removeItem("doctorId");
+    safeStorage.removeItem("assignedDoctorIds");
+    router.push("/admin/login");
   };
 
   const formatDate = (date: Date) => {
@@ -128,25 +129,25 @@ export default function AppointmentsManagement() {
       case "completed":
         return (
           <span className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
-            <FaCheckCircle className="text-xs" /> Completed
+            <FaCheckCircle className="text-xs" /> {t("appointments.completed")}
           </span>
         );
       case "in_progress":
         return (
           <span className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
-            <FaClock className="text-xs" /> In Progress
+            <FaClock className="text-xs" /> {t("appointments.inProgress")}
           </span>
         );
       case "upcoming":
         return (
           <span className="flex items-center gap-1 px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-full">
-            <FaClock className="text-xs" /> Upcoming
+            <FaClock className="text-xs" /> {t("appointments.upcoming")}
           </span>
         );
       case "cancelled":
         return (
           <span className="flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">
-            <FaTimes className="text-xs" /> Cancelled
+            <FaTimes className="text-xs" /> {t("appointments.cancelled")}
           </span>
         );
       default:
@@ -228,7 +229,7 @@ export default function AppointmentsManagement() {
             </div>
             <div>
               <span className="text-lg font-bold">BrightSmile</span>
-              <p className="text-xs text-gray-400">Admin Panel</p>
+              <p className="text-xs text-gray-400">{t("nav.adminPanel")}</p>
             </div>
           </Link>
         </div>
@@ -240,37 +241,28 @@ export default function AppointmentsManagement() {
             className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
           >
             <FaChartLine className="text-lg" />
-            <span className="font-medium">Dashboard</span>
+            <span className="font-medium">{t("nav.dashboard")}</span>
           </Link>
           <Link
             href="/admin/appointments"
             className="flex items-center space-x-3 px-4 py-3 bg-dental-blue/20 text-dental-lightblue rounded-xl"
           >
             <FaCalendarAlt className="text-lg" />
-            <span className="font-medium">Appointments</span>
+            <span className="font-medium">{t("nav.appointments")}</span>
           </Link>
           <Link
             href="/admin/inventory"
             className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
           >
             <FaBoxes className="text-lg" />
-            <span className="font-medium">Inventory</span>
+            <span className="font-medium">{t("nav.inventory")}</span>
           </Link>
-          {userRole === "doctor" && (
-            <Link
-              href="/admin/transactions"
-              className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
-            >
-              <FaMoneyBillWave className="text-lg" />
-              <span className="font-medium">Transactions</span>
-            </Link>
-          )}
           <Link
             href="/admin/patients"
             className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
           >
             <FaUsers className="text-lg" />
-            <span className="font-medium">Patients</span>
+            <span className="font-medium">{t("nav.patients")}</span>
           </Link>
         </nav>
 
@@ -282,7 +274,7 @@ export default function AppointmentsManagement() {
               className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
             >
               <FaCog className="text-lg" />
-              <span className="font-medium">Settings</span>
+              <span className="font-medium">{t("nav.settings")}</span>
             </Link>
           )}
           <button
@@ -290,7 +282,7 @@ export default function AppointmentsManagement() {
             className="w-full flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-red-500/20 hover:text-red-400 rounded-xl transition-colors"
           >
             <FaSignOutAlt className="text-lg" />
-            <span className="font-medium">Logout</span>
+            <span className="font-medium">{t("common.logout")}</span>
           </button>
         </div>
       </aside>
@@ -300,21 +292,39 @@ export default function AppointmentsManagement() {
         {/* Header */}
         <header className="bg-white shadow-sm px-8 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Appointments</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{t("appointments.appointments")}</h1>
             <p className="text-gray-500 text-sm">
               {currentUser
                 ? `${currentUser.firstName} ${currentUser.lastName}'s`
-                : "Manage"}{" "}
-              appointments
+                : t("common.manage")}{" "}
+              {t("appointments.manageAppointments")}
             </p>
           </div>
-          <Button
-            onClick={() => setShowAddModal(true)}
-            className="bg-dental-blue hover:bg-dental-blue/90"
-          >
-            <FaPlus className="mr-2" />
-            New Appointment
-          </Button>
+          <div className="flex items-center gap-3">
+            {/* Language Switcher */}
+            <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+              {(["en", "fr", "ar"] as const).map((lang) => (
+                <button
+                  key={lang}
+                  onClick={() => setLanguage(lang)}
+                  className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                    language === lang
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  {lang.toUpperCase()}
+                </button>
+              ))}
+            </div>
+            <Button
+              onClick={() => setShowAddModal(true)}
+              className="bg-dental-blue hover:bg-dental-blue/90"
+            >
+              <FaPlus className="mr-2 rtl:mr-0 rtl:ml-2" />
+              {t("appointments.newAppointment")}
+            </Button>
+          </div>
         </header>
 
         {/* Content */}
@@ -336,7 +346,7 @@ export default function AppointmentsManagement() {
                       <p className="text-2xl font-bold text-gray-900">
                         {todayStats.total}
                       </p>
-                      <p className="text-sm text-gray-500">Today's Total</p>
+                      <p className="text-sm text-gray-500">{t("appointments.todaysTotal")}</p>
                     </div>
                   </div>
                 </div>
@@ -349,7 +359,7 @@ export default function AppointmentsManagement() {
                       <p className="text-2xl font-bold text-gray-900">
                         {todayStats.completed}
                       </p>
-                      <p className="text-sm text-gray-500">Completed</p>
+                      <p className="text-sm text-gray-500">{t("appointments.completed")}</p>
                     </div>
                   </div>
                 </div>
@@ -362,7 +372,7 @@ export default function AppointmentsManagement() {
                       <p className="text-2xl font-bold text-gray-900">
                         {todayStats.upcoming}
                       </p>
-                      <p className="text-sm text-gray-500">Upcoming</p>
+                      <p className="text-sm text-gray-500">{t("appointments.upcoming")}</p>
                     </div>
                   </div>
                 </div>
@@ -375,7 +385,7 @@ export default function AppointmentsManagement() {
                       <p className="text-2xl font-bold text-gray-900">
                         {todayStats.cancelled}
                       </p>
-                      <p className="text-sm text-gray-500">Cancelled</p>
+                      <p className="text-sm text-gray-500">{t("appointments.cancelled")}</p>
                     </div>
                   </div>
                 </div>
@@ -390,7 +400,7 @@ export default function AppointmentsManagement() {
                       onClick={() => navigateDate("prev")}
                       className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                     >
-                      <FaChevronLeft className="text-gray-600" />
+                      <FaChevronLeft className="text-gray-600 rtl:rotate-180" />
                     </button>
                     <div className="text-center min-w-[250px]">
                       <p className="text-lg font-bold text-gray-900">
@@ -401,27 +411,27 @@ export default function AppointmentsManagement() {
                       onClick={() => navigateDate("next")}
                       className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                     >
-                      <FaChevronRight className="text-gray-600" />
+                      <FaChevronRight className="text-gray-600 rtl:rotate-180" />
                     </button>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setSelectedDate(new Date())}
                     >
-                      Today
+                      {t("common.today")}
                     </Button>
                   </div>
 
                   {/* Filters */}
                   <div className="flex gap-4">
                     <div className="relative">
-                      <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <FaSearch className="absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2 text-gray-400" />
                       <input
                         type="text"
-                        placeholder="Search patient or type..."
+                        placeholder={t("appointments.searchPlaceholder")}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue w-64"
+                        className="pl-10 rtl:pl-4 rtl:pr-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue w-64"
                       />
                     </div>
                     {visibleDoctors.length > 1 && (
@@ -430,7 +440,7 @@ export default function AppointmentsManagement() {
                         onChange={(e) => setSelectedDoctor(e.target.value)}
                         className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
                       >
-                        <option value="all">All Doctors</option>
+                        <option value="all">{t("appointments.allDoctors")}</option>
                         {visibleDoctors.map((doctor) => (
                           <option key={doctor.id} value={doctor.name}>
                             {doctor.name}
@@ -507,7 +517,7 @@ export default function AppointmentsManagement() {
                               </div>
                               {apt.notes && (
                                 <p className="text-sm text-gray-400 mt-2 italic">
-                                  Note: {apt.notes}
+                                  {t("appointments.notePrefix")} {apt.notes}
                                 </p>
                               )}
                             </div>
@@ -522,7 +532,7 @@ export default function AppointmentsManagement() {
                                   className="bg-green-600 hover:bg-green-700"
                                   onClick={() => handleStartAppointment(apt.id)}
                                 >
-                                  <FaCheckCircle className="mr-1" /> Start
+                                  <FaCheckCircle className="mr-1 rtl:mr-0 rtl:ml-1" /> {t("appointments.start")}
                                 </Button>
                                 <Button
                                   size="sm"
@@ -532,7 +542,7 @@ export default function AppointmentsManagement() {
                                     handleCancelAppointment(apt.id)
                                   }
                                 >
-                                  <FaTimes className="mr-1" /> Cancel
+                                  <FaTimes className="mr-1 rtl:mr-0 rtl:ml-1" /> {t("appointments.cancel")}
                                 </Button>
                               </>
                             )}
@@ -544,7 +554,7 @@ export default function AppointmentsManagement() {
                                   handleCompleteAppointment(apt.id)
                                 }
                               >
-                                <FaCheckCircle className="mr-1" /> Complete
+                                <FaCheckCircle className="mr-1 rtl:mr-0 rtl:ml-1" /> {t("appointments.complete")}
                               </Button>
                             )}
                             <button className="p-2 hover:bg-gray-100 rounded-lg text-gray-500">
@@ -561,10 +571,10 @@ export default function AppointmentsManagement() {
                       <FaCalendarAlt className="text-gray-400 text-2xl" />
                     </div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      No Appointments
+                      {t("appointments.noAppointments")}
                     </h3>
                     <p className="text-gray-500">
-                      No appointments scheduled for this date.
+                      {t("appointments.noAppointmentsDesc")}
                     </p>
                   </div>
                 )}
@@ -579,17 +589,17 @@ export default function AppointmentsManagement() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-6">
-              New Appointment
+              {t("appointments.newAppointment")}
             </h2>
 
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Patient Name
+                  {t("appointments.patientName")}
                 </label>
                 <input
                   type="text"
-                  placeholder="Search or enter patient name"
+                  placeholder={t("appointments.patientNamePlaceholder")}
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
                 />
               </div>
@@ -597,7 +607,7 @@ export default function AppointmentsManagement() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Date
+                    {t("appointments.date")}
                   </label>
                   <input
                     type="date"
@@ -606,7 +616,7 @@ export default function AppointmentsManagement() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Time
+                    {t("appointments.time")}
                   </label>
                   <select className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue">
                     <option>09:00 AM</option>
@@ -629,21 +639,21 @@ export default function AppointmentsManagement() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Appointment Type
+                    {t("appointments.appointmentType")}
                   </label>
                   <select className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue">
-                    <option>Regular Checkup</option>
-                    <option>Teeth Cleaning</option>
-                    <option>Cavity Filling</option>
-                    <option>Root Canal</option>
-                    <option>Teeth Whitening</option>
-                    <option>Crown Fitting</option>
-                    <option>Extraction</option>
+                    <option>{t("appointments.regularCheckup")}</option>
+                    <option>{t("appointments.teethCleaning")}</option>
+                    <option>{t("appointments.cavityFilling")}</option>
+                    <option>{t("appointments.rootCanal")}</option>
+                    <option>{t("appointments.teethWhitening")}</option>
+                    <option>{t("appointments.crownFitting")}</option>
+                    <option>{t("appointments.extraction")}</option>
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Doctor
+                    {t("appointments.doctor")}
                   </label>
                   <select className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue">
                     {visibleDoctors.map((doctor) => (
@@ -657,11 +667,11 @@ export default function AppointmentsManagement() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Notes (Optional)
+                  {t("appointments.notesOptional")}
                 </label>
                 <textarea
                   rows={3}
-                  placeholder="Add any notes for this appointment"
+                  placeholder={t("appointments.notesPlaceholder")}
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue resize-none"
                 />
               </div>
@@ -673,10 +683,10 @@ export default function AppointmentsManagement() {
                 className="flex-1"
                 onClick={() => setShowAddModal(false)}
               >
-                Cancel
+                {t("common.cancel")}
               </Button>
               <Button className="flex-1 bg-dental-blue hover:bg-dental-blue/90">
-                Schedule Appointment
+                {t("appointments.scheduleAppointment")}
               </Button>
             </div>
           </div>

@@ -4,11 +4,12 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { safeStorage } from "@/lib/browser-compat";
+import { useTranslation } from "@/lib/i18n";
 import {
   FaTooth,
   FaCalendarAlt,
   FaBoxes,
-  FaMoneyBillWave,
   FaUsers,
   FaChartLine,
   FaCog,
@@ -26,8 +27,6 @@ import {
   FaChevronRight,
   FaAllergies,
   FaNotesMedical,
-  FaReceipt,
-  FaCreditCard,
   FaCheckCircle,
   FaClock,
   FaEdit,
@@ -50,7 +49,6 @@ interface Patient {
   registeredDate: string;
   lastVisit: string;
   totalVisits: number;
-  totalSpent: number;
   status: string;
   notes: string;
 }
@@ -61,9 +59,7 @@ interface PatientHistory {
     type: string;
     doctor: string;
     status: string;
-    cost: number;
   }[];
-  payments: { date: string; amount: number; method: string; invoice: string }[];
   treatments: {
     tooth: string;
     treatment: string;
@@ -74,11 +70,12 @@ interface PatientHistory {
 
 export default function PatientsPage() {
   const router = useRouter();
+  const { t, language, setLanguage } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [showPatientModal, setShowPatientModal] = useState(false);
   const [activeTab, setActiveTab] = useState<
-    "info" | "appointments" | "payments" | "treatments"
+    "info" | "appointments" | "treatments"
   >("info");
   const [statusFilter, setStatusFilter] = useState<
     "all" | "active" | "inactive"
@@ -100,16 +97,16 @@ export default function PatientsPage() {
   // Check auth and load user data (auth disabled)
   useEffect(() => {
     // Auth disabled - allow access
-    // const isAuthenticated = localStorage.getItem("adminAuth") === "true";
+    // const isAuthenticated = safeStorage.getItem("adminAuth") === "true";
     // if (!isAuthenticated) {
     //   router.push("/admin/login");
     //   return;
     // }
 
-    const role = localStorage.getItem("userRole") || "doctor";
-    const storedDoctorId = localStorage.getItem("doctorId");
-    const storedAssignedIds = localStorage.getItem("assignedDoctorIds");
-    const storedUser = localStorage.getItem("adminUser");
+    const role = safeStorage.getItem("userRole") || "doctor";
+    const storedDoctorId = safeStorage.getItem("doctorId");
+    const storedAssignedIds = safeStorage.getItem("assignedDoctorIds");
+    const storedUser = safeStorage.getItem("adminUser");
 
     setUserRole(role);
     if (storedDoctorId) setDoctorId(parseInt(storedDoctorId));
@@ -138,18 +135,13 @@ export default function PatientsPage() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("adminAuth");
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("adminUser");
-    localStorage.removeItem("userRole");
-    localStorage.removeItem("doctorId");
-    localStorage.removeItem("assignedDoctorIds");
-    // Logout disabled - no redirect
-    // router.push("/admin/login");
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-LB").format(amount) + " LBP";
+    safeStorage.removeItem("adminAuth");
+    safeStorage.removeItem("authToken");
+    safeStorage.removeItem("adminUser");
+    safeStorage.removeItem("userRole");
+    safeStorage.removeItem("doctorId");
+    safeStorage.removeItem("assignedDoctorIds");
+    router.push("/admin/login");
   };
 
   const calculateAge = (dateOfBirth: string) => {
@@ -187,7 +179,6 @@ export default function PatientsPage() {
   const totalPatients = patients.length;
   const activePatients = patients.filter((p) => p.status === "active").length;
   const totalVisits = patients.reduce((sum, p) => sum + p.totalVisits, 0);
-  const totalRevenue = patients.reduce((sum, p) => sum + p.totalSpent, 0);
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -200,7 +191,7 @@ export default function PatientsPage() {
             </div>
             <div>
               <span className="text-lg font-bold">BrightSmile</span>
-              <p className="text-xs text-gray-400">Admin Panel</p>
+              <p className="text-xs text-gray-400">{t("nav.adminPanel")}</p>
             </div>
           </Link>
         </div>
@@ -211,37 +202,28 @@ export default function PatientsPage() {
             className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
           >
             <FaChartLine className="text-lg" />
-            <span className="font-medium">Dashboard</span>
+            <span className="font-medium">{t("nav.dashboard")}</span>
           </Link>
           <Link
             href="/admin/appointments"
             className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
           >
             <FaCalendarAlt className="text-lg" />
-            <span className="font-medium">Appointments</span>
+            <span className="font-medium">{t("nav.appointments")}</span>
           </Link>
           <Link
             href="/admin/inventory"
             className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
           >
             <FaBoxes className="text-lg" />
-            <span className="font-medium">Inventory</span>
+            <span className="font-medium">{t("nav.inventory")}</span>
           </Link>
-          {userRole === "doctor" && (
-            <Link
-              href="/admin/transactions"
-              className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
-            >
-              <FaMoneyBillWave className="text-lg" />
-              <span className="font-medium">Transactions</span>
-            </Link>
-          )}
           <Link
             href="/admin/patients"
             className="flex items-center space-x-3 px-4 py-3 bg-dental-blue/20 text-dental-lightblue rounded-xl"
           >
             <FaUsers className="text-lg" />
-            <span className="font-medium">Patients</span>
+            <span className="font-medium">{t("nav.patients")}</span>
           </Link>
         </nav>
 
@@ -252,7 +234,7 @@ export default function PatientsPage() {
               className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
             >
               <FaCog className="text-lg" />
-              <span className="font-medium">Settings</span>
+              <span className="font-medium">{t("nav.settings")}</span>
             </Link>
           )}
           <button
@@ -260,7 +242,7 @@ export default function PatientsPage() {
             className="w-full flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-red-500/20 hover:text-red-400 rounded-xl transition-colors"
           >
             <FaSignOutAlt className="text-lg" />
-            <span className="font-medium">Logout</span>
+            <span className="font-medium">{t("common.logout")}</span>
           </button>
         </div>
       </aside>
@@ -269,18 +251,36 @@ export default function PatientsPage() {
       <div className="flex-1 flex flex-col">
         <header className="bg-white shadow-sm px-8 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Patients</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{t("patients.patients")}</h1>
             <p className="text-gray-500 text-sm">
               {currentUser
                 ? `${currentUser.firstName} ${currentUser.lastName}'s`
-                : "Manage"}{" "}
-              patient records
+                : t("common.manage")}{" "}
+              {t("patients.patientRecords")}
             </p>
           </div>
-          <Button className="bg-dental-blue hover:bg-dental-blue/90">
-            <FaPlus className="mr-2" />
-            Add Patient
-          </Button>
+          <div className="flex items-center gap-3">
+            {/* Language Switcher */}
+            <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+              {(["en", "fr", "ar"] as const).map((lang) => (
+                <button
+                  key={lang}
+                  onClick={() => setLanguage(lang)}
+                  className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                    language === lang
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  {lang.toUpperCase()}
+                </button>
+              ))}
+            </div>
+            <Button className="bg-dental-blue hover:bg-dental-blue/90">
+              <FaPlus className="mr-2 rtl:mr-0 rtl:ml-2" />
+              {t("patients.addPatient")}
+            </Button>
+          </div>
         </header>
 
         <main className="flex-1 p-8 overflow-auto">
@@ -301,7 +301,7 @@ export default function PatientsPage() {
                       <p className="text-2xl font-bold text-gray-900">
                         {totalPatients}
                       </p>
-                      <p className="text-sm text-gray-500">Total Patients</p>
+                      <p className="text-sm text-gray-500">{t("patients.totalPatients")}</p>
                     </div>
                   </div>
                 </div>
@@ -314,7 +314,7 @@ export default function PatientsPage() {
                       <p className="text-2xl font-bold text-gray-900">
                         {activePatients}
                       </p>
-                      <p className="text-sm text-gray-500">Active Patients</p>
+                      <p className="text-sm text-gray-500">{t("patients.activePatients")}</p>
                     </div>
                   </div>
                 </div>
@@ -327,20 +327,7 @@ export default function PatientsPage() {
                       <p className="text-2xl font-bold text-gray-900">
                         {totalVisits}
                       </p>
-                      <p className="text-sm text-gray-500">Total Visits</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
-                      <FaMoneyBillWave className="text-yellow-600 text-xl" />
-                    </div>
-                    <div>
-                      <p className="text-lg font-bold text-gray-900">
-                        {formatCurrency(totalRevenue)}
-                      </p>
-                      <p className="text-sm text-gray-500">Total Revenue</p>
+                      <p className="text-sm text-gray-500">{t("patients.totalVisits")}</p>
                     </div>
                   </div>
                 </div>
@@ -350,13 +337,13 @@ export default function PatientsPage() {
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-6">
                 <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
                   <div className="flex-1 relative">
-                    <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <FaSearch className="absolute left-4 rtl:left-auto rtl:right-4 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
                       type="text"
-                      placeholder="Search by name, email, or phone..."
+                      placeholder={t("patients.searchPlaceholder")}
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
+                      className="w-full pl-12 rtl:pl-4 rtl:pr-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
                     />
                   </div>
                   <div className="flex gap-2">
@@ -368,7 +355,7 @@ export default function PatientsPage() {
                           : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                       }`}
                     >
-                      All
+                      {t("patients.all")}
                     </button>
                     <button
                       onClick={() => setStatusFilter("active")}
@@ -378,7 +365,7 @@ export default function PatientsPage() {
                           : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                       }`}
                     >
-                      Active
+                      {t("patients.active")}
                     </button>
                     <button
                       onClick={() => setStatusFilter("inactive")}
@@ -388,7 +375,7 @@ export default function PatientsPage() {
                           : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                       }`}
                     >
-                      Inactive
+                      {t("patients.inactive")}
                     </button>
                   </div>
                 </div>
@@ -416,7 +403,7 @@ export default function PatientsPage() {
                               {patient.name}
                             </h3>
                             <p className="text-sm text-gray-500">
-                              {calculateAge(patient.dateOfBirth)} years old
+                              {calculateAge(patient.dateOfBirth)} {t("patients.yearsOld")}
                             </p>
                           </div>
                         </div>
@@ -427,7 +414,7 @@ export default function PatientsPage() {
                               : "bg-gray-100 text-gray-500"
                           }`}
                         >
-                          {patient.status === "active" ? "Active" : "Inactive"}
+                          {patient.status === "active" ? t("patients.active") : t("patients.inactive")}
                         </span>
                       </div>
 
@@ -448,21 +435,15 @@ export default function PatientsPage() {
 
                       <div className="border-t border-gray-100 pt-4 flex justify-between text-sm">
                         <div>
-                          <p className="text-gray-500">Last Visit</p>
+                          <p className="text-gray-500">{t("patients.lastVisit")}</p>
                           <p className="font-semibold text-gray-900">
                             {new Date(patient.lastVisit).toLocaleDateString()}
                           </p>
                         </div>
-                        <div className="text-right">
-                          <p className="text-gray-500">Total Visits</p>
+                        <div className="text-right rtl:text-left">
+                          <p className="text-gray-500">{t("patients.totalVisits")}</p>
                           <p className="font-semibold text-gray-900">
                             {patient.totalVisits}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-gray-500">Total Spent</p>
-                          <p className="font-semibold text-dental-blue">
-                            {formatCurrency(patient.totalSpent)}
                           </p>
                         </div>
                       </div>
@@ -475,10 +456,10 @@ export default function PatientsPage() {
                     <FaUsers className="text-gray-400 text-2xl" />
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    No Patients Found
+                    {t("patients.noPatientsFound")}
                   </h3>
                   <p className="text-gray-500">
-                    No patients match your search criteria.
+                    {t("patients.noPatientsDesc")}
                   </p>
                 </div>
               )}
@@ -505,7 +486,7 @@ export default function PatientsPage() {
                     {selectedPatient.name}
                   </h2>
                   <p className="text-gray-500">
-                    Patient since{" "}
+                    {t("patients.patientSince")}{" "}
                     {new Date(
                       selectedPatient.registeredDate,
                     ).toLocaleDateString()}
@@ -514,13 +495,13 @@ export default function PatientsPage() {
               </div>
               <div className="flex items-center gap-3">
                 <Button variant="outline" size="sm">
-                  <FaEdit className="mr-2" /> Edit
+                  <FaEdit className="mr-2 rtl:mr-0 rtl:ml-2" /> {t("common.edit")}
                 </Button>
                 <Button
                   size="sm"
                   className="bg-dental-blue hover:bg-dental-blue/90"
                 >
-                  <FaCalendarPlus className="mr-2" /> Book Appointment
+                  <FaCalendarPlus className="mr-2 rtl:mr-0 rtl:ml-2" /> {t("patients.bookAppointment")}
                 </Button>
                 <button
                   onClick={() => setShowPatientModal(false)}
@@ -541,7 +522,7 @@ export default function PatientsPage() {
                     : "text-gray-500 hover:text-gray-700"
                 }`}
               >
-                <FaIdCard className="inline mr-2" /> Info
+                <FaIdCard className="inline mr-2 rtl:mr-0 rtl:ml-2" /> {t("patients.info")}
                 {activeTab === "info" && (
                   <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-dental-blue" />
                 )}
@@ -554,21 +535,8 @@ export default function PatientsPage() {
                     : "text-gray-500 hover:text-gray-700"
                 }`}
               >
-                <FaCalendarAlt className="inline mr-2" /> Appointments
+                <FaCalendarAlt className="inline mr-2 rtl:mr-0 rtl:ml-2" /> {t("appointments.appointments")}
                 {activeTab === "appointments" && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-dental-blue" />
-                )}
-              </button>
-              <button
-                onClick={() => setActiveTab("payments")}
-                className={`px-6 py-4 font-medium transition-colors relative ${
-                  activeTab === "payments"
-                    ? "text-dental-blue"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                <FaCreditCard className="inline mr-2" /> Payments
-                {activeTab === "payments" && (
                   <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-dental-blue" />
                 )}
               </button>
@@ -580,7 +548,7 @@ export default function PatientsPage() {
                     : "text-gray-500 hover:text-gray-700"
                 }`}
               >
-                <FaTooth className="inline mr-2" /> Treatments
+                <FaTooth className="inline mr-2 rtl:mr-0 rtl:ml-2" /> {t("patients.treatmentsTab")}
                 {activeTab === "treatments" && (
                   <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-dental-blue" />
                 )}
@@ -595,7 +563,7 @@ export default function PatientsPage() {
                   <div className="space-y-6">
                     <div className="bg-gray-50 rounded-xl p-4">
                       <h3 className="font-semibold text-gray-900 mb-4">
-                        Contact Information
+                        {t("patients.contactInformation")}
                       </h3>
                       <div className="space-y-3">
                         <div className="flex items-center gap-3">
@@ -621,11 +589,11 @@ export default function PatientsPage() {
 
                     <div className="bg-gray-50 rounded-xl p-4">
                       <h3 className="font-semibold text-gray-900 mb-4">
-                        Personal Details
+                        {t("patients.personalDetails")}
                       </h3>
                       <div className="space-y-3">
                         <div className="flex justify-between">
-                          <span className="text-gray-500">Date of Birth</span>
+                          <span className="text-gray-500">{t("patients.dateOfBirth")}</span>
                           <span className="font-medium text-gray-900">
                             {new Date(
                               selectedPatient.dateOfBirth,
@@ -634,13 +602,13 @@ export default function PatientsPage() {
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-500">Blood Type</span>
+                          <span className="text-gray-500">{t("patients.bloodType")}</span>
                           <span className="font-medium text-gray-900">
                             {selectedPatient.bloodType}
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-500">Insurance</span>
+                          <span className="text-gray-500">{t("patients.insurance")}</span>
                           <span className="font-medium text-gray-900">
                             {selectedPatient.insurance}
                           </span>
@@ -652,7 +620,7 @@ export default function PatientsPage() {
                   <div className="space-y-6">
                     <div className="bg-red-50 rounded-xl p-4">
                       <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <FaAllergies className="text-red-500" /> Allergies
+                        <FaAllergies className="text-red-500" /> {t("patients.allergies")}
                       </h3>
                       {selectedPatient.allergies.length > 0 ? (
                         <div className="flex flex-wrap gap-2">
@@ -666,35 +634,29 @@ export default function PatientsPage() {
                           ))}
                         </div>
                       ) : (
-                        <p className="text-gray-500">No known allergies</p>
+                        <p className="text-gray-500">{t("patients.noKnownAllergies")}</p>
                       )}
                     </div>
 
                     <div className="bg-blue-50 rounded-xl p-4">
                       <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <FaNotesMedical className="text-blue-500" /> Notes
+                        <FaNotesMedical className="text-blue-500" /> {t("patients.notesSection")}
                       </h3>
                       <p className="text-gray-700">
-                        {selectedPatient.notes || "No notes available"}
+                        {selectedPatient.notes || t("patients.noNotes")}
                       </p>
                     </div>
 
                     <div className="bg-green-50 rounded-xl p-4">
                       <h3 className="font-semibold text-gray-900 mb-4">
-                        Statistics
+                        {t("patients.statistics")}
                       </h3>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="text-center p-3 bg-white rounded-lg">
                           <p className="text-2xl font-bold text-gray-900">
                             {selectedPatient.totalVisits}
                           </p>
-                          <p className="text-xs text-gray-500">Total Visits</p>
-                        </div>
-                        <div className="text-center p-3 bg-white rounded-lg">
-                          <p className="text-lg font-bold text-dental-blue">
-                            {formatCurrency(selectedPatient.totalSpent)}
-                          </p>
-                          <p className="text-xs text-gray-500">Total Spent</p>
+                          <p className="text-xs text-gray-500">{t("patients.totalVisits")}</p>
                         </div>
                       </div>
                     </div>
@@ -726,9 +688,6 @@ export default function PatientsPage() {
                           </div>
                         </div>
                         <div className="flex items-center gap-4">
-                          <span className="font-medium text-gray-900">
-                            {formatCurrency(apt.cost)}
-                          </span>
                           <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
                             {apt.status}
                           </span>
@@ -737,43 +696,7 @@ export default function PatientsPage() {
                     ))
                   ) : (
                     <div className="text-center py-8 text-gray-500">
-                      No appointments found
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Payments Tab */}
-              {activeTab === "payments" && patientHistory && (
-                <div className="space-y-4">
-                  {patientHistory.payments.length > 0 ? (
-                    patientHistory.payments.map((payment, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-4 bg-gray-50 rounded-xl"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                            <FaReceipt className="text-green-600" />
-                          </div>
-                          <div>
-                            <p className="font-semibold text-gray-900">
-                              {payment.invoice}
-                            </p>
-                            <p className="text-sm text-gray-500">
-                              {payment.method} •{" "}
-                              {new Date(payment.date).toLocaleDateString()}
-                            </p>
-                          </div>
-                        </div>
-                        <span className="font-bold text-green-600">
-                          +{formatCurrency(payment.amount)}
-                        </span>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      No payments found
+                      {t("patients.noAppointmentsFound")}
                     </div>
                   )}
                 </div>
@@ -797,7 +720,7 @@ export default function PatientsPage() {
                               {treatment.treatment}
                             </p>
                             <p className="text-sm text-gray-500">
-                              Tooth: {treatment.tooth} • {treatment.doctor}
+                              {t("patients.tooth")} {treatment.tooth} • {treatment.doctor}
                             </p>
                           </div>
                         </div>
@@ -808,7 +731,7 @@ export default function PatientsPage() {
                     ))
                   ) : (
                     <div className="text-center py-8 text-gray-500">
-                      No treatments found
+                      {t("patients.noTreatmentsFound")}
                     </div>
                   )}
                 </div>
@@ -818,7 +741,7 @@ export default function PatientsPage() {
               {activeTab !== "info" && !patientHistory && (
                 <div className="text-center py-12">
                   <div className="w-8 h-8 border-4 border-dental-blue/30 border-t-dental-blue rounded-full animate-spin mx-auto"></div>
-                  <p className="text-gray-500 mt-4">Loading history...</p>
+                  <p className="text-gray-500 mt-4">{t("patients.loadingHistory")}</p>
                 </div>
               )}
             </div>

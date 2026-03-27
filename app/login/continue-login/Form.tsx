@@ -25,11 +25,15 @@ import {
 } from "@/components/ui/popover";
 import { ChevronDownIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "@/lib/i18n";
+import { ar, fr, enUS } from "date-fns/locale";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 export default function Form() {
   const router = useRouter();
+  const { t, language, setLanguage } = useTranslation();
+  const dateLocale = language === "ar" ? ar : language === "fr" ? fr : enUS;
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -68,6 +72,24 @@ export default function Form() {
       <div className="w-full max-w-2xl">
         {/* Logo */}
         <div className="text-center mb-8">
+          <div className="flex justify-center mb-4">
+            <div className="flex items-center gap-1 bg-white/20 rounded-lg p-1">
+              {(["en", "fr", "ar"] as const).map((lang) => (
+                <button
+                  key={lang}
+                  type="button"
+                  onClick={() => setLanguage(lang)}
+                  className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                    language === lang
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-white/80 hover:text-white"
+                  }`}
+                >
+                  {lang.toUpperCase()}
+                </button>
+              ))}
+            </div>
+          </div>
           <Link href="/" className="inline-flex items-center space-x-2">
             <div className="w-12 h-12 bg-gradient-to-br from-dental-blue to-dental-teal rounded-lg flex items-center justify-center shadow-lg">
               <FaTooth className="text-white text-2xl" />
@@ -75,10 +97,10 @@ export default function Form() {
             <span className="text-2xl font-bold text-white">BrightSmile</span>
           </Link>
           <h2 className="mt-4 text-3xl font-extrabold text-white tracking-tight">
-            Complete Your Profile
+            {t("continueLogin.title")}
           </h2>
           <p className="mt-2 text-base text-white/90 font-light">
-            Help us serve you better by providing your information
+            {t("continueLogin.subtitle")}
           </p>
         </div>
 
@@ -86,10 +108,10 @@ export default function Form() {
           {/* Personal Information */}
           <FieldSet className="border-2 border-dental-blue/20 rounded-xl p-6 bg-white shadow-xl">
             <FieldLegend className="text-2xl font-bold text-dental-blue px-3 bg-white tracking-tight">
-              Personal Information
+              {t("continueLogin.personalInfo")}
             </FieldLegend>
             <FieldDescription className="text-gray-600 mb-6 font-light text-base">
-              Please provide your basic information
+              {t("continueLogin.personalInfoDesc")}
             </FieldDescription>
             <FieldGroup className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -98,7 +120,7 @@ export default function Form() {
                     htmlFor="firstName"
                     className="text-gray-900 font-semibold text-sm tracking-wide"
                   >
-                    First Name
+                    {t("continueLogin.firstName")}
                   </FieldLabel>
                   <Input
                     value={formData.firstName}
@@ -117,7 +139,7 @@ export default function Form() {
                     htmlFor="lastName"
                     className="text-gray-900 font-semibold text-sm tracking-wide"
                   >
-                    Last Name
+                    {t("continueLogin.lastName")}
                   </FieldLabel>
                   <Input
                     value={formData.lastName}
@@ -138,7 +160,7 @@ export default function Form() {
                     htmlFor="phone"
                     className="text-gray-900 font-semibold text-sm tracking-wide"
                   >
-                    Phone Number
+                    {t("continueLogin.phone")}
                   </FieldLabel>
                   <Input
                     value={formData.phone}
@@ -146,6 +168,7 @@ export default function Form() {
                     id="phone"
                     name="phone"
                     type="tel"
+                    dir="ltr"
                     placeholder="+961 3 123 456"
                     required
                     className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
@@ -157,7 +180,7 @@ export default function Form() {
                     htmlFor="dateOfBirth"
                     className="text-gray-900 font-semibold text-sm tracking-wide"
                   >
-                    Date of Birth
+                    {t("continueLogin.dateOfBirth")}
                   </FieldLabel>
                   <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                     <PopoverTrigger asChild>
@@ -168,7 +191,7 @@ export default function Form() {
                       >
                         {formData.dateOfBirth
                           ? new Date(formData.dateOfBirth).toLocaleDateString()
-                          : "Select date"}
+                          : t("continueLogin.selectDate")}
                         <ChevronDownIcon />
                       </Button>
                     </PopoverTrigger>
@@ -195,6 +218,7 @@ export default function Form() {
                           setCalendarOpen(false);
                         }}
                         captionLayout="dropdown"
+                        locale={dateLocale}
                         fromYear={1920}
                         toYear={new Date().getFullYear()}
                         className="rounded-md border text-base"
@@ -229,10 +253,10 @@ export default function Form() {
           {/* Address Information */}
           <FieldSet className="border-2 border-dental-blue/20 rounded-xl p-6 bg-white shadow-xl">
             <FieldLegend className="text-2xl font-bold text-dental-blue px-3 bg-white tracking-tight">
-              Address Information
+              {t("continueLogin.addressInfo")}
             </FieldLegend>
             <FieldDescription className="text-gray-600 mb-6 font-light text-base">
-              Where can we reach you?
+              {t("continueLogin.addressInfoDesc")}
             </FieldDescription>
             <FieldGroup className="space-y-4">
               <Field>
@@ -240,7 +264,7 @@ export default function Form() {
                   htmlFor="address"
                   className="text-gray-900 font-semibold text-sm tracking-wide"
                 >
-                  Street Address
+                  {t("continueLogin.streetAddress")}
                 </FieldLabel>
                 <Input
                   value={formData.address}
@@ -260,7 +284,7 @@ export default function Form() {
                     htmlFor="city"
                     className="text-gray-900 font-semibold text-sm tracking-wide"
                   >
-                    City
+                    {t("continueLogin.city")}
                   </FieldLabel>
                   <Input
                     value={formData.city}
@@ -279,7 +303,7 @@ export default function Form() {
                     htmlFor="governate"
                     className="text-gray-900 font-semibold text-sm tracking-wide"
                   >
-                    Governorate
+                    {t("continueLogin.governorate")}
                   </FieldLabel>
                   <Input
                     value={formData.governate}
@@ -299,10 +323,10 @@ export default function Form() {
           {/* Emergency Contact */}
           <FieldSet className="border-2 border-dental-blue/20 rounded-xl p-6 bg-white shadow-xl">
             <FieldLegend className="text-2xl font-bold text-dental-blue px-3 bg-white tracking-tight">
-              Emergency Contact
+              {t("continueLogin.emergencyContact")}
             </FieldLegend>
             <FieldDescription className="text-gray-600 mb-6 font-light text-base">
-              Who should we contact in case of emergency?
+              {t("continueLogin.emergencyContactDesc")}
             </FieldDescription>
             <FieldGroup className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -311,7 +335,7 @@ export default function Form() {
                     htmlFor="emergencyContact"
                     className="text-gray-900 font-semibold text-sm tracking-wide"
                   >
-                    Contact Name
+                    {t("continueLogin.contactName")}
                   </FieldLabel>
                   <Input
                     value={formData.emergencyContact}
@@ -330,7 +354,7 @@ export default function Form() {
                     htmlFor="emergencyPhone"
                     className="text-gray-900 font-semibold text-sm tracking-wide"
                   >
-                    Contact Phone
+                    {t("continueLogin.contactPhone")}
                   </FieldLabel>
                   <Input
                     value={formData.emergencyPhone}
@@ -338,6 +362,7 @@ export default function Form() {
                     id="emergencyPhone"
                     name="emergencyPhone"
                     type="tel"
+                    dir="ltr"
                     placeholder="+961 3 987 654"
                     required
                     className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
@@ -350,10 +375,10 @@ export default function Form() {
           {/* Insurance Information */}
           <FieldSet className="border-2 border-dental-blue/20 rounded-xl p-6 bg-white shadow-xl">
             <FieldLegend className="text-2xl font-bold text-dental-blue px-3 bg-white tracking-tight">
-              Insurance Information
+              {t("continueLogin.insuranceInfo")}
             </FieldLegend>
             <FieldDescription className="text-gray-600 mb-6 font-light text-base">
-              Please provide your insurance details
+              {t("continueLogin.insuranceInfoDesc")}
             </FieldDescription>
             <FieldGroup className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -362,7 +387,7 @@ export default function Form() {
                     htmlFor="insuranceProvider"
                     className="text-gray-900 font-semibold text-sm tracking-wide"
                   >
-                    Insurance Provider
+                    {t("continueLogin.insuranceProvider")}
                   </FieldLabel>
                   <Input
                     value={formData.insuranceProvider}
@@ -380,7 +405,7 @@ export default function Form() {
                     htmlFor="insurancePolicy"
                     className="text-gray-900 font-semibold text-sm tracking-wide"
                   >
-                    Policy Number
+                    {t("continueLogin.policyNumber")}
                   </FieldLabel>
                   <Input
                     value={formData.insurancePolicy}
@@ -399,10 +424,10 @@ export default function Form() {
           {/* Medical History */}
           <FieldSet className="border-2 border-dental-blue/20 rounded-xl p-6 bg-white shadow-xl">
             <FieldLegend className="text-2xl font-bold text-dental-blue px-3 bg-white tracking-tight">
-              Medical History
+              {t("continueLogin.medicalHistory")}
             </FieldLegend>
             <FieldDescription className="text-gray-600 mb-6 font-light text-base">
-              Help us provide better care by sharing your medical history
+              {t("continueLogin.medicalHistoryDesc")}
             </FieldDescription>
             <FieldGroup className="space-y-4">
               <Field>
@@ -410,7 +435,7 @@ export default function Form() {
                   htmlFor="medicalConditions"
                   className="text-gray-900 font-semibold text-sm tracking-wide"
                 >
-                  Medical Conditions
+                  {t("continueLogin.medicalConditions")}
                 </FieldLabel>
                 <Input
                   value={formData.medicalConditions}
@@ -428,7 +453,7 @@ export default function Form() {
                   htmlFor="allergies"
                   className="text-gray-900 font-semibold text-sm tracking-wide"
                 >
-                  Allergies
+                  {t("continueLogin.allergies")}
                 </FieldLabel>
                 <Input
                   value={formData.allergies}
@@ -446,7 +471,7 @@ export default function Form() {
                   htmlFor="currentMedications"
                   className="text-gray-900 font-semibold text-sm tracking-wide"
                 >
-                  Current Medications
+                  {t("continueLogin.currentMedications")}
                 </FieldLabel>
                 <Input
                   value={formData.currentMedications}
@@ -469,7 +494,7 @@ export default function Form() {
               size="lg"
               onClick={submitForm}
             >
-              Submit Patient Information
+              {t("continueLogin.submit")}
             </Button>
           </Link>
         </form>

@@ -1,13 +1,18 @@
+"use client";
+
 import Link from "next/link";
 import { FaTooth } from "react-icons/fa";
 import { Menu } from "lucide-react";
+import { useTranslation } from "@/lib/i18n";
 
-// Server Component - Navigation Bar
+// Client Component - Navigation Bar
 export default function Navbar() {
+  const { t, language, setLanguage } = useTranslation();
+
   const navLinks = [
-    { href: "#services", label: "Services" },
-    { href: "#about", label: "About" },
-    { href: "#credentials", label: "Credentials" },
+    { href: "#services", label: t("landing.services") },
+    { href: "#about", label: t("landing.about") },
+    { href: "#credentials", label: t("landing.credentials") },
   ];
 
   return (
@@ -18,7 +23,12 @@ export default function Navbar() {
           <Logo />
 
           {/* Desktop Navigation */}
-          <DesktopNav navLinks={navLinks} />
+          <DesktopNav
+            navLinks={navLinks}
+            patientPortalLabel={t("landing.patientPortal")}
+            language={language}
+            setLanguage={setLanguage}
+          />
 
           {/* Mobile Menu Button */}
           <MobileMenuButton />
@@ -45,11 +55,17 @@ export function Logo() {
 // Reusable Desktop Navigation Component
 function DesktopNav({
   navLinks,
+  patientPortalLabel,
+  language,
+  setLanguage,
 }: {
   navLinks: Array<{ href: string; label: string }>;
+  patientPortalLabel: string;
+  language: string;
+  setLanguage: (lang: "en" | "fr" | "ar") => void;
 }) {
   return (
-    <div className="hidden md:flex items-center space-x-8">
+    <div className="hidden md:flex items-center space-x-6">
       {navLinks.map((link) => (
         <Link
           key={link.href}
@@ -59,11 +75,26 @@ function DesktopNav({
           {link.label}
         </Link>
       ))}
+      <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+        {(["en", "fr", "ar"] as const).map((lang) => (
+          <button
+            key={lang}
+            onClick={() => setLanguage(lang)}
+            className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+              language === lang
+                ? "bg-white text-gray-900 shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            {lang.toUpperCase()}
+          </button>
+        ))}
+      </div>
       <Link
         href="/login"
         className="bg-dental-blue text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition-all transform hover:scale-105 font-semibold shadow-md"
       >
-        Patient Portal
+        {patientPortalLabel}
       </Link>
     </div>
   );

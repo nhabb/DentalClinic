@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { safeStorage } from "@/lib/browser-compat";
+import { useTranslation } from "@/lib/i18n";
 import {
   FaTooth,
   FaBell,
@@ -28,6 +30,7 @@ type Notification = {
 
 export default function PatientNotifications() {
   const router = useRouter();
+  const { t, language, setLanguage } = useTranslation();
   const [filter, setFilter] = useState<"all" | "unread">("all");
   const [user, setUser] = useState({
     name: "",
@@ -53,11 +56,10 @@ export default function PatientNotifications() {
   }, []);
 
   const handleLogout = async () => {
-    localStorage.removeItem("patientAuth");
-    localStorage.removeItem("patientUser");
-    localStorage.removeItem("authToken");
-    // Logout disabled - no redirect
-    // router.push("/login");
+    safeStorage.removeItem("patientAuth");
+    safeStorage.removeItem("patientUser");
+    safeStorage.removeItem("authToken");
+    router.push("/login");
   };
 
   const markAsRead = async (id: number) => {
@@ -116,7 +118,7 @@ export default function PatientNotifications() {
                 href="/patient-dashboard"
                 className="text-gray-600 hover:text-gray-900"
               >
-                Dashboard
+                {t("nav.dashboard")}
               </Link>
               <div className="text-right hidden sm:block">
                 <p className="text-sm font-medium text-gray-900">{user.name}</p>
@@ -128,13 +130,29 @@ export default function PatientNotifications() {
                   .map((n) => n[0])
                   .join("")}
               </div>
+              {/* Language Switcher */}
+              <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+                {(["en", "fr", "ar"] as const).map((lang) => (
+                  <button
+                    key={lang}
+                    onClick={() => setLanguage(lang)}
+                    className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                      language === lang
+                        ? "bg-white text-gray-900 shadow-sm"
+                        : "text-gray-500 hover:text-gray-700"
+                    }`}
+                  >
+                    {lang.toUpperCase()}
+                  </button>
+                ))}
+              </div>
               <Button
                 onClick={handleLogout}
                 variant="outline"
                 size="sm"
                 className="text-gray-600 hover:text-gray-900"
               >
-                Logout
+                {t("common.logout")}
               </Button>
             </div>
           </div>
@@ -152,11 +170,10 @@ export default function PatientNotifications() {
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">
-                  Notifications
+                  {t("notifications.notifications")}
                 </h1>
                 <p className="text-gray-600">
-                  {unreadCount} unread notification
-                  {unreadCount !== 1 ? "s" : ""}
+                  {unreadCount} {unreadCount !== 1 ? t("notifications.unreadNotifications") : t("notifications.unreadNotification")}
                 </p>
               </div>
             </div>
@@ -173,7 +190,7 @@ export default function PatientNotifications() {
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >
-                All ({notifications.length})
+                {t("notifications.all")} ({notifications.length})
               </button>
               <button
                 onClick={() => setFilter("unread")}
@@ -183,7 +200,7 @@ export default function PatientNotifications() {
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >
-                Unread ({unreadCount})
+                {t("notifications.unread")} ({unreadCount})
               </button>
             </div>
             {unreadCount > 0 && (
@@ -192,7 +209,7 @@ export default function PatientNotifications() {
                 className="flex items-center gap-2 px-4 py-2 text-dental-blue hover:bg-dental-blue/10 rounded-lg transition-colors font-medium"
               >
                 <FaCheck />
-                Mark all as read
+                {t("notifications.markAllAsRead")}
               </button>
             )}
           </div>
@@ -203,10 +220,10 @@ export default function PatientNotifications() {
               <div className="bg-white rounded-xl shadow-sm p-12 text-center">
                 <FaBell className="text-5xl text-gray-300 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  No notifications
+                  {t("notifications.noNotifications")}
                 </h3>
                 <p className="text-gray-500">
-                  You're all caught up! Check back later for updates.
+                  {t("notifications.allCaughtUp")}
                 </p>
               </div>
             ) : (
@@ -214,7 +231,7 @@ export default function PatientNotifications() {
                 <div
                   key={notification.id}
                   className={`bg-white rounded-xl shadow-sm p-5 transition-all hover:shadow-md ${
-                    !notification.read ? "border-l-4 border-dental-blue" : ""
+                    !notification.read ? "border-l-4 rtl:border-l-0 rtl:border-r-4 border-dental-blue" : ""
                   }`}
                 >
                   <div className="flex items-start gap-4">
@@ -227,7 +244,7 @@ export default function PatientNotifications() {
                           {notification.title}
                         </h3>
                         {!notification.read && (
-                          <span className="ml-2 w-2 h-2 bg-dental-blue rounded-full flex-shrink-0"></span>
+                          <span className="ml-2 rtl:ml-0 rtl:mr-2 w-2 h-2 bg-dental-blue rounded-full flex-shrink-0"></span>
                         )}
                       </div>
                       <p className="text-gray-600 text-sm mb-2">
@@ -242,7 +259,7 @@ export default function PatientNotifications() {
                         <button
                           onClick={() => markAsRead(notification.id)}
                           className="p-2 text-gray-400 hover:text-dental-blue hover:bg-dental-blue/10 rounded-lg transition-colors"
-                          title="Mark as read"
+                          title={t("notifications.markAsRead")}
                         >
                           <FaCheck />
                         </button>
@@ -250,7 +267,7 @@ export default function PatientNotifications() {
                       <button
                         onClick={() => deleteNotification(notification.id)}
                         className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Delete"
+                        title={t("notifications.delete")}
                       >
                         <FaTrash />
                       </button>

@@ -1,23 +1,33 @@
-import { MapPin, Phone, Mail, ChevronRight } from "lucide-react";
+"use client";
+
+import { MapPin, Phone, Mail } from "lucide-react";
 import Link from "next/link";
 import { FaTooth } from "react-icons/fa";
+import { useTranslation } from "@/lib/i18n";
 
-// Server Component - Footer
+// Client Component - Footer
 export default function Footer() {
+  const { t } = useTranslation();
   const currentYear = new Date().getFullYear();
 
   const quickLinks = [
-    { href: "#about", label: "About Us" },
-    { href: "#services", label: "Services" },
-    { href: "#credentials", label: "Credentials" },
-    { href: "/book-appointment", label: "Book Appointment" },
-    { href: "/login", label: "Patient Portal" },
+    { href: "#about", label: t("landing.aboutUs") },
+    { href: "#services", label: t("landing.services") },
+    { href: "#credentials", label: t("landing.credentials") },
+    { href: "/book-appointment", label: t("landing.bookAppointment") },
+    { href: "/login", label: t("landing.patientPortal") },
   ];
 
   const officeHours = [
-    { day: "Mon - Fri", hours: "8:00 AM - 6:00 PM" },
-    { day: "Saturday", hours: "9:00 AM - 2:00 PM" },
-    { day: "Sunday", hours: "Closed" },
+    { day: t("landing.monFri"), hours: "8:00 AM - 6:00 PM" },
+    { day: t("landing.saturday"), hours: "9:00 AM - 2:00 PM" },
+    { day: t("landing.sunday"), hours: t("landing.closed") },
+  ];
+
+  const legalLinks = [
+    { href: "#", label: t("landing.privacyPolicy") },
+    { href: "#", label: t("landing.termsOfService") },
+    { href: "#", label: t("landing.hipaaCompliance") },
   ];
 
   return (
@@ -25,27 +35,38 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid md:grid-cols-4 gap-8 mb-8">
           {/* Clinic Info */}
-          <ClinicInfo />
+          <ClinicInfo trustedPartner={t("landing.trustedPartner")} />
 
           {/* Quick Links */}
-          <QuickLinksSection links={quickLinks} />
+          <QuickLinksSection
+            title={t("landing.quickLinks")}
+            links={quickLinks}
+          />
 
           {/* Office Hours */}
-          <OfficeHoursSection hours={officeHours} />
+          <OfficeHoursSection
+            title={t("landing.officeHours")}
+            hours={officeHours}
+            emergencyCare={t("landing.emergencyCare")}
+          />
 
           {/* Contact Info */}
-          <ContactSection />
+          <ContactSection title={t("landing.contactUs")} />
         </div>
 
         {/* Bottom Bar */}
-        <BottomBar currentYear={currentYear} />
+        <BottomBar
+          currentYear={currentYear}
+          allRightsReserved={t("landing.allRightsReserved")}
+          legalLinks={legalLinks}
+        />
       </div>
     </footer>
   );
 }
 
 // Reusable Clinic Info Component
-function ClinicInfo() {
+function ClinicInfo({ trustedPartner }: { trustedPartner: string }) {
   return (
     <div className="md:col-span-1">
       <div className="flex items-center space-x-2 mb-4">
@@ -55,8 +76,7 @@ function ClinicInfo() {
         <span className="text-xl font-bold text-white">BrightSmile</span>
       </div>
       <p className="text-sm text-gray-400 mb-4">
-        Your trusted partner in comprehensive dental care. Serving the community
-        with excellence since 2010.
+        {trustedPartner}
       </p>
       <SocialMediaLinks />
     </div>
@@ -66,18 +86,9 @@ function ClinicInfo() {
 // Reusable Social Media Links Component
 function SocialMediaLinks() {
   const socialLinks = [
-    {
-      name: "Facebook",
-      href: "#",
-    },
-    {
-      name: "Instagram",
-      href: "#",
-    },
-    {
-      name: "Twitter",
-      href: "#",
-    },
+    { name: "Facebook", href: "#" },
+    { name: "Instagram", href: "#" },
+    { name: "Twitter", href: "#" },
   ];
 
   return (
@@ -98,13 +109,15 @@ function SocialMediaLinks() {
 
 // Reusable Quick Links Section
 function QuickLinksSection({
+  title,
   links,
 }: {
+  title: string;
   links: Array<{ href: string; label: string }>;
 }) {
   return (
     <div>
-      <h3 className="text-white font-semibold mb-4">Quick Links</h3>
+      <h3 className="text-white font-semibold mb-4">{title}</h3>
       <ul className="space-y-2 text-sm">
         {links.map((link) => (
           <li key={link.href}>
@@ -123,13 +136,17 @@ function QuickLinksSection({
 
 // Reusable Office Hours Section
 function OfficeHoursSection({
+  title,
   hours,
+  emergencyCare,
 }: {
+  title: string;
   hours: Array<{ day: string; hours: string }>;
+  emergencyCare: string;
 }) {
   return (
     <div>
-      <h3 className="text-white font-semibold mb-4">Office Hours</h3>
+      <h3 className="text-white font-semibold mb-4">{title}</h3>
       <ul className="space-y-2 text-sm">
         {hours.map((item, index) => (
           <li key={index} className="flex justify-between">
@@ -139,7 +156,7 @@ function OfficeHoursSection({
         ))}
         <li className="pt-2 border-t border-gray-800">
           <span className="text-dental-teal font-semibold">
-            24/7 Emergency Care
+            {emergencyCare}
           </span>
         </li>
       </ul>
@@ -148,7 +165,7 @@ function OfficeHoursSection({
 }
 
 // Reusable Contact Section
-function ContactSection() {
+function ContactSection({ title }: { title: string }) {
   const contactItems = [
     {
       icon: <Phone className="w-5 h-5 flex-shrink-0 mt-0.5" />,
@@ -169,7 +186,7 @@ function ContactSection() {
 
   return (
     <div>
-      <h3 className="text-white font-semibold mb-4">Contact Us</h3>
+      <h3 className="text-white font-semibold mb-4">{title}</h3>
       <ul className="space-y-3 text-sm">
         {contactItems.map((item, index) => (
           <li key={index}>
@@ -192,18 +209,20 @@ function ContactSection() {
 }
 
 // Reusable Bottom Bar Component
-function BottomBar({ currentYear }: { currentYear: number }) {
-  const legalLinks = [
-    { href: "#", label: "Privacy Policy" },
-    { href: "#", label: "Terms of Service" },
-    { href: "#", label: "HIPAA Compliance" },
-  ];
-
+function BottomBar({
+  currentYear,
+  allRightsReserved,
+  legalLinks,
+}: {
+  currentYear: number;
+  allRightsReserved: string;
+  legalLinks: Array<{ href: string; label: string }>;
+}) {
   return (
     <div className="border-t border-gray-800 pt-8 mt-8">
       <div className="flex flex-col md:flex-row justify-between items-center">
         <p className="text-sm text-gray-400 mb-4 md:mb-0">
-          © {currentYear} BrightSmile Dental Clinic. All rights reserved.
+          © {currentYear} BrightSmile Dental Clinic. {allRightsReserved}
         </p>
         <div className="flex space-x-6 text-sm">
           {legalLinks.map((link, index) => (

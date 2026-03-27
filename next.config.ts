@@ -7,12 +7,6 @@ const nextConfig: NextConfig = {
     removeConsole: process.env.NODE_ENV === "production",
   },
 
-  // Enable experimental features for better browser support
-  experimental: {
-    // Optimize CSS for better cross-browser compatibility
-    optimizeCss: true,
-  },
-
   // Headers for better browser compatibility
   async headers() {
     return [

@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { safeStorage } from "@/lib/browser-compat";
+import { useTranslation } from "@/lib/i18n";
 import {
   FaTooth,
   FaCalendarAlt,
   FaBoxes,
-  FaMoneyBillWave,
   FaUsers,
   FaChartLine,
   FaCog,
@@ -34,24 +36,31 @@ const inventoryItems: {
   currentStock: number;
   minimumStock: number;
   unit: string;
-  costPerUnit: number;
   supplier: string;
   lastRestocked: string;
   status: string;
 }[] = [];
 
-const categories = ["All", "Disposables", "Materials", "Medications", "Instruments"];
+const categoryKeys = ["all", "disposables", "materials", "medications", "instruments"] as const;
+const categoryValues = ["All", "Disposables", "Materials", "Medications", "Instruments"];
 
 export default function InventoryManagement() {
+  const router = useRouter();
+  const { t, language, setLanguage } = useTranslation();
+
+  const handleLogout = () => {
+    safeStorage.removeItem("adminAuth");
+    safeStorage.removeItem("adminUser");
+    safeStorage.removeItem("authToken");
+    safeStorage.removeItem("userRole");
+    router.push("/admin/login");
+  };
+
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState<typeof inventoryItems[0] | null>(null);
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-LB").format(amount) + " LBP";
-  };
 
   const filteredItems = inventoryItems.filter((item) => {
     const matchesSearch =
@@ -62,10 +71,6 @@ export default function InventoryManagement() {
   });
 
   const lowStockCount = inventoryItems.filter((item) => item.status === "low").length;
-  const totalValue = inventoryItems.reduce(
-    (sum, item) => sum + item.currentStock * item.costPerUnit,
-    0
-  );
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
@@ -94,7 +99,7 @@ export default function InventoryManagement() {
             </div>
             <div>
               <span className="text-lg font-bold">BrightSmile</span>
-              <p className="text-xs text-gray-400">Admin Panel</p>
+              <p className="text-xs text-gray-400">{t("nav.adminPanel")}</p>
             </div>
           </Link>
         </div>
@@ -106,35 +111,28 @@ export default function InventoryManagement() {
             className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
           >
             <FaChartLine className="text-lg" />
-            <span className="font-medium">Dashboard</span>
+            <span className="font-medium">{t("nav.dashboard")}</span>
           </Link>
           <Link
             href="/admin/appointments"
             className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
           >
             <FaCalendarAlt className="text-lg" />
-            <span className="font-medium">Appointments</span>
+            <span className="font-medium">{t("nav.appointments")}</span>
           </Link>
           <Link
             href="/admin/inventory"
             className="flex items-center space-x-3 px-4 py-3 bg-dental-blue/20 text-dental-lightblue rounded-xl"
           >
             <FaBoxes className="text-lg" />
-            <span className="font-medium">Inventory</span>
-          </Link>
-          <Link
-            href="/admin/transactions"
-            className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
-          >
-            <FaMoneyBillWave className="text-lg" />
-            <span className="font-medium">Transactions</span>
+            <span className="font-medium">{t("nav.inventory")}</span>
           </Link>
           <Link
             href="/admin/patients"
             className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
           >
             <FaUsers className="text-lg" />
-            <span className="font-medium">Patients</span>
+            <span className="font-medium">{t("nav.patients")}</span>
           </Link>
         </nav>
 
@@ -145,15 +143,15 @@ export default function InventoryManagement() {
             className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
           >
             <FaCog className="text-lg" />
-            <span className="font-medium">Settings</span>
+            <span className="font-medium">{t("nav.settings")}</span>
           </Link>
-          <Link
-            href="/"
-            className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-red-500/20 hover:text-red-400 rounded-xl transition-colors"
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-red-500/20 hover:text-red-400 rounded-xl transition-colors"
           >
             <FaSignOutAlt className="text-lg" />
-            <span className="font-medium">Logout</span>
-          </Link>
+            <span className="font-medium">{t("common.logout")}</span>
+          </button>
         </div>
       </aside>
 
@@ -162,13 +160,31 @@ export default function InventoryManagement() {
         {/* Header */}
         <header className="bg-white shadow-sm px-8 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Inventory Management</h1>
-            <p className="text-gray-500 text-sm">Manage your dental supplies and equipment</p>
+            <h1 className="text-2xl font-bold text-gray-900">{t("inventory.inventoryManagement")}</h1>
+            <p className="text-gray-500 text-sm">{t("inventory.manageSupplies")}</p>
           </div>
-          <Button onClick={() => setShowAddModal(true)} className="bg-dental-blue hover:bg-dental-blue/90">
-            <FaPlus className="mr-2" />
-            Add Item
-          </Button>
+          <div className="flex items-center gap-3">
+            {/* Language Switcher */}
+            <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+              {(["en", "fr", "ar"] as const).map((lang) => (
+                <button
+                  key={lang}
+                  onClick={() => setLanguage(lang)}
+                  className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                    language === lang
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  {lang.toUpperCase()}
+                </button>
+              ))}
+            </div>
+            <Button onClick={() => setShowAddModal(true)} className="bg-dental-blue hover:bg-dental-blue/90">
+              <FaPlus className="mr-2 rtl:mr-0 rtl:ml-2" />
+              {t("inventory.addItem")}
+            </Button>
+          </div>
         </header>
 
         {/* Content */}
@@ -182,7 +198,7 @@ export default function InventoryManagement() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-gray-900">{inventoryItems.length}</p>
-                  <p className="text-sm text-gray-500">Total Items</p>
+                  <p className="text-sm text-gray-500">{t("inventory.totalItems")}</p>
                 </div>
               </div>
             </div>
@@ -193,7 +209,7 @@ export default function InventoryManagement() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-gray-900">{lowStockCount}</p>
-                  <p className="text-sm text-gray-500">Low Stock</p>
+                  <p className="text-sm text-gray-500">{t("inventory.lowStock")}</p>
                 </div>
               </div>
             </div>
@@ -206,18 +222,7 @@ export default function InventoryManagement() {
                   <p className="text-2xl font-bold text-gray-900">
                     {inventoryItems.length - lowStockCount}
                   </p>
-                  <p className="text-sm text-gray-500">Well Stocked</p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                  <FaMoneyBillWave className="text-purple-600 text-xl" />
-                </div>
-                <div>
-                  <p className="text-lg font-bold text-gray-900">{formatCurrency(totalValue)}</p>
-                  <p className="text-sm text-gray-500">Total Value</p>
+                  <p className="text-sm text-gray-500">{t("inventory.wellStocked")}</p>
                 </div>
               </div>
             </div>
@@ -227,17 +232,17 @@ export default function InventoryManagement() {
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-6">
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1 relative">
-                <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                <FaSearch className="absolute left-4 rtl:left-auto rtl:right-4 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search items or suppliers..."
+                  placeholder={t("inventory.searchPlaceholder")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
+                  className="w-full pl-12 rtl:pl-4 rtl:pr-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
                 />
               </div>
               <div className="flex gap-2">
-                {categories.map((category) => (
+                {categoryValues.map((category, idx) => (
                   <button
                     key={category}
                     onClick={() => setSelectedCategory(category)}
@@ -247,7 +252,7 @@ export default function InventoryManagement() {
                         : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                     }`}
                   >
-                    {category}
+                    {t(`inventory.${categoryKeys[idx]}`)}
                   </button>
                 ))}
               </div>
@@ -260,13 +265,12 @@ export default function InventoryManagement() {
               <table className="w-full">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Item</th>
-                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Category</th>
-                    <th className="text-center py-4 px-6 text-sm font-semibold text-gray-600">Stock</th>
-                    <th className="text-right py-4 px-6 text-sm font-semibold text-gray-600">Unit Cost</th>
-                    <th className="text-left py-4 px-6 text-sm font-semibold text-gray-600">Supplier</th>
-                    <th className="text-center py-4 px-6 text-sm font-semibold text-gray-600">Status</th>
-                    <th className="text-center py-4 px-6 text-sm font-semibold text-gray-600">Actions</th>
+                    <th className="text-left rtl:text-right py-4 px-6 text-sm font-semibold text-gray-600">{t("inventory.item")}</th>
+                    <th className="text-left rtl:text-right py-4 px-6 text-sm font-semibold text-gray-600">{t("inventory.category")}</th>
+                    <th className="text-center py-4 px-6 text-sm font-semibold text-gray-600">{t("inventory.stock")}</th>
+                    <th className="text-left rtl:text-right py-4 px-6 text-sm font-semibold text-gray-600">{t("inventory.supplier")}</th>
+                    <th className="text-center py-4 px-6 text-sm font-semibold text-gray-600">{t("common.status")}</th>
+                    <th className="text-center py-4 px-6 text-sm font-semibold text-gray-600">{t("common.actions")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -280,7 +284,7 @@ export default function InventoryManagement() {
                           <div>
                             <p className="font-semibold text-gray-900">{item.name}</p>
                             <p className="text-xs text-gray-500">
-                              Last restocked: {new Date(item.lastRestocked).toLocaleDateString()}
+                              {t("inventory.lastRestocked")} {new Date(item.lastRestocked).toLocaleDateString()}
                             </p>
                           </div>
                         </div>
@@ -296,20 +300,17 @@ export default function InventoryManagement() {
                         </p>
                         <p className="text-xs text-gray-500">{item.unit}</p>
                       </td>
-                      <td className="py-4 px-6 text-right">
-                        <p className="font-medium text-gray-900">{formatCurrency(item.costPerUnit)}</p>
-                      </td>
                       <td className="py-4 px-6">
                         <p className="text-gray-700 text-sm">{item.supplier}</p>
                       </td>
                       <td className="py-4 px-6 text-center">
                         {item.status === "low" ? (
                           <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">
-                            <FaExclamationTriangle className="text-xs" /> Low Stock
+                            <FaExclamationTriangle className="text-xs" /> {t("inventory.lowStockBadge")}
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
-                            <FaCheckCircle className="text-xs" /> OK
+                            <FaCheckCircle className="text-xs" /> {t("inventory.okBadge")}
                           </span>
                         )}
                       </td>
@@ -342,33 +343,33 @@ export default function InventoryManagement() {
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">Add New Item</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-6">{t("inventory.addNewItem")}</h2>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Item Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t("inventory.itemName")}</label>
                 <input
                   type="text"
-                  placeholder="e.g., Dental Gloves (M)"
+                  placeholder={t("inventory.itemNamePlaceholder")}
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t("inventory.category")}</label>
                   <select className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue">
-                    <option>Disposables</option>
-                    <option>Materials</option>
-                    <option>Medications</option>
-                    <option>Instruments</option>
+                    <option>{t("inventory.disposables")}</option>
+                    <option>{t("inventory.materials")}</option>
+                    <option>{t("inventory.medications")}</option>
+                    <option>{t("inventory.instruments")}</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Unit</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t("inventory.unit")}</label>
                   <input
                     type="text"
-                    placeholder="e.g., boxes, pieces"
+                    placeholder={t("inventory.unitPlaceholder")}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
                   />
                 </div>
@@ -376,7 +377,7 @@ export default function InventoryManagement() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Current Stock</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t("inventory.currentStock")}</label>
                   <input
                     type="number"
                     placeholder="0"
@@ -384,7 +385,7 @@ export default function InventoryManagement() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Minimum Stock</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t("inventory.minimumStock")}</label>
                   <input
                     type="number"
                     placeholder="0"
@@ -395,18 +396,10 @@ export default function InventoryManagement() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Cost per Unit (LBP)</label>
-                  <input
-                    type="number"
-                    placeholder="0"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Supplier</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t("inventory.supplier")}</label>
                   <input
                     type="text"
-                    placeholder="Supplier name"
+                    placeholder={t("inventory.supplierName")}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
                   />
                 </div>
@@ -415,9 +408,9 @@ export default function InventoryManagement() {
 
             <div className="flex gap-3 mt-6">
               <Button variant="outline" className="flex-1" onClick={() => setShowAddModal(false)}>
-                Cancel
+                {t("common.cancel")}
               </Button>
-              <Button className="flex-1 bg-dental-blue hover:bg-dental-blue/90">Add Item</Button>
+              <Button className="flex-1 bg-dental-blue hover:bg-dental-blue/90">{t("inventory.addItem")}</Button>
             </div>
           </div>
         </div>
@@ -427,11 +420,11 @@ export default function InventoryManagement() {
       {showEditModal && selectedItem && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">Edit Item</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-6">{t("inventory.editItem")}</h2>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Item Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t("inventory.itemName")}</label>
                 <input
                   type="text"
                   defaultValue={selectedItem.name}
@@ -441,7 +434,7 @@ export default function InventoryManagement() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Current Stock</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t("inventory.currentStock")}</label>
                   <input
                     type="number"
                     defaultValue={selectedItem.currentStock}
@@ -449,7 +442,7 @@ export default function InventoryManagement() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Minimum Stock</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t("inventory.minimumStock")}</label>
                   <input
                     type="number"
                     defaultValue={selectedItem.minimumStock}
@@ -458,21 +451,13 @@ export default function InventoryManagement() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Cost per Unit (LBP)</label>
-                <input
-                  type="number"
-                  defaultValue={selectedItem.costPerUnit}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
-                />
-              </div>
             </div>
 
             <div className="flex gap-3 mt-6">
               <Button variant="outline" className="flex-1" onClick={() => setShowEditModal(false)}>
-                Cancel
+                {t("common.cancel")}
               </Button>
-              <Button className="flex-1 bg-dental-blue hover:bg-dental-blue/90">Save Changes</Button>
+              <Button className="flex-1 bg-dental-blue hover:bg-dental-blue/90">{t("inventory.saveChanges")}</Button>
             </div>
           </div>
         </div>

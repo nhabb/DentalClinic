@@ -3,25 +3,23 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { safeStorage } from "@/lib/browser-compat";
+import { useTranslation } from "@/lib/i18n";
 import {
   FaTooth,
   FaCalendarAlt,
   FaBoxes,
-  FaMoneyBillWave,
   FaUsers,
   FaChartLine,
   FaCog,
   FaSignOutAlt,
   FaBell,
-  FaUserMd,
-  FaClipboardList,
   FaExclamationTriangle,
   FaCheckCircle,
   FaClock,
-  FaArrowUp,
-  FaArrowDown,
   FaCalendarCheck,
   FaChevronRight,
+  FaBars,
 } from "react-icons/fa";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
@@ -39,28 +37,16 @@ interface AdminUser {
 export default function AdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const router = useRouter();
+  const { t, language, setLanguage } = useTranslation();
   const [user, setUser] = useState<AdminUser | null>(null);
   const [userRole, setUserRole] = useState<string>("doctor");
   const [doctorId, setDoctorId] = useState<number | null>(null);
   const [clinicStats, setClinicStats] = useState({
-    totalFunds: 0,
-    monthlyRevenue: 0,
-    monthlyExpenses: 0,
-    pendingPayments: 0,
     todayAppointments: 0,
     completedToday: 0,
     lowStockItems: 0,
     totalPatients: 0,
   });
-  const [recentTransactions, setRecentTransactions] = useState<
-    {
-      id: number;
-      type: string;
-      description: string;
-      amount: number;
-      date: string;
-    }[]
-  >([]);
   const [todayAppointments, setTodayAppointments] = useState<
     {
       id: number;
@@ -82,9 +68,9 @@ export default function AdminDashboard() {
 
   // Load user info from localStorage on mount
   useEffect(() => {
-    const storedUser = localStorage.getItem("adminUser");
-    const storedRole = localStorage.getItem("userRole");
-    const storedDoctorId = localStorage.getItem("doctorId");
+    const storedUser = safeStorage.getItem("adminUser");
+    const storedRole = safeStorage.getItem("userRole");
+    const storedDoctorId = safeStorage.getItem("doctorId");
 
     if (storedUser) {
       setUser(JSON.parse(storedUser));
@@ -113,16 +99,6 @@ export default function AdminDashboard() {
     fetchTodayAppointments();
   }, [doctorId]);
 
-  // Fetch recent transactions (filtered by doctorId) - only for doctors
-  useEffect(() => {
-    if (userRole === "secretary") return; // Secretaries don't see transactions
-
-    const fetchTransactions = async () => {
-      // API call removed
-    };
-    fetchTransactions();
-  }, [doctorId, userRole]);
-
   // Fetch low stock alerts (shared across clinic)
   useEffect(() => {
     const fetchLowStock = async () => {
@@ -131,19 +107,14 @@ export default function AdminDashboard() {
     fetchLowStock();
   }, []);
 
-  const handleLogout = async () => {
-    localStorage.removeItem("adminAuth");
-    localStorage.removeItem("adminUser");
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("userRole");
-    localStorage.removeItem("doctorId");
-    localStorage.removeItem("assignedDoctorIds");
-    // Logout disabled - no redirect
-    // router.push("/admin/login");
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-LB").format(Math.abs(amount)) + " LBP";
+  const handleLogout = () => {
+    safeStorage.removeItem("adminAuth");
+    safeStorage.removeItem("adminUser");
+    safeStorage.removeItem("authToken");
+    safeStorage.removeItem("userRole");
+    safeStorage.removeItem("doctorId");
+    safeStorage.removeItem("assignedDoctorIds");
+    router.push("/admin/login");
   };
 
   const getStatusBadge = (status: string) => {
@@ -151,19 +122,19 @@ export default function AdminDashboard() {
       case "completed":
         return (
           <span className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
-            <FaCheckCircle className="text-xs" /> Done
+            <FaCheckCircle className="text-xs" /> {t("appointments.completed")}
           </span>
         );
       case "in_progress":
         return (
           <span className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
-            <FaClock className="text-xs" /> In Progress
+            <FaClock className="text-xs" /> {t("appointments.inProgress")}
           </span>
         );
       case "upcoming":
         return (
           <span className="flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">
-            <FaClock className="text-xs" /> Upcoming
+            <FaClock className="text-xs" /> {t("appointments.upcoming")}
           </span>
         );
       default:
@@ -178,7 +149,7 @@ export default function AdminDashboard() {
     : "U";
   const specialty =
     user?.specialty ||
-    (userRole === "secretary" ? "Secretary" : "General Dentistry");
+    (userRole === "secretary" ? t("adminLogin.secretary") : "General Dentistry");
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -198,7 +169,7 @@ export default function AdminDashboard() {
               <div>
                 <span className="text-lg font-bold">BrightSmile</span>
                 <p className="text-xs text-gray-400">
-                  {userRole === "doctor" ? "Doctor Panel" : "Staff Panel"}
+                  {userRole === "doctor" ? t("nav.doctorPanel") : t("nav.staffPanel")}
                 </p>
               </div>
             )}
@@ -212,56 +183,45 @@ export default function AdminDashboard() {
             className="flex items-center space-x-3 px-4 py-3 bg-dental-blue/20 text-dental-lightblue rounded-xl"
           >
             <FaChartLine className="text-lg" />
-            {sidebarOpen && <span className="font-medium">Dashboard</span>}
+            {sidebarOpen && <span className="font-medium">{t("nav.dashboard")}</span>}
           </Link>
           <Link
             href="/admin/appointments"
             className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
           >
             <FaCalendarAlt className="text-lg" />
-            {sidebarOpen && <span className="font-medium">Appointments</span>}
+            {sidebarOpen && <span className="font-medium">{t("nav.appointments")}</span>}
           </Link>
           <Link
             href="/admin/inventory"
             className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
           >
             <FaBoxes className="text-lg" />
-            {sidebarOpen && <span className="font-medium">Inventory</span>}
+            {sidebarOpen && <span className="font-medium">{t("nav.inventory")}</span>}
             {sidebarOpen && lowStockAlerts.length > 0 && (
-              <span className="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+              <span className="ml-auto rtl:ml-0 rtl:mr-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
                 {lowStockAlerts.length}
               </span>
             )}
           </Link>
-          {/* Only show Transactions for doctors */}
-          {userRole === "doctor" && (
-            <Link
-              href="/admin/transactions"
-              className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
-            >
-              <FaMoneyBillWave className="text-lg" />
-              {sidebarOpen && <span className="font-medium">Transactions</span>}
-            </Link>
-          )}
           <Link
             href="/admin/patients"
             className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
           >
             <FaUsers className="text-lg" />
-            {sidebarOpen && <span className="font-medium">Patients</span>}
+            {sidebarOpen && <span className="font-medium">{t("nav.patients")}</span>}
           </Link>
         </nav>
 
         {/* Bottom Section */}
         <div className="p-4 border-t border-gray-700 space-y-2">
-          {/* Only show Settings for doctors */}
           {userRole === "doctor" && (
             <Link
               href="/admin/settings"
               className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
             >
               <FaCog className="text-lg" />
-              {sidebarOpen && <span className="font-medium">Settings</span>}
+              {sidebarOpen && <span className="font-medium">{t("nav.settings")}</span>}
             </Link>
           )}
           <button
@@ -269,7 +229,7 @@ export default function AdminDashboard() {
             className="w-full flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-red-500/20 hover:text-red-400 rounded-xl transition-colors"
           >
             <FaSignOutAlt className="text-lg" />
-            {sidebarOpen && <span className="font-medium">Logout</span>}
+            {sidebarOpen && <span className="font-medium">{t("common.logout")}</span>}
           </button>
         </div>
       </aside>
@@ -278,28 +238,52 @@ export default function AdminDashboard() {
       <div className="flex-1 flex flex-col">
         {/* Top Header */}
         <header className="bg-white shadow-sm px-8 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-            <p className="text-gray-500 text-sm">
-              Welcome back, {userRole === "doctor" ? "Dr. " : ""}
-              {displayName}
-            </p>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <FaBars className="text-xl text-gray-600" />
+            </button>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">{t("nav.dashboard")}</h1>
+              <p className="text-gray-500 text-sm">
+                {t("adminDashboard.welcomeBack")}, {userRole === "doctor" ? `${t("adminLogin.doctor")}. ` : ""}
+                {displayName}
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-4">
+            {/* Language Switcher */}
+            <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+              {(["en", "fr", "ar"] as const).map((lang) => (
+                <button
+                  key={lang}
+                  onClick={() => setLanguage(lang)}
+                  className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                    language === lang
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  {lang.toUpperCase()}
+                </button>
+              ))}
+            </div>
             <Link
               href="/admin/notifications"
               className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <FaBell className="text-xl" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+              <span className="absolute top-1 right-1 rtl:right-auto rtl:left-1 w-2 h-2 bg-red-500 rounded-full"></span>
             </Link>
-            <div className="flex items-center gap-3 pl-4 border-l border-gray-200">
+            <div className="flex items-center gap-3 pl-4 rtl:pl-0 rtl:pr-4 border-l rtl:border-l-0 rtl:border-r border-gray-200">
               <div className="w-10 h-10 bg-gradient-to-br from-dental-blue to-dental-teal rounded-full flex items-center justify-center text-white font-semibold">
                 {initials}
               </div>
               <div className="hidden sm:block">
                 <p className="text-sm font-medium text-gray-900">
-                  {userRole === "doctor" ? "Dr. " : ""}
+                  {userRole === "doctor" ? `${t("adminLogin.doctor")}. ` : ""}
                   {displayName}
                 </p>
                 <p className="text-xs text-gray-500">{specialty}</p>
@@ -312,60 +296,6 @@ export default function AdminDashboard() {
         <main className="flex-1 p-8 overflow-auto">
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {/* Clinic Funds - only for doctors */}
-            {userRole === "doctor" && (
-              <div className="bg-gradient-to-br from-dental-blue to-dental-teal rounded-2xl p-6 text-white">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                    <FaMoneyBillWave className="text-2xl" />
-                  </div>
-                  <span className="text-xs bg-white/20 px-2 py-1 rounded-full">
-                    Total Funds
-                  </span>
-                </div>
-                <p className="text-3xl font-bold">
-                  {formatCurrency(clinicStats.totalFunds)}
-                </p>
-                <p className="text-sm text-white/80 mt-1">Your Balance</p>
-              </div>
-            )}
-
-            {/* Monthly Revenue - only for doctors */}
-            {userRole === "doctor" && (
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                    <FaArrowUp className="text-green-600 text-xl" />
-                  </div>
-                  <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full flex items-center gap-1">
-                    <FaArrowUp className="text-xs" /> +12%
-                  </span>
-                </div>
-                <p className="text-2xl font-bold text-gray-900">
-                  {formatCurrency(clinicStats.monthlyRevenue)}
-                </p>
-                <p className="text-sm text-gray-500 mt-1">Monthly Revenue</p>
-              </div>
-            )}
-
-            {/* Monthly Expenses - only for doctors */}
-            {userRole === "doctor" && (
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
-                    <FaArrowDown className="text-red-600 text-xl" />
-                  </div>
-                  <span className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded-full flex items-center gap-1">
-                    <FaArrowDown className="text-xs" /> -5%
-                  </span>
-                </div>
-                <p className="text-2xl font-bold text-gray-900">
-                  {formatCurrency(clinicStats.monthlyExpenses)}
-                </p>
-                <p className="text-sm text-gray-500 mt-1">Monthly Expenses</p>
-              </div>
-            )}
-
             {/* Today's Appointments - shown for all roles */}
             <div
               className={`bg-white rounded-2xl p-6 shadow-sm border border-gray-100 ${userRole === "secretary" ? "col-span-2" : ""}`}
@@ -378,10 +308,10 @@ export default function AdminDashboard() {
               <p className="text-2xl font-bold text-gray-900">
                 {clinicStats.completedToday}/{clinicStats.todayAppointments}
               </p>
-              <p className="text-sm text-gray-500 mt-1">Today's Appointments</p>
+              <p className="text-sm text-gray-500 mt-1">{t("adminDashboard.todaysAppointments")}</p>
             </div>
 
-            {/* Total Patients - shown for all roles */}
+            {/* Total Patients - shown for secretaries */}
             {userRole === "secretary" && (
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 col-span-2">
                 <div className="flex items-center justify-between mb-4">
@@ -392,7 +322,7 @@ export default function AdminDashboard() {
                 <p className="text-2xl font-bold text-gray-900">
                   {clinicStats.totalPatients}
                 </p>
-                <p className="text-sm text-gray-500 mt-1">Total Patients</p>
+                <p className="text-sm text-gray-500 mt-1">{t("adminDashboard.totalPatients")}</p>
               </div>
             )}
           </div>
@@ -403,13 +333,13 @@ export default function AdminDashboard() {
             <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-bold text-gray-900">
-                  Today's Schedule
+                  {t("adminDashboard.todaysSchedule")}
                 </h2>
                 <Link
                   href="/admin/appointments"
                   className="text-dental-blue text-sm font-medium flex items-center gap-1 hover:underline"
                 >
-                  View All <FaChevronRight className="text-xs" />
+                  {t("common.viewAll")} <FaChevronRight className="text-xs rtl:rotate-180" />
                 </Link>
               </div>
               <div className="space-y-3">
@@ -445,7 +375,7 @@ export default function AdminDashboard() {
                 ) : (
                   <div className="text-center py-8 text-gray-500">
                     <FaCalendarAlt className="text-4xl mx-auto mb-2 text-gray-300" />
-                    <p>No appointments scheduled for today</p>
+                    <p>{t("adminDashboard.noAppointmentsToday")}</p>
                   </div>
                 )}
               </div>
@@ -457,13 +387,13 @@ export default function AdminDashboard() {
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-bold text-gray-900">
-                    Low Stock Alerts
+                    {t("adminDashboard.lowStockAlerts")}
                   </h2>
                   <Link
                     href="/admin/inventory"
                     className="text-dental-blue text-sm font-medium flex items-center gap-1 hover:underline"
                   >
-                    Manage <FaChevronRight className="text-xs" />
+                    {t("common.manage")} <FaChevronRight className="text-xs rtl:rotate-180" />
                   </Link>
                 </div>
                 {lowStockAlerts.length > 0 ? (
@@ -487,82 +417,18 @@ export default function AdminDashboard() {
                           </div>
                         </div>
                         <button className="text-xs text-red-600 font-medium hover:underline">
-                          Reorder
+                          {t("adminDashboard.reorder")}
                         </button>
                       </div>
                     ))}
                   </div>
                 ) : (
                   <p className="text-gray-500 text-sm">
-                    All items are well stocked
+                    {t("adminDashboard.allItemsWellStocked")}
                   </p>
                 )}
               </div>
 
-              {/* Recent Transactions - only for doctors */}
-              {userRole === "doctor" && (
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-bold text-gray-900">
-                      Recent Transactions
-                    </h2>
-                    <Link
-                      href="/admin/transactions"
-                      className="text-dental-blue text-sm font-medium flex items-center gap-1 hover:underline"
-                    >
-                      View All <FaChevronRight className="text-xs" />
-                    </Link>
-                  </div>
-                  <div className="space-y-3">
-                    {recentTransactions.length > 0 ? (
-                      recentTransactions.slice(0, 4).map((txn) => (
-                        <div
-                          key={txn.id}
-                          className="flex items-center justify-between"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div
-                              className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                                txn.type === "income"
-                                  ? "bg-green-100"
-                                  : "bg-red-100"
-                              }`}
-                            >
-                              {txn.type === "income" ? (
-                                <FaArrowUp className="text-green-600" />
-                              ) : (
-                                <FaArrowDown className="text-red-600" />
-                              )}
-                            </div>
-                            <div>
-                              <p className="font-medium text-gray-900 text-sm">
-                                {txn.description}
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                {txn.date}
-                              </p>
-                            </div>
-                          </div>
-                          <p
-                            className={`font-semibold ${
-                              txn.type === "income"
-                                ? "text-green-600"
-                                : "text-red-600"
-                            }`}
-                          >
-                            {txn.type === "income" ? "+" : "-"}
-                            {formatCurrency(txn.amount)}
-                          </p>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-gray-500 text-sm">
-                        No recent transactions
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </main>

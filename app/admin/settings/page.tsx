@@ -4,12 +4,14 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { safeStorage } from "@/lib/browser-compat";
+import { useTranslation } from "@/lib/i18n";
+import type { Language } from "@/lib/i18n";
 import {
   FaTooth,
   FaChartLine,
   FaCalendarAlt,
   FaBoxes,
-  FaMoneyBillWave,
   FaUsers,
   FaCog,
   FaSignOutAlt,
@@ -27,6 +29,7 @@ import {
 export default function AdminSettings() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const router = useRouter();
+  const { t, language, setLanguage } = useTranslation();
   // TODO: Fetch from API
   const [settings, setSettings] = useState({
     clinicName: "",
@@ -35,7 +38,6 @@ export default function AdminSettings() {
     address: "",
     language: "en",
     timezone: "Asia/Beirut",
-    currency: "LBP",
     emailNotifications: true,
     smsNotifications: false,
     appointmentReminders: true,
@@ -43,15 +45,14 @@ export default function AdminSettings() {
   });
 
   const handleLogout = () => {
-    localStorage.removeItem("adminAuth");
-    localStorage.removeItem("adminUser");
-    // Logout disabled - no redirect
-    // router.push("/admin/login");
+    safeStorage.removeItem("adminAuth");
+    safeStorage.removeItem("adminUser");
+    router.push("/admin/login");
   };
 
   const handleSave = () => {
     // Save settings logic here
-    alert("Settings saved successfully!");
+    alert(t("settings.settingsSaved"));
   };
 
   return (
@@ -71,7 +72,7 @@ export default function AdminSettings() {
             {sidebarOpen && (
               <div>
                 <span className="text-lg font-bold">BrightSmile</span>
-                <p className="text-xs text-gray-400">Admin Panel</p>
+                <p className="text-xs text-gray-400">{t("nav.adminPanel")}</p>
               </div>
             )}
           </Link>
@@ -84,35 +85,28 @@ export default function AdminSettings() {
             className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
           >
             <FaChartLine className="text-lg" />
-            {sidebarOpen && <span className="font-medium">Dashboard</span>}
+            {sidebarOpen && <span className="font-medium">{t("nav.dashboard")}</span>}
           </Link>
           <Link
             href="/admin/appointments"
             className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
           >
             <FaCalendarAlt className="text-lg" />
-            {sidebarOpen && <span className="font-medium">Appointments</span>}
+            {sidebarOpen && <span className="font-medium">{t("nav.appointments")}</span>}
           </Link>
           <Link
             href="/admin/inventory"
             className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
           >
             <FaBoxes className="text-lg" />
-            {sidebarOpen && <span className="font-medium">Inventory</span>}
-          </Link>
-          <Link
-            href="/admin/transactions"
-            className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
-          >
-            <FaMoneyBillWave className="text-lg" />
-            {sidebarOpen && <span className="font-medium">Transactions</span>}
+            {sidebarOpen && <span className="font-medium">{t("nav.inventory")}</span>}
           </Link>
           <Link
             href="/admin/patients"
             className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
           >
             <FaUsers className="text-lg" />
-            {sidebarOpen && <span className="font-medium">Patients</span>}
+            {sidebarOpen && <span className="font-medium">{t("nav.patients")}</span>}
           </Link>
         </nav>
 
@@ -123,14 +117,14 @@ export default function AdminSettings() {
             className="flex items-center space-x-3 px-4 py-3 bg-dental-blue/20 text-dental-lightblue rounded-xl"
           >
             <FaCog className="text-lg" />
-            {sidebarOpen && <span className="font-medium">Settings</span>}
+            {sidebarOpen && <span className="font-medium">{t("nav.settings")}</span>}
           </Link>
           <button
             onClick={handleLogout}
             className="w-full flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-red-500/20 hover:text-red-400 rounded-xl transition-colors"
           >
             <FaSignOutAlt className="text-lg" />
-            {sidebarOpen && <span className="font-medium">Logout</span>}
+            {sidebarOpen && <span className="font-medium">{t("common.logout")}</span>}
           </button>
         </div>
       </aside>
@@ -147,9 +141,9 @@ export default function AdminSettings() {
               <FaBars className="text-xl text-gray-600" />
             </button>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
+              <h1 className="text-2xl font-bold text-gray-900">{t("settings.settings")}</h1>
               <p className="text-gray-500 text-sm">
-                Manage clinic and system settings
+                {t("settings.manageSettings")}
               </p>
             </div>
           </div>
@@ -171,10 +165,10 @@ export default function AdminSettings() {
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-gray-900">
-                    Clinic Information
+                    {t("settings.clinicInformation")}
                   </h2>
                   <p className="text-sm text-gray-500">
-                    Basic clinic details and contact information
+                    {t("settings.clinicInfoDesc")}
                   </p>
                 </div>
               </div>
@@ -182,7 +176,7 @@ export default function AdminSettings() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Clinic Name
+                    {t("settings.clinicName")}
                   </label>
                   <input
                     type="text"
@@ -197,7 +191,7 @@ export default function AdminSettings() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Email
+                      {t("settings.email")}
                     </label>
                     <input
                       type="email"
@@ -210,7 +204,7 @@ export default function AdminSettings() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Phone
+                      {t("settings.phone")}
                     </label>
                     <input
                       type="tel"
@@ -225,7 +219,7 @@ export default function AdminSettings() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Address
+                    {t("settings.address")}
                   </label>
                   <textarea
                     value={settings.address}
@@ -247,24 +241,22 @@ export default function AdminSettings() {
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-gray-900">
-                    Regional Settings
+                    {t("settings.regionalSettings")}
                   </h2>
                   <p className="text-sm text-gray-500">
-                    Language, timezone, and currency preferences
+                    {t("settings.regionalSettingsDesc")}
                   </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Language
+                    {t("settings.language")}
                   </label>
                   <select
-                    value={settings.language}
-                    onChange={(e) =>
-                      setSettings({ ...settings, language: e.target.value })
-                    }
+                    value={language}
+                    onChange={(e) => setLanguage(e.target.value as Language)}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-dental-blue focus:border-transparent"
                   >
                     <option value="en">English</option>
@@ -275,7 +267,7 @@ export default function AdminSettings() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Timezone
+                    {t("settings.timezone")}
                   </label>
                   <select
                     value={settings.timezone}
@@ -292,22 +284,6 @@ export default function AdminSettings() {
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Currency
-                  </label>
-                  <select
-                    value={settings.currency}
-                    onChange={(e) =>
-                      setSettings({ ...settings, currency: e.target.value })
-                    }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-dental-blue focus:border-transparent"
-                  >
-                    <option value="LBP">LBP - Lebanese Pound</option>
-                    <option value="USD">USD - US Dollar</option>
-                    <option value="EUR">EUR - Euro</option>
-                  </select>
-                </div>
               </div>
             </div>
 
@@ -319,10 +295,10 @@ export default function AdminSettings() {
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-gray-900">
-                    Notifications
+                    {t("settings.notifications")}
                   </h2>
                   <p className="text-sm text-gray-500">
-                    Manage notification preferences
+                    {t("settings.notificationsDesc")}
                   </p>
                 </div>
               </div>
@@ -331,10 +307,10 @@ export default function AdminSettings() {
                 <div className="flex items-center justify-between py-3 border-b border-gray-200">
                   <div>
                     <p className="font-medium text-gray-900">
-                      Email Notifications
+                      {t("settings.emailNotifications")}
                     </p>
                     <p className="text-sm text-gray-500">
-                      Receive updates via email
+                      {t("settings.emailNotificationsDesc")}
                     </p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
@@ -356,10 +332,10 @@ export default function AdminSettings() {
                 <div className="flex items-center justify-between py-3 border-b border-gray-200">
                   <div>
                     <p className="font-medium text-gray-900">
-                      SMS Notifications
+                      {t("settings.smsNotifications")}
                     </p>
                     <p className="text-sm text-gray-500">
-                      Receive updates via SMS
+                      {t("settings.smsNotificationsDesc")}
                     </p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
@@ -381,10 +357,10 @@ export default function AdminSettings() {
                 <div className="flex items-center justify-between py-3">
                   <div>
                     <p className="font-medium text-gray-900">
-                      Appointment Reminders
+                      {t("settings.appointmentReminders")}
                     </p>
                     <p className="text-sm text-gray-500">
-                      Send reminders to patients
+                      {t("settings.appointmentRemindersDesc")}
                     </p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
@@ -412,9 +388,9 @@ export default function AdminSettings() {
                   <FaShieldAlt className="text-red-500 text-xl" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900">Security</h2>
+                  <h2 className="text-xl font-bold text-gray-900">{t("settings.security")}</h2>
                   <p className="text-sm text-gray-500">
-                    Account security and authentication
+                    {t("settings.securityDesc")}
                   </p>
                 </div>
               </div>
@@ -423,10 +399,10 @@ export default function AdminSettings() {
                 <div className="flex items-center justify-between py-3 border-b border-gray-200">
                   <div>
                     <p className="font-medium text-gray-900">
-                      Two-Factor Authentication
+                      {t("settings.twoFactorAuth")}
                     </p>
                     <p className="text-sm text-gray-500">
-                      Add an extra layer of security
+                      {t("settings.twoFactorAuthDesc")}
                     </p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
@@ -451,7 +427,7 @@ export default function AdminSettings() {
                     className="w-full justify-center text-gray-700 hover:text-gray-900"
                   >
                     <FaLock className="mr-2" />
-                    Change Password
+                    {t("settings.changePassword")}
                   </Button>
                 </div>
               </div>
@@ -460,14 +436,14 @@ export default function AdminSettings() {
             {/* Save Button */}
             <div className="flex justify-end gap-4">
               <Button variant="outline" onClick={() => router.push("/admin")}>
-                Cancel
+                {t("common.cancel")}
               </Button>
               <Button
                 onClick={handleSave}
                 className="bg-dental-blue hover:bg-dental-blue/90"
               >
                 <FaSave className="mr-2" />
-                Save Changes
+                {t("settings.saveChanges")}
               </Button>
             </div>
           </div>

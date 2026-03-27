@@ -5,21 +5,14 @@ import { Button } from "@/components/ui/button";
 import { FaTooth, FaUser, FaHospital, FaCheckCircle, FaClock } from "react-icons/fa";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { safeStorage } from "@/lib/browser-compat";
+import { useTranslation } from "@/lib/i18n";
 
 type SignupType = "patient" | "clinic";
 
-const SPECIALTIES = [
-  { value: "general",      label: "General Dentistry" },
-  { value: "orthodontics", label: "Orthodontics" },
-  { value: "pediatric",    label: "Pediatric Dentistry" },
-  { value: "cosmetic",     label: "Cosmetic Dentistry" },
-  { value: "oral_surgery", label: "Oral Surgery" },
-  { value: "periodontics", label: "Periodontics" },
-  { value: "multi",        label: "Multi-Specialty" },
-];
-
 export default function SignupPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [type, setType]         = useState<SignupType>("patient");
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess]   = useState(false);
@@ -48,26 +41,26 @@ export default function SignupPage() {
     e.preventDefault();
     setPatientError("");
     if (patient.password !== patient.confirmPassword) {
-      setPatientError("Passwords do not match.");
+      setPatientError(t("signup.passwordsDoNotMatch"));
       return;
     }
     setIsLoading(true);
-    localStorage.setItem("patientAuth", "true");
-    localStorage.setItem("userRole", "patient");
-    router.push("/select-clinic");
+    safeStorage.setItem("patientAuth", "true");
+    safeStorage.setItem("userRole", "patient");
+    router.push("/login/continue-login");
   };
 
   const handleClinicSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setClinicError("");
     if (clinic.password !== clinic.confirmPassword) {
-      setClinicError("Passwords do not match.");
+      setClinicError(t("signup.passwordsDoNotMatch"));
       return;
     }
     setIsLoading(true);
 
     // Save to localStorage as pending — super admin will review
-    const existing = JSON.parse(localStorage.getItem("clinicRegistrations") || "[]");
+    const existing = JSON.parse(safeStorage.getItem("clinicRegistrations") || "[]");
     const newClinic = {
       id: Date.now(),
       clinicName:    clinic.clinicName,
@@ -81,7 +74,7 @@ export default function SignupPage() {
       status:        "pending",
       submittedAt:   new Date().toISOString(),
     };
-    localStorage.setItem("clinicRegistrations", JSON.stringify([...existing, newClinic]));
+    safeStorage.setItem("clinicRegistrations", JSON.stringify([...existing, newClinic]));
 
     setIsLoading(false);
     setSuccess(true);
@@ -94,19 +87,17 @@ export default function SignupPage() {
           <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto">
             <FaClock className="text-amber-500 text-4xl" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900">Registration Submitted!</h2>
+          <h2 className="text-2xl font-bold text-gray-900">{t("signup.registrationSubmitted")}</h2>
           <p className="text-gray-600">
-            Your clinic registration is now pending review. Our super admin will
-            verify your details and approve your account within 2–3 business days.
-            You&apos;ll receive a confirmation email once approved.
+            {t("signup.pendingReview")}
           </p>
           <div className="flex items-center gap-2 justify-center text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
             <FaClock className="shrink-0" />
-            Awaiting super admin approval
+            {t("signup.awaitingApproval")}
           </div>
           <Link href="/login">
             <Button className="w-full gradient-auth-card" size="lg">
-              Back to Sign In
+              {t("signup.backToSignIn")}
             </Button>
           </Link>
         </div>
@@ -126,16 +117,16 @@ export default function SignupPage() {
               </div>
               <span className="text-2xl font-bold text-gray-900">BrightSmile</span>
             </Link>
-            <h2 className="mt-6 text-3xl font-bold text-gray-900">Create an account</h2>
-            <p className="mt-2 text-sm text-gray-600">Join BrightSmile today</p>
+            <h2 className="mt-6 text-3xl font-bold text-gray-900">{t("signup.createAccount")}</h2>
+            <p className="mt-2 text-sm text-gray-600">{t("signup.joinToday")}</p>
           </div>
 
           {/* Type Selector */}
           <div className="flex gap-2 p-1 bg-gray-100 rounded-xl">
             {([
-              { id: "patient", label: "Patient",  icon: FaUser     },
-              { id: "clinic",  label: "Clinic",   icon: FaHospital },
-            ] as const).map(({ id, label, icon: Icon }) => (
+              { id: "patient", labelKey: "signup.patient", icon: FaUser     },
+              { id: "clinic",  labelKey: "signup.clinic",  icon: FaHospital },
+            ] as const).map(({ id, labelKey, icon: Icon }) => (
               <button
                 key={id}
                 type="button"
@@ -147,7 +138,7 @@ export default function SignupPage() {
                 }`}
               >
                 <Icon />
-                {label}
+                {t(labelKey)}
               </button>
             ))}
           </div>
@@ -162,11 +153,11 @@ export default function SignupPage() {
               )}
               <div className="grid grid-cols-2 gap-4">
                 {[
-                  { name: "firstName", label: "First Name", placeholder: "Ahmad" },
-                  { name: "lastName",  label: "Last Name",  placeholder: "Khoury" },
+                  { name: "firstName", labelKey: "signup.firstName", placeholder: "Ahmad" },
+                  { name: "lastName",  labelKey: "signup.lastName",  placeholder: "Khoury" },
                 ].map((f) => (
                   <div key={f.name}>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">{t(f.labelKey)}</label>
                     <input
                       name={f.name}
                       value={(patient as any)[f.name]}
@@ -180,7 +171,7 @@ export default function SignupPage() {
                 ))}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email address</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t("signup.emailAddress")}</label>
                 <input
                   name="email"
                   value={patient.email}
@@ -192,26 +183,26 @@ export default function SignupPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t("signup.password")}</label>
                 <input
                   name="password"
                   value={patient.password}
                   onChange={handlePatientChange}
                   type="password"
                   required
-                  placeholder="Create a password"
+                  placeholder={t("signup.createPassword")}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-auth-blue focus:border-transparent text-gray-900 placeholder-gray-400"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t("signup.confirmPassword")}</label>
                 <input
                   name="confirmPassword"
                   value={patient.confirmPassword}
                   onChange={handlePatientChange}
                   type="password"
                   required
-                  placeholder="Repeat your password"
+                  placeholder={t("signup.repeatPassword")}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-auth-blue focus:border-transparent text-gray-900 placeholder-gray-400"
                 />
               </div>
@@ -224,9 +215,9 @@ export default function SignupPage() {
                 {isLoading ? (
                   <span className="flex items-center gap-2">
                     <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                    Creating account...
+                    {t("signup.creatingAccount")}
                   </span>
-                ) : "Create Patient Account"}
+                ) : t("signup.createPatientAccount")}
               </Button>
             </form>
           )}
@@ -243,11 +234,11 @@ export default function SignupPage() {
               {/* Info banner */}
               <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-700">
                 <FaClock className="mt-0.5 shrink-0" />
-                <span>Clinic accounts require super admin approval before activation.</span>
+                <span>{t("signup.clinicRequiresApproval")}</span>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Clinic Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t("signup.clinicName")}</label>
                 <input
                   name="clinicName"
                   value={clinic.clinicName}
@@ -261,7 +252,7 @@ export default function SignupPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Owner / Director</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t("signup.ownerDirector")}</label>
                   <input
                     name="ownerName"
                     value={clinic.ownerName}
@@ -273,7 +264,7 @@ export default function SignupPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t("signup.phoneNumber")}</label>
                   <input
                     name="phone"
                     value={clinic.phone}
@@ -287,7 +278,7 @@ export default function SignupPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Business Email</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t("signup.businessEmail")}</label>
                 <input
                   name="email"
                   value={clinic.email}
@@ -301,7 +292,7 @@ export default function SignupPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t("signup.address")}</label>
                   <input
                     name="address"
                     value={clinic.address}
@@ -313,7 +304,7 @@ export default function SignupPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t("signup.city")}</label>
                   <input
                     name="city"
                     value={clinic.city}
@@ -328,7 +319,7 @@ export default function SignupPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">License Number</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t("signup.licenseNumber")}</label>
                   <input
                     name="licenseNumber"
                     value={clinic.licenseNumber}
@@ -340,7 +331,7 @@ export default function SignupPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Specialty</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t("signup.specialty")}</label>
                   <select
                     name="specialty"
                     value={clinic.specialty}
@@ -348,36 +339,40 @@ export default function SignupPage() {
                     required
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-auth-blue focus:border-transparent text-gray-900 bg-white"
                   >
-                    <option value="">Select specialty</option>
-                    {SPECIALTIES.map((s) => (
-                      <option key={s.value} value={s.value}>{s.label}</option>
-                    ))}
+                    <option value="">{t("signup.selectSpecialty")}</option>
+                    <option value="general">{t("signup.generalDentistry")}</option>
+                    <option value="orthodontics">{t("signup.orthodontics")}</option>
+                    <option value="pediatric">{t("signup.pediatricDentistry")}</option>
+                    <option value="cosmetic">{t("signup.cosmeticDentistry")}</option>
+                    <option value="oral_surgery">{t("signup.oralSurgery")}</option>
+                    <option value="periodontics">{t("signup.periodontics")}</option>
+                    <option value="multi">{t("signup.multiSpecialty")}</option>
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t("signup.password")}</label>
                 <input
                   name="password"
                   value={clinic.password}
                   onChange={handleClinicChange}
                   type="password"
                   required
-                  placeholder="Create a password"
+                  placeholder={t("signup.createPassword")}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-auth-blue focus:border-transparent text-gray-900 placeholder-gray-400"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t("signup.confirmPassword")}</label>
                 <input
                   name="confirmPassword"
                   value={clinic.confirmPassword}
                   onChange={handleClinicChange}
                   type="password"
                   required
-                  placeholder="Repeat your password"
+                  placeholder={t("signup.repeatPassword")}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-auth-blue focus:border-transparent text-gray-900 placeholder-gray-400"
                 />
               </div>
@@ -391,18 +386,18 @@ export default function SignupPage() {
                 {isLoading ? (
                   <span className="flex items-center gap-2">
                     <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                    Submitting...
+                    {t("signup.submitting")}
                   </span>
-                ) : "Register Clinic"}
+                ) : t("signup.registerClinic")}
               </Button>
             </form>
           )}
 
           {/* Sign In Link */}
           <p className="text-center text-sm text-gray-600">
-            Already have an account?{" "}
+            {t("signup.alreadyHaveAccount")}{" "}
             <Link href="/login" className="font-semibold text-auth-blue hover:text-auth-blue-light">
-              Sign in
+              {t("signup.signIn")}
             </Link>
           </p>
         </div>

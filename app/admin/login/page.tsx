@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { safeStorage } from "@/lib/browser-compat";
+import { useTranslation } from "@/lib/i18n";
 import {
   FaTooth,
   FaLock,
@@ -22,6 +24,7 @@ type StaffRole = "doctor" | "secretary";
 
 export default function AdminLogin() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -33,7 +36,7 @@ export default function AdminLogin() {
 
   // Check if already logged in
   useEffect(() => {
-    const isAuthenticated = localStorage.getItem("adminAuth") === "true";
+    const isAuthenticated = safeStorage.getItem("adminAuth") === "true";
     if (isAuthenticated) {
       router.push("/admin");
     }
@@ -45,12 +48,12 @@ export default function AdminLogin() {
     setIsLoading(true);
 
     // API call removed
-    localStorage.setItem("adminAuth", "true");
-    localStorage.setItem(
+    safeStorage.setItem("adminAuth", "true");
+    safeStorage.setItem(
       "adminUser",
       JSON.stringify({ email: credentials.email }),
     );
-    localStorage.setItem("userRole", role);
+    safeStorage.setItem("userRole", role);
     router.push("/admin");
     setIsLoading(false);
   };
@@ -72,7 +75,7 @@ export default function AdminLogin() {
             </div>
             <div className="text-left">
               <span className="text-2xl font-bold text-white">BrightSmile</span>
-              <p className="text-sm text-gray-400">Dental Clinic</p>
+              <p className="text-sm text-gray-400">{t("adminLogin.dentalClinic")}</p>
             </div>
           </Link>
         </div>
@@ -87,8 +90,8 @@ export default function AdminLogin() {
                 <FaUserTie className="text-white text-2xl" />
               )}
             </div>
-            <h1 className="text-2xl font-bold text-white mb-2">Staff Portal</h1>
-            <p className="text-gray-400">Sign in to access your dashboard</p>
+            <h1 className="text-2xl font-bold text-white mb-2">{t("adminLogin.staffPortal")}</h1>
+            <p className="text-gray-400">{t("adminLogin.signInSubtitle")}</p>
           </div>
 
           {/* Role Selection */}
@@ -103,7 +106,7 @@ export default function AdminLogin() {
               }`}
             >
               <FaUserMd />
-              Doctor
+              {t("adminLogin.doctor")}
             </button>
             <button
               type="button"
@@ -115,7 +118,7 @@ export default function AdminLogin() {
               }`}
             >
               <FaUserTie />
-              Secretary
+              {t("adminLogin.secretary")}
             </button>
           </div>
 
@@ -131,10 +134,10 @@ export default function AdminLogin() {
             {/* Email Field */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Email
+                {t("adminLogin.email")}
               </label>
               <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                <div className="absolute left-4 rtl:left-auto rtl:right-4 top-1/2 -translate-y-1/2 text-gray-400">
                   <FaEnvelope />
                 </div>
                 <input
@@ -143,9 +146,9 @@ export default function AdminLogin() {
                   onChange={(e) =>
                     setCredentials({ ...credentials, email: e.target.value })
                   }
-                  placeholder="Enter your email"
+                  placeholder={t("adminLogin.emailPlaceholder")}
                   required
-                  className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 text-white placeholder-gray-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/50 focus:border-dental-blue transition-all"
+                  className="w-full pl-12 rtl:pl-4 rtl:pr-12 pr-4 py-4 bg-white/5 border border-white/10 text-white placeholder-gray-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/50 focus:border-dental-blue transition-all"
                 />
               </div>
             </div>
@@ -153,10 +156,10 @@ export default function AdminLogin() {
             {/* Password Field */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Password
+                {t("adminLogin.password")}
               </label>
               <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                <div className="absolute left-4 rtl:left-auto rtl:right-4 top-1/2 -translate-y-1/2 text-gray-400">
                   <FaLock />
                 </div>
                 <input
@@ -165,14 +168,14 @@ export default function AdminLogin() {
                   onChange={(e) =>
                     setCredentials({ ...credentials, password: e.target.value })
                   }
-                  placeholder="Enter your password"
+                  placeholder={t("adminLogin.passwordPlaceholder")}
                   required
-                  className="w-full pl-12 pr-12 py-4 bg-white/5 border border-white/10 text-white placeholder-gray-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/50 focus:border-dental-blue transition-all"
+                  className="w-full pl-12 rtl:pl-12 rtl:pr-12 pr-12 py-4 bg-white/5 border border-white/10 text-white placeholder-gray-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/50 focus:border-dental-blue transition-all"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300 transition-colors"
+                  className="absolute right-4 rtl:right-auto rtl:left-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300 transition-colors"
                 >
                   {showPassword ? <FaEyeSlash /> : <FaEye />}
                 </button>
@@ -186,13 +189,13 @@ export default function AdminLogin() {
                   type="checkbox"
                   className="w-4 h-4 rounded border-gray-600 bg-white/5 text-dental-blue focus:ring-dental-blue/50"
                 />
-                <span className="text-sm text-gray-400">Remember me</span>
+                <span className="text-sm text-gray-400">{t("adminLogin.rememberMe")}</span>
               </label>
               <button
                 type="button"
                 className="text-sm text-dental-lightblue hover:underline"
               >
-                Forgot password?
+                {t("adminLogin.forgotPassword")}
               </button>
             </div>
 
@@ -205,10 +208,10 @@ export default function AdminLogin() {
               {isLoading ? (
                 <div className="flex items-center gap-2">
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  Signing in...
+                  {t("adminLogin.signingIn")}
                 </div>
               ) : (
-                `Sign In as ${role === "doctor" ? "Doctor" : "Secretary"}`
+                `${t("adminLogin.signInAs")} ${role === "doctor" ? t("adminLogin.doctor") : t("adminLogin.secretary")}`
               )}
             </Button>
           </form>
@@ -216,11 +219,11 @@ export default function AdminLogin() {
           {/* Demo Credentials */}
           <div className="mt-6 p-4 bg-white/5 rounded-xl border border-white/10">
             <p className="text-xs text-gray-400 text-center mb-2">
-              Demo Credentials ({role === "doctor" ? "Doctor" : "Secretary"})
+              {t("adminLogin.demoCredentials")} ({role === "doctor" ? t("adminLogin.doctor") : t("adminLogin.secretary")})
             </p>
             <div className="flex justify-center gap-4 text-sm">
               <div className="text-center">
-                <p className="text-gray-500">Email</p>
+                <p className="text-gray-500">{t("adminLogin.email")}</p>
                 <p className="text-white font-mono text-xs">
                   {role === "doctor"
                     ? "dr.sarah@clinic.com"
@@ -228,7 +231,7 @@ export default function AdminLogin() {
                 </p>
               </div>
               <div className="text-center">
-                <p className="text-gray-500">Password</p>
+                <p className="text-gray-500">{t("adminLogin.password")}</p>
                 <p className="text-white font-mono">demo123</p>
               </div>
             </div>
@@ -241,7 +244,7 @@ export default function AdminLogin() {
             href="/"
             className="text-gray-400 hover:text-white transition-colors text-sm"
           >
-            ← Back to website
+            {t("adminLogin.backToWebsite")}
           </Link>
         </div>
       </div>

@@ -31,42 +31,95 @@
   --color-auth-blue-light: #2563eb; /* Brighter blue for accents */
 }
 
+/* -------------------------------------------------------------------------
+ * Design-token CSS custom properties
+ *
+ * HSL / hex values are declared first so that every browser — including
+ * Firefox, Safari, and Edge versions that pre-date oklch() support — gets
+ * a usable colour.  The @supports block below overrides those values with
+ * perceptually-uniform oklch() equivalents in browsers that understand them.
+ *
+ * oklch() support matrix:
+ *   Chrome  111+  (Mar 2023)
+ *   Edge    111+  (Mar 2023)
+ *   Firefox 113+  (May 2023)
+ *   Safari  15.4+ (Mar 2022)
+ * ------------------------------------------------------------------------ */
 :root {
   --foreground-rgb: 15, 23, 42;
   --background-start-rgb: 255, 255, 255;
   --background-end-rgb: 255, 255, 255;
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+
+  /* ---- HSL fallbacks (all browsers) ---- */
+  --background:                hsl(0, 0%, 100%);
+  --foreground:                hsl(0, 0%, 11%);
+  --card:                      hsl(0, 0%, 100%);
+  --card-foreground:           hsl(0, 0%, 11%);
+  --popover:                   hsl(0, 0%, 100%);
+  --popover-foreground:        hsl(0, 0%, 11%);
+  --primary:                   hsl(0, 0%, 18%);
+  --primary-foreground:        hsl(0, 0%, 98%);
+  --secondary:                 hsl(0, 0%, 96%);
+  --secondary-foreground:      hsl(0, 0%, 18%);
+  --muted:                     hsl(0, 0%, 96%);
+  --muted-foreground:          hsl(0, 0%, 53%);
+  --accent:                    hsl(0, 0%, 96%);
+  --accent-foreground:         hsl(0, 0%, 18%);
+  --destructive:               hsl(4, 72%, 51%);
+  --border:                    hsl(0, 0%, 90%);
+  --input:                     hsl(0, 0%, 90%);
+  --ring:                      hsl(0, 0%, 70%);
+  --chart-1:                   hsl(28, 65%, 52%);
+  --chart-2:                   hsl(180, 35%, 48%);
+  --chart-3:                   hsl(220, 20%, 38%);
+  --chart-4:                   hsl(68, 72%, 60%);
+  --chart-5:                   hsl(50, 65%, 55%);
+  --sidebar:                   hsl(0, 0%, 98%);
+  --sidebar-foreground:        hsl(0, 0%, 11%);
+  --sidebar-primary:           hsl(0, 0%, 18%);
+  --sidebar-primary-foreground:hsl(0, 0%, 98%);
+  --sidebar-accent:            hsl(0, 0%, 96%);
+  --sidebar-accent-foreground: hsl(0, 0%, 18%);
+  --sidebar-border:            hsl(0, 0%, 90%);
+  --sidebar-ring:              hsl(0, 0%, 70%);
+}
+
+/* ---- oklch overrides for browsers that support oklch() ---- */
+@supports (color: oklch(0 0 0)) {
+  :root {
+    --background:                oklch(1 0 0);
+    --foreground:                oklch(0.145 0 0);
+    --card:                      oklch(1 0 0);
+    --card-foreground:           oklch(0.145 0 0);
+    --popover:                   oklch(1 0 0);
+    --popover-foreground:        oklch(0.145 0 0);
+    --primary:                   oklch(0.205 0 0);
+    --primary-foreground:        oklch(0.985 0 0);
+    --secondary:                 oklch(0.97 0 0);
+    --secondary-foreground:      oklch(0.205 0 0);
+    --muted:                     oklch(0.97 0 0);
+    --muted-foreground:          oklch(0.556 0 0);
+    --accent:                    oklch(0.97 0 0);
+    --accent-foreground:         oklch(0.205 0 0);
+    --destructive:               oklch(0.577 0.245 27.325);
+    --border:                    oklch(0.922 0 0);
+    --input:                     oklch(0.922 0 0);
+    --ring:                      oklch(0.708 0 0);
+    --chart-1:                   oklch(0.646 0.222 41.116);
+    --chart-2:                   oklch(0.6 0.118 184.704);
+    --chart-3:                   oklch(0.398 0.07 227.392);
+    --chart-4:                   oklch(0.828 0.189 84.429);
+    --chart-5:                   oklch(0.769 0.188 70.08);
+    --sidebar:                   oklch(0.985 0 0);
+    --sidebar-foreground:        oklch(0.145 0 0);
+    --sidebar-primary:           oklch(0.205 0 0);
+    --sidebar-primary-foreground:oklch(0.985 0 0);
+    --sidebar-accent:            oklch(0.97 0 0);
+    --sidebar-accent-foreground: oklch(0.205 0 0);
+    --sidebar-border:            oklch(0.922 0 0);
+    --sidebar-ring:              oklch(0.708 0 0);
+  }
 }
 
 body {
@@ -101,12 +154,22 @@ body {
 
 @layer utilities {
   .text-balance {
+    /* word-break is the universal fallback; text-wrap:balance is progressive */
+    word-break: break-word;
+    overflow-wrap: break-word;
     text-wrap: balance;
   }
 }
 
-/* Smooth scrolling */
+/* -------------------------------------------------------------------------
+ * Smooth scrolling
+ *
+ * -webkit-overflow-scrolling:touch enables momentum-based (inertial)
+ * scrolling on iOS Safari — without it pages feel stiff on iPhone/iPad.
+ * scroll-behavior:smooth is the standard property for anchor-link animation.
+ * ------------------------------------------------------------------------ */
 html {
+  -webkit-overflow-scrolling: touch; /* iOS Safari momentum scroll */
   scroll-behavior: smooth;
 }
 
@@ -126,18 +189,30 @@ html {
   animation: fadeIn 0.6s ease-out;
 }
 
-/* ===== 3D Teeth Animation Styles ===== */
+/* =========================================================================
+ * 3D Teeth Animation Styles
+ *
+ * -webkit- prefixes are provided for transform-style and perspective so that
+ * older Safari releases (which shipped these behind the vendor prefix) still
+ * render the 3-D scene correctly.
+ * ======================================================================= */
 
 /* 3D Scene Container */
 .teeth-scene {
-  perspective: 1200px;
-  perspective-origin: center;
+  /* Vendor-prefixed perspective for Safari < 9 */
+  -webkit-perspective: 1200px;
+          perspective: 1200px;
+  -webkit-perspective-origin: center;
+          perspective-origin: center;
   position: relative;
   width: 100%;
   height: 400px;
+  display: -webkit-flex;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  -webkit-align-items: center;
+          align-items: center;
+  -webkit-justify-content: center;
+          justify-content: center;
 }
 
 /* Container for all teeth */
@@ -145,10 +220,15 @@ html {
   position: relative;
   width: 100%;
   height: 100%;
-  transform-style: preserve-3d;
+  /* Vendor-prefixed transform-style for older Safari */
+  -webkit-transform-style: preserve-3d;
+          transform-style: preserve-3d;
+  display: -webkit-flex;
   display: flex;
-  align-items: center;
-  justify-content: space-around;
+  -webkit-align-items: center;
+          align-items: center;
+  -webkit-justify-content: space-around;
+          justify-content: space-around;
   padding: 0 10%;
 }
 
@@ -157,41 +237,31 @@ html {
   position: relative;
   width: 60px;
   height: 100px;
-  transform-style: preserve-3d;
-  animation: toothFloat 3s ease-in-out infinite;
+  -webkit-transform-style: preserve-3d;
+          transform-style: preserve-3d;
+  -webkit-animation: toothFloat 3s ease-in-out infinite;
+          animation: toothFloat 3s ease-in-out infinite;
   will-change: transform;
+  /* Prevent flicker in Safari by promoting to its own compositor layer */
+  -webkit-backface-visibility: hidden;
+          backface-visibility: hidden;
 }
 
 /* Staggered animation delays for each tooth */
-.tooth-3d:nth-child(1) {
-  animation-delay: 0s;
-}
-
-.tooth-3d:nth-child(2) {
-  animation-delay: 0.3s;
-}
-
-.tooth-3d:nth-child(3) {
-  animation-delay: 0.6s;
-}
-
-.tooth-3d:nth-child(4) {
-  animation-delay: 0.9s;
-}
-
-.tooth-3d:nth-child(5) {
-  animation-delay: 1.2s;
-}
+.tooth-3d:nth-child(1) { -webkit-animation-delay: 0s;   animation-delay: 0s;   }
+.tooth-3d:nth-child(2) { -webkit-animation-delay: 0.3s; animation-delay: 0.3s; }
+.tooth-3d:nth-child(3) { -webkit-animation-delay: 0.6s; animation-delay: 0.6s; }
+.tooth-3d:nth-child(4) { -webkit-animation-delay: 0.9s; animation-delay: 0.9s; }
+.tooth-3d:nth-child(5) { -webkit-animation-delay: 1.2s; animation-delay: 1.2s; }
 
 /* Floating animation with rotation */
+@-webkit-keyframes toothFloat {
+  0%,  100% { -webkit-transform: translateY(0)     translateZ(0)    rotateY(0deg);  transform: translateY(0)     translateZ(0)    rotateY(0deg); }
+  50%        { -webkit-transform: translateY(-30px) translateZ(50px) rotateY(15deg); transform: translateY(-30px) translateZ(50px) rotateY(15deg); }
+}
 @keyframes toothFloat {
-  0%,
-  100% {
-    transform: translateY(0) translateZ(0) rotateY(0deg);
-  }
-  50% {
-    transform: translateY(-30px) translateZ(50px) rotateY(15deg);
-  }
+  0%,  100% { transform: translateY(0)     translateZ(0)    rotateY(0deg); }
+  50%        { transform: translateY(-30px) translateZ(50px) rotateY(15deg); }
 }
 
 /* Tooth Crown (main part) */
@@ -201,10 +271,12 @@ html {
   height: 70%;
   background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
   border-radius: 50% 50% 45% 45% / 60% 60% 40% 40%;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1),
+  box-shadow:
+    0 4px 8px rgba(0, 0, 0, 0.1),
     inset -2px -2px 8px rgba(0, 0, 0, 0.05),
     inset 2px 2px 8px rgba(255, 255, 255, 0.8);
-  transform: translateZ(30px);
+  -webkit-transform: translateZ(30px);
+          transform: translateZ(30px);
 }
 
 /* Tooth Root */
@@ -212,7 +284,8 @@ html {
   position: absolute;
   bottom: 0;
   left: 50%;
-  transform: translateX(-50%) translateZ(15px);
+  -webkit-transform: translateX(-50%) translateZ(15px);
+          transform: translateX(-50%) translateZ(15px);
   width: 40%;
   height: 35%;
   background: linear-gradient(180deg, #f0f9ff 0%, #e0f2fe 100%);
@@ -233,26 +306,28 @@ html {
     transparent 100%
   );
   border-radius: 50%;
-  transform: translateZ(35px);
-  animation: toothShine 2s ease-in-out infinite;
+  -webkit-transform: translateZ(35px);
+          transform: translateZ(35px);
+  -webkit-animation: toothShine 2s ease-in-out infinite;
+          animation: toothShine 2s ease-in-out infinite;
   pointer-events: none;
 }
 
 /* Shine pulsing animation */
+@-webkit-keyframes toothShine {
+  0%, 100% { opacity: 0.3; }
+  50%       { opacity: 0.7; }
+}
 @keyframes toothShine {
-  0%,
-  100% {
-    opacity: 0.3;
-  }
-  50% {
-    opacity: 0.7;
-  }
+  0%, 100% { opacity: 0.3; }
+  50%       { opacity: 0.7; }
 }
 
 /* Mobile responsiveness */
 @media (max-width: 768px) {
   .teeth-scene {
-    perspective: 800px;
+    -webkit-perspective: 800px;
+            perspective: 800px;
     height: 300px;
   }
 
@@ -261,26 +336,106 @@ html {
     height: 70px;
   }
 
+  @-webkit-keyframes toothFloat {
+    0%,  100% { -webkit-transform: translateY(0)     translateZ(0)    rotateY(0deg);  transform: translateY(0)     translateZ(0)    rotateY(0deg); }
+    50%        { -webkit-transform: translateY(-20px) translateZ(30px) rotateY(10deg); transform: translateY(-20px) translateZ(30px) rotateY(10deg); }
+  }
   @keyframes toothFloat {
-    0%,
-    100% {
-      transform: translateY(0) translateZ(0) rotateY(0deg);
-    }
-    50% {
-      transform: translateY(-20px) translateZ(30px) rotateY(10deg);
-    }
+    0%,  100% { transform: translateY(0)     translateZ(0)    rotateY(0deg); }
+    50%        { transform: translateY(-20px) translateZ(30px) rotateY(10deg); }
   }
 }
 
 /* Accessibility: Respect reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
-  .tooth-3d {
-    animation: none;
-  }
+  .tooth-3d  { -webkit-animation: none; animation: none; }
+  .tooth-shine { -webkit-animation: none; animation: none; opacity: 0.5; }
+}
 
-  .tooth-shine {
-    animation: none;
-    opacity: 0.5;
+/* -------------------------------------------------------------------------
+ * iOS Safari viewport height fix
+ *
+ * On mobile Safari, 100vh includes the collapsible browser chrome, which
+ * means min-h-screen sections can be partially hidden.
+ * -webkit-fill-available fills only the *visible* viewport.
+ * ------------------------------------------------------------------------ */
+@supports (-webkit-touch-callout: none) {
+  .min-h-screen {
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* -------------------------------------------------------------------------
+ * Dark mode token overrides
+ * Same pattern: HSL fallbacks first, then oklch via @supports.
+ * ------------------------------------------------------------------------ */
+.dark {
+  --background:                hsl(0, 0%, 11%);
+  --foreground:                hsl(0, 0%, 98%);
+  --card:                      hsl(0, 0%, 18%);
+  --card-foreground:           hsl(0, 0%, 98%);
+  --popover:                   hsl(0, 0%, 18%);
+  --popover-foreground:        hsl(0, 0%, 98%);
+  --primary:                   hsl(0, 0%, 90%);
+  --primary-foreground:        hsl(0, 0%, 18%);
+  --secondary:                 hsl(0, 0%, 25%);
+  --secondary-foreground:      hsl(0, 0%, 98%);
+  --muted:                     hsl(0, 0%, 25%);
+  --muted-foreground:          hsl(0, 0%, 70%);
+  --accent:                    hsl(0, 0%, 25%);
+  --accent-foreground:         hsl(0, 0%, 98%);
+  --destructive:               hsl(4, 72%, 64%);
+  --border:                    rgba(255, 255, 255, 0.1);
+  --input:                     rgba(255, 255, 255, 0.15);
+  --ring:                      hsl(0, 0%, 53%);
+  --chart-1:                   hsl(255, 65%, 43%);
+  --chart-2:                   hsl(159, 46%, 55%);
+  --chart-3:                   hsl(50, 65%, 55%);
+  --chart-4:                   hsl(295, 65%, 52%);
+  --chart-5:                   hsl(11, 72%, 55%);
+  --sidebar:                   hsl(0, 0%, 18%);
+  --sidebar-foreground:        hsl(0, 0%, 98%);
+  --sidebar-primary:           hsl(255, 65%, 43%);
+  --sidebar-primary-foreground:hsl(0, 0%, 98%);
+  --sidebar-accent:            hsl(0, 0%, 25%);
+  --sidebar-accent-foreground: hsl(0, 0%, 18%);
+  --sidebar-border:            rgba(255, 255, 255, 0.1);
+  --sidebar-ring:              hsl(0, 0%, 53%);
+}
+
+@supports (color: oklch(0 0 0)) {
+  .dark {
+    --background:                oklch(0.145 0 0);
+    --foreground:                oklch(0.985 0 0);
+    --card:                      oklch(0.205 0 0);
+    --card-foreground:           oklch(0.985 0 0);
+    --popover:                   oklch(0.205 0 0);
+    --popover-foreground:        oklch(0.985 0 0);
+    --primary:                   oklch(0.922 0 0);
+    --primary-foreground:        oklch(0.205 0 0);
+    --secondary:                 oklch(0.269 0 0);
+    --secondary-foreground:      oklch(0.985 0 0);
+    --muted:                     oklch(0.269 0 0);
+    --muted-foreground:          oklch(0.708 0 0);
+    --accent:                    oklch(0.269 0 0);
+    --accent-foreground:         oklch(0.985 0 0);
+    --destructive:               oklch(0.704 0.191 22.216);
+    --border:                    oklch(1 0 0 / 10%);
+    --input:                     oklch(1 0 0 / 15%);
+    --ring:                      oklch(0.556 0 0);
+    --chart-1:                   oklch(0.488 0.243 264.376);
+    --chart-2:                   oklch(0.696 0.17 162.48);
+    --chart-3:                   oklch(0.769 0.188 70.08);
+    --chart-4:                   oklch(0.627 0.265 303.9);
+    --chart-5:                   oklch(0.645 0.246 16.439);
+    --sidebar:                   oklch(0.205 0 0);
+    --sidebar-foreground:        oklch(0.985 0 0);
+    --sidebar-primary:           oklch(0.488 0.243 264.376);
+    --sidebar-primary-foreground:oklch(0.985 0 0);
+    --sidebar-accent:            oklch(0.269 0 0);
+    --sidebar-accent-foreground: oklch(0.205 0 0);
+    --sidebar-border:            oklch(1 0 0 / 10%);
+    --sidebar-ring:              oklch(0.556 0 0);
   }
 }
 
@@ -323,40 +478,6 @@ html {
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-}
-
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
 }
 
 @layer base {
