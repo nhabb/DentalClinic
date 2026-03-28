@@ -1,41 +1,60 @@
 "use client";
 
+import { Languages } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+const LANGUAGES = [
+  { value: "en", label: "English", flag: "🇺🇸" },
+  { value: "fr", label: "Français", flag: "🇫🇷" },
+  { value: "ar", label: "العربية", flag: "🇸🇦" },
+] as const;
 
 type Props = {
-  variant?: "light" | "dark";
+  variant?: "outline" | "ghost";
 };
 
-export default function LanguageSwitcher({ variant = "light" }: Props) {
+export default function LanguageSwitcher({ variant = "outline" }: Props) {
   const { language, setLanguage } = useTranslation();
 
-  const containerClass =
-    variant === "dark"
-      ? "flex items-center gap-1 bg-white/20 rounded-lg p-1"
-      : "flex items-center gap-1 bg-gray-100 rounded-lg p-1";
-
-  const activeClass =
-    "bg-white text-gray-900 shadow-sm";
-
-  const inactiveClass =
-    variant === "dark"
-      ? "text-white/80 hover:text-white"
-      : "text-gray-500 hover:text-gray-700";
+  const current = LANGUAGES.find((l) => l.value === language);
 
   return (
-    <div className={containerClass}>
-      {(["en", "fr", "ar"] as const).map((lang) => (
-        <button
-          key={lang}
-          type="button"
-          onClick={() => setLanguage(lang)}
-          className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
-            language === lang ? activeClass : inactiveClass
-          }`}
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant={variant}>
+          <Languages className="h-4 w-4" />
+          {current?.flag} {current?.label}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-48">
+        <DropdownMenuLabel>Select Language</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuRadioGroup
+          value={language}
+          onValueChange={(val) =>
+            setLanguage(val as "en" | "fr" | "ar")
+          }
         >
-          {lang.toUpperCase()}
-        </button>
-      ))}
-    </div>
+          {LANGUAGES.map(({ value, label, flag }) => (
+            <DropdownMenuRadioItem key={value} value={value}>
+              <span className="flex items-center gap-2">
+                <span>{flag}</span>
+                <span>{label}</span>
+              </span>
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

@@ -26,13 +26,14 @@ import {
 import { ChevronDownIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/lib/i18n";
+import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { ar, fr, enUS } from "date-fns/locale";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 export default function Form() {
   const router = useRouter();
-  const { t, language, setLanguage } = useTranslation();
+  const { t, language } = useTranslation();
   const dateLocale = language === "ar" ? ar : language === "fr" ? fr : enUS;
   const [formData, setFormData] = useState({
     firstName: "",
@@ -73,22 +74,7 @@ export default function Form() {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <div className="flex items-center gap-1 bg-white/20 rounded-lg p-1">
-              {(["en", "fr", "ar"] as const).map((lang) => (
-                <button
-                  key={lang}
-                  type="button"
-                  onClick={() => setLanguage(lang)}
-                  className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
-                    language === lang
-                      ? "bg-white text-gray-900 shadow-sm"
-                      : "text-white/80 hover:text-white"
-                  }`}
-                >
-                  {lang.toUpperCase()}
-                </button>
-              ))}
-            </div>
+            <LanguageSwitcher />
           </div>
           <Link href="/" className="inline-flex items-center space-x-2">
             <div className="w-12 h-12 bg-gradient-to-br from-dental-blue to-dental-teal rounded-lg flex items-center justify-center shadow-lg">

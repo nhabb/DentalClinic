@@ -9,51 +9,59 @@ export default function Diplomas() {
   const credentials = [
     {
       institution: "American Dental Association",
-      credential: "Board Certified",
+      credential: t("landing.cred1"),
       year: "2010",
-      type: "Certification",
+      type: t("landing.typeCertification"),
+      typeKey: "Certification",
     },
     {
       institution: "Academy of General Dentistry",
-      credential: "Fellowship (FAGD)",
+      credential: t("landing.cred2"),
       year: "2015",
-      type: "Fellowship",
+      type: t("landing.typeFellowship"),
+      typeKey: "Fellowship",
     },
     {
       institution: "American Academy of Cosmetic Dentistry",
-      credential: "Accredited Member",
+      credential: t("landing.cred3"),
       year: "2016",
-      type: "Accreditation",
+      type: t("landing.typeAccreditation"),
+      typeKey: "Accreditation",
     },
     {
       institution: "Invisalign",
-      credential: "Certified Provider",
+      credential: t("landing.cred4"),
       year: "2018",
-      type: "Certification",
+      type: t("landing.typeCertification"),
+      typeKey: "Certification",
     },
     {
       institution: "International Congress of Oral Implantologists",
-      credential: "Diplomate Status",
+      credential: t("landing.cred5"),
       year: "2019",
-      type: "Certification",
+      type: t("landing.typeCertification"),
+      typeKey: "Certification",
     },
     {
       institution: "American Board of Pediatric Dentistry",
-      credential: "Board Certified",
+      credential: t("landing.cred6"),
       year: "2020",
-      type: "Certification",
+      type: t("landing.typeCertification"),
+      typeKey: "Certification",
     },
     {
       institution: "Dental Organization for Conscious Sedation",
-      credential: "Certified Provider",
+      credential: t("landing.cred7"),
       year: "2021",
-      type: "Certification",
+      type: t("landing.typeCertification"),
+      typeKey: "Certification",
     },
     {
       institution: "State Dental Board",
-      credential: "Active License",
+      credential: t("landing.cred8"),
       year: "2024",
-      type: "License",
+      type: t("landing.typeLicense"),
+      typeKey: "License",
     },
   ];
 
@@ -91,6 +99,7 @@ export default function Diplomas() {
           {credentials.map((credential, index) => (
             <CredentialCard key={index} {...credential} />
           ))}
+
         </div>
       </div>
     </section>
@@ -103,14 +112,16 @@ function CredentialCard({
   credential,
   year,
   type,
+  typeKey,
 }: {
   institution: string;
   credential: string;
   year: string;
   type: string;
+  typeKey: string;
 }) {
   const getIcon = () => {
-    switch (type) {
+    switch (typeKey) {
       case "Fellowship":
         return <Star className="w-8 h-8" />;
       case "License":

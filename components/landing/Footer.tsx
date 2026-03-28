@@ -25,8 +25,8 @@ export default function Footer() {
   ];
 
   const legalLinks = [
-    { href: "#", label: t("landing.privacyPolicy") },
-    { href: "#", label: t("landing.termsOfService") },
+    { href: "/privacy-policy", label: t("landing.privacyPolicy") },
+    { href: "/terms-of-service", label: t("landing.termsOfService") },
     { href: "#", label: t("landing.hipaaCompliance") },
   ];
 
