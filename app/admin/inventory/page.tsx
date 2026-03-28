@@ -6,14 +6,11 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { safeStorage } from "@/lib/browser-compat";
 import { useTranslation } from "@/lib/i18n";
+import AdminSidebar from "@/components/ui/AdminSidebar";
+import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import {
   FaTooth,
-  FaCalendarAlt,
   FaBoxes,
-  FaUsers,
-  FaChartLine,
-  FaCog,
-  FaSignOutAlt,
   FaSearch,
   FaPlus,
   FaEdit,
@@ -46,7 +43,8 @@ const categoryValues = ["All", "Disposables", "Materials", "Medications", "Instr
 
 export default function InventoryManagement() {
   const router = useRouter();
-  const { t, language, setLanguage } = useTranslation();
+  const { t } = useTranslation();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const handleLogout = () => {
     safeStorage.removeItem("adminAuth");
@@ -89,71 +87,7 @@ export default function InventoryManagement() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <aside className="w-64 bg-gradient-to-b from-gray-900 to-gray-800 text-white flex flex-col">
-        {/* Logo */}
-        <div className="p-6 border-b border-gray-700">
-          <Link href="/admin" className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-dental-blue to-dental-teal rounded-lg flex items-center justify-center">
-              <FaTooth className="text-white text-xl" />
-            </div>
-            <div>
-              <span className="text-lg font-bold">BrightSmile</span>
-              <p className="text-xs text-gray-400">{t("nav.adminPanel")}</p>
-            </div>
-          </Link>
-        </div>
-
-        {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-2">
-          <Link
-            href="/admin"
-            className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
-          >
-            <FaChartLine className="text-lg" />
-            <span className="font-medium">{t("nav.dashboard")}</span>
-          </Link>
-          <Link
-            href="/admin/appointments"
-            className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
-          >
-            <FaCalendarAlt className="text-lg" />
-            <span className="font-medium">{t("nav.appointments")}</span>
-          </Link>
-          <Link
-            href="/admin/inventory"
-            className="flex items-center space-x-3 px-4 py-3 bg-dental-blue/20 text-dental-lightblue rounded-xl"
-          >
-            <FaBoxes className="text-lg" />
-            <span className="font-medium">{t("nav.inventory")}</span>
-          </Link>
-          <Link
-            href="/admin/patients"
-            className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
-          >
-            <FaUsers className="text-lg" />
-            <span className="font-medium">{t("nav.patients")}</span>
-          </Link>
-        </nav>
-
-        {/* Bottom Section */}
-        <div className="p-4 border-t border-gray-700 space-y-2">
-          <Link
-            href="/admin/settings"
-            className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
-          >
-            <FaCog className="text-lg" />
-            <span className="font-medium">{t("nav.settings")}</span>
-          </Link>
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-red-500/20 hover:text-red-400 rounded-xl transition-colors"
-          >
-            <FaSignOutAlt className="text-lg" />
-            <span className="font-medium">{t("common.logout")}</span>
-          </button>
-        </div>
-      </aside>
+      <AdminSidebar activePage="inventory" sidebarOpen={sidebarOpen} onLogout={handleLogout} />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
@@ -164,22 +98,7 @@ export default function InventoryManagement() {
             <p className="text-gray-500 text-sm">{t("inventory.manageSupplies")}</p>
           </div>
           <div className="flex items-center gap-3">
-            {/* Language Switcher */}
-            <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-              {(["en", "fr", "ar"] as const).map((lang) => (
-                <button
-                  key={lang}
-                  onClick={() => setLanguage(lang)}
-                  className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
-                    language === lang
-                      ? "bg-white text-gray-900 shadow-sm"
-                      : "text-gray-500 hover:text-gray-700"
-                  }`}
-                >
-                  {lang.toUpperCase()}
-                </button>
-              ))}
-            </div>
+            <LanguageSwitcher />
             <Button onClick={() => setShowAddModal(true)} className="bg-dental-blue hover:bg-dental-blue/90">
               <FaPlus className="mr-2 rtl:mr-0 rtl:ml-2" />
               {t("inventory.addItem")}

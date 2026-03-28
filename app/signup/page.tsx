@@ -2,405 +2,567 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { FaTooth, FaUser, FaHospital, FaCheckCircle, FaClock } from "react-icons/fa";
+import { Input } from "@/components/ui/input";
+import {
+  Field,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+} from "@/components/ui/field";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { ChevronDownIcon } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { safeStorage } from "@/lib/browser-compat";
 import { useTranslation } from "@/lib/i18n";
-
-type SignupType = "patient" | "clinic";
+import { ar, fr, enUS } from "date-fns/locale";
+import { FaTooth } from "react-icons/fa";
 
 export default function SignupPage() {
   const router = useRouter();
-  const { t } = useTranslation();
-  const [type, setType]         = useState<SignupType>("patient");
+  const { t, language, setLanguage } = useTranslation();
+  const dateLocale = language === "ar" ? ar : language === "fr" ? fr : enUS;
+
   const [isLoading, setIsLoading] = useState(false);
-  const [success, setSuccess]   = useState(false);
+  const [error, setError] = useState("");
+  const [calendarOpen, setCalendarOpen] = useState(false);
 
-  // Patient form
-  const [patient, setPatient] = useState({
-    firstName: "", lastName: "", email: "", password: "", confirmPassword: "",
+  const [form, setForm] = useState({
+    // Account
+    email: "",
+    password: "",
+    confirmPassword: "",
+    // Personal
+    firstName: "",
+    lastName: "",
+    phone: "",
+    dateOfBirth: null as string | null,
+    // Address
+    address: "",
+    city: "",
+    governate: "",
+    // Emergency
+    emergencyContact: "",
+    emergencyPhone: "",
+    // Insurance
+    insuranceProvider: "",
+    insurancePolicy: "",
+    // Medical
+    medicalConditions: "",
+    allergies: "",
+    currentMedications: "",
   });
-  const [patientError, setPatientError] = useState("");
 
-  // Clinic form
-  const [clinic, setClinic] = useState({
-    clinicName: "", ownerName: "", email: "", phone: "",
-    address: "", city: "", licenseNumber: "", specialty: "",
-    password: "", confirmPassword: "",
-  });
-  const [clinicError, setClinicError] = useState("");
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handlePatientChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setPatient({ ...patient, [e.target.name]: e.target.value });
-
-  const handleClinicChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
-    setClinic({ ...clinic, [e.target.name]: e.target.value });
-
-  const handlePatientSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setPatientError("");
-    if (patient.password !== patient.confirmPassword) {
-      setPatientError(t("signup.passwordsDoNotMatch"));
+    setError("");
+    if (form.password !== form.confirmPassword) {
+      setError(t("signup.passwordsDoNotMatch"));
       return;
     }
     setIsLoading(true);
     safeStorage.setItem("patientAuth", "true");
     safeStorage.setItem("userRole", "patient");
-    router.push("/login/continue-login");
+    router.push("/patient-dashboard");
   };
-
-  const handleClinicSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setClinicError("");
-    if (clinic.password !== clinic.confirmPassword) {
-      setClinicError(t("signup.passwordsDoNotMatch"));
-      return;
-    }
-    setIsLoading(true);
-
-    // Save to localStorage as pending — super admin will review
-    const existing = JSON.parse(safeStorage.getItem("clinicRegistrations") || "[]");
-    const newClinic = {
-      id: Date.now(),
-      clinicName:    clinic.clinicName,
-      ownerName:     clinic.ownerName,
-      email:         clinic.email,
-      phone:         clinic.phone,
-      address:       clinic.address,
-      city:          clinic.city,
-      licenseNumber: clinic.licenseNumber,
-      specialty:     clinic.specialty,
-      status:        "pending",
-      submittedAt:   new Date().toISOString(),
-    };
-    safeStorage.setItem("clinicRegistrations", JSON.stringify([...existing, newClinic]));
-
-    setIsLoading(false);
-    setSuccess(true);
-  };
-
-  if (success) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4 gradient-auth-bg">
-        <div className="bg-white rounded-2xl shadow-2xl p-10 max-w-md w-full text-center space-y-6">
-          <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto">
-            <FaClock className="text-amber-500 text-4xl" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900">{t("signup.registrationSubmitted")}</h2>
-          <p className="text-gray-600">
-            {t("signup.pendingReview")}
-          </p>
-          <div className="flex items-center gap-2 justify-center text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
-            <FaClock className="shrink-0" />
-            {t("signup.awaitingApproval")}
-          </div>
-          <Link href="/login">
-            <Button className="w-full gradient-auth-card" size="lg">
-              {t("signup.backToSignIn")}
-            </Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 gradient-auth-bg py-12">
-      <div className="max-w-lg w-full">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 md:p-10 space-y-6">
-          {/* Logo */}
-          <div className="text-center">
-            <Link href="/" className="inline-flex items-center space-x-2">
-              <div className="w-12 h-12 bg-gradient-to-br from-dental-blue to-dental-teal rounded-lg flex items-center justify-center shadow-lg">
-                <FaTooth className="text-white text-2xl" />
-              </div>
-              <span className="text-2xl font-bold text-gray-900">BrightSmile</span>
-            </Link>
-            <h2 className="mt-6 text-3xl font-bold text-gray-900">{t("signup.createAccount")}</h2>
-            <p className="mt-2 text-sm text-gray-600">{t("signup.joinToday")}</p>
+    <div className="min-h-screen w-full flex items-center justify-center px-4 sm:px-6 lg:px-8 gradient-auth-bg py-12">
+      <div className="w-full max-w-2xl">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="flex justify-center mb-4">
+            <div className="flex items-center gap-1 bg-white/20 rounded-lg p-1">
+              {(["en", "fr", "ar"] as const).map((lang) => (
+                <button
+                  key={lang}
+                  type="button"
+                  onClick={() => setLanguage(lang)}
+                  className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                    language === lang
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-white/80 hover:text-white"
+                  }`}
+                >
+                  {lang.toUpperCase()}
+                </button>
+              ))}
+            </div>
           </div>
+          <Link href="/" className="inline-flex items-center space-x-2">
+            <div className="w-12 h-12 bg-gradient-to-br from-dental-blue to-dental-teal rounded-lg flex items-center justify-center shadow-lg">
+              <FaTooth className="text-white text-2xl" />
+            </div>
+            <span className="text-2xl font-bold text-white">BrightSmile</span>
+          </Link>
+          <h2 className="mt-4 text-3xl font-extrabold text-white tracking-tight">
+            {t("signup.createAccount")}
+          </h2>
+          <p className="mt-2 text-base text-white/90 font-light">
+            {t("signup.joinToday")}
+          </p>
+        </div>
 
-          {/* Type Selector */}
-          <div className="flex gap-2 p-1 bg-gray-100 rounded-xl">
-            {([
-              { id: "patient", labelKey: "signup.patient", icon: FaUser     },
-              { id: "clinic",  labelKey: "signup.clinic",  icon: FaHospital },
-            ] as const).map(({ id, labelKey, icon: Icon }) => (
-              <button
-                key={id}
-                type="button"
-                onClick={() => setType(id)}
-                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-medium transition-all ${
-                  type === id
-                    ? "bg-gradient-to-r from-dental-blue to-dental-teal text-white shadow-md"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                <Icon />
-                {t(labelKey)}
-              </button>
-            ))}
-          </div>
-
-          {/* ── PATIENT FORM ── */}
-          {type === "patient" && (
-            <form className="space-y-4" onSubmit={handlePatientSubmit}>
-              {patientError && (
-                <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
-                  {patientError}
-                </p>
-              )}
-              <div className="grid grid-cols-2 gap-4">
-                {[
-                  { name: "firstName", labelKey: "signup.firstName", placeholder: "Ahmad" },
-                  { name: "lastName",  labelKey: "signup.lastName",  placeholder: "Khoury" },
-                ].map((f) => (
-                  <div key={f.name}>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">{t(f.labelKey)}</label>
-                    <input
-                      name={f.name}
-                      value={(patient as any)[f.name]}
-                      onChange={handlePatientChange}
-                      type="text"
-                      required
-                      placeholder={f.placeholder}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-auth-blue focus:border-transparent text-gray-900 placeholder-gray-400"
-                    />
-                  </div>
-                ))}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t("signup.emailAddress")}</label>
-                <input
-                  name="email"
-                  value={patient.email}
-                  onChange={handlePatientChange}
-                  type="email"
-                  required
-                  placeholder="ahmad@example.com"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-auth-blue focus:border-transparent text-gray-900 placeholder-gray-400"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t("signup.password")}</label>
-                <input
-                  name="password"
-                  value={patient.password}
-                  onChange={handlePatientChange}
-                  type="password"
-                  required
-                  placeholder={t("signup.createPassword")}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-auth-blue focus:border-transparent text-gray-900 placeholder-gray-400"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t("signup.confirmPassword")}</label>
-                <input
-                  name="confirmPassword"
-                  value={patient.confirmPassword}
-                  onChange={handlePatientChange}
-                  type="password"
-                  required
-                  placeholder={t("signup.repeatPassword")}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-auth-blue focus:border-transparent text-gray-900 placeholder-gray-400"
-                />
-              </div>
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="w-full py-6 gradient-auth-card hover:shadow-xl transition-all transform hover:scale-[1.02]"
-                size="lg"
-              >
-                {isLoading ? (
-                  <span className="flex items-center gap-2">
-                    <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                    {t("signup.creatingAccount")}
-                  </span>
-                ) : t("signup.createPatientAccount")}
-              </Button>
-            </form>
+        <form className="space-y-6" onSubmit={handleSubmit}>
+          {error && (
+            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
+              {error}
+            </p>
           )}
 
-          {/* ── CLINIC FORM ── */}
-          {type === "clinic" && (
-            <form className="space-y-4" onSubmit={handleClinicSubmit}>
-              {clinicError && (
-                <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
-                  {clinicError}
-                </p>
-              )}
-
-              {/* Info banner */}
-              <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-700">
-                <FaClock className="mt-0.5 shrink-0" />
-                <span>{t("signup.clinicRequiresApproval")}</span>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t("signup.clinicName")}</label>
-                <input
-                  name="clinicName"
-                  value={clinic.clinicName}
-                  onChange={handleClinicChange}
-                  type="text"
-                  required
-                  placeholder="BrightSmile Dental Clinic"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-auth-blue focus:border-transparent text-gray-900 placeholder-gray-400"
-                />
-              </div>
-
+          {/* Personal Information */}
+          <FieldSet className="border-2 border-dental-blue/20 rounded-xl p-6 bg-white shadow-xl">
+            <FieldLegend className="text-2xl font-bold text-dental-blue px-3 bg-white tracking-tight">
+              {t("continueLogin.personalInfo")}
+            </FieldLegend>
+            <FieldDescription className="text-gray-600 mb-6 font-light text-base">
+              {t("continueLogin.personalInfoDesc")}
+            </FieldDescription>
+            <FieldGroup className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{t("signup.ownerDirector")}</label>
-                  <input
-                    name="ownerName"
-                    value={clinic.ownerName}
-                    onChange={handleClinicChange}
+                <Field>
+                  <FieldLabel
+                    htmlFor="firstName"
+                    className="text-gray-900 font-semibold text-sm tracking-wide"
+                  >
+                    {t("continueLogin.firstName")}
+                  </FieldLabel>
+                  <Input
+                    id="firstName"
+                    name="firstName"
                     type="text"
+                    value={form.firstName}
+                    onChange={handleChange}
                     required
-                    placeholder="Dr. Sarah Mansour"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-auth-blue focus:border-transparent text-gray-900 placeholder-gray-400"
+                    placeholder="Ahmad"
+                    className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
                   />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{t("signup.phoneNumber")}</label>
-                  <input
+                </Field>
+                <Field>
+                  <FieldLabel
+                    htmlFor="lastName"
+                    className="text-gray-900 font-semibold text-sm tracking-wide"
+                  >
+                    {t("continueLogin.lastName")}
+                  </FieldLabel>
+                  <Input
+                    id="lastName"
+                    name="lastName"
+                    type="text"
+                    value={form.lastName}
+                    onChange={handleChange}
+                    required
+                    placeholder="Khoury"
+                    className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
+                  />
+                </Field>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <Field>
+                  <FieldLabel
+                    htmlFor="phone"
+                    className="text-gray-900 font-semibold text-sm tracking-wide"
+                  >
+                    {t("continueLogin.phone")}
+                  </FieldLabel>
+                  <Input
+                    id="phone"
                     name="phone"
-                    value={clinic.phone}
-                    onChange={handleClinicChange}
                     type="tel"
+                    dir="ltr"
+                    value={form.phone}
+                    onChange={handleChange}
                     required
-                    placeholder="+961 1 234 567"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-auth-blue focus:border-transparent text-gray-900 placeholder-gray-400"
+                    placeholder="+961 3 123 456"
+                    className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
                   />
-                </div>
+                </Field>
+                <Field>
+                  <FieldLabel
+                    htmlFor="dateOfBirth"
+                    className="text-gray-900 font-semibold text-sm tracking-wide"
+                  >
+                    {t("continueLogin.dateOfBirth")}
+                  </FieldLabel>
+                  <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        id="dateOfBirth"
+                        className="w-full justify-between font-normal"
+                      >
+                        {form.dateOfBirth
+                          ? new Date(form.dateOfBirth).toLocaleDateString()
+                          : t("continueLogin.selectDate")}
+                        <ChevronDownIcon />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      className="w-auto p-4 max-h-[600px] overflow-auto"
+                      align="center"
+                      side="bottom"
+                      sideOffset={10}
+                      avoidCollisions={false}
+                    >
+                      <Calendar
+                        mode="single"
+                        selected={
+                          form.dateOfBirth
+                            ? new Date(form.dateOfBirth)
+                            : undefined
+                        }
+                        onSelect={(date) => {
+                          setForm({
+                            ...form,
+                            dateOfBirth: date ? date.toISOString() : null,
+                          });
+                          setCalendarOpen(false);
+                        }}
+                        captionLayout="dropdown"
+                        locale={dateLocale}
+                        fromYear={1920}
+                        toYear={new Date().getFullYear()}
+                        classNames={{ nav: "hidden" }}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </Field>
               </div>
+            </FieldGroup>
+          </FieldSet>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t("signup.businessEmail")}</label>
-                <input
-                  name="email"
-                  value={clinic.email}
-                  onChange={handleClinicChange}
-                  type="email"
+          {/* Address */}
+          <FieldSet className="border-2 border-dental-blue/20 rounded-xl p-6 bg-white shadow-xl">
+            <FieldLegend className="text-2xl font-bold text-dental-blue px-3 bg-white tracking-tight">
+              {t("continueLogin.addressInfo")}
+            </FieldLegend>
+            <FieldDescription className="text-gray-600 mb-6 font-light text-base">
+              {t("continueLogin.addressInfoDesc")}
+            </FieldDescription>
+            <FieldGroup className="space-y-4">
+              <Field>
+                <FieldLabel
+                  htmlFor="address"
+                  className="text-gray-900 font-semibold text-sm tracking-wide"
+                >
+                  {t("continueLogin.streetAddress")}
+                </FieldLabel>
+                <Input
+                  id="address"
+                  name="address"
+                  type="text"
+                  value={form.address}
+                  onChange={handleChange}
                   required
-                  placeholder="contact@myclinic.com"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-auth-blue focus:border-transparent text-gray-900 placeholder-gray-400"
+                  placeholder="Hamra Street, Building 123"
+                  className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
                 />
-              </div>
-
+              </Field>
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{t("signup.address")}</label>
-                  <input
-                    name="address"
-                    value={clinic.address}
-                    onChange={handleClinicChange}
-                    type="text"
-                    required
-                    placeholder="Hamra Street, Blvd 12"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-auth-blue focus:border-transparent text-gray-900 placeholder-gray-400"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{t("signup.city")}</label>
-                  <input
+                <Field>
+                  <FieldLabel
+                    htmlFor="city"
+                    className="text-gray-900 font-semibold text-sm tracking-wide"
+                  >
+                    {t("continueLogin.city")}
+                  </FieldLabel>
+                  <Input
+                    id="city"
                     name="city"
-                    value={clinic.city}
-                    onChange={handleClinicChange}
                     type="text"
+                    value={form.city}
+                    onChange={handleChange}
                     required
                     placeholder="Beirut"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-auth-blue focus:border-transparent text-gray-900 placeholder-gray-400"
+                    className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
                   />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{t("signup.licenseNumber")}</label>
-                  <input
-                    name="licenseNumber"
-                    value={clinic.licenseNumber}
-                    onChange={handleClinicChange}
-                    type="text"
-                    required
-                    placeholder="LBN-2024-00123"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-auth-blue focus:border-transparent text-gray-900 placeholder-gray-400"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{t("signup.specialty")}</label>
-                  <select
-                    name="specialty"
-                    value={clinic.specialty}
-                    onChange={handleClinicChange}
-                    required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-auth-blue focus:border-transparent text-gray-900 bg-white"
+                </Field>
+                <Field>
+                  <FieldLabel
+                    htmlFor="governate"
+                    className="text-gray-900 font-semibold text-sm tracking-wide"
                   >
-                    <option value="">{t("signup.selectSpecialty")}</option>
-                    <option value="general">{t("signup.generalDentistry")}</option>
-                    <option value="orthodontics">{t("signup.orthodontics")}</option>
-                    <option value="pediatric">{t("signup.pediatricDentistry")}</option>
-                    <option value="cosmetic">{t("signup.cosmeticDentistry")}</option>
-                    <option value="oral_surgery">{t("signup.oralSurgery")}</option>
-                    <option value="periodontics">{t("signup.periodontics")}</option>
-                    <option value="multi">{t("signup.multiSpecialty")}</option>
-                  </select>
-                </div>
+                    {t("continueLogin.governorate")}
+                  </FieldLabel>
+                  <Input
+                    id="governate"
+                    name="governate"
+                    type="text"
+                    value={form.governate}
+                    onChange={handleChange}
+                    required
+                    placeholder="Beirut"
+                    className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
+                  />
+                </Field>
               </div>
+            </FieldGroup>
+          </FieldSet>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t("signup.password")}</label>
-                <input
-                  name="password"
-                  value={clinic.password}
-                  onChange={handleClinicChange}
-                  type="password"
-                  required
-                  placeholder={t("signup.createPassword")}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-auth-blue focus:border-transparent text-gray-900 placeholder-gray-400"
+          {/* Emergency Contact */}
+          <FieldSet className="border-2 border-dental-blue/20 rounded-xl p-6 bg-white shadow-xl">
+            <FieldLegend className="text-2xl font-bold text-dental-blue px-3 bg-white tracking-tight">
+              {t("continueLogin.emergencyContact")}
+            </FieldLegend>
+            <FieldDescription className="text-gray-600 mb-6 font-light text-base">
+              {t("continueLogin.emergencyContactDesc")}
+            </FieldDescription>
+            <FieldGroup className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <Field>
+                  <FieldLabel
+                    htmlFor="emergencyContact"
+                    className="text-gray-900 font-semibold text-sm tracking-wide"
+                  >
+                    {t("continueLogin.contactName")}
+                  </FieldLabel>
+                  <Input
+                    id="emergencyContact"
+                    name="emergencyContact"
+                    type="text"
+                    value={form.emergencyContact}
+                    onChange={handleChange}
+                    required
+                    placeholder="Layla Khoury"
+                    className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
+                  />
+                </Field>
+                <Field>
+                  <FieldLabel
+                    htmlFor="emergencyPhone"
+                    className="text-gray-900 font-semibold text-sm tracking-wide"
+                  >
+                    {t("continueLogin.contactPhone")}
+                  </FieldLabel>
+                  <Input
+                    id="emergencyPhone"
+                    name="emergencyPhone"
+                    type="tel"
+                    dir="ltr"
+                    value={form.emergencyPhone}
+                    onChange={handleChange}
+                    required
+                    placeholder="+961 3 987 654"
+                    className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
+                  />
+                </Field>
+              </div>
+            </FieldGroup>
+          </FieldSet>
+
+          {/* Insurance */}
+          <FieldSet className="border-2 border-dental-blue/20 rounded-xl p-6 bg-white shadow-xl">
+            <FieldLegend className="text-2xl font-bold text-dental-blue px-3 bg-white tracking-tight">
+              {t("continueLogin.insuranceInfo")}
+            </FieldLegend>
+            <FieldDescription className="text-gray-600 mb-6 font-light text-base">
+              {t("continueLogin.insuranceInfoDesc")}
+            </FieldDescription>
+            <FieldGroup className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <Field>
+                  <FieldLabel
+                    htmlFor="insuranceProvider"
+                    className="text-gray-900 font-semibold text-sm tracking-wide"
+                  >
+                    {t("continueLogin.insuranceProvider")}
+                  </FieldLabel>
+                  <Input
+                    id="insuranceProvider"
+                    name="insuranceProvider"
+                    type="text"
+                    value={form.insuranceProvider}
+                    onChange={handleChange}
+                    placeholder="Globemed"
+                    className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
+                  />
+                </Field>
+                <Field>
+                  <FieldLabel
+                    htmlFor="insurancePolicy"
+                    className="text-gray-900 font-semibold text-sm tracking-wide"
+                  >
+                    {t("continueLogin.policyNumber")}
+                  </FieldLabel>
+                  <Input
+                    id="insurancePolicy"
+                    name="insurancePolicy"
+                    type="text"
+                    value={form.insurancePolicy}
+                    onChange={handleChange}
+                    placeholder="ABC123456789"
+                    className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
+                  />
+                </Field>
+              </div>
+            </FieldGroup>
+          </FieldSet>
+
+          {/* Medical History */}
+          <FieldSet className="border-2 border-dental-blue/20 rounded-xl p-6 bg-white shadow-xl">
+            <FieldLegend className="text-2xl font-bold text-dental-blue px-3 bg-white tracking-tight">
+              {t("continueLogin.medicalHistory")}
+            </FieldLegend>
+            <FieldDescription className="text-gray-600 mb-6 font-light text-base">
+              {t("continueLogin.medicalHistoryDesc")}
+            </FieldDescription>
+            <FieldGroup className="space-y-4">
+              <Field>
+                <FieldLabel
+                  htmlFor="medicalConditions"
+                  className="text-gray-900 font-semibold text-sm tracking-wide"
+                >
+                  {t("continueLogin.medicalConditions")}
+                </FieldLabel>
+                <Input
+                  id="medicalConditions"
+                  name="medicalConditions"
+                  type="text"
+                  value={form.medicalConditions}
+                  onChange={handleChange}
+                  placeholder="e.g., Diabetes, Hypertension"
+                  className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
                 />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t("signup.confirmPassword")}</label>
-                <input
-                  name="confirmPassword"
-                  value={clinic.confirmPassword}
-                  onChange={handleClinicChange}
-                  type="password"
-                  required
-                  placeholder={t("signup.repeatPassword")}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-auth-blue focus:border-transparent text-gray-900 placeholder-gray-400"
+              </Field>
+              <Field>
+                <FieldLabel
+                  htmlFor="allergies"
+                  className="text-gray-900 font-semibold text-sm tracking-wide"
+                >
+                  {t("continueLogin.allergies")}
+                </FieldLabel>
+                <Input
+                  id="allergies"
+                  name="allergies"
+                  type="text"
+                  value={form.allergies}
+                  onChange={handleChange}
+                  placeholder="e.g., Penicillin, Latex"
+                  className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
                 />
+              </Field>
+              <Field>
+                <FieldLabel
+                  htmlFor="currentMedications"
+                  className="text-gray-900 font-semibold text-sm tracking-wide"
+                >
+                  {t("continueLogin.currentMedications")}
+                </FieldLabel>
+                <Input
+                  id="currentMedications"
+                  name="currentMedications"
+                  type="text"
+                  value={form.currentMedications}
+                  onChange={handleChange}
+                  placeholder="e.g., Aspirin, Lisinopril"
+                  className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
+                />
+              </Field>
+            </FieldGroup>
+          </FieldSet>
+          {/* Account */}
+          <FieldSet className="border-2 border-dental-blue/20 rounded-xl p-6 bg-white shadow-xl">
+            <FieldLegend className="text-2xl font-bold text-dental-blue px-3 bg-white tracking-tight">
+              {t("signup.createAccount")}
+            </FieldLegend>
+            <FieldDescription className="text-gray-600 mb-6 font-light text-base">
+              {t("signup.joinToday")}
+            </FieldDescription>
+            <FieldGroup className="space-y-4">
+              <Field>
+                <FieldLabel
+                  htmlFor="email"
+                  className="text-gray-900 font-semibold text-sm tracking-wide"
+                >
+                  {t("signup.emailAddress")}
+                </FieldLabel>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={form.email}
+                  onChange={handleChange}
+                  required
+                  placeholder="ahmad@example.com"
+                  className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
+                />
+              </Field>
+              <div className="grid grid-cols-2 gap-4">
+                <Field>
+                  <FieldLabel
+                    htmlFor="password"
+                    className="text-gray-900 font-semibold text-sm tracking-wide"
+                  >
+                    {t("signup.password")}
+                  </FieldLabel>
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    value={form.password}
+                    onChange={handleChange}
+                    required
+                    placeholder={t("signup.createPassword")}
+                    className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
+                  />
+                </Field>
+                <Field>
+                  <FieldLabel
+                    htmlFor="confirmPassword"
+                    className="text-gray-900 font-semibold text-sm tracking-wide"
+                  >
+                    {t("signup.confirmPassword")}
+                  </FieldLabel>
+                  <Input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type="password"
+                    value={form.confirmPassword}
+                    onChange={handleChange}
+                    required
+                    placeholder={t("signup.repeatPassword")}
+                    className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
+                  />
+                </Field>
               </div>
+            </FieldGroup>
+          </FieldSet>
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="w-full py-6 gradient-auth-card hover:shadow-xl transition-all transform hover:scale-[1.02]"
+            size="lg"
+          >
+            {isLoading ? (
+              <span className="flex items-center gap-2">
+                <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                {t("signup.creatingAccount")}
+              </span>
+            ) : (
+              t("signup.createPatientAccount")
+            )}
+          </Button>
 
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="w-full py-6 gradient-auth-card hover:shadow-xl transition-all transform hover:scale-[1.02]"
-                size="lg"
-              >
-                {isLoading ? (
-                  <span className="flex items-center gap-2">
-                    <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                    {t("signup.submitting")}
-                  </span>
-                ) : t("signup.registerClinic")}
-              </Button>
-            </form>
-          )}
-
-          {/* Sign In Link */}
-          <p className="text-center text-sm text-gray-600">
+          <p className="text-center text-sm text-white/80">
             {t("signup.alreadyHaveAccount")}{" "}
-            <Link href="/login" className="font-semibold text-auth-blue hover:text-auth-blue-light">
+            <Link
+              href="/login"
+              className="font-semibold text-white hover:text-white/80 underline"
+            >
               {t("signup.signIn")}
             </Link>
           </p>
-        </div>
+        </form>
       </div>
     </div>
   );

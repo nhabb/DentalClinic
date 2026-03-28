@@ -6,14 +6,13 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { safeStorage } from "@/lib/browser-compat";
 import { useTranslation } from "@/lib/i18n";
+import AdminSidebar from "@/components/ui/AdminSidebar";
+import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import {
   FaTooth,
   FaCalendarAlt,
-  FaBoxes,
   FaUsers,
-  FaChartLine,
   FaCog,
-  FaSignOutAlt,
   FaSearch,
   FaPlus,
   FaPhone,
@@ -70,7 +69,8 @@ interface PatientHistory {
 
 export default function PatientsPage() {
   const router = useRouter();
-  const { t, language, setLanguage } = useTranslation();
+  const { t } = useTranslation();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [showPatientModal, setShowPatientModal] = useState(false);
@@ -182,70 +182,7 @@ export default function PatientsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <aside className="w-64 bg-gradient-to-b from-gray-900 to-gray-800 text-white flex flex-col">
-        <div className="p-6 border-b border-gray-700">
-          <Link href="/admin" className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-dental-blue to-dental-teal rounded-lg flex items-center justify-center">
-              <FaTooth className="text-white text-xl" />
-            </div>
-            <div>
-              <span className="text-lg font-bold">BrightSmile</span>
-              <p className="text-xs text-gray-400">{t("nav.adminPanel")}</p>
-            </div>
-          </Link>
-        </div>
-
-        <nav className="flex-1 p-4 space-y-2">
-          <Link
-            href="/admin"
-            className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
-          >
-            <FaChartLine className="text-lg" />
-            <span className="font-medium">{t("nav.dashboard")}</span>
-          </Link>
-          <Link
-            href="/admin/appointments"
-            className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
-          >
-            <FaCalendarAlt className="text-lg" />
-            <span className="font-medium">{t("nav.appointments")}</span>
-          </Link>
-          <Link
-            href="/admin/inventory"
-            className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
-          >
-            <FaBoxes className="text-lg" />
-            <span className="font-medium">{t("nav.inventory")}</span>
-          </Link>
-          <Link
-            href="/admin/patients"
-            className="flex items-center space-x-3 px-4 py-3 bg-dental-blue/20 text-dental-lightblue rounded-xl"
-          >
-            <FaUsers className="text-lg" />
-            <span className="font-medium">{t("nav.patients")}</span>
-          </Link>
-        </nav>
-
-        <div className="p-4 border-t border-gray-700 space-y-2">
-          {userRole === "doctor" && (
-            <Link
-              href="/admin/settings"
-              className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
-            >
-              <FaCog className="text-lg" />
-              <span className="font-medium">{t("nav.settings")}</span>
-            </Link>
-          )}
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-red-500/20 hover:text-red-400 rounded-xl transition-colors"
-          >
-            <FaSignOutAlt className="text-lg" />
-            <span className="font-medium">{t("common.logout")}</span>
-          </button>
-        </div>
-      </aside>
+      <AdminSidebar activePage="patients" sidebarOpen={sidebarOpen} onLogout={handleLogout} />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">

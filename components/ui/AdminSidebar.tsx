@@ -1,0 +1,86 @@
+"use client";
+
+import Link from "next/link";
+import { useTranslation } from "@/lib/i18n";
+import {
+  FaTooth,
+  FaChartLine,
+  FaCalendarAlt,
+  FaBoxes,
+  FaUsers,
+  FaSignOutAlt,
+} from "react-icons/fa";
+
+type ActivePage = "dashboard" | "appointments" | "inventory" | "patients" | "notifications";
+
+type Props = {
+  activePage: ActivePage;
+  sidebarOpen: boolean;
+  onLogout: () => void;
+};
+
+const navItems = [
+  { id: "dashboard",     href: "/admin",                icon: FaChartLine,   labelKey: "nav.dashboard"     },
+  { id: "appointments",  href: "/admin/appointments",   icon: FaCalendarAlt, labelKey: "nav.appointments"  },
+  { id: "inventory",     href: "/admin/inventory",      icon: FaBoxes,       labelKey: "nav.inventory"     },
+  { id: "patients",      href: "/admin/patients",       icon: FaUsers,       labelKey: "nav.patients"      },
+] as const;
+
+export default function AdminSidebar({ activePage, sidebarOpen, onLogout }: Props) {
+  const { t } = useTranslation();
+
+  return (
+    <aside
+      className={`${
+        sidebarOpen ? "w-64" : "w-20"
+      } bg-gradient-to-b from-gray-900 to-gray-800 text-white transition-all duration-300 flex flex-col`}
+    >
+      {/* Logo */}
+      <div className="p-6 border-b border-gray-700">
+        <Link href="/admin" className="flex items-center space-x-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-dental-blue to-dental-teal rounded-lg flex items-center justify-center">
+            <FaTooth className="text-white text-xl" />
+          </div>
+          {sidebarOpen && (
+            <div>
+              <span className="text-lg font-bold">BrightSmile</span>
+              <p className="text-xs text-gray-400">{t("nav.adminPanel")}</p>
+            </div>
+          )}
+        </Link>
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 p-4 space-y-2">
+        {navItems.map(({ id, href, icon: Icon, labelKey }) => {
+          const isActive = activePage === id;
+          return (
+            <Link
+              key={id}
+              href={href}
+              className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors ${
+                isActive
+                  ? "bg-dental-blue/20 text-dental-lightblue"
+                  : "text-gray-300 hover:bg-gray-700/50 hover:text-white"
+              }`}
+            >
+              <Icon className="text-lg" />
+              {sidebarOpen && <span className="font-medium">{t(labelKey)}</span>}
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* Logout */}
+      <div className="p-4 border-t border-gray-700">
+        <button
+          onClick={onLogout}
+          className="w-full flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-red-500/20 hover:text-red-400 rounded-xl transition-colors"
+        >
+          <FaSignOutAlt className="text-lg" />
+          {sidebarOpen && <span className="font-medium">{t("common.logout")}</span>}
+        </button>
+      </div>
+    </aside>
+  );
+}

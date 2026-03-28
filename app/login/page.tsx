@@ -11,7 +11,7 @@ import { useTranslation } from "@/lib/i18n";
 type UserRole = "patient" | "doctor";
 
 const ROLE_REDIRECTS: Record<UserRole, string> = {
-  patient: "/login/continue-login",
+  patient: "/patient-dashboard",
   doctor: "/admin",
 };
 
@@ -28,7 +28,7 @@ async function mockLogin(email: string, _password: string): Promise<{ role: User
 
 export default function LoginPage() {
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, language, setLanguage } = useTranslation();
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -72,6 +72,24 @@ export default function LoginPage() {
         <div className="bg-white rounded-2xl shadow-2xl p-8 md:p-10 space-y-7">
           {/* Logo */}
           <div className="text-center">
+            <div className="flex justify-end mb-2">
+              <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+                {(["en", "fr", "ar"] as const).map((lang) => (
+                  <button
+                    key={lang}
+                    type="button"
+                    onClick={() => setLanguage(lang)}
+                    className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                      language === lang
+                        ? "bg-white text-gray-900 shadow-sm"
+                        : "text-gray-500 hover:text-gray-700"
+                    }`}
+                  >
+                    {lang.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+            </div>
             <Link href="/" className="inline-flex items-center space-x-2">
               <div className="w-12 h-12 bg-gradient-to-br from-dental-blue to-dental-teal rounded-lg flex items-center justify-center shadow-lg">
                 <FaTooth className="text-white text-2xl" />
@@ -125,20 +143,6 @@ export default function LoginPage() {
                 className="appearance-none block w-full px-4 py-3 border border-gray-300 placeholder-gray-400 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-auth-blue focus:border-transparent transition-all"
                 placeholder={t("login.passwordPlaceholder")}
               />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  id="remember-me"
-                  type="checkbox"
-                  className="h-4 w-4 text-auth-blue focus:ring-auth-blue border-gray-300 rounded"
-                />
-                <span className="text-sm text-gray-700">{t("login.rememberMe")}</span>
-              </label>
-              <Link href="/forgot-password" className="text-sm font-medium text-auth-blue hover:text-auth-blue-light">
-                {t("login.forgotPassword")}
-              </Link>
             </div>
 
             <Button

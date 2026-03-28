@@ -133,13 +133,6 @@ export default function AdminNotifications() {
         </nav>
 
         <div className="p-4 border-t border-gray-700 space-y-2">
-          <Link
-            href="/admin/settings"
-            className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
-          >
-            <FaCog className="text-lg" />
-            {sidebarOpen && <span className="font-medium">{t("nav.settings")}</span>}
-          </Link>
           <button
             onClick={handleLogout}
             className="w-full flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-red-500/20 hover:text-red-400 rounded-xl transition-colors"

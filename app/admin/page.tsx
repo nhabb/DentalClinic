@@ -114,7 +114,7 @@ export default function AdminDashboard() {
     safeStorage.removeItem("userRole");
     safeStorage.removeItem("doctorId");
     safeStorage.removeItem("assignedDoctorIds");
-    router.push("/admin/login");
+    router.push("/login");
   };
 
   const getStatusBadge = (status: string) => {
@@ -149,7 +149,9 @@ export default function AdminDashboard() {
     : "U";
   const specialty =
     user?.specialty ||
-    (userRole === "secretary" ? t("adminLogin.secretary") : "General Dentistry");
+    (userRole === "secretary"
+      ? t("adminLogin.secretary")
+      : "General Dentistry");
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -169,7 +171,9 @@ export default function AdminDashboard() {
               <div>
                 <span className="text-lg font-bold">BrightSmile</span>
                 <p className="text-xs text-gray-400">
-                  {userRole === "doctor" ? t("nav.doctorPanel") : t("nav.staffPanel")}
+                  {userRole === "doctor"
+                    ? t("nav.doctorPanel")
+                    : t("nav.staffPanel")}
                 </p>
               </div>
             )}
@@ -183,21 +187,27 @@ export default function AdminDashboard() {
             className="flex items-center space-x-3 px-4 py-3 bg-dental-blue/20 text-dental-lightblue rounded-xl"
           >
             <FaChartLine className="text-lg" />
-            {sidebarOpen && <span className="font-medium">{t("nav.dashboard")}</span>}
+            {sidebarOpen && (
+              <span className="font-medium">{t("nav.dashboard")}</span>
+            )}
           </Link>
           <Link
             href="/admin/appointments"
             className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
           >
             <FaCalendarAlt className="text-lg" />
-            {sidebarOpen && <span className="font-medium">{t("nav.appointments")}</span>}
+            {sidebarOpen && (
+              <span className="font-medium">{t("nav.appointments")}</span>
+            )}
           </Link>
           <Link
             href="/admin/inventory"
             className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
           >
             <FaBoxes className="text-lg" />
-            {sidebarOpen && <span className="font-medium">{t("nav.inventory")}</span>}
+            {sidebarOpen && (
+              <span className="font-medium">{t("nav.inventory")}</span>
+            )}
             {sidebarOpen && lowStockAlerts.length > 0 && (
               <span className="ml-auto rtl:ml-0 rtl:mr-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
                 {lowStockAlerts.length}
@@ -209,27 +219,22 @@ export default function AdminDashboard() {
             className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
           >
             <FaUsers className="text-lg" />
-            {sidebarOpen && <span className="font-medium">{t("nav.patients")}</span>}
+            {sidebarOpen && (
+              <span className="font-medium">{t("nav.patients")}</span>
+            )}
           </Link>
         </nav>
 
         {/* Bottom Section */}
         <div className="p-4 border-t border-gray-700 space-y-2">
-          {userRole === "doctor" && (
-            <Link
-              href="/admin/settings"
-              className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
-            >
-              <FaCog className="text-lg" />
-              {sidebarOpen && <span className="font-medium">{t("nav.settings")}</span>}
-            </Link>
-          )}
           <button
             onClick={handleLogout}
             className="w-full flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-red-500/20 hover:text-red-400 rounded-xl transition-colors"
           >
             <FaSignOutAlt className="text-lg" />
-            {sidebarOpen && <span className="font-medium">{t("common.logout")}</span>}
+            {sidebarOpen && (
+              <span className="font-medium">{t("common.logout")}</span>
+            )}
           </button>
         </div>
       </aside>
@@ -246,9 +251,12 @@ export default function AdminDashboard() {
               <FaBars className="text-xl text-gray-600" />
             </button>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">{t("nav.dashboard")}</h1>
+              <h1 className="text-2xl font-bold text-gray-900">
+                {t("nav.dashboard")}
+              </h1>
               <p className="text-gray-500 text-sm">
-                {t("adminDashboard.welcomeBack")}, {userRole === "doctor" ? `${t("adminLogin.doctor")}. ` : ""}
+                {t("adminDashboard.welcomeBack")},{" "}
+                {userRole === "doctor" ? `${t("adminLogin.doctor")}. ` : ""}
                 {displayName}
               </p>
             </div>
@@ -308,7 +316,9 @@ export default function AdminDashboard() {
               <p className="text-2xl font-bold text-gray-900">
                 {clinicStats.completedToday}/{clinicStats.todayAppointments}
               </p>
-              <p className="text-sm text-gray-500 mt-1">{t("adminDashboard.todaysAppointments")}</p>
+              <p className="text-sm text-gray-500 mt-1">
+                {t("adminDashboard.todaysAppointments")}
+              </p>
             </div>
 
             {/* Total Patients - shown for secretaries */}
@@ -322,7 +332,9 @@ export default function AdminDashboard() {
                 <p className="text-2xl font-bold text-gray-900">
                   {clinicStats.totalPatients}
                 </p>
-                <p className="text-sm text-gray-500 mt-1">{t("adminDashboard.totalPatients")}</p>
+                <p className="text-sm text-gray-500 mt-1">
+                  {t("adminDashboard.totalPatients")}
+                </p>
               </div>
             )}
           </div>
@@ -339,7 +351,8 @@ export default function AdminDashboard() {
                   href="/admin/appointments"
                   className="text-dental-blue text-sm font-medium flex items-center gap-1 hover:underline"
                 >
-                  {t("common.viewAll")} <FaChevronRight className="text-xs rtl:rotate-180" />
+                  {t("common.viewAll")}{" "}
+                  <FaChevronRight className="text-xs rtl:rotate-180" />
                 </Link>
               </div>
               <div className="space-y-3">
@@ -393,7 +406,8 @@ export default function AdminDashboard() {
                     href="/admin/inventory"
                     className="text-dental-blue text-sm font-medium flex items-center gap-1 hover:underline"
                   >
-                    {t("common.manage")} <FaChevronRight className="text-xs rtl:rotate-180" />
+                    {t("common.manage")}{" "}
+                    <FaChevronRight className="text-xs rtl:rotate-180" />
                   </Link>
                 </div>
                 {lowStockAlerts.length > 0 ? (
@@ -428,7 +442,6 @@ export default function AdminDashboard() {
                   </p>
                 )}
               </div>
-
             </div>
           </div>
         </main>
