@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { Avatar } from "@/components/ui/Avatar";
 import { useRouter } from "next/navigation";
 import { safeStorage } from "@/lib/browser-compat";
 import { useTranslation } from "@/lib/i18n";
@@ -264,17 +265,8 @@ export default function AdminDashboard() {
           </div>
           <div className="flex items-center gap-4">
             <LanguageSwitcher />
-            <Link
-              href="/admin/notifications"
-              className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <FaBell className="text-xl" />
-              <span className="absolute top-1 right-1 rtl:right-auto rtl:left-1 w-2 h-2 bg-red-500 rounded-full"></span>
-            </Link>
             <div className="flex items-center gap-3 pl-4 rtl:pl-0 rtl:pr-4 border-l rtl:border-l-0 rtl:border-r border-gray-200">
-              <div className="w-10 h-10 bg-gradient-to-br from-dental-blue to-dental-teal rounded-full flex items-center justify-center text-white font-semibold">
-                {initials}
-              </div>
+              <Avatar name={displayName} size="md" />
               <div className="hidden sm:block">
                 <p className="text-sm font-medium text-gray-900">
                   {userRole === "doctor" ? `${t("adminLogin.doctor")}. ` : ""}

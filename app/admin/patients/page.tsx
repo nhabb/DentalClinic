@@ -7,30 +7,25 @@ import { Button } from "@/components/ui/button";
 import { safeStorage } from "@/lib/browser-compat";
 import { useTranslation } from "@/lib/i18n";
 import AdminSidebar from "@/components/ui/AdminSidebar";
-import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
-import ImportExportMenu from "@/components/ui/ImportExportMenu";
+import { StatsCard } from "@/components/ui/StatsCard";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { Avatar } from "@/components/ui/Avatar";
+import { FilterBar } from "@/components/ui/FilterBar";
+import { AdminPageHeader } from "@/components/ui/AdminPageHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
 import {
   FaTooth,
   FaCalendarAlt,
   FaUsers,
-  FaCog,
-  FaSearch,
-  FaPlus,
   FaPhone,
   FaEnvelope,
   FaMapMarkerAlt,
-  FaUserMd,
-  FaHistory,
-  FaFileMedical,
   FaCalendarPlus,
   FaTimes,
-  FaChevronRight,
   FaAllergies,
   FaNotesMedical,
   FaCheckCircle,
-  FaClock,
   FaEdit,
-  FaBirthdayCake,
   FaIdCard,
 } from "react-icons/fa";
 
@@ -187,127 +182,39 @@ export default function PatientsPage() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        <header className="bg-white shadow-sm px-8 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">{t("patients.patients")}</h1>
-            <p className="text-gray-500 text-sm">
-              {currentUser
-                ? `${currentUser.firstName} ${currentUser.lastName}'s`
-                : t("common.manage")}{" "}
-              {t("patients.patientRecords")}
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <LanguageSwitcher />
-            <ImportExportMenu
-              data={patients}
-              filename="patients"
-              onImport={(rows) => setPatients((prev) => [...prev, ...(rows as Patient[])])}
-            />
-            <Button className="bg-dental-blue hover:bg-dental-blue/90">
-              <FaPlus className="mr-2 rtl:mr-0 rtl:ml-2" />
-              {t("patients.addPatient")}
-            </Button>
-          </div>
-        </header>
+        <AdminPageHeader
+          title={t("patients.patients")}
+          subtitle={`${currentUser ? `${currentUser.firstName} ${currentUser.lastName}'s` : t("common.manage")} ${t("patients.patientRecords")}`}
+          data={patients}
+          filename="patients"
+          onImport={(rows) => setPatients((prev) => [...prev, ...(rows as Patient[])])}
+          addLabel={t("patients.addPatient")}
+        />
 
         <main className="flex-1 p-8 overflow-auto">
           {isLoading ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="w-8 h-8 border-4 border-dental-blue/30 border-t-dental-blue rounded-full animate-spin"></div>
-            </div>
+            <LoadingSpinner />
           ) : (
             <>
               {/* Stats */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                      <FaUsers className="text-blue-600 text-xl" />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {totalPatients}
-                      </p>
-                      <p className="text-sm text-gray-500">{t("patients.totalPatients")}</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                      <FaCheckCircle className="text-green-600 text-xl" />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {activePatients}
-                      </p>
-                      <p className="text-sm text-gray-500">{t("patients.activePatients")}</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                      <FaCalendarAlt className="text-purple-600 text-xl" />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {totalVisits}
-                      </p>
-                      <p className="text-sm text-gray-500">{t("patients.totalVisits")}</p>
-                    </div>
-                  </div>
-                </div>
+                <StatsCard icon={FaUsers} iconBgClass="bg-blue-100" iconColorClass="text-blue-600" value={totalPatients} label={t("patients.totalPatients")} />
+                <StatsCard icon={FaCheckCircle} iconBgClass="bg-green-100" iconColorClass="text-green-600" value={activePatients} label={t("patients.activePatients")} />
+                <StatsCard icon={FaCalendarAlt} iconBgClass="bg-purple-100" iconColorClass="text-purple-600" value={totalVisits} label={t("patients.totalVisits")} />
               </div>
 
-              {/* Filters */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-6">
-                <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-                  <div className="flex-1 relative">
-                    <FaSearch className="absolute left-4 rtl:left-auto rtl:right-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder={t("patients.searchPlaceholder")}
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-12 rtl:pl-4 rtl:pr-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setStatusFilter("all")}
-                      className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                        statusFilter === "all"
-                          ? "bg-dental-blue text-white"
-                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                      }`}
-                    >
-                      {t("patients.all")}
-                    </button>
-                    <button
-                      onClick={() => setStatusFilter("active")}
-                      className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                        statusFilter === "active"
-                          ? "bg-green-500 text-white"
-                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                      }`}
-                    >
-                      {t("patients.active")}
-                    </button>
-                    <button
-                      onClick={() => setStatusFilter("inactive")}
-                      className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                        statusFilter === "inactive"
-                          ? "bg-gray-500 text-white"
-                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                      }`}
-                    >
-                      {t("patients.inactive")}
-                    </button>
-                  </div>
-                </div>
-              </div>
+              <FilterBar
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                searchPlaceholder={t("patients.searchPlaceholder")}
+                filters={[
+                  { value: "all", label: t("patients.all") },
+                  { value: "active", label: t("patients.active"), activeClass: "bg-green-500 text-white" },
+                  { value: "inactive", label: t("patients.inactive"), activeClass: "bg-gray-500 text-white" },
+                ]}
+                activeFilter={statusFilter}
+                onFilterChange={(v) => setStatusFilter(v as "all" | "active" | "inactive")}
+              />
 
               {/* Patients Grid */}
               {filteredPatients.length > 0 ? (
@@ -320,12 +227,7 @@ export default function PatientsPage() {
                     >
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex items-center gap-4">
-                          <div className="w-14 h-14 bg-gradient-to-br from-dental-blue to-dental-teal rounded-full flex items-center justify-center text-white text-xl font-bold">
-                            {patient.name
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")}
-                          </div>
+                          <Avatar name={patient.name} size="lg" />
                           <div>
                             <h3 className="font-bold text-gray-900">
                               {patient.name}
@@ -379,16 +281,12 @@ export default function PatientsPage() {
                   ))}
                 </div>
               ) : (
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <FaUsers className="text-gray-400 text-2xl" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    {t("patients.noPatientsFound")}
-                  </h3>
-                  <p className="text-gray-500">
-                    {t("patients.noPatientsDesc")}
-                  </p>
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
+                  <EmptyState
+                    icon={FaUsers}
+                    title={t("patients.noPatientsFound")}
+                    description={t("patients.noPatientsDesc")}
+                  />
                 </div>
               )}
             </>
@@ -403,12 +301,7 @@ export default function PatientsPage() {
             {/* Modal Header */}
             <div className="p-6 border-b border-gray-100 flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-dental-blue to-dental-teal rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                  {selectedPatient.name
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")}
-                </div>
+                <Avatar name={selectedPatient.name} size="xl" />
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900">
                     {selectedPatient.name}
@@ -668,7 +561,7 @@ export default function PatientsPage() {
               {/* Loading state for history */}
               {activeTab !== "info" && !patientHistory && (
                 <div className="text-center py-12">
-                  <div className="w-8 h-8 border-4 border-dental-blue/30 border-t-dental-blue rounded-full animate-spin mx-auto"></div>
+                  <LoadingSpinner />
                   <p className="text-gray-500 mt-4">{t("patients.loadingHistory")}</p>
                 </div>
               )}

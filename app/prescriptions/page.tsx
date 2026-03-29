@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { StatsCard } from "@/components/ui/StatsCard";
+import { PatientPageHeader } from "@/components/ui/PatientPageHeader";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/button";
 import {
   FaTooth,
-  FaArrowLeft,
   FaPills,
   FaCalendarAlt,
   FaUserMd,
@@ -112,26 +114,11 @@ export default function Prescriptions() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "active":
-        return (
-          <span className="flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
-            <FaCheckCircle className="text-xs" />
-            Active
-          </span>
-        );
+        return <Badge icon={FaCheckCircle} bgClass="bg-green-100" textClass="text-green-700" size="md">Active</Badge>;
       case "completed":
-        return (
-          <span className="flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">
-            <FaCheckCircle className="text-xs" />
-            Completed
-          </span>
-        );
+        return <Badge icon={FaCheckCircle} bgClass="bg-gray-100" textClass="text-gray-600" size="md">Completed</Badge>;
       case "ongoing":
-        return (
-          <span className="flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
-            <FaRedo className="text-xs" />
-            Ongoing
-          </span>
-        );
+        return <Badge icon={FaRedo} bgClass="bg-blue-100" textClass="text-blue-700" size="md">Ongoing</Badge>;
       default:
         return null;
     }
@@ -140,26 +127,11 @@ export default function Prescriptions() {
   const getUrgencyBadge = (urgency: string) => {
     switch (urgency) {
       case "necessary":
-        return (
-          <span className="flex items-center gap-1 px-3 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">
-            <FaExclamationCircle className="text-xs" />
-            Necessary
-          </span>
-        );
+        return <Badge icon={FaExclamationCircle} bgClass="bg-red-100" textClass="text-red-700" size="md">Necessary</Badge>;
       case "recommended":
-        return (
-          <span className="flex items-center gap-1 px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-full">
-            <FaExclamationTriangle className="text-xs" />
-            Recommended
-          </span>
-        );
+        return <Badge icon={FaExclamationTriangle} bgClass="bg-yellow-100" textClass="text-yellow-700" size="md">Recommended</Badge>;
       case "monitor":
-        return (
-          <span className="flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
-            <FaInfoCircle className="text-xs" />
-            Monitor
-          </span>
-        );
+        return <Badge icon={FaInfoCircle} bgClass="bg-blue-100" textClass="text-blue-700" size="md">Monitor</Badge>;
       default:
         return null;
     }
@@ -179,31 +151,7 @@ export default function Prescriptions() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-primary-50">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
-            <Link
-              href="/patient-dashboard"
-              className="flex items-center space-x-2"
-            >
-              <div className="w-10 h-10 bg-gradient-to-br from-dental-blue to-dental-teal rounded-lg flex items-center justify-center">
-                <FaTooth className="text-white text-xl" />
-              </div>
-              <span className="text-xl font-bold text-gray-900">
-                BrightSmile
-              </span>
-            </Link>
-            <Link
-              href="/patient-dashboard"
-              className="text-gray-600 hover:text-dental-blue transition-colors flex items-center gap-2"
-            >
-              <FaArrowLeft className="text-sm" />
-              Back to Dashboard
-            </Link>
-          </div>
-        </div>
-      </header>
+      <PatientPageHeader />
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Title */}
@@ -218,55 +166,9 @@ export default function Prescriptions() {
 
         {/* Summary Cards */}
         <div className="grid sm:grid-cols-3 gap-4 mb-8">
-          <div className="bg-white rounded-2xl shadow-sm p-6 border-l-4 border-green-500">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                <FaPills className="text-green-600 text-xl" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">
-                  {currentPrescriptions.length}
-                </p>
-                <p className="text-sm text-gray-500">Active Prescriptions</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-2xl shadow-sm p-6 border-l-4 border-yellow-500">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
-                <FaExclamationTriangle className="text-yellow-600 text-xl" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">
-                  {
-                    recommendedProcedures.filter(
-                      (p) =>
-                        p.urgency === "recommended" ||
-                        p.urgency === "necessary",
-                    ).length
-                  }
-                </p>
-                <p className="text-sm text-gray-500">Pending Procedures</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-2xl shadow-sm p-6 border-l-4 border-red-500">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
-                <FaExclamationCircle className="text-red-600 text-xl" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">
-                  {
-                    recommendedProcedures.filter(
-                      (p) => p.urgency === "necessary",
-                    ).length
-                  }
-                </p>
-                <p className="text-sm text-gray-500">Necessary Procedures</p>
-              </div>
-            </div>
-          </div>
+          <StatsCard icon={FaPills} iconBgClass="bg-green-100" iconColorClass="text-green-600" value={currentPrescriptions.length} label="Active Prescriptions" accentClass="border-l-4 border-green-500" />
+          <StatsCard icon={FaExclamationTriangle} iconBgClass="bg-yellow-100" iconColorClass="text-yellow-600" value={recommendedProcedures.filter((p) => p.urgency === "recommended" || p.urgency === "necessary").length} label="Pending Procedures" accentClass="border-l-4 border-yellow-500" />
+          <StatsCard icon={FaExclamationCircle} iconBgClass="bg-red-100" iconColorClass="text-red-600" value={recommendedProcedures.filter((p) => p.urgency === "necessary").length} label="Necessary Procedures" accentClass="border-l-4 border-red-500" />
         </div>
 
         {/* Alert for Necessary Procedures */}

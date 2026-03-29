@@ -1,29 +1,26 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { safeStorage } from "@/lib/browser-compat";
 import { useTranslation } from "@/lib/i18n";
 import AdminSidebar from "@/components/ui/AdminSidebar";
-import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
-import ImportExportMenu from "@/components/ui/ImportExportMenu";
+import { StatsCard } from "@/components/ui/StatsCard";
+import { FilterBar } from "@/components/ui/FilterBar";
+import { AdminPageHeader } from "@/components/ui/AdminPageHeader";
+import { Modal } from "@/components/ui/Modal";
+import { FormField, inputClass } from "@/components/ui/FormField";
 import {
   FaTooth,
   FaBoxes,
-  FaSearch,
-  FaPlus,
   FaEdit,
   FaTrash,
   FaExclamationTriangle,
   FaCheckCircle,
-  FaFilter,
-  FaSortAmountDown,
   FaBoxOpen,
   FaSyringe,
   FaTeeth,
-  FaShieldAlt,
 } from "react-icons/fa";
 
 type InventoryItem = {
@@ -92,97 +89,36 @@ export default function InventoryManagement() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <header className="bg-white shadow-sm px-8 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">{t("inventory.inventoryManagement")}</h1>
-            <p className="text-gray-500 text-sm">{t("inventory.manageSupplies")}</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <LanguageSwitcher />
-            <ImportExportMenu
-              data={inventoryItems}
-              filename="inventory"
-              onImport={(rows) => setInventoryItems((prev) => [...prev, ...(rows as InventoryItem[])])}
-            />
-            <Button onClick={() => setShowAddModal(true)} className="bg-dental-blue hover:bg-dental-blue/90">
-              <FaPlus className="mr-2 rtl:mr-0 rtl:ml-2" />
-              {t("inventory.addItem")}
-            </Button>
-          </div>
-        </header>
+        <AdminPageHeader
+          title={t("inventory.inventoryManagement")}
+          subtitle={t("inventory.manageSupplies")}
+          data={inventoryItems}
+          filename="inventory"
+          onImport={(rows) => setInventoryItems((prev) => [...prev, ...(rows as InventoryItem[])])}
+          onAdd={() => setShowAddModal(true)}
+          addLabel={t("inventory.addItem")}
+        />
 
         {/* Content */}
         <main className="flex-1 p-8 overflow-auto">
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                  <FaBoxes className="text-blue-600 text-xl" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-gray-900">{inventoryItems.length}</p>
-                  <p className="text-sm text-gray-500">{t("inventory.totalItems")}</p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
-                  <FaExclamationTriangle className="text-red-600 text-xl" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-gray-900">{lowStockCount}</p>
-                  <p className="text-sm text-gray-500">{t("inventory.lowStock")}</p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                  <FaCheckCircle className="text-green-600 text-xl" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {inventoryItems.length - lowStockCount}
-                  </p>
-                  <p className="text-sm text-gray-500">{t("inventory.wellStocked")}</p>
-                </div>
-              </div>
-            </div>
+            <StatsCard icon={FaBoxes} iconBgClass="bg-blue-100" iconColorClass="text-blue-600" value={inventoryItems.length} label={t("inventory.totalItems")} />
+            <StatsCard icon={FaExclamationTriangle} iconBgClass="bg-red-100" iconColorClass="text-red-600" value={lowStockCount} label={t("inventory.lowStock")} />
+            <StatsCard icon={FaCheckCircle} iconBgClass="bg-green-100" iconColorClass="text-green-600" value={inventoryItems.length - lowStockCount} label={t("inventory.wellStocked")} />
           </div>
 
-          {/* Filters */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-6">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1 relative">
-                <FaSearch className="absolute left-4 rtl:left-auto rtl:right-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder={t("inventory.searchPlaceholder")}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 rtl:pl-4 rtl:pr-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
-                />
-              </div>
-              <div className="flex gap-2">
-                {categoryValues.map((category, idx) => (
-                  <button
-                    key={category}
-                    onClick={() => setSelectedCategory(category)}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                      selectedCategory === category
-                        ? "bg-dental-blue text-white"
-                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    }`}
-                  >
-                    {t(`inventory.${categoryKeys[idx]}`)}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
+          <FilterBar
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            searchPlaceholder={t("inventory.searchPlaceholder")}
+            filters={categoryValues.map((category, idx) => ({
+              value: category,
+              label: t(`inventory.${categoryKeys[idx]}`),
+            }))}
+            activeFilter={selectedCategory}
+            onFilterChange={setSelectedCategory}
+          />
 
           {/* Inventory Table */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -265,128 +201,72 @@ export default function InventoryManagement() {
       </div>
 
       {/* Add Item Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">{t("inventory.addNewItem")}</h2>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">{t("inventory.itemName")}</label>
-                <input
-                  type="text"
-                  placeholder={t("inventory.itemNamePlaceholder")}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">{t("inventory.category")}</label>
-                  <select className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue">
-                    <option>{t("inventory.disposables")}</option>
-                    <option>{t("inventory.materials")}</option>
-                    <option>{t("inventory.medications")}</option>
-                    <option>{t("inventory.instruments")}</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">{t("inventory.unit")}</label>
-                  <input
-                    type="text"
-                    placeholder={t("inventory.unitPlaceholder")}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">{t("inventory.currentStock")}</label>
-                  <input
-                    type="number"
-                    placeholder="0"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">{t("inventory.minimumStock")}</label>
-                  <input
-                    type="number"
-                    placeholder="0"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">{t("inventory.supplier")}</label>
-                  <input
-                    type="text"
-                    placeholder={t("inventory.supplierName")}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="flex gap-3 mt-6">
-              <Button variant="outline" className="flex-1" onClick={() => setShowAddModal(false)}>
-                {t("common.cancel")}
-              </Button>
-              <Button className="flex-1 bg-dental-blue hover:bg-dental-blue/90">{t("inventory.addItem")}</Button>
-            </div>
+      <Modal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title={t("inventory.addNewItem")}>
+        <div className="space-y-4">
+          <FormField label={t("inventory.itemName")}>
+            <input type="text" placeholder={t("inventory.itemNamePlaceholder")} className={inputClass} />
+          </FormField>
+          <div className="grid grid-cols-2 gap-4">
+            <FormField label={t("inventory.category")}>
+              <select className={inputClass}>
+                <option>{t("inventory.disposables")}</option>
+                <option>{t("inventory.materials")}</option>
+                <option>{t("inventory.medications")}</option>
+                <option>{t("inventory.instruments")}</option>
+              </select>
+            </FormField>
+            <FormField label={t("inventory.unit")}>
+              <input type="text" placeholder={t("inventory.unitPlaceholder")} className={inputClass} />
+            </FormField>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <FormField label={t("inventory.currentStock")}>
+              <input type="number" placeholder="0" className={inputClass} />
+            </FormField>
+            <FormField label={t("inventory.minimumStock")}>
+              <input type="number" placeholder="0" className={inputClass} />
+            </FormField>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <FormField label={t("inventory.supplier")}>
+              <input type="text" placeholder={t("inventory.supplierName")} className={inputClass} />
+            </FormField>
           </div>
         </div>
-      )}
+        <div className="flex gap-3 mt-6">
+          <Button variant="outline" className="flex-1" onClick={() => setShowAddModal(false)}>
+            {t("common.cancel")}
+          </Button>
+          <Button className="flex-1 bg-dental-blue hover:bg-dental-blue/90">{t("inventory.addItem")}</Button>
+        </div>
+      </Modal>
 
       {/* Edit Item Modal */}
-      {showEditModal && selectedItem && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">{t("inventory.editItem")}</h2>
-
+      <Modal isOpen={showEditModal && !!selectedItem} onClose={() => setShowEditModal(false)} title={t("inventory.editItem")}>
+        {selectedItem && (
+          <>
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">{t("inventory.itemName")}</label>
-                <input
-                  type="text"
-                  defaultValue={selectedItem.name}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
-                />
-              </div>
-
+              <FormField label={t("inventory.itemName")}>
+                <input type="text" defaultValue={selectedItem.name} className={inputClass} />
+              </FormField>
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">{t("inventory.currentStock")}</label>
-                  <input
-                    type="number"
-                    defaultValue={selectedItem.currentStock}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">{t("inventory.minimumStock")}</label>
-                  <input
-                    type="number"
-                    defaultValue={selectedItem.minimumStock}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
-                  />
-                </div>
+                <FormField label={t("inventory.currentStock")}>
+                  <input type="number" defaultValue={selectedItem.currentStock} className={inputClass} />
+                </FormField>
+                <FormField label={t("inventory.minimumStock")}>
+                  <input type="number" defaultValue={selectedItem.minimumStock} className={inputClass} />
+                </FormField>
               </div>
-
             </div>
-
             <div className="flex gap-3 mt-6">
               <Button variant="outline" className="flex-1" onClick={() => setShowEditModal(false)}>
                 {t("common.cancel")}
               </Button>
               <Button className="flex-1 bg-dental-blue hover:bg-dental-blue/90">{t("inventory.saveChanges")}</Button>
             </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </Modal>
     </div>
   );
 }
