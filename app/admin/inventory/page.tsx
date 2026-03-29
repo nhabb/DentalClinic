@@ -8,6 +8,7 @@ import { safeStorage } from "@/lib/browser-compat";
 import { useTranslation } from "@/lib/i18n";
 import AdminSidebar from "@/components/ui/AdminSidebar";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
+import ImportExportMenu from "@/components/ui/ImportExportMenu";
 import {
   FaTooth,
   FaBoxes,
@@ -25,8 +26,7 @@ import {
   FaShieldAlt,
 } from "react-icons/fa";
 
-// TODO: Fetch from API
-const inventoryItems: {
+type InventoryItem = {
   id: number;
   name: string;
   category: string;
@@ -36,7 +36,7 @@ const inventoryItems: {
   supplier: string;
   lastRestocked: string;
   status: string;
-}[] = [];
+};
 
 const categoryKeys = ["all", "disposables", "materials", "medications", "instruments"] as const;
 const categoryValues = ["All", "Disposables", "Materials", "Medications", "Instruments"];
@@ -45,6 +45,7 @@ export default function InventoryManagement() {
   const router = useRouter();
   const { t } = useTranslation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
 
   const handleLogout = () => {
     safeStorage.removeItem("adminAuth");
@@ -58,7 +59,7 @@ export default function InventoryManagement() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<typeof inventoryItems[0] | null>(null);
+  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
 
   const filteredItems = inventoryItems.filter((item) => {
     const matchesSearch =
@@ -99,6 +100,11 @@ export default function InventoryManagement() {
           </div>
           <div className="flex items-center gap-3">
             <LanguageSwitcher />
+            <ImportExportMenu
+              data={inventoryItems}
+              filename="inventory"
+              onImport={(rows) => setInventoryItems((prev) => [...prev, ...(rows as InventoryItem[])])}
+            />
             <Button onClick={() => setShowAddModal(true)} className="bg-dental-blue hover:bg-dental-blue/90">
               <FaPlus className="mr-2 rtl:mr-0 rtl:ml-2" />
               {t("inventory.addItem")}

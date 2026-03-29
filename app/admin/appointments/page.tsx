@@ -8,6 +8,7 @@ import { safeStorage } from "@/lib/browser-compat";
 import { useTranslation } from "@/lib/i18n";
 import AdminSidebar from "@/components/ui/AdminSidebar";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
+import ImportExportMenu from "@/components/ui/ImportExportMenu";
 import {
   FaCalendarAlt,
   FaSearch,
@@ -233,6 +234,11 @@ export default function AppointmentsManagement() {
           </div>
           <div className="flex items-center gap-3">
             <LanguageSwitcher />
+            <ImportExportMenu
+              data={appointments}
+              filename="appointments"
+              onImport={(rows) => setAppointments((prev) => [...prev, ...(rows as Appointment[])])}
+            />
             <Button
               onClick={() => setShowAddModal(true)}
               className="bg-dental-blue hover:bg-dental-blue/90"

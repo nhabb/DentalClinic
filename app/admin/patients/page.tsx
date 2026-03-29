@@ -8,6 +8,7 @@ import { safeStorage } from "@/lib/browser-compat";
 import { useTranslation } from "@/lib/i18n";
 import AdminSidebar from "@/components/ui/AdminSidebar";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
+import ImportExportMenu from "@/components/ui/ImportExportMenu";
 import {
   FaTooth,
   FaCalendarAlt,
@@ -198,6 +199,11 @@ export default function PatientsPage() {
           </div>
           <div className="flex items-center gap-3">
             <LanguageSwitcher />
+            <ImportExportMenu
+              data={patients}
+              filename="patients"
+              onImport={(rows) => setPatients((prev) => [...prev, ...(rows as Patient[])])}
+            />
             <Button className="bg-dental-blue hover:bg-dental-blue/90">
               <FaPlus className="mr-2 rtl:mr-0 rtl:ml-2" />
               {t("patients.addPatient")}
