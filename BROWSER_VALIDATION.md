@@ -6,7 +6,15 @@ This document explains how each browser support requirement was met for the Brig
 
 ## Requirement 1 – Full compatibility with at least 2 additional browsers
 
-We targeted **Firefox**, **Safari**, and **Edge** in addition to Chrome, giving us four fully supported browsers in total. The minimum versions chosen (Chrome 111+, Edge 111+, Firefox 113+, Safari 15.4+) were picked because they all share support for the CSS and JS features the app relies on.
+We targeted **Firefox**, **Safari**, **Edge**, and **Brave** in addition to Chrome — five fully supported browsers in total. The minimum versions chosen (Chrome 111+, Edge 111+, Firefox 113+, Safari 15.4+, Brave latest) were picked because they all share support for the CSS and JS features the app relies on.
+
+| Browser     | Additional?       | How covered                                          |
+|-------------|-------------------|------------------------------------------------------|
+| Chrome      | Baseline          | Primary development target                           |
+| Brave       | ✅ Yes (additional)| Chromium-based; same profile as Chrome. Shields note documented. |
+| Firefox     | ✅ Yes (additional)| Locale fallback fix in `browser-compat.ts`           |
+| Safari      | ✅ Yes (additional)| Viewport fix, vendor prefixes, localStorage fallback |
+| Edge        | ✅ Yes (additional)| Chromium-based; no extra fixes needed                |
 
 ---
 
@@ -34,18 +42,39 @@ We went through every major feature area and fixed anything that broke in a non-
 
 - **Reduced-motion accessibility** – A `@media (prefers-reduced-motion: reduce)` block disables all tooth animations for users who have that system preference enabled. This is required for Safari on macOS/iOS where this preference is commonly set.
 
+### `postcss.config.mjs` (configured)
+
+Autoprefixer is configured with `flexbox: 'no-2009'` to inject modern `-webkit-flex` prefixes for Safari. The `browserslist` in `package.json` drives which prefixes autoprefixer generates — it targets Chrome, Firefox, Safari, Edge, and Brave (via Chrome).
+
+### `package.json` — browserslist
+
+```json
+"browserslist": [
+  "last 2 Chrome versions",
+  "last 2 Firefox versions",
+  "Firefox ESR",
+  "last 2 Safari versions",
+  "last 2 Edge versions",
+  "last 2 ChromeAndroid versions",
+  "last 2 iOS versions"
+]
+```
+
+This drives autoprefixer so it generates the correct vendor-prefixed CSS for all target browsers at build time.
+
 ---
 
 ## Requirement 3 – Document browser-specific limitations
 
 All known limitations are documented in **`BROWSER_COMPATIBILITY.md`**, which covers:
 
-- Safari Private Browsing – localStorage is unavailable; session data is not persisted.
-- Safari / iOS Safari viewport height behaviour on mobile.
-- CSS `oklch()` colour space not available in Safari < 15.4.
-- 3-D CSS transforms requiring `-webkit-` prefixes in older Safari.
-- Firefox builds missing `en-LB` locale data for `Intl.NumberFormat`.
-- Edge – no additional limitations beyond the Chrome profile.
+- **Brave** – No rendering differences from Chrome. Brave Shields in aggressive mode may block third-party requests; core features unaffected.
+- **Safari Private Browsing** – `localStorage` is unavailable; session data is not persisted.
+- **Safari / iOS Safari** – Viewport height behaviour on mobile requires `-webkit-fill-available`.
+- **CSS `oklch()` colour space** – Not available in Safari < 15.4; HSL fallbacks provided.
+- **3-D CSS transforms** – Require `-webkit-` prefixes in older Safari.
+- **Firefox** – Some builds missing `en-LB` locale data for `Intl.NumberFormat`; fallback chain provided.
+- **Edge** – No additional limitations beyond the Chrome profile.
 
 ---
 
@@ -56,3 +85,4 @@ All known limitations are documented in **`BROWSER_COMPATIBILITY.md`**, which co
 - The viewport fix ensures full-screen sections fill the screen correctly on both desktop and mobile Safari.
 - Currency amounts always display with the correct format regardless of which browser's locale data is available.
 - The `safeStorage` wrapper means all interactive features (login, session, settings) work in every browser, including Safari Private Browsing, without visual errors.
+- Autoprefixer runs at build time to ensure all CSS is correctly prefixed for every target browser — no manual prefix management needed.

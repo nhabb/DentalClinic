@@ -21,11 +21,13 @@
   },
   "homepage": "https://github.com/nhabb/DentalClinic#readme",
   "browserslist": [
-    ">0.2%",
-    "not dead",
-    "not op_mini all",
-    "last 2 versions",
-    "Firefox ESR"
+    "last 2 Chrome versions",
+    "last 2 Firefox versions",
+    "Firefox ESR",
+    "last 2 Safari versions",
+    "last 2 Edge versions",
+    "last 2 ChromeAndroid versions",
+    "last 2 iOS versions"
   ],
   "dependencies": {
     "@radix-ui/react-dropdown-menu": "^2.1.16",
