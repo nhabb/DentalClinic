@@ -20,8 +20,8 @@ import {
 import { ChevronDownIcon } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { safeStorage } from "@/lib/browser-compat";
 import { useTranslation } from "@/lib/i18n";
+import { supabase } from "@/lib/supabase/client";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { ar, fr, enUS } from "date-fns/locale";
 import { FaTooth } from "react-icons/fa";
@@ -72,8 +72,37 @@ export default function SignupPage() {
       return;
     }
     setIsLoading(true);
-    safeStorage.setItem("patientAuth", "true");
-    safeStorage.setItem("userRole", "patient");
+
+    const { error: authError } = await supabase.auth.signUp({
+      email: form.email,
+      password: form.password,
+      options: {
+        data: {
+          first_name: form.firstName,
+          last_name: form.lastName,
+          phone: form.phone,
+          date_of_birth: form.dateOfBirth,
+          address: form.address,
+          city: form.city,
+          governate: form.governate,
+          emergency_contact: form.emergencyContact,
+          emergency_phone: form.emergencyPhone,
+          insurance_provider: form.insuranceProvider,
+          insurance_policy: form.insurancePolicy,
+          medical_conditions: form.medicalConditions,
+          allergies: form.allergies,
+          current_medications: form.currentMedications,
+          role: "patient",
+        },
+      },
+    });
+
+    if (authError) {
+      setError(authError.message);
+      setIsLoading(false);
+      return;
+    }
+
     router.push("/patient-dashboard");
   };
 

@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button";
 import { FaTooth, FaUser, FaUserMd } from "react-icons/fa";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { safeStorage } from "@/lib/browser-compat";
 import { useTranslation } from "@/lib/i18n";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
+import { supabase } from "@/lib/supabase/client";
 
 type UserRole = "patient" | "doctor";
 
@@ -21,18 +21,13 @@ const DEMO_ACCOUNTS = [
   { role: "Doctor",  email: "doctor@demo.com",  password: "demo123", icon: FaUserMd, color: "text-teal-500" },
 ];
 
-async function mockLogin(email: string, _password: string): Promise<{ role: UserRole }> {
-  await new Promise((r) => setTimeout(r, 600));
-  if (email === "doctor@demo.com") return { role: "doctor" };
-  return { role: "patient" };
-}
-
 export default function LoginPage() {
   const router = useRouter();
   const { t } = useTranslation();
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [oauthLoading, setOauthLoading] = useState(false);
   const [error, setError]       = useState("");
 
   const fillDemo = (acc: typeof DEMO_ACCOUNTS[0]) => {
@@ -46,24 +41,28 @@ export default function LoginPage() {
     setIsLoading(true);
     setError("");
 
-    try {
-      const { role } = await mockLogin(email, password);
+    const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password });
 
-      safeStorage.setItem("userRole", role);
-      safeStorage.setItem("authToken", "demo-token");
-
-      if (role === "patient") {
-        safeStorage.setItem("patientAuth", "true");
-      } else {
-        safeStorage.setItem("adminAuth", "true");
-        safeStorage.setItem("adminUser", JSON.stringify({ email }));
-      }
-
-      router.push(ROLE_REDIRECTS[role]);
-    } catch {
-      setError(t("login.invalidCredentials"));
-    } finally {
+    if (authError) {
+      setError(authError.message);
       setIsLoading(false);
+      return;
+    }
+
+    const role: UserRole = data.user?.user_metadata?.role === "doctor" ? "doctor" : "patient";
+    router.push(ROLE_REDIRECTS[role]);
+  };
+
+  const onGoogleLogin = async () => {
+    setOauthLoading(true);
+    setError("");
+    const { error: authError } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    });
+    if (authError) {
+      setError(authError.message);
+      setOauthLoading(false);
     }
   };
 
@@ -157,9 +156,18 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <Button type="button" variant="outline" className="w-full" size="lg">
-              <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5 mr-2" />
-              {t("login.continueWithGoogle")}
+            <Button type="button" variant="outline" className="w-full" size="lg" onClick={onGoogleLogin} disabled={oauthLoading}>
+              {oauthLoading ? (
+                <span className="flex items-center gap-2">
+                  <span className="w-4 h-4 border-2 border-gray-400/40 border-t-gray-600 rounded-full animate-spin" />
+                  {t("login.continueWithGoogle")}
+                </span>
+              ) : (
+                <>
+                  <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5 mr-2" />
+                  {t("login.continueWithGoogle")}
+                </>
+              )}
             </Button>
           </form>
 
