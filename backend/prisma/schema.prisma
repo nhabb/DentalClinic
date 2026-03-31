@@ -1,0 +1,176 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model appointments {
+  id               BigInt            @id @default(autoincrement())
+  patient_id       BigInt
+  appointment_date DateTime          @db.Date
+  start_time       DateTime          @db.Time(6)
+  end_time         DateTime          @db.Time(6)
+  status           String            @default("scheduled")
+  reason           String?
+  notes            String?
+  created_by       BigInt?
+  created_at       DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime          @default(now()) @db.Timestamptz(6)
+  users            users?            @relation(fields: [created_by], references: [id], onUpdate: NoAction)
+  patient_profiles patient_profiles  @relation(fields: [patient_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "appointments_patient_fkey")
+  patient_records  patient_records[]
+
+  @@index([appointment_date], map: "idx_appointments_date")
+  @@index([patient_id], map: "idx_appointments_patient_id")
+  @@index([status], map: "idx_appointments_status")
+}
+
+model audit_logs {
+  id         BigInt   @id @default(autoincrement())
+  user_id    BigInt?
+  action     String
+  table_name String
+  record_id  BigInt?
+  old_data   Json?
+  new_data   Json?
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  users      users?   @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "audit_logs_user_fkey")
+
+  @@index([table_name], map: "idx_audit_logs_table_name")
+  @@index([user_id], map: "idx_audit_logs_user_id")
+}
+
+model clinic_profile {
+  id            BigInt   @id @default(autoincrement())
+  name          String   @db.VarChar
+  phone         String?  @db.VarChar
+  email         String?  @db.VarChar
+  address       String?
+  website_url   String?
+  logo_url      String?
+  description   String?
+  opening_hours String?
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime @default(now()) @db.Timestamptz(6)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model inventory_items {
+  id                  BigInt                @id @default(autoincrement())
+  name                String                @db.VarChar
+  category            String?               @db.VarChar
+  description         String?
+  sku                 String?               @unique @db.VarChar
+  quantity            Int                   @default(0)
+  minimum_quantity    Int                   @default(0)
+  unit                String?               @default("piece") @db.VarChar
+  cost_price          Decimal?              @default(0) @db.Decimal(12, 2)
+  created_at          DateTime              @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime              @default(now()) @db.Timestamptz(6)
+  inventory_movements inventory_movements[]
+
+  @@index([name], map: "idx_inventory_items_name")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model inventory_movements {
+  id              BigInt          @id @default(autoincrement())
+  item_id         BigInt
+  movement_type   String
+  quantity        Int
+  note            String?
+  performed_by    BigInt?
+  created_at      DateTime        @default(now()) @db.Timestamptz(6)
+  inventory_items inventory_items @relation(fields: [item_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "inventory_movements_item_fkey")
+  users           users?          @relation(fields: [performed_by], references: [id], onUpdate: NoAction)
+
+  @@index([created_at], map: "idx_inventory_movements_created_at")
+  @@index([item_id], map: "idx_inventory_movements_item_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model patient_documents {
+  id               BigInt           @id @default(autoincrement())
+  patient_id       BigInt
+  record_id        BigInt?
+  file_name        String           @db.VarChar
+  file_path        String
+  document_type    String?
+  uploaded_by      BigInt?
+  uploaded_at      DateTime         @default(now()) @db.Timestamptz(6)
+  patient_profiles patient_profiles @relation(fields: [patient_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "patient_documents_patient_fkey")
+  patient_records  patient_records? @relation(fields: [record_id], references: [id], onUpdate: NoAction, map: "patient_documents_record_fkey")
+  users            users?           @relation(fields: [uploaded_by], references: [id], onUpdate: NoAction)
+
+  @@index([patient_id], map: "idx_patient_documents_patient_id")
+  @@index([record_id], map: "idx_patient_documents_record_id")
+}
+
+model patient_profiles {
+  id                      BigInt              @id @default(autoincrement())
+  user_id                 BigInt              @unique
+  emergency_contact_name  String?             @db.VarChar
+  emergency_contact_phone String?             @db.VarChar
+  blood_type              String?             @db.VarChar
+  allergies               String?
+  medical_notes           String?
+  created_at              DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime            @default(now()) @db.Timestamptz(6)
+  appointments            appointments[]
+  patient_documents       patient_documents[]
+  users                   users               @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "patient_profiles_user_fkey")
+  patient_records         patient_records[]
+
+  @@index([user_id], map: "idx_patient_profiles_user_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model patient_records {
+  id                BigInt              @id @default(autoincrement())
+  patient_id        BigInt
+  appointment_id    BigInt?
+  record_type       String              @default("general_note")
+  title             String              @db.VarChar
+  description       String
+  tooth_number      String?
+  treatment_date    DateTime?           @db.Date
+  created_by        BigInt?
+  created_at        DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime            @default(now()) @db.Timestamptz(6)
+  patient_documents patient_documents[]
+  appointments      appointments?       @relation(fields: [appointment_id], references: [id], onUpdate: NoAction, map: "patient_records_appointment_fkey")
+  users             users?              @relation(fields: [created_by], references: [id], onUpdate: NoAction)
+  patient_profiles  patient_profiles    @relation(fields: [patient_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "patient_records_patient_fkey")
+
+  @@index([appointment_id], map: "idx_patient_records_appointment_id")
+  @@index([patient_id], map: "idx_patient_records_patient_id")
+  @@index([record_type], map: "idx_patient_records_type")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model users {
+  id                  BigInt                @id @default(autoincrement())
+  email               String                @unique @db.VarChar
+  password_hash       String
+  first_name          String                @db.VarChar
+  last_name           String                @db.VarChar
+  phone               String?               @db.VarChar
+  date_of_birth       DateTime?             @db.Date
+  gender              String?
+  address             String?
+  role                String                @default("patient")
+  is_active           Boolean               @default(true)
+  created_at          DateTime              @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime              @default(now()) @db.Timestamptz(6)
+  appointments        appointments[]
+  audit_logs          audit_logs[]
+  inventory_movements inventory_movements[]
+  patient_documents   patient_documents[]
+  patient_profiles    patient_profiles?
+  patient_records     patient_records[]
+
+  @@index([role], map: "idx_users_role")
+}
