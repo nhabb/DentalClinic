@@ -9,12 +9,12 @@
  * 🟢 You can import this file directly.
  */
 import type * as runtime from "@prisma/client/runtime/client"
-import type * as $Enums from "../enums.js"
-import type * as Prisma from "../internal/prismaNamespace.js"
+import type * as $Enums from "../enums"
+import type * as Prisma from "../internal/prismaNamespace"
 
 /**
  * Model inventory_movements
- * This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+ * 
  */
 export type inventory_movementsModel = runtime.Types.Result.DefaultSelection<Prisma.$inventory_movementsPayload>
 
@@ -244,8 +244,8 @@ export type inventory_movementsWhereInput = {
   note?: Prisma.StringNullableFilter<"inventory_movements"> | string | null
   performed_by?: Prisma.BigIntNullableFilter<"inventory_movements"> | bigint | number | null
   created_at?: Prisma.DateTimeFilter<"inventory_movements"> | Date | string
-  inventory_items?: Prisma.XOR<Prisma.Inventory_itemsScalarRelationFilter, Prisma.inventory_itemsWhereInput>
-  users?: Prisma.XOR<Prisma.UsersNullableScalarRelationFilter, Prisma.usersWhereInput> | null
+  item?: Prisma.XOR<Prisma.Inventory_itemsScalarRelationFilter, Prisma.inventory_itemsWhereInput>
+  performed_by_user?: Prisma.XOR<Prisma.UsersNullableScalarRelationFilter, Prisma.usersWhereInput> | null
 }
 
 export type inventory_movementsOrderByWithRelationInput = {
@@ -256,8 +256,8 @@ export type inventory_movementsOrderByWithRelationInput = {
   note?: Prisma.SortOrderInput | Prisma.SortOrder
   performed_by?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrder
-  inventory_items?: Prisma.inventory_itemsOrderByWithRelationInput
-  users?: Prisma.usersOrderByWithRelationInput
+  item?: Prisma.inventory_itemsOrderByWithRelationInput
+  performed_by_user?: Prisma.usersOrderByWithRelationInput
 }
 
 export type inventory_movementsWhereUniqueInput = Prisma.AtLeast<{
@@ -271,8 +271,8 @@ export type inventory_movementsWhereUniqueInput = Prisma.AtLeast<{
   note?: Prisma.StringNullableFilter<"inventory_movements"> | string | null
   performed_by?: Prisma.BigIntNullableFilter<"inventory_movements"> | bigint | number | null
   created_at?: Prisma.DateTimeFilter<"inventory_movements"> | Date | string
-  inventory_items?: Prisma.XOR<Prisma.Inventory_itemsScalarRelationFilter, Prisma.inventory_itemsWhereInput>
-  users?: Prisma.XOR<Prisma.UsersNullableScalarRelationFilter, Prisma.usersWhereInput> | null
+  item?: Prisma.XOR<Prisma.Inventory_itemsScalarRelationFilter, Prisma.inventory_itemsWhereInput>
+  performed_by_user?: Prisma.XOR<Prisma.UsersNullableScalarRelationFilter, Prisma.usersWhereInput> | null
 }, "id">
 
 export type inventory_movementsOrderByWithAggregationInput = {
@@ -309,8 +309,8 @@ export type inventory_movementsCreateInput = {
   quantity: number
   note?: string | null
   created_at?: Date | string
-  inventory_items: Prisma.inventory_itemsCreateNestedOneWithoutInventory_movementsInput
-  users?: Prisma.usersCreateNestedOneWithoutInventory_movementsInput
+  item: Prisma.inventory_itemsCreateNestedOneWithoutInventory_movementsInput
+  performed_by_user?: Prisma.usersCreateNestedOneWithoutInventory_movementsInput
 }
 
 export type inventory_movementsUncheckedCreateInput = {
@@ -329,8 +329,8 @@ export type inventory_movementsUpdateInput = {
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  inventory_items?: Prisma.inventory_itemsUpdateOneRequiredWithoutInventory_movementsNestedInput
-  users?: Prisma.usersUpdateOneWithoutInventory_movementsNestedInput
+  item?: Prisma.inventory_itemsUpdateOneRequiredWithoutInventory_movementsNestedInput
+  performed_by_user?: Prisma.usersUpdateOneWithoutInventory_movementsNestedInput
 }
 
 export type inventory_movementsUncheckedUpdateInput = {
@@ -425,132 +425,132 @@ export type inventory_movementsSumOrderByAggregateInput = {
   performed_by?: Prisma.SortOrder
 }
 
-export type inventory_movementsCreateNestedManyWithoutInventory_itemsInput = {
-  create?: Prisma.XOR<Prisma.inventory_movementsCreateWithoutInventory_itemsInput, Prisma.inventory_movementsUncheckedCreateWithoutInventory_itemsInput> | Prisma.inventory_movementsCreateWithoutInventory_itemsInput[] | Prisma.inventory_movementsUncheckedCreateWithoutInventory_itemsInput[]
-  connectOrCreate?: Prisma.inventory_movementsCreateOrConnectWithoutInventory_itemsInput | Prisma.inventory_movementsCreateOrConnectWithoutInventory_itemsInput[]
-  createMany?: Prisma.inventory_movementsCreateManyInventory_itemsInputEnvelope
+export type inventory_movementsCreateNestedManyWithoutPerformed_by_userInput = {
+  create?: Prisma.XOR<Prisma.inventory_movementsCreateWithoutPerformed_by_userInput, Prisma.inventory_movementsUncheckedCreateWithoutPerformed_by_userInput> | Prisma.inventory_movementsCreateWithoutPerformed_by_userInput[] | Prisma.inventory_movementsUncheckedCreateWithoutPerformed_by_userInput[]
+  connectOrCreate?: Prisma.inventory_movementsCreateOrConnectWithoutPerformed_by_userInput | Prisma.inventory_movementsCreateOrConnectWithoutPerformed_by_userInput[]
+  createMany?: Prisma.inventory_movementsCreateManyPerformed_by_userInputEnvelope
   connect?: Prisma.inventory_movementsWhereUniqueInput | Prisma.inventory_movementsWhereUniqueInput[]
 }
 
-export type inventory_movementsUncheckedCreateNestedManyWithoutInventory_itemsInput = {
-  create?: Prisma.XOR<Prisma.inventory_movementsCreateWithoutInventory_itemsInput, Prisma.inventory_movementsUncheckedCreateWithoutInventory_itemsInput> | Prisma.inventory_movementsCreateWithoutInventory_itemsInput[] | Prisma.inventory_movementsUncheckedCreateWithoutInventory_itemsInput[]
-  connectOrCreate?: Prisma.inventory_movementsCreateOrConnectWithoutInventory_itemsInput | Prisma.inventory_movementsCreateOrConnectWithoutInventory_itemsInput[]
-  createMany?: Prisma.inventory_movementsCreateManyInventory_itemsInputEnvelope
+export type inventory_movementsUncheckedCreateNestedManyWithoutPerformed_by_userInput = {
+  create?: Prisma.XOR<Prisma.inventory_movementsCreateWithoutPerformed_by_userInput, Prisma.inventory_movementsUncheckedCreateWithoutPerformed_by_userInput> | Prisma.inventory_movementsCreateWithoutPerformed_by_userInput[] | Prisma.inventory_movementsUncheckedCreateWithoutPerformed_by_userInput[]
+  connectOrCreate?: Prisma.inventory_movementsCreateOrConnectWithoutPerformed_by_userInput | Prisma.inventory_movementsCreateOrConnectWithoutPerformed_by_userInput[]
+  createMany?: Prisma.inventory_movementsCreateManyPerformed_by_userInputEnvelope
   connect?: Prisma.inventory_movementsWhereUniqueInput | Prisma.inventory_movementsWhereUniqueInput[]
 }
 
-export type inventory_movementsUpdateManyWithoutInventory_itemsNestedInput = {
-  create?: Prisma.XOR<Prisma.inventory_movementsCreateWithoutInventory_itemsInput, Prisma.inventory_movementsUncheckedCreateWithoutInventory_itemsInput> | Prisma.inventory_movementsCreateWithoutInventory_itemsInput[] | Prisma.inventory_movementsUncheckedCreateWithoutInventory_itemsInput[]
-  connectOrCreate?: Prisma.inventory_movementsCreateOrConnectWithoutInventory_itemsInput | Prisma.inventory_movementsCreateOrConnectWithoutInventory_itemsInput[]
-  upsert?: Prisma.inventory_movementsUpsertWithWhereUniqueWithoutInventory_itemsInput | Prisma.inventory_movementsUpsertWithWhereUniqueWithoutInventory_itemsInput[]
-  createMany?: Prisma.inventory_movementsCreateManyInventory_itemsInputEnvelope
+export type inventory_movementsUpdateManyWithoutPerformed_by_userNestedInput = {
+  create?: Prisma.XOR<Prisma.inventory_movementsCreateWithoutPerformed_by_userInput, Prisma.inventory_movementsUncheckedCreateWithoutPerformed_by_userInput> | Prisma.inventory_movementsCreateWithoutPerformed_by_userInput[] | Prisma.inventory_movementsUncheckedCreateWithoutPerformed_by_userInput[]
+  connectOrCreate?: Prisma.inventory_movementsCreateOrConnectWithoutPerformed_by_userInput | Prisma.inventory_movementsCreateOrConnectWithoutPerformed_by_userInput[]
+  upsert?: Prisma.inventory_movementsUpsertWithWhereUniqueWithoutPerformed_by_userInput | Prisma.inventory_movementsUpsertWithWhereUniqueWithoutPerformed_by_userInput[]
+  createMany?: Prisma.inventory_movementsCreateManyPerformed_by_userInputEnvelope
   set?: Prisma.inventory_movementsWhereUniqueInput | Prisma.inventory_movementsWhereUniqueInput[]
   disconnect?: Prisma.inventory_movementsWhereUniqueInput | Prisma.inventory_movementsWhereUniqueInput[]
   delete?: Prisma.inventory_movementsWhereUniqueInput | Prisma.inventory_movementsWhereUniqueInput[]
   connect?: Prisma.inventory_movementsWhereUniqueInput | Prisma.inventory_movementsWhereUniqueInput[]
-  update?: Prisma.inventory_movementsUpdateWithWhereUniqueWithoutInventory_itemsInput | Prisma.inventory_movementsUpdateWithWhereUniqueWithoutInventory_itemsInput[]
-  updateMany?: Prisma.inventory_movementsUpdateManyWithWhereWithoutInventory_itemsInput | Prisma.inventory_movementsUpdateManyWithWhereWithoutInventory_itemsInput[]
+  update?: Prisma.inventory_movementsUpdateWithWhereUniqueWithoutPerformed_by_userInput | Prisma.inventory_movementsUpdateWithWhereUniqueWithoutPerformed_by_userInput[]
+  updateMany?: Prisma.inventory_movementsUpdateManyWithWhereWithoutPerformed_by_userInput | Prisma.inventory_movementsUpdateManyWithWhereWithoutPerformed_by_userInput[]
   deleteMany?: Prisma.inventory_movementsScalarWhereInput | Prisma.inventory_movementsScalarWhereInput[]
 }
 
-export type inventory_movementsUncheckedUpdateManyWithoutInventory_itemsNestedInput = {
-  create?: Prisma.XOR<Prisma.inventory_movementsCreateWithoutInventory_itemsInput, Prisma.inventory_movementsUncheckedCreateWithoutInventory_itemsInput> | Prisma.inventory_movementsCreateWithoutInventory_itemsInput[] | Prisma.inventory_movementsUncheckedCreateWithoutInventory_itemsInput[]
-  connectOrCreate?: Prisma.inventory_movementsCreateOrConnectWithoutInventory_itemsInput | Prisma.inventory_movementsCreateOrConnectWithoutInventory_itemsInput[]
-  upsert?: Prisma.inventory_movementsUpsertWithWhereUniqueWithoutInventory_itemsInput | Prisma.inventory_movementsUpsertWithWhereUniqueWithoutInventory_itemsInput[]
-  createMany?: Prisma.inventory_movementsCreateManyInventory_itemsInputEnvelope
+export type inventory_movementsUncheckedUpdateManyWithoutPerformed_by_userNestedInput = {
+  create?: Prisma.XOR<Prisma.inventory_movementsCreateWithoutPerformed_by_userInput, Prisma.inventory_movementsUncheckedCreateWithoutPerformed_by_userInput> | Prisma.inventory_movementsCreateWithoutPerformed_by_userInput[] | Prisma.inventory_movementsUncheckedCreateWithoutPerformed_by_userInput[]
+  connectOrCreate?: Prisma.inventory_movementsCreateOrConnectWithoutPerformed_by_userInput | Prisma.inventory_movementsCreateOrConnectWithoutPerformed_by_userInput[]
+  upsert?: Prisma.inventory_movementsUpsertWithWhereUniqueWithoutPerformed_by_userInput | Prisma.inventory_movementsUpsertWithWhereUniqueWithoutPerformed_by_userInput[]
+  createMany?: Prisma.inventory_movementsCreateManyPerformed_by_userInputEnvelope
   set?: Prisma.inventory_movementsWhereUniqueInput | Prisma.inventory_movementsWhereUniqueInput[]
   disconnect?: Prisma.inventory_movementsWhereUniqueInput | Prisma.inventory_movementsWhereUniqueInput[]
   delete?: Prisma.inventory_movementsWhereUniqueInput | Prisma.inventory_movementsWhereUniqueInput[]
   connect?: Prisma.inventory_movementsWhereUniqueInput | Prisma.inventory_movementsWhereUniqueInput[]
-  update?: Prisma.inventory_movementsUpdateWithWhereUniqueWithoutInventory_itemsInput | Prisma.inventory_movementsUpdateWithWhereUniqueWithoutInventory_itemsInput[]
-  updateMany?: Prisma.inventory_movementsUpdateManyWithWhereWithoutInventory_itemsInput | Prisma.inventory_movementsUpdateManyWithWhereWithoutInventory_itemsInput[]
+  update?: Prisma.inventory_movementsUpdateWithWhereUniqueWithoutPerformed_by_userInput | Prisma.inventory_movementsUpdateWithWhereUniqueWithoutPerformed_by_userInput[]
+  updateMany?: Prisma.inventory_movementsUpdateManyWithWhereWithoutPerformed_by_userInput | Prisma.inventory_movementsUpdateManyWithWhereWithoutPerformed_by_userInput[]
   deleteMany?: Prisma.inventory_movementsScalarWhereInput | Prisma.inventory_movementsScalarWhereInput[]
 }
 
-export type inventory_movementsCreateNestedManyWithoutUsersInput = {
-  create?: Prisma.XOR<Prisma.inventory_movementsCreateWithoutUsersInput, Prisma.inventory_movementsUncheckedCreateWithoutUsersInput> | Prisma.inventory_movementsCreateWithoutUsersInput[] | Prisma.inventory_movementsUncheckedCreateWithoutUsersInput[]
-  connectOrCreate?: Prisma.inventory_movementsCreateOrConnectWithoutUsersInput | Prisma.inventory_movementsCreateOrConnectWithoutUsersInput[]
-  createMany?: Prisma.inventory_movementsCreateManyUsersInputEnvelope
+export type inventory_movementsCreateNestedManyWithoutItemInput = {
+  create?: Prisma.XOR<Prisma.inventory_movementsCreateWithoutItemInput, Prisma.inventory_movementsUncheckedCreateWithoutItemInput> | Prisma.inventory_movementsCreateWithoutItemInput[] | Prisma.inventory_movementsUncheckedCreateWithoutItemInput[]
+  connectOrCreate?: Prisma.inventory_movementsCreateOrConnectWithoutItemInput | Prisma.inventory_movementsCreateOrConnectWithoutItemInput[]
+  createMany?: Prisma.inventory_movementsCreateManyItemInputEnvelope
   connect?: Prisma.inventory_movementsWhereUniqueInput | Prisma.inventory_movementsWhereUniqueInput[]
 }
 
-export type inventory_movementsUncheckedCreateNestedManyWithoutUsersInput = {
-  create?: Prisma.XOR<Prisma.inventory_movementsCreateWithoutUsersInput, Prisma.inventory_movementsUncheckedCreateWithoutUsersInput> | Prisma.inventory_movementsCreateWithoutUsersInput[] | Prisma.inventory_movementsUncheckedCreateWithoutUsersInput[]
-  connectOrCreate?: Prisma.inventory_movementsCreateOrConnectWithoutUsersInput | Prisma.inventory_movementsCreateOrConnectWithoutUsersInput[]
-  createMany?: Prisma.inventory_movementsCreateManyUsersInputEnvelope
+export type inventory_movementsUncheckedCreateNestedManyWithoutItemInput = {
+  create?: Prisma.XOR<Prisma.inventory_movementsCreateWithoutItemInput, Prisma.inventory_movementsUncheckedCreateWithoutItemInput> | Prisma.inventory_movementsCreateWithoutItemInput[] | Prisma.inventory_movementsUncheckedCreateWithoutItemInput[]
+  connectOrCreate?: Prisma.inventory_movementsCreateOrConnectWithoutItemInput | Prisma.inventory_movementsCreateOrConnectWithoutItemInput[]
+  createMany?: Prisma.inventory_movementsCreateManyItemInputEnvelope
   connect?: Prisma.inventory_movementsWhereUniqueInput | Prisma.inventory_movementsWhereUniqueInput[]
 }
 
-export type inventory_movementsUpdateManyWithoutUsersNestedInput = {
-  create?: Prisma.XOR<Prisma.inventory_movementsCreateWithoutUsersInput, Prisma.inventory_movementsUncheckedCreateWithoutUsersInput> | Prisma.inventory_movementsCreateWithoutUsersInput[] | Prisma.inventory_movementsUncheckedCreateWithoutUsersInput[]
-  connectOrCreate?: Prisma.inventory_movementsCreateOrConnectWithoutUsersInput | Prisma.inventory_movementsCreateOrConnectWithoutUsersInput[]
-  upsert?: Prisma.inventory_movementsUpsertWithWhereUniqueWithoutUsersInput | Prisma.inventory_movementsUpsertWithWhereUniqueWithoutUsersInput[]
-  createMany?: Prisma.inventory_movementsCreateManyUsersInputEnvelope
+export type inventory_movementsUpdateManyWithoutItemNestedInput = {
+  create?: Prisma.XOR<Prisma.inventory_movementsCreateWithoutItemInput, Prisma.inventory_movementsUncheckedCreateWithoutItemInput> | Prisma.inventory_movementsCreateWithoutItemInput[] | Prisma.inventory_movementsUncheckedCreateWithoutItemInput[]
+  connectOrCreate?: Prisma.inventory_movementsCreateOrConnectWithoutItemInput | Prisma.inventory_movementsCreateOrConnectWithoutItemInput[]
+  upsert?: Prisma.inventory_movementsUpsertWithWhereUniqueWithoutItemInput | Prisma.inventory_movementsUpsertWithWhereUniqueWithoutItemInput[]
+  createMany?: Prisma.inventory_movementsCreateManyItemInputEnvelope
   set?: Prisma.inventory_movementsWhereUniqueInput | Prisma.inventory_movementsWhereUniqueInput[]
   disconnect?: Prisma.inventory_movementsWhereUniqueInput | Prisma.inventory_movementsWhereUniqueInput[]
   delete?: Prisma.inventory_movementsWhereUniqueInput | Prisma.inventory_movementsWhereUniqueInput[]
   connect?: Prisma.inventory_movementsWhereUniqueInput | Prisma.inventory_movementsWhereUniqueInput[]
-  update?: Prisma.inventory_movementsUpdateWithWhereUniqueWithoutUsersInput | Prisma.inventory_movementsUpdateWithWhereUniqueWithoutUsersInput[]
-  updateMany?: Prisma.inventory_movementsUpdateManyWithWhereWithoutUsersInput | Prisma.inventory_movementsUpdateManyWithWhereWithoutUsersInput[]
+  update?: Prisma.inventory_movementsUpdateWithWhereUniqueWithoutItemInput | Prisma.inventory_movementsUpdateWithWhereUniqueWithoutItemInput[]
+  updateMany?: Prisma.inventory_movementsUpdateManyWithWhereWithoutItemInput | Prisma.inventory_movementsUpdateManyWithWhereWithoutItemInput[]
   deleteMany?: Prisma.inventory_movementsScalarWhereInput | Prisma.inventory_movementsScalarWhereInput[]
 }
 
-export type inventory_movementsUncheckedUpdateManyWithoutUsersNestedInput = {
-  create?: Prisma.XOR<Prisma.inventory_movementsCreateWithoutUsersInput, Prisma.inventory_movementsUncheckedCreateWithoutUsersInput> | Prisma.inventory_movementsCreateWithoutUsersInput[] | Prisma.inventory_movementsUncheckedCreateWithoutUsersInput[]
-  connectOrCreate?: Prisma.inventory_movementsCreateOrConnectWithoutUsersInput | Prisma.inventory_movementsCreateOrConnectWithoutUsersInput[]
-  upsert?: Prisma.inventory_movementsUpsertWithWhereUniqueWithoutUsersInput | Prisma.inventory_movementsUpsertWithWhereUniqueWithoutUsersInput[]
-  createMany?: Prisma.inventory_movementsCreateManyUsersInputEnvelope
+export type inventory_movementsUncheckedUpdateManyWithoutItemNestedInput = {
+  create?: Prisma.XOR<Prisma.inventory_movementsCreateWithoutItemInput, Prisma.inventory_movementsUncheckedCreateWithoutItemInput> | Prisma.inventory_movementsCreateWithoutItemInput[] | Prisma.inventory_movementsUncheckedCreateWithoutItemInput[]
+  connectOrCreate?: Prisma.inventory_movementsCreateOrConnectWithoutItemInput | Prisma.inventory_movementsCreateOrConnectWithoutItemInput[]
+  upsert?: Prisma.inventory_movementsUpsertWithWhereUniqueWithoutItemInput | Prisma.inventory_movementsUpsertWithWhereUniqueWithoutItemInput[]
+  createMany?: Prisma.inventory_movementsCreateManyItemInputEnvelope
   set?: Prisma.inventory_movementsWhereUniqueInput | Prisma.inventory_movementsWhereUniqueInput[]
   disconnect?: Prisma.inventory_movementsWhereUniqueInput | Prisma.inventory_movementsWhereUniqueInput[]
   delete?: Prisma.inventory_movementsWhereUniqueInput | Prisma.inventory_movementsWhereUniqueInput[]
   connect?: Prisma.inventory_movementsWhereUniqueInput | Prisma.inventory_movementsWhereUniqueInput[]
-  update?: Prisma.inventory_movementsUpdateWithWhereUniqueWithoutUsersInput | Prisma.inventory_movementsUpdateWithWhereUniqueWithoutUsersInput[]
-  updateMany?: Prisma.inventory_movementsUpdateManyWithWhereWithoutUsersInput | Prisma.inventory_movementsUpdateManyWithWhereWithoutUsersInput[]
+  update?: Prisma.inventory_movementsUpdateWithWhereUniqueWithoutItemInput | Prisma.inventory_movementsUpdateWithWhereUniqueWithoutItemInput[]
+  updateMany?: Prisma.inventory_movementsUpdateManyWithWhereWithoutItemInput | Prisma.inventory_movementsUpdateManyWithWhereWithoutItemInput[]
   deleteMany?: Prisma.inventory_movementsScalarWhereInput | Prisma.inventory_movementsScalarWhereInput[]
 }
 
-export type inventory_movementsCreateWithoutInventory_itemsInput = {
+export type inventory_movementsCreateWithoutPerformed_by_userInput = {
   id?: bigint | number
   movement_type: string
   quantity: number
   note?: string | null
   created_at?: Date | string
-  users?: Prisma.usersCreateNestedOneWithoutInventory_movementsInput
+  item: Prisma.inventory_itemsCreateNestedOneWithoutInventory_movementsInput
 }
 
-export type inventory_movementsUncheckedCreateWithoutInventory_itemsInput = {
+export type inventory_movementsUncheckedCreateWithoutPerformed_by_userInput = {
   id?: bigint | number
+  item_id: bigint | number
   movement_type: string
   quantity: number
   note?: string | null
-  performed_by?: bigint | number | null
   created_at?: Date | string
 }
 
-export type inventory_movementsCreateOrConnectWithoutInventory_itemsInput = {
+export type inventory_movementsCreateOrConnectWithoutPerformed_by_userInput = {
   where: Prisma.inventory_movementsWhereUniqueInput
-  create: Prisma.XOR<Prisma.inventory_movementsCreateWithoutInventory_itemsInput, Prisma.inventory_movementsUncheckedCreateWithoutInventory_itemsInput>
+  create: Prisma.XOR<Prisma.inventory_movementsCreateWithoutPerformed_by_userInput, Prisma.inventory_movementsUncheckedCreateWithoutPerformed_by_userInput>
 }
 
-export type inventory_movementsCreateManyInventory_itemsInputEnvelope = {
-  data: Prisma.inventory_movementsCreateManyInventory_itemsInput | Prisma.inventory_movementsCreateManyInventory_itemsInput[]
+export type inventory_movementsCreateManyPerformed_by_userInputEnvelope = {
+  data: Prisma.inventory_movementsCreateManyPerformed_by_userInput | Prisma.inventory_movementsCreateManyPerformed_by_userInput[]
   skipDuplicates?: boolean
 }
 
-export type inventory_movementsUpsertWithWhereUniqueWithoutInventory_itemsInput = {
+export type inventory_movementsUpsertWithWhereUniqueWithoutPerformed_by_userInput = {
   where: Prisma.inventory_movementsWhereUniqueInput
-  update: Prisma.XOR<Prisma.inventory_movementsUpdateWithoutInventory_itemsInput, Prisma.inventory_movementsUncheckedUpdateWithoutInventory_itemsInput>
-  create: Prisma.XOR<Prisma.inventory_movementsCreateWithoutInventory_itemsInput, Prisma.inventory_movementsUncheckedCreateWithoutInventory_itemsInput>
+  update: Prisma.XOR<Prisma.inventory_movementsUpdateWithoutPerformed_by_userInput, Prisma.inventory_movementsUncheckedUpdateWithoutPerformed_by_userInput>
+  create: Prisma.XOR<Prisma.inventory_movementsCreateWithoutPerformed_by_userInput, Prisma.inventory_movementsUncheckedCreateWithoutPerformed_by_userInput>
 }
 
-export type inventory_movementsUpdateWithWhereUniqueWithoutInventory_itemsInput = {
+export type inventory_movementsUpdateWithWhereUniqueWithoutPerformed_by_userInput = {
   where: Prisma.inventory_movementsWhereUniqueInput
-  data: Prisma.XOR<Prisma.inventory_movementsUpdateWithoutInventory_itemsInput, Prisma.inventory_movementsUncheckedUpdateWithoutInventory_itemsInput>
+  data: Prisma.XOR<Prisma.inventory_movementsUpdateWithoutPerformed_by_userInput, Prisma.inventory_movementsUncheckedUpdateWithoutPerformed_by_userInput>
 }
 
-export type inventory_movementsUpdateManyWithWhereWithoutInventory_itemsInput = {
+export type inventory_movementsUpdateManyWithWhereWithoutPerformed_by_userInput = {
   where: Prisma.inventory_movementsScalarWhereInput
-  data: Prisma.XOR<Prisma.inventory_movementsUpdateManyMutationInput, Prisma.inventory_movementsUncheckedUpdateManyWithoutInventory_itemsInput>
+  data: Prisma.XOR<Prisma.inventory_movementsUpdateManyMutationInput, Prisma.inventory_movementsUncheckedUpdateManyWithoutPerformed_by_userInput>
 }
 
 export type inventory_movementsScalarWhereInput = {
@@ -566,51 +566,16 @@ export type inventory_movementsScalarWhereInput = {
   created_at?: Prisma.DateTimeFilter<"inventory_movements"> | Date | string
 }
 
-export type inventory_movementsCreateWithoutUsersInput = {
+export type inventory_movementsCreateWithoutItemInput = {
   id?: bigint | number
   movement_type: string
   quantity: number
   note?: string | null
   created_at?: Date | string
-  inventory_items: Prisma.inventory_itemsCreateNestedOneWithoutInventory_movementsInput
+  performed_by_user?: Prisma.usersCreateNestedOneWithoutInventory_movementsInput
 }
 
-export type inventory_movementsUncheckedCreateWithoutUsersInput = {
-  id?: bigint | number
-  item_id: bigint | number
-  movement_type: string
-  quantity: number
-  note?: string | null
-  created_at?: Date | string
-}
-
-export type inventory_movementsCreateOrConnectWithoutUsersInput = {
-  where: Prisma.inventory_movementsWhereUniqueInput
-  create: Prisma.XOR<Prisma.inventory_movementsCreateWithoutUsersInput, Prisma.inventory_movementsUncheckedCreateWithoutUsersInput>
-}
-
-export type inventory_movementsCreateManyUsersInputEnvelope = {
-  data: Prisma.inventory_movementsCreateManyUsersInput | Prisma.inventory_movementsCreateManyUsersInput[]
-  skipDuplicates?: boolean
-}
-
-export type inventory_movementsUpsertWithWhereUniqueWithoutUsersInput = {
-  where: Prisma.inventory_movementsWhereUniqueInput
-  update: Prisma.XOR<Prisma.inventory_movementsUpdateWithoutUsersInput, Prisma.inventory_movementsUncheckedUpdateWithoutUsersInput>
-  create: Prisma.XOR<Prisma.inventory_movementsCreateWithoutUsersInput, Prisma.inventory_movementsUncheckedCreateWithoutUsersInput>
-}
-
-export type inventory_movementsUpdateWithWhereUniqueWithoutUsersInput = {
-  where: Prisma.inventory_movementsWhereUniqueInput
-  data: Prisma.XOR<Prisma.inventory_movementsUpdateWithoutUsersInput, Prisma.inventory_movementsUncheckedUpdateWithoutUsersInput>
-}
-
-export type inventory_movementsUpdateManyWithWhereWithoutUsersInput = {
-  where: Prisma.inventory_movementsScalarWhereInput
-  data: Prisma.XOR<Prisma.inventory_movementsUpdateManyMutationInput, Prisma.inventory_movementsUncheckedUpdateManyWithoutUsersInput>
-}
-
-export type inventory_movementsCreateManyInventory_itemsInput = {
+export type inventory_movementsUncheckedCreateWithoutItemInput = {
   id?: bigint | number
   movement_type: string
   quantity: number
@@ -619,34 +584,33 @@ export type inventory_movementsCreateManyInventory_itemsInput = {
   created_at?: Date | string
 }
 
-export type inventory_movementsUpdateWithoutInventory_itemsInput = {
-  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  movement_type?: Prisma.StringFieldUpdateOperationsInput | string
-  quantity?: Prisma.IntFieldUpdateOperationsInput | number
-  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  users?: Prisma.usersUpdateOneWithoutInventory_movementsNestedInput
+export type inventory_movementsCreateOrConnectWithoutItemInput = {
+  where: Prisma.inventory_movementsWhereUniqueInput
+  create: Prisma.XOR<Prisma.inventory_movementsCreateWithoutItemInput, Prisma.inventory_movementsUncheckedCreateWithoutItemInput>
 }
 
-export type inventory_movementsUncheckedUpdateWithoutInventory_itemsInput = {
-  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  movement_type?: Prisma.StringFieldUpdateOperationsInput | string
-  quantity?: Prisma.IntFieldUpdateOperationsInput | number
-  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  performed_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+export type inventory_movementsCreateManyItemInputEnvelope = {
+  data: Prisma.inventory_movementsCreateManyItemInput | Prisma.inventory_movementsCreateManyItemInput[]
+  skipDuplicates?: boolean
 }
 
-export type inventory_movementsUncheckedUpdateManyWithoutInventory_itemsInput = {
-  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  movement_type?: Prisma.StringFieldUpdateOperationsInput | string
-  quantity?: Prisma.IntFieldUpdateOperationsInput | number
-  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  performed_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+export type inventory_movementsUpsertWithWhereUniqueWithoutItemInput = {
+  where: Prisma.inventory_movementsWhereUniqueInput
+  update: Prisma.XOR<Prisma.inventory_movementsUpdateWithoutItemInput, Prisma.inventory_movementsUncheckedUpdateWithoutItemInput>
+  create: Prisma.XOR<Prisma.inventory_movementsCreateWithoutItemInput, Prisma.inventory_movementsUncheckedCreateWithoutItemInput>
 }
 
-export type inventory_movementsCreateManyUsersInput = {
+export type inventory_movementsUpdateWithWhereUniqueWithoutItemInput = {
+  where: Prisma.inventory_movementsWhereUniqueInput
+  data: Prisma.XOR<Prisma.inventory_movementsUpdateWithoutItemInput, Prisma.inventory_movementsUncheckedUpdateWithoutItemInput>
+}
+
+export type inventory_movementsUpdateManyWithWhereWithoutItemInput = {
+  where: Prisma.inventory_movementsScalarWhereInput
+  data: Prisma.XOR<Prisma.inventory_movementsUpdateManyMutationInput, Prisma.inventory_movementsUncheckedUpdateManyWithoutItemInput>
+}
+
+export type inventory_movementsCreateManyPerformed_by_userInput = {
   id?: bigint | number
   item_id: bigint | number
   movement_type: string
@@ -655,16 +619,16 @@ export type inventory_movementsCreateManyUsersInput = {
   created_at?: Date | string
 }
 
-export type inventory_movementsUpdateWithoutUsersInput = {
+export type inventory_movementsUpdateWithoutPerformed_by_userInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   movement_type?: Prisma.StringFieldUpdateOperationsInput | string
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  inventory_items?: Prisma.inventory_itemsUpdateOneRequiredWithoutInventory_movementsNestedInput
+  item?: Prisma.inventory_itemsUpdateOneRequiredWithoutInventory_movementsNestedInput
 }
 
-export type inventory_movementsUncheckedUpdateWithoutUsersInput = {
+export type inventory_movementsUncheckedUpdateWithoutPerformed_by_userInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   item_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   movement_type?: Prisma.StringFieldUpdateOperationsInput | string
@@ -673,12 +637,48 @@ export type inventory_movementsUncheckedUpdateWithoutUsersInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
-export type inventory_movementsUncheckedUpdateManyWithoutUsersInput = {
+export type inventory_movementsUncheckedUpdateManyWithoutPerformed_by_userInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   item_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   movement_type?: Prisma.StringFieldUpdateOperationsInput | string
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type inventory_movementsCreateManyItemInput = {
+  id?: bigint | number
+  movement_type: string
+  quantity: number
+  note?: string | null
+  performed_by?: bigint | number | null
+  created_at?: Date | string
+}
+
+export type inventory_movementsUpdateWithoutItemInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  movement_type?: Prisma.StringFieldUpdateOperationsInput | string
+  quantity?: Prisma.IntFieldUpdateOperationsInput | number
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  performed_by_user?: Prisma.usersUpdateOneWithoutInventory_movementsNestedInput
+}
+
+export type inventory_movementsUncheckedUpdateWithoutItemInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  movement_type?: Prisma.StringFieldUpdateOperationsInput | string
+  quantity?: Prisma.IntFieldUpdateOperationsInput | number
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  performed_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type inventory_movementsUncheckedUpdateManyWithoutItemInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  movement_type?: Prisma.StringFieldUpdateOperationsInput | string
+  quantity?: Prisma.IntFieldUpdateOperationsInput | number
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  performed_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -692,8 +692,8 @@ export type inventory_movementsSelect<ExtArgs extends runtime.Types.Extensions.I
   note?: boolean
   performed_by?: boolean
   created_at?: boolean
-  inventory_items?: boolean | Prisma.inventory_itemsDefaultArgs<ExtArgs>
-  users?: boolean | Prisma.inventory_movements$usersArgs<ExtArgs>
+  item?: boolean | Prisma.inventory_itemsDefaultArgs<ExtArgs>
+  performed_by_user?: boolean | Prisma.inventory_movements$performed_by_userArgs<ExtArgs>
 }, ExtArgs["result"]["inventory_movements"]>
 
 export type inventory_movementsSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -704,8 +704,8 @@ export type inventory_movementsSelectCreateManyAndReturn<ExtArgs extends runtime
   note?: boolean
   performed_by?: boolean
   created_at?: boolean
-  inventory_items?: boolean | Prisma.inventory_itemsDefaultArgs<ExtArgs>
-  users?: boolean | Prisma.inventory_movements$usersArgs<ExtArgs>
+  item?: boolean | Prisma.inventory_itemsDefaultArgs<ExtArgs>
+  performed_by_user?: boolean | Prisma.inventory_movements$performed_by_userArgs<ExtArgs>
 }, ExtArgs["result"]["inventory_movements"]>
 
 export type inventory_movementsSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -716,8 +716,8 @@ export type inventory_movementsSelectUpdateManyAndReturn<ExtArgs extends runtime
   note?: boolean
   performed_by?: boolean
   created_at?: boolean
-  inventory_items?: boolean | Prisma.inventory_itemsDefaultArgs<ExtArgs>
-  users?: boolean | Prisma.inventory_movements$usersArgs<ExtArgs>
+  item?: boolean | Prisma.inventory_itemsDefaultArgs<ExtArgs>
+  performed_by_user?: boolean | Prisma.inventory_movements$performed_by_userArgs<ExtArgs>
 }, ExtArgs["result"]["inventory_movements"]>
 
 export type inventory_movementsSelectScalar = {
@@ -732,23 +732,23 @@ export type inventory_movementsSelectScalar = {
 
 export type inventory_movementsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "item_id" | "movement_type" | "quantity" | "note" | "performed_by" | "created_at", ExtArgs["result"]["inventory_movements"]>
 export type inventory_movementsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  inventory_items?: boolean | Prisma.inventory_itemsDefaultArgs<ExtArgs>
-  users?: boolean | Prisma.inventory_movements$usersArgs<ExtArgs>
+  item?: boolean | Prisma.inventory_itemsDefaultArgs<ExtArgs>
+  performed_by_user?: boolean | Prisma.inventory_movements$performed_by_userArgs<ExtArgs>
 }
 export type inventory_movementsIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  inventory_items?: boolean | Prisma.inventory_itemsDefaultArgs<ExtArgs>
-  users?: boolean | Prisma.inventory_movements$usersArgs<ExtArgs>
+  item?: boolean | Prisma.inventory_itemsDefaultArgs<ExtArgs>
+  performed_by_user?: boolean | Prisma.inventory_movements$performed_by_userArgs<ExtArgs>
 }
 export type inventory_movementsIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  inventory_items?: boolean | Prisma.inventory_itemsDefaultArgs<ExtArgs>
-  users?: boolean | Prisma.inventory_movements$usersArgs<ExtArgs>
+  item?: boolean | Prisma.inventory_itemsDefaultArgs<ExtArgs>
+  performed_by_user?: boolean | Prisma.inventory_movements$performed_by_userArgs<ExtArgs>
 }
 
 export type $inventory_movementsPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "inventory_movements"
   objects: {
-    inventory_items: Prisma.$inventory_itemsPayload<ExtArgs>
-    users: Prisma.$usersPayload<ExtArgs> | null
+    item: Prisma.$inventory_itemsPayload<ExtArgs>
+    performed_by_user: Prisma.$usersPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: bigint
@@ -1152,8 +1152,8 @@ readonly fields: inventory_movementsFieldRefs;
  */
 export interface Prisma__inventory_movementsClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  inventory_items<T extends Prisma.inventory_itemsDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.inventory_itemsDefaultArgs<ExtArgs>>): Prisma.Prisma__inventory_itemsClient<runtime.Types.Result.GetResult<Prisma.$inventory_itemsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-  users<T extends Prisma.inventory_movements$usersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.inventory_movements$usersArgs<ExtArgs>>): Prisma.Prisma__usersClient<runtime.Types.Result.GetResult<Prisma.$usersPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  item<T extends Prisma.inventory_itemsDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.inventory_itemsDefaultArgs<ExtArgs>>): Prisma.Prisma__inventory_itemsClient<runtime.Types.Result.GetResult<Prisma.$inventory_itemsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  performed_by_user<T extends Prisma.inventory_movements$performed_by_userArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.inventory_movements$performed_by_userArgs<ExtArgs>>): Prisma.Prisma__usersClient<runtime.Types.Result.GetResult<Prisma.$usersPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1591,9 +1591,9 @@ export type inventory_movementsDeleteManyArgs<ExtArgs extends runtime.Types.Exte
 }
 
 /**
- * inventory_movements.users
+ * inventory_movements.performed_by_user
  */
-export type inventory_movements$usersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+export type inventory_movements$performed_by_userArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
    * Select specific fields to fetch from the users
    */

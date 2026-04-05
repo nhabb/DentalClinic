@@ -17,8 +17,8 @@
 
 import * as runtime from "@prisma/client/runtime/index-browser"
 
-export type * from '../models.js'
-export type * from './prismaNamespace.js'
+export type * from '../models'
+export type * from './prismaNamespace'
 
 export const Decimal = runtime.Decimal
 
@@ -51,15 +51,17 @@ export const AnyNull = runtime.AnyNull
 
 
 export const ModelName = {
+  users: 'users',
+  patient_profiles: 'patient_profiles',
+  appointment_slots: 'appointment_slots',
   appointments: 'appointments',
-  audit_logs: 'audit_logs',
-  clinic_profile: 'clinic_profile',
+  patient_records: 'patient_records',
+  patient_documents: 'patient_documents',
   inventory_items: 'inventory_items',
   inventory_movements: 'inventory_movements',
-  patient_documents: 'patient_documents',
-  patient_profiles: 'patient_profiles',
-  patient_records: 'patient_records',
-  users: 'users'
+  clinic_profile: 'clinic_profile',
+  notifications: 'notifications',
+  audit_logs: 'audit_logs'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -78,6 +80,60 @@ export const TransactionIsolationLevel = runtime.makeStrictEnum({
 export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
 
 
+export const UsersScalarFieldEnum = {
+  id: 'id',
+  email: 'email',
+  password_hash: 'password_hash',
+  first_name: 'first_name',
+  last_name: 'last_name',
+  phone: 'phone',
+  date_of_birth: 'date_of_birth',
+  gender: 'gender',
+  address: 'address',
+  role: 'role',
+  is_active: 'is_active',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+} as const
+
+export type UsersScalarFieldEnum = (typeof UsersScalarFieldEnum)[keyof typeof UsersScalarFieldEnum]
+
+
+export const Patient_profilesScalarFieldEnum = {
+  id: 'id',
+  user_id: 'user_id',
+  emergency_contact_name: 'emergency_contact_name',
+  emergency_contact_phone: 'emergency_contact_phone',
+  blood_type: 'blood_type',
+  allergies: 'allergies',
+  medical_notes: 'medical_notes',
+  created_at: 'created_at',
+  updated_at: 'updated_at',
+  city: 'city',
+  current_medications: 'current_medications',
+  governate: 'governate',
+  insurance_policy: 'insurance_policy',
+  insurance_provider: 'insurance_provider',
+  profile_complete: 'profile_complete'
+} as const
+
+export type Patient_profilesScalarFieldEnum = (typeof Patient_profilesScalarFieldEnum)[keyof typeof Patient_profilesScalarFieldEnum]
+
+
+export const Appointment_slotsScalarFieldEnum = {
+  id: 'id',
+  doctor_id: 'doctor_id',
+  slot_date: 'slot_date',
+  start_time: 'start_time',
+  end_time: 'end_time',
+  is_booked: 'is_booked',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+} as const
+
+export type Appointment_slotsScalarFieldEnum = (typeof Appointment_slotsScalarFieldEnum)[keyof typeof Appointment_slotsScalarFieldEnum]
+
+
 export const AppointmentsScalarFieldEnum = {
   id: 'id',
   patient_id: 'patient_id',
@@ -89,41 +145,43 @@ export const AppointmentsScalarFieldEnum = {
   notes: 'notes',
   created_by: 'created_by',
   created_at: 'created_at',
-  updated_at: 'updated_at'
+  updated_at: 'updated_at',
+  doctor_id: 'doctor_id',
+  slot_id: 'slot_id'
 } as const
 
 export type AppointmentsScalarFieldEnum = (typeof AppointmentsScalarFieldEnum)[keyof typeof AppointmentsScalarFieldEnum]
 
 
-export const Audit_logsScalarFieldEnum = {
+export const Patient_recordsScalarFieldEnum = {
   id: 'id',
-  user_id: 'user_id',
-  action: 'action',
-  table_name: 'table_name',
-  record_id: 'record_id',
-  old_data: 'old_data',
-  new_data: 'new_data',
-  created_at: 'created_at'
-} as const
-
-export type Audit_logsScalarFieldEnum = (typeof Audit_logsScalarFieldEnum)[keyof typeof Audit_logsScalarFieldEnum]
-
-
-export const Clinic_profileScalarFieldEnum = {
-  id: 'id',
-  name: 'name',
-  phone: 'phone',
-  email: 'email',
-  address: 'address',
-  website_url: 'website_url',
-  logo_url: 'logo_url',
+  patient_id: 'patient_id',
+  appointment_id: 'appointment_id',
+  record_type: 'record_type',
+  title: 'title',
   description: 'description',
-  opening_hours: 'opening_hours',
+  tooth_number: 'tooth_number',
+  treatment_date: 'treatment_date',
+  created_by: 'created_by',
   created_at: 'created_at',
   updated_at: 'updated_at'
 } as const
 
-export type Clinic_profileScalarFieldEnum = (typeof Clinic_profileScalarFieldEnum)[keyof typeof Clinic_profileScalarFieldEnum]
+export type Patient_recordsScalarFieldEnum = (typeof Patient_recordsScalarFieldEnum)[keyof typeof Patient_recordsScalarFieldEnum]
+
+
+export const Patient_documentsScalarFieldEnum = {
+  id: 'id',
+  patient_id: 'patient_id',
+  record_id: 'record_id',
+  file_name: 'file_name',
+  file_path: 'file_path',
+  document_type: 'document_type',
+  uploaded_by: 'uploaded_by',
+  uploaded_at: 'uploaded_at'
+} as const
+
+export type Patient_documentsScalarFieldEnum = (typeof Patient_documentsScalarFieldEnum)[keyof typeof Patient_documentsScalarFieldEnum]
 
 
 export const Inventory_itemsScalarFieldEnum = {
@@ -156,69 +214,48 @@ export const Inventory_movementsScalarFieldEnum = {
 export type Inventory_movementsScalarFieldEnum = (typeof Inventory_movementsScalarFieldEnum)[keyof typeof Inventory_movementsScalarFieldEnum]
 
 
-export const Patient_documentsScalarFieldEnum = {
+export const Clinic_profileScalarFieldEnum = {
   id: 'id',
-  patient_id: 'patient_id',
-  record_id: 'record_id',
-  file_name: 'file_name',
-  file_path: 'file_path',
-  document_type: 'document_type',
-  uploaded_by: 'uploaded_by',
-  uploaded_at: 'uploaded_at'
+  name: 'name',
+  phone: 'phone',
+  email: 'email',
+  address: 'address',
+  website_url: 'website_url',
+  logo_url: 'logo_url',
+  description: 'description',
+  opening_hours: 'opening_hours',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
 } as const
 
-export type Patient_documentsScalarFieldEnum = (typeof Patient_documentsScalarFieldEnum)[keyof typeof Patient_documentsScalarFieldEnum]
+export type Clinic_profileScalarFieldEnum = (typeof Clinic_profileScalarFieldEnum)[keyof typeof Clinic_profileScalarFieldEnum]
 
 
-export const Patient_profilesScalarFieldEnum = {
+export const NotificationsScalarFieldEnum = {
   id: 'id',
   user_id: 'user_id',
-  emergency_contact_name: 'emergency_contact_name',
-  emergency_contact_phone: 'emergency_contact_phone',
-  blood_type: 'blood_type',
-  allergies: 'allergies',
-  medical_notes: 'medical_notes',
-  created_at: 'created_at',
-  updated_at: 'updated_at'
-} as const
-
-export type Patient_profilesScalarFieldEnum = (typeof Patient_profilesScalarFieldEnum)[keyof typeof Patient_profilesScalarFieldEnum]
-
-
-export const Patient_recordsScalarFieldEnum = {
-  id: 'id',
-  patient_id: 'patient_id',
-  appointment_id: 'appointment_id',
-  record_type: 'record_type',
   title: 'title',
-  description: 'description',
-  tooth_number: 'tooth_number',
-  treatment_date: 'treatment_date',
-  created_by: 'created_by',
-  created_at: 'created_at',
-  updated_at: 'updated_at'
+  message: 'message',
+  type: 'type',
+  is_read: 'is_read',
+  created_at: 'created_at'
 } as const
 
-export type Patient_recordsScalarFieldEnum = (typeof Patient_recordsScalarFieldEnum)[keyof typeof Patient_recordsScalarFieldEnum]
+export type NotificationsScalarFieldEnum = (typeof NotificationsScalarFieldEnum)[keyof typeof NotificationsScalarFieldEnum]
 
 
-export const UsersScalarFieldEnum = {
+export const Audit_logsScalarFieldEnum = {
   id: 'id',
-  email: 'email',
-  password_hash: 'password_hash',
-  first_name: 'first_name',
-  last_name: 'last_name',
-  phone: 'phone',
-  date_of_birth: 'date_of_birth',
-  gender: 'gender',
-  address: 'address',
-  role: 'role',
-  is_active: 'is_active',
-  created_at: 'created_at',
-  updated_at: 'updated_at'
+  user_id: 'user_id',
+  action: 'action',
+  table_name: 'table_name',
+  record_id: 'record_id',
+  old_data: 'old_data',
+  new_data: 'new_data',
+  created_at: 'created_at'
 } as const
 
-export type UsersScalarFieldEnum = (typeof UsersScalarFieldEnum)[keyof typeof UsersScalarFieldEnum]
+export type Audit_logsScalarFieldEnum = (typeof Audit_logsScalarFieldEnum)[keyof typeof Audit_logsScalarFieldEnum]
 
 
 export const SortOrder = {

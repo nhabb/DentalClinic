@@ -9,8 +9,8 @@
  * 🟢 You can import this file directly.
  */
 import type * as runtime from "@prisma/client/runtime/client"
-import type * as $Enums from "../enums.js"
-import type * as Prisma from "../internal/prismaNamespace.js"
+import type * as $Enums from "../enums"
+import type * as Prisma from "../internal/prismaNamespace"
 
 /**
  * Model patient_profiles
@@ -46,6 +46,12 @@ export type Patient_profilesMinAggregateOutputType = {
   medical_notes: string | null
   created_at: Date | null
   updated_at: Date | null
+  city: string | null
+  current_medications: string | null
+  governate: string | null
+  insurance_policy: string | null
+  insurance_provider: string | null
+  profile_complete: boolean | null
 }
 
 export type Patient_profilesMaxAggregateOutputType = {
@@ -58,6 +64,12 @@ export type Patient_profilesMaxAggregateOutputType = {
   medical_notes: string | null
   created_at: Date | null
   updated_at: Date | null
+  city: string | null
+  current_medications: string | null
+  governate: string | null
+  insurance_policy: string | null
+  insurance_provider: string | null
+  profile_complete: boolean | null
 }
 
 export type Patient_profilesCountAggregateOutputType = {
@@ -70,6 +82,12 @@ export type Patient_profilesCountAggregateOutputType = {
   medical_notes: number
   created_at: number
   updated_at: number
+  city: number
+  current_medications: number
+  governate: number
+  insurance_policy: number
+  insurance_provider: number
+  profile_complete: number
   _all: number
 }
 
@@ -94,6 +112,12 @@ export type Patient_profilesMinAggregateInputType = {
   medical_notes?: true
   created_at?: true
   updated_at?: true
+  city?: true
+  current_medications?: true
+  governate?: true
+  insurance_policy?: true
+  insurance_provider?: true
+  profile_complete?: true
 }
 
 export type Patient_profilesMaxAggregateInputType = {
@@ -106,6 +130,12 @@ export type Patient_profilesMaxAggregateInputType = {
   medical_notes?: true
   created_at?: true
   updated_at?: true
+  city?: true
+  current_medications?: true
+  governate?: true
+  insurance_policy?: true
+  insurance_provider?: true
+  profile_complete?: true
 }
 
 export type Patient_profilesCountAggregateInputType = {
@@ -118,6 +148,12 @@ export type Patient_profilesCountAggregateInputType = {
   medical_notes?: true
   created_at?: true
   updated_at?: true
+  city?: true
+  current_medications?: true
+  governate?: true
+  insurance_policy?: true
+  insurance_provider?: true
+  profile_complete?: true
   _all?: true
 }
 
@@ -217,6 +253,12 @@ export type Patient_profilesGroupByOutputType = {
   medical_notes: string | null
   created_at: Date
   updated_at: Date
+  city: string | null
+  current_medications: string | null
+  governate: string | null
+  insurance_policy: string | null
+  insurance_provider: string | null
+  profile_complete: boolean
   _count: Patient_profilesCountAggregateOutputType | null
   _avg: Patient_profilesAvgAggregateOutputType | null
   _sum: Patient_profilesSumAggregateOutputType | null
@@ -252,6 +294,12 @@ export type patient_profilesWhereInput = {
   medical_notes?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
   created_at?: Prisma.DateTimeFilter<"patient_profiles"> | Date | string
   updated_at?: Prisma.DateTimeFilter<"patient_profiles"> | Date | string
+  city?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  current_medications?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  governate?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  insurance_policy?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  insurance_provider?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  profile_complete?: Prisma.BoolFilter<"patient_profiles"> | boolean
   appointments?: Prisma.AppointmentsListRelationFilter
   patient_documents?: Prisma.Patient_documentsListRelationFilter
   users?: Prisma.XOR<Prisma.UsersScalarRelationFilter, Prisma.usersWhereInput>
@@ -268,6 +316,12 @@ export type patient_profilesOrderByWithRelationInput = {
   medical_notes?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
+  city?: Prisma.SortOrderInput | Prisma.SortOrder
+  current_medications?: Prisma.SortOrderInput | Prisma.SortOrder
+  governate?: Prisma.SortOrderInput | Prisma.SortOrder
+  insurance_policy?: Prisma.SortOrderInput | Prisma.SortOrder
+  insurance_provider?: Prisma.SortOrderInput | Prisma.SortOrder
+  profile_complete?: Prisma.SortOrder
   appointments?: Prisma.appointmentsOrderByRelationAggregateInput
   patient_documents?: Prisma.patient_documentsOrderByRelationAggregateInput
   users?: Prisma.usersOrderByWithRelationInput
@@ -287,6 +341,12 @@ export type patient_profilesWhereUniqueInput = Prisma.AtLeast<{
   medical_notes?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
   created_at?: Prisma.DateTimeFilter<"patient_profiles"> | Date | string
   updated_at?: Prisma.DateTimeFilter<"patient_profiles"> | Date | string
+  city?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  current_medications?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  governate?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  insurance_policy?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  insurance_provider?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  profile_complete?: Prisma.BoolFilter<"patient_profiles"> | boolean
   appointments?: Prisma.AppointmentsListRelationFilter
   patient_documents?: Prisma.Patient_documentsListRelationFilter
   users?: Prisma.XOR<Prisma.UsersScalarRelationFilter, Prisma.usersWhereInput>
@@ -303,6 +363,12 @@ export type patient_profilesOrderByWithAggregationInput = {
   medical_notes?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
+  city?: Prisma.SortOrderInput | Prisma.SortOrder
+  current_medications?: Prisma.SortOrderInput | Prisma.SortOrder
+  governate?: Prisma.SortOrderInput | Prisma.SortOrder
+  insurance_policy?: Prisma.SortOrderInput | Prisma.SortOrder
+  insurance_provider?: Prisma.SortOrderInput | Prisma.SortOrder
+  profile_complete?: Prisma.SortOrder
   _count?: Prisma.patient_profilesCountOrderByAggregateInput
   _avg?: Prisma.patient_profilesAvgOrderByAggregateInput
   _max?: Prisma.patient_profilesMaxOrderByAggregateInput
@@ -323,6 +389,12 @@ export type patient_profilesScalarWhereWithAggregatesInput = {
   medical_notes?: Prisma.StringNullableWithAggregatesFilter<"patient_profiles"> | string | null
   created_at?: Prisma.DateTimeWithAggregatesFilter<"patient_profiles"> | Date | string
   updated_at?: Prisma.DateTimeWithAggregatesFilter<"patient_profiles"> | Date | string
+  city?: Prisma.StringNullableWithAggregatesFilter<"patient_profiles"> | string | null
+  current_medications?: Prisma.StringNullableWithAggregatesFilter<"patient_profiles"> | string | null
+  governate?: Prisma.StringNullableWithAggregatesFilter<"patient_profiles"> | string | null
+  insurance_policy?: Prisma.StringNullableWithAggregatesFilter<"patient_profiles"> | string | null
+  insurance_provider?: Prisma.StringNullableWithAggregatesFilter<"patient_profiles"> | string | null
+  profile_complete?: Prisma.BoolWithAggregatesFilter<"patient_profiles"> | boolean
 }
 
 export type patient_profilesCreateInput = {
@@ -334,10 +406,16 @@ export type patient_profilesCreateInput = {
   medical_notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
-  appointments?: Prisma.appointmentsCreateNestedManyWithoutPatient_profilesInput
-  patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutPatient_profilesInput
-  users: Prisma.usersCreateNestedOneWithoutPatient_profilesInput
-  patient_records?: Prisma.patient_recordsCreateNestedManyWithoutPatient_profilesInput
+  city?: string | null
+  current_medications?: string | null
+  governate?: string | null
+  insurance_policy?: string | null
+  insurance_provider?: string | null
+  profile_complete?: boolean
+  appointments?: Prisma.appointmentsCreateNestedManyWithoutPatient_profileInput
+  patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutPatient_profileInput
+  users: Prisma.usersCreateNestedOneWithoutPatient_profileInput
+  patient_records?: Prisma.patient_recordsCreateNestedManyWithoutPatient_profileInput
 }
 
 export type patient_profilesUncheckedCreateInput = {
@@ -350,9 +428,15 @@ export type patient_profilesUncheckedCreateInput = {
   medical_notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
-  appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutPatient_profilesInput
-  patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutPatient_profilesInput
-  patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutPatient_profilesInput
+  city?: string | null
+  current_medications?: string | null
+  governate?: string | null
+  insurance_policy?: string | null
+  insurance_provider?: string | null
+  profile_complete?: boolean
+  appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutPatient_profileInput
+  patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutPatient_profileInput
+  patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutPatient_profileInput
 }
 
 export type patient_profilesUpdateInput = {
@@ -364,10 +448,16 @@ export type patient_profilesUpdateInput = {
   medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  appointments?: Prisma.appointmentsUpdateManyWithoutPatient_profilesNestedInput
-  patient_documents?: Prisma.patient_documentsUpdateManyWithoutPatient_profilesNestedInput
-  users?: Prisma.usersUpdateOneRequiredWithoutPatient_profilesNestedInput
-  patient_records?: Prisma.patient_recordsUpdateManyWithoutPatient_profilesNestedInput
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  current_medications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  governate?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_complete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  appointments?: Prisma.appointmentsUpdateManyWithoutPatient_profileNestedInput
+  patient_documents?: Prisma.patient_documentsUpdateManyWithoutPatient_profileNestedInput
+  users?: Prisma.usersUpdateOneRequiredWithoutPatient_profileNestedInput
+  patient_records?: Prisma.patient_recordsUpdateManyWithoutPatient_profileNestedInput
 }
 
 export type patient_profilesUncheckedUpdateInput = {
@@ -380,9 +470,15 @@ export type patient_profilesUncheckedUpdateInput = {
   medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutPatient_profilesNestedInput
-  patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutPatient_profilesNestedInput
-  patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutPatient_profilesNestedInput
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  current_medications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  governate?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_complete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutPatient_profileNestedInput
+  patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutPatient_profileNestedInput
+  patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutPatient_profileNestedInput
 }
 
 export type patient_profilesCreateManyInput = {
@@ -395,6 +491,12 @@ export type patient_profilesCreateManyInput = {
   medical_notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
+  city?: string | null
+  current_medications?: string | null
+  governate?: string | null
+  insurance_policy?: string | null
+  insurance_provider?: string | null
+  profile_complete?: boolean
 }
 
 export type patient_profilesUpdateManyMutationInput = {
@@ -406,6 +508,12 @@ export type patient_profilesUpdateManyMutationInput = {
   medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  current_medications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  governate?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_complete?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type patient_profilesUncheckedUpdateManyInput = {
@@ -418,11 +526,17 @@ export type patient_profilesUncheckedUpdateManyInput = {
   medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  current_medications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  governate?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_complete?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
-export type Patient_profilesScalarRelationFilter = {
-  is?: Prisma.patient_profilesWhereInput
-  isNot?: Prisma.patient_profilesWhereInput
+export type Patient_profilesNullableScalarRelationFilter = {
+  is?: Prisma.patient_profilesWhereInput | null
+  isNot?: Prisma.patient_profilesWhereInput | null
 }
 
 export type patient_profilesCountOrderByAggregateInput = {
@@ -435,6 +549,12 @@ export type patient_profilesCountOrderByAggregateInput = {
   medical_notes?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
+  city?: Prisma.SortOrder
+  current_medications?: Prisma.SortOrder
+  governate?: Prisma.SortOrder
+  insurance_policy?: Prisma.SortOrder
+  insurance_provider?: Prisma.SortOrder
+  profile_complete?: Prisma.SortOrder
 }
 
 export type patient_profilesAvgOrderByAggregateInput = {
@@ -452,6 +572,12 @@ export type patient_profilesMaxOrderByAggregateInput = {
   medical_notes?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
+  city?: Prisma.SortOrder
+  current_medications?: Prisma.SortOrder
+  governate?: Prisma.SortOrder
+  insurance_policy?: Prisma.SortOrder
+  insurance_provider?: Prisma.SortOrder
+  profile_complete?: Prisma.SortOrder
 }
 
 export type patient_profilesMinOrderByAggregateInput = {
@@ -464,6 +590,12 @@ export type patient_profilesMinOrderByAggregateInput = {
   medical_notes?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
+  city?: Prisma.SortOrder
+  current_medications?: Prisma.SortOrder
+  governate?: Prisma.SortOrder
+  insurance_policy?: Prisma.SortOrder
+  insurance_provider?: Prisma.SortOrder
+  profile_complete?: Prisma.SortOrder
 }
 
 export type patient_profilesSumOrderByAggregateInput = {
@@ -471,51 +603,9 @@ export type patient_profilesSumOrderByAggregateInput = {
   user_id?: Prisma.SortOrder
 }
 
-export type Patient_profilesNullableScalarRelationFilter = {
-  is?: Prisma.patient_profilesWhereInput | null
-  isNot?: Prisma.patient_profilesWhereInput | null
-}
-
-export type patient_profilesCreateNestedOneWithoutAppointmentsInput = {
-  create?: Prisma.XOR<Prisma.patient_profilesCreateWithoutAppointmentsInput, Prisma.patient_profilesUncheckedCreateWithoutAppointmentsInput>
-  connectOrCreate?: Prisma.patient_profilesCreateOrConnectWithoutAppointmentsInput
-  connect?: Prisma.patient_profilesWhereUniqueInput
-}
-
-export type patient_profilesUpdateOneRequiredWithoutAppointmentsNestedInput = {
-  create?: Prisma.XOR<Prisma.patient_profilesCreateWithoutAppointmentsInput, Prisma.patient_profilesUncheckedCreateWithoutAppointmentsInput>
-  connectOrCreate?: Prisma.patient_profilesCreateOrConnectWithoutAppointmentsInput
-  upsert?: Prisma.patient_profilesUpsertWithoutAppointmentsInput
-  connect?: Prisma.patient_profilesWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.patient_profilesUpdateToOneWithWhereWithoutAppointmentsInput, Prisma.patient_profilesUpdateWithoutAppointmentsInput>, Prisma.patient_profilesUncheckedUpdateWithoutAppointmentsInput>
-}
-
-export type patient_profilesCreateNestedOneWithoutPatient_documentsInput = {
-  create?: Prisma.XOR<Prisma.patient_profilesCreateWithoutPatient_documentsInput, Prisma.patient_profilesUncheckedCreateWithoutPatient_documentsInput>
-  connectOrCreate?: Prisma.patient_profilesCreateOrConnectWithoutPatient_documentsInput
-  connect?: Prisma.patient_profilesWhereUniqueInput
-}
-
-export type patient_profilesUpdateOneRequiredWithoutPatient_documentsNestedInput = {
-  create?: Prisma.XOR<Prisma.patient_profilesCreateWithoutPatient_documentsInput, Prisma.patient_profilesUncheckedCreateWithoutPatient_documentsInput>
-  connectOrCreate?: Prisma.patient_profilesCreateOrConnectWithoutPatient_documentsInput
-  upsert?: Prisma.patient_profilesUpsertWithoutPatient_documentsInput
-  connect?: Prisma.patient_profilesWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.patient_profilesUpdateToOneWithWhereWithoutPatient_documentsInput, Prisma.patient_profilesUpdateWithoutPatient_documentsInput>, Prisma.patient_profilesUncheckedUpdateWithoutPatient_documentsInput>
-}
-
-export type patient_profilesCreateNestedOneWithoutPatient_recordsInput = {
-  create?: Prisma.XOR<Prisma.patient_profilesCreateWithoutPatient_recordsInput, Prisma.patient_profilesUncheckedCreateWithoutPatient_recordsInput>
-  connectOrCreate?: Prisma.patient_profilesCreateOrConnectWithoutPatient_recordsInput
-  connect?: Prisma.patient_profilesWhereUniqueInput
-}
-
-export type patient_profilesUpdateOneRequiredWithoutPatient_recordsNestedInput = {
-  create?: Prisma.XOR<Prisma.patient_profilesCreateWithoutPatient_recordsInput, Prisma.patient_profilesUncheckedCreateWithoutPatient_recordsInput>
-  connectOrCreate?: Prisma.patient_profilesCreateOrConnectWithoutPatient_recordsInput
-  upsert?: Prisma.patient_profilesUpsertWithoutPatient_recordsInput
-  connect?: Prisma.patient_profilesWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.patient_profilesUpdateToOneWithWhereWithoutPatient_recordsInput, Prisma.patient_profilesUpdateWithoutPatient_recordsInput>, Prisma.patient_profilesUncheckedUpdateWithoutPatient_recordsInput>
+export type Patient_profilesScalarRelationFilter = {
+  is?: Prisma.patient_profilesWhereInput
+  isNot?: Prisma.patient_profilesWhereInput
 }
 
 export type patient_profilesCreateNestedOneWithoutUsersInput = {
@@ -550,220 +640,46 @@ export type patient_profilesUncheckedUpdateOneWithoutUsersNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.patient_profilesUpdateToOneWithWhereWithoutUsersInput, Prisma.patient_profilesUpdateWithoutUsersInput>, Prisma.patient_profilesUncheckedUpdateWithoutUsersInput>
 }
 
-export type patient_profilesCreateWithoutAppointmentsInput = {
-  id?: bigint | number
-  emergency_contact_name?: string | null
-  emergency_contact_phone?: string | null
-  blood_type?: string | null
-  allergies?: string | null
-  medical_notes?: string | null
-  created_at?: Date | string
-  updated_at?: Date | string
-  patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutPatient_profilesInput
-  users: Prisma.usersCreateNestedOneWithoutPatient_profilesInput
-  patient_records?: Prisma.patient_recordsCreateNestedManyWithoutPatient_profilesInput
+export type patient_profilesCreateNestedOneWithoutAppointmentsInput = {
+  create?: Prisma.XOR<Prisma.patient_profilesCreateWithoutAppointmentsInput, Prisma.patient_profilesUncheckedCreateWithoutAppointmentsInput>
+  connectOrCreate?: Prisma.patient_profilesCreateOrConnectWithoutAppointmentsInput
+  connect?: Prisma.patient_profilesWhereUniqueInput
 }
 
-export type patient_profilesUncheckedCreateWithoutAppointmentsInput = {
-  id?: bigint | number
-  user_id: bigint | number
-  emergency_contact_name?: string | null
-  emergency_contact_phone?: string | null
-  blood_type?: string | null
-  allergies?: string | null
-  medical_notes?: string | null
-  created_at?: Date | string
-  updated_at?: Date | string
-  patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutPatient_profilesInput
-  patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutPatient_profilesInput
+export type patient_profilesUpdateOneRequiredWithoutAppointmentsNestedInput = {
+  create?: Prisma.XOR<Prisma.patient_profilesCreateWithoutAppointmentsInput, Prisma.patient_profilesUncheckedCreateWithoutAppointmentsInput>
+  connectOrCreate?: Prisma.patient_profilesCreateOrConnectWithoutAppointmentsInput
+  upsert?: Prisma.patient_profilesUpsertWithoutAppointmentsInput
+  connect?: Prisma.patient_profilesWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.patient_profilesUpdateToOneWithWhereWithoutAppointmentsInput, Prisma.patient_profilesUpdateWithoutAppointmentsInput>, Prisma.patient_profilesUncheckedUpdateWithoutAppointmentsInput>
 }
 
-export type patient_profilesCreateOrConnectWithoutAppointmentsInput = {
-  where: Prisma.patient_profilesWhereUniqueInput
-  create: Prisma.XOR<Prisma.patient_profilesCreateWithoutAppointmentsInput, Prisma.patient_profilesUncheckedCreateWithoutAppointmentsInput>
+export type patient_profilesCreateNestedOneWithoutPatient_recordsInput = {
+  create?: Prisma.XOR<Prisma.patient_profilesCreateWithoutPatient_recordsInput, Prisma.patient_profilesUncheckedCreateWithoutPatient_recordsInput>
+  connectOrCreate?: Prisma.patient_profilesCreateOrConnectWithoutPatient_recordsInput
+  connect?: Prisma.patient_profilesWhereUniqueInput
 }
 
-export type patient_profilesUpsertWithoutAppointmentsInput = {
-  update: Prisma.XOR<Prisma.patient_profilesUpdateWithoutAppointmentsInput, Prisma.patient_profilesUncheckedUpdateWithoutAppointmentsInput>
-  create: Prisma.XOR<Prisma.patient_profilesCreateWithoutAppointmentsInput, Prisma.patient_profilesUncheckedCreateWithoutAppointmentsInput>
-  where?: Prisma.patient_profilesWhereInput
+export type patient_profilesUpdateOneRequiredWithoutPatient_recordsNestedInput = {
+  create?: Prisma.XOR<Prisma.patient_profilesCreateWithoutPatient_recordsInput, Prisma.patient_profilesUncheckedCreateWithoutPatient_recordsInput>
+  connectOrCreate?: Prisma.patient_profilesCreateOrConnectWithoutPatient_recordsInput
+  upsert?: Prisma.patient_profilesUpsertWithoutPatient_recordsInput
+  connect?: Prisma.patient_profilesWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.patient_profilesUpdateToOneWithWhereWithoutPatient_recordsInput, Prisma.patient_profilesUpdateWithoutPatient_recordsInput>, Prisma.patient_profilesUncheckedUpdateWithoutPatient_recordsInput>
 }
 
-export type patient_profilesUpdateToOneWithWhereWithoutAppointmentsInput = {
-  where?: Prisma.patient_profilesWhereInput
-  data: Prisma.XOR<Prisma.patient_profilesUpdateWithoutAppointmentsInput, Prisma.patient_profilesUncheckedUpdateWithoutAppointmentsInput>
+export type patient_profilesCreateNestedOneWithoutPatient_documentsInput = {
+  create?: Prisma.XOR<Prisma.patient_profilesCreateWithoutPatient_documentsInput, Prisma.patient_profilesUncheckedCreateWithoutPatient_documentsInput>
+  connectOrCreate?: Prisma.patient_profilesCreateOrConnectWithoutPatient_documentsInput
+  connect?: Prisma.patient_profilesWhereUniqueInput
 }
 
-export type patient_profilesUpdateWithoutAppointmentsInput = {
-  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  emergency_contact_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  emergency_contact_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  blood_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  allergies?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  patient_documents?: Prisma.patient_documentsUpdateManyWithoutPatient_profilesNestedInput
-  users?: Prisma.usersUpdateOneRequiredWithoutPatient_profilesNestedInput
-  patient_records?: Prisma.patient_recordsUpdateManyWithoutPatient_profilesNestedInput
-}
-
-export type patient_profilesUncheckedUpdateWithoutAppointmentsInput = {
-  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  user_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  emergency_contact_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  emergency_contact_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  blood_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  allergies?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutPatient_profilesNestedInput
-  patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutPatient_profilesNestedInput
-}
-
-export type patient_profilesCreateWithoutPatient_documentsInput = {
-  id?: bigint | number
-  emergency_contact_name?: string | null
-  emergency_contact_phone?: string | null
-  blood_type?: string | null
-  allergies?: string | null
-  medical_notes?: string | null
-  created_at?: Date | string
-  updated_at?: Date | string
-  appointments?: Prisma.appointmentsCreateNestedManyWithoutPatient_profilesInput
-  users: Prisma.usersCreateNestedOneWithoutPatient_profilesInput
-  patient_records?: Prisma.patient_recordsCreateNestedManyWithoutPatient_profilesInput
-}
-
-export type patient_profilesUncheckedCreateWithoutPatient_documentsInput = {
-  id?: bigint | number
-  user_id: bigint | number
-  emergency_contact_name?: string | null
-  emergency_contact_phone?: string | null
-  blood_type?: string | null
-  allergies?: string | null
-  medical_notes?: string | null
-  created_at?: Date | string
-  updated_at?: Date | string
-  appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutPatient_profilesInput
-  patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutPatient_profilesInput
-}
-
-export type patient_profilesCreateOrConnectWithoutPatient_documentsInput = {
-  where: Prisma.patient_profilesWhereUniqueInput
-  create: Prisma.XOR<Prisma.patient_profilesCreateWithoutPatient_documentsInput, Prisma.patient_profilesUncheckedCreateWithoutPatient_documentsInput>
-}
-
-export type patient_profilesUpsertWithoutPatient_documentsInput = {
-  update: Prisma.XOR<Prisma.patient_profilesUpdateWithoutPatient_documentsInput, Prisma.patient_profilesUncheckedUpdateWithoutPatient_documentsInput>
-  create: Prisma.XOR<Prisma.patient_profilesCreateWithoutPatient_documentsInput, Prisma.patient_profilesUncheckedCreateWithoutPatient_documentsInput>
-  where?: Prisma.patient_profilesWhereInput
-}
-
-export type patient_profilesUpdateToOneWithWhereWithoutPatient_documentsInput = {
-  where?: Prisma.patient_profilesWhereInput
-  data: Prisma.XOR<Prisma.patient_profilesUpdateWithoutPatient_documentsInput, Prisma.patient_profilesUncheckedUpdateWithoutPatient_documentsInput>
-}
-
-export type patient_profilesUpdateWithoutPatient_documentsInput = {
-  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  emergency_contact_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  emergency_contact_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  blood_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  allergies?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  appointments?: Prisma.appointmentsUpdateManyWithoutPatient_profilesNestedInput
-  users?: Prisma.usersUpdateOneRequiredWithoutPatient_profilesNestedInput
-  patient_records?: Prisma.patient_recordsUpdateManyWithoutPatient_profilesNestedInput
-}
-
-export type patient_profilesUncheckedUpdateWithoutPatient_documentsInput = {
-  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  user_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  emergency_contact_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  emergency_contact_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  blood_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  allergies?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutPatient_profilesNestedInput
-  patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutPatient_profilesNestedInput
-}
-
-export type patient_profilesCreateWithoutPatient_recordsInput = {
-  id?: bigint | number
-  emergency_contact_name?: string | null
-  emergency_contact_phone?: string | null
-  blood_type?: string | null
-  allergies?: string | null
-  medical_notes?: string | null
-  created_at?: Date | string
-  updated_at?: Date | string
-  appointments?: Prisma.appointmentsCreateNestedManyWithoutPatient_profilesInput
-  patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutPatient_profilesInput
-  users: Prisma.usersCreateNestedOneWithoutPatient_profilesInput
-}
-
-export type patient_profilesUncheckedCreateWithoutPatient_recordsInput = {
-  id?: bigint | number
-  user_id: bigint | number
-  emergency_contact_name?: string | null
-  emergency_contact_phone?: string | null
-  blood_type?: string | null
-  allergies?: string | null
-  medical_notes?: string | null
-  created_at?: Date | string
-  updated_at?: Date | string
-  appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutPatient_profilesInput
-  patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutPatient_profilesInput
-}
-
-export type patient_profilesCreateOrConnectWithoutPatient_recordsInput = {
-  where: Prisma.patient_profilesWhereUniqueInput
-  create: Prisma.XOR<Prisma.patient_profilesCreateWithoutPatient_recordsInput, Prisma.patient_profilesUncheckedCreateWithoutPatient_recordsInput>
-}
-
-export type patient_profilesUpsertWithoutPatient_recordsInput = {
-  update: Prisma.XOR<Prisma.patient_profilesUpdateWithoutPatient_recordsInput, Prisma.patient_profilesUncheckedUpdateWithoutPatient_recordsInput>
-  create: Prisma.XOR<Prisma.patient_profilesCreateWithoutPatient_recordsInput, Prisma.patient_profilesUncheckedCreateWithoutPatient_recordsInput>
-  where?: Prisma.patient_profilesWhereInput
-}
-
-export type patient_profilesUpdateToOneWithWhereWithoutPatient_recordsInput = {
-  where?: Prisma.patient_profilesWhereInput
-  data: Prisma.XOR<Prisma.patient_profilesUpdateWithoutPatient_recordsInput, Prisma.patient_profilesUncheckedUpdateWithoutPatient_recordsInput>
-}
-
-export type patient_profilesUpdateWithoutPatient_recordsInput = {
-  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  emergency_contact_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  emergency_contact_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  blood_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  allergies?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  appointments?: Prisma.appointmentsUpdateManyWithoutPatient_profilesNestedInput
-  patient_documents?: Prisma.patient_documentsUpdateManyWithoutPatient_profilesNestedInput
-  users?: Prisma.usersUpdateOneRequiredWithoutPatient_profilesNestedInput
-}
-
-export type patient_profilesUncheckedUpdateWithoutPatient_recordsInput = {
-  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  user_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  emergency_contact_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  emergency_contact_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  blood_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  allergies?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutPatient_profilesNestedInput
-  patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutPatient_profilesNestedInput
+export type patient_profilesUpdateOneRequiredWithoutPatient_documentsNestedInput = {
+  create?: Prisma.XOR<Prisma.patient_profilesCreateWithoutPatient_documentsInput, Prisma.patient_profilesUncheckedCreateWithoutPatient_documentsInput>
+  connectOrCreate?: Prisma.patient_profilesCreateOrConnectWithoutPatient_documentsInput
+  upsert?: Prisma.patient_profilesUpsertWithoutPatient_documentsInput
+  connect?: Prisma.patient_profilesWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.patient_profilesUpdateToOneWithWhereWithoutPatient_documentsInput, Prisma.patient_profilesUpdateWithoutPatient_documentsInput>, Prisma.patient_profilesUncheckedUpdateWithoutPatient_documentsInput>
 }
 
 export type patient_profilesCreateWithoutUsersInput = {
@@ -775,9 +691,15 @@ export type patient_profilesCreateWithoutUsersInput = {
   medical_notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
-  appointments?: Prisma.appointmentsCreateNestedManyWithoutPatient_profilesInput
-  patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutPatient_profilesInput
-  patient_records?: Prisma.patient_recordsCreateNestedManyWithoutPatient_profilesInput
+  city?: string | null
+  current_medications?: string | null
+  governate?: string | null
+  insurance_policy?: string | null
+  insurance_provider?: string | null
+  profile_complete?: boolean
+  appointments?: Prisma.appointmentsCreateNestedManyWithoutPatient_profileInput
+  patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutPatient_profileInput
+  patient_records?: Prisma.patient_recordsCreateNestedManyWithoutPatient_profileInput
 }
 
 export type patient_profilesUncheckedCreateWithoutUsersInput = {
@@ -789,9 +711,15 @@ export type patient_profilesUncheckedCreateWithoutUsersInput = {
   medical_notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
-  appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutPatient_profilesInput
-  patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutPatient_profilesInput
-  patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutPatient_profilesInput
+  city?: string | null
+  current_medications?: string | null
+  governate?: string | null
+  insurance_policy?: string | null
+  insurance_provider?: string | null
+  profile_complete?: boolean
+  appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutPatient_profileInput
+  patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutPatient_profileInput
+  patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutPatient_profileInput
 }
 
 export type patient_profilesCreateOrConnectWithoutUsersInput = {
@@ -819,9 +747,15 @@ export type patient_profilesUpdateWithoutUsersInput = {
   medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  appointments?: Prisma.appointmentsUpdateManyWithoutPatient_profilesNestedInput
-  patient_documents?: Prisma.patient_documentsUpdateManyWithoutPatient_profilesNestedInput
-  patient_records?: Prisma.patient_recordsUpdateManyWithoutPatient_profilesNestedInput
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  current_medications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  governate?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_complete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  appointments?: Prisma.appointmentsUpdateManyWithoutPatient_profileNestedInput
+  patient_documents?: Prisma.patient_documentsUpdateManyWithoutPatient_profileNestedInput
+  patient_records?: Prisma.patient_recordsUpdateManyWithoutPatient_profileNestedInput
 }
 
 export type patient_profilesUncheckedUpdateWithoutUsersInput = {
@@ -833,9 +767,303 @@ export type patient_profilesUncheckedUpdateWithoutUsersInput = {
   medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutPatient_profilesNestedInput
-  patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutPatient_profilesNestedInput
-  patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutPatient_profilesNestedInput
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  current_medications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  governate?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_complete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutPatient_profileNestedInput
+  patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutPatient_profileNestedInput
+  patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutPatient_profileNestedInput
+}
+
+export type patient_profilesCreateWithoutAppointmentsInput = {
+  id?: bigint | number
+  emergency_contact_name?: string | null
+  emergency_contact_phone?: string | null
+  blood_type?: string | null
+  allergies?: string | null
+  medical_notes?: string | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  city?: string | null
+  current_medications?: string | null
+  governate?: string | null
+  insurance_policy?: string | null
+  insurance_provider?: string | null
+  profile_complete?: boolean
+  patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutPatient_profileInput
+  users: Prisma.usersCreateNestedOneWithoutPatient_profileInput
+  patient_records?: Prisma.patient_recordsCreateNestedManyWithoutPatient_profileInput
+}
+
+export type patient_profilesUncheckedCreateWithoutAppointmentsInput = {
+  id?: bigint | number
+  user_id: bigint | number
+  emergency_contact_name?: string | null
+  emergency_contact_phone?: string | null
+  blood_type?: string | null
+  allergies?: string | null
+  medical_notes?: string | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  city?: string | null
+  current_medications?: string | null
+  governate?: string | null
+  insurance_policy?: string | null
+  insurance_provider?: string | null
+  profile_complete?: boolean
+  patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutPatient_profileInput
+  patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutPatient_profileInput
+}
+
+export type patient_profilesCreateOrConnectWithoutAppointmentsInput = {
+  where: Prisma.patient_profilesWhereUniqueInput
+  create: Prisma.XOR<Prisma.patient_profilesCreateWithoutAppointmentsInput, Prisma.patient_profilesUncheckedCreateWithoutAppointmentsInput>
+}
+
+export type patient_profilesUpsertWithoutAppointmentsInput = {
+  update: Prisma.XOR<Prisma.patient_profilesUpdateWithoutAppointmentsInput, Prisma.patient_profilesUncheckedUpdateWithoutAppointmentsInput>
+  create: Prisma.XOR<Prisma.patient_profilesCreateWithoutAppointmentsInput, Prisma.patient_profilesUncheckedCreateWithoutAppointmentsInput>
+  where?: Prisma.patient_profilesWhereInput
+}
+
+export type patient_profilesUpdateToOneWithWhereWithoutAppointmentsInput = {
+  where?: Prisma.patient_profilesWhereInput
+  data: Prisma.XOR<Prisma.patient_profilesUpdateWithoutAppointmentsInput, Prisma.patient_profilesUncheckedUpdateWithoutAppointmentsInput>
+}
+
+export type patient_profilesUpdateWithoutAppointmentsInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  emergency_contact_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  blood_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  allergies?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  current_medications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  governate?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_complete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  patient_documents?: Prisma.patient_documentsUpdateManyWithoutPatient_profileNestedInput
+  users?: Prisma.usersUpdateOneRequiredWithoutPatient_profileNestedInput
+  patient_records?: Prisma.patient_recordsUpdateManyWithoutPatient_profileNestedInput
+}
+
+export type patient_profilesUncheckedUpdateWithoutAppointmentsInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  user_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  emergency_contact_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  blood_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  allergies?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  current_medications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  governate?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_complete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutPatient_profileNestedInput
+  patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutPatient_profileNestedInput
+}
+
+export type patient_profilesCreateWithoutPatient_recordsInput = {
+  id?: bigint | number
+  emergency_contact_name?: string | null
+  emergency_contact_phone?: string | null
+  blood_type?: string | null
+  allergies?: string | null
+  medical_notes?: string | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  city?: string | null
+  current_medications?: string | null
+  governate?: string | null
+  insurance_policy?: string | null
+  insurance_provider?: string | null
+  profile_complete?: boolean
+  appointments?: Prisma.appointmentsCreateNestedManyWithoutPatient_profileInput
+  patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutPatient_profileInput
+  users: Prisma.usersCreateNestedOneWithoutPatient_profileInput
+}
+
+export type patient_profilesUncheckedCreateWithoutPatient_recordsInput = {
+  id?: bigint | number
+  user_id: bigint | number
+  emergency_contact_name?: string | null
+  emergency_contact_phone?: string | null
+  blood_type?: string | null
+  allergies?: string | null
+  medical_notes?: string | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  city?: string | null
+  current_medications?: string | null
+  governate?: string | null
+  insurance_policy?: string | null
+  insurance_provider?: string | null
+  profile_complete?: boolean
+  appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutPatient_profileInput
+  patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutPatient_profileInput
+}
+
+export type patient_profilesCreateOrConnectWithoutPatient_recordsInput = {
+  where: Prisma.patient_profilesWhereUniqueInput
+  create: Prisma.XOR<Prisma.patient_profilesCreateWithoutPatient_recordsInput, Prisma.patient_profilesUncheckedCreateWithoutPatient_recordsInput>
+}
+
+export type patient_profilesUpsertWithoutPatient_recordsInput = {
+  update: Prisma.XOR<Prisma.patient_profilesUpdateWithoutPatient_recordsInput, Prisma.patient_profilesUncheckedUpdateWithoutPatient_recordsInput>
+  create: Prisma.XOR<Prisma.patient_profilesCreateWithoutPatient_recordsInput, Prisma.patient_profilesUncheckedCreateWithoutPatient_recordsInput>
+  where?: Prisma.patient_profilesWhereInput
+}
+
+export type patient_profilesUpdateToOneWithWhereWithoutPatient_recordsInput = {
+  where?: Prisma.patient_profilesWhereInput
+  data: Prisma.XOR<Prisma.patient_profilesUpdateWithoutPatient_recordsInput, Prisma.patient_profilesUncheckedUpdateWithoutPatient_recordsInput>
+}
+
+export type patient_profilesUpdateWithoutPatient_recordsInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  emergency_contact_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  blood_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  allergies?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  current_medications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  governate?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_complete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  appointments?: Prisma.appointmentsUpdateManyWithoutPatient_profileNestedInput
+  patient_documents?: Prisma.patient_documentsUpdateManyWithoutPatient_profileNestedInput
+  users?: Prisma.usersUpdateOneRequiredWithoutPatient_profileNestedInput
+}
+
+export type patient_profilesUncheckedUpdateWithoutPatient_recordsInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  user_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  emergency_contact_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  blood_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  allergies?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  current_medications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  governate?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_complete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutPatient_profileNestedInput
+  patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutPatient_profileNestedInput
+}
+
+export type patient_profilesCreateWithoutPatient_documentsInput = {
+  id?: bigint | number
+  emergency_contact_name?: string | null
+  emergency_contact_phone?: string | null
+  blood_type?: string | null
+  allergies?: string | null
+  medical_notes?: string | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  city?: string | null
+  current_medications?: string | null
+  governate?: string | null
+  insurance_policy?: string | null
+  insurance_provider?: string | null
+  profile_complete?: boolean
+  appointments?: Prisma.appointmentsCreateNestedManyWithoutPatient_profileInput
+  users: Prisma.usersCreateNestedOneWithoutPatient_profileInput
+  patient_records?: Prisma.patient_recordsCreateNestedManyWithoutPatient_profileInput
+}
+
+export type patient_profilesUncheckedCreateWithoutPatient_documentsInput = {
+  id?: bigint | number
+  user_id: bigint | number
+  emergency_contact_name?: string | null
+  emergency_contact_phone?: string | null
+  blood_type?: string | null
+  allergies?: string | null
+  medical_notes?: string | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  city?: string | null
+  current_medications?: string | null
+  governate?: string | null
+  insurance_policy?: string | null
+  insurance_provider?: string | null
+  profile_complete?: boolean
+  appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutPatient_profileInput
+  patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutPatient_profileInput
+}
+
+export type patient_profilesCreateOrConnectWithoutPatient_documentsInput = {
+  where: Prisma.patient_profilesWhereUniqueInput
+  create: Prisma.XOR<Prisma.patient_profilesCreateWithoutPatient_documentsInput, Prisma.patient_profilesUncheckedCreateWithoutPatient_documentsInput>
+}
+
+export type patient_profilesUpsertWithoutPatient_documentsInput = {
+  update: Prisma.XOR<Prisma.patient_profilesUpdateWithoutPatient_documentsInput, Prisma.patient_profilesUncheckedUpdateWithoutPatient_documentsInput>
+  create: Prisma.XOR<Prisma.patient_profilesCreateWithoutPatient_documentsInput, Prisma.patient_profilesUncheckedCreateWithoutPatient_documentsInput>
+  where?: Prisma.patient_profilesWhereInput
+}
+
+export type patient_profilesUpdateToOneWithWhereWithoutPatient_documentsInput = {
+  where?: Prisma.patient_profilesWhereInput
+  data: Prisma.XOR<Prisma.patient_profilesUpdateWithoutPatient_documentsInput, Prisma.patient_profilesUncheckedUpdateWithoutPatient_documentsInput>
+}
+
+export type patient_profilesUpdateWithoutPatient_documentsInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  emergency_contact_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  blood_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  allergies?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  current_medications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  governate?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_complete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  appointments?: Prisma.appointmentsUpdateManyWithoutPatient_profileNestedInput
+  users?: Prisma.usersUpdateOneRequiredWithoutPatient_profileNestedInput
+  patient_records?: Prisma.patient_recordsUpdateManyWithoutPatient_profileNestedInput
+}
+
+export type patient_profilesUncheckedUpdateWithoutPatient_documentsInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  user_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  emergency_contact_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  blood_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  allergies?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  current_medications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  governate?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_complete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutPatient_profileNestedInput
+  patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutPatient_profileNestedInput
 }
 
 
@@ -897,6 +1125,12 @@ export type patient_profilesSelect<ExtArgs extends runtime.Types.Extensions.Inte
   medical_notes?: boolean
   created_at?: boolean
   updated_at?: boolean
+  city?: boolean
+  current_medications?: boolean
+  governate?: boolean
+  insurance_policy?: boolean
+  insurance_provider?: boolean
+  profile_complete?: boolean
   appointments?: boolean | Prisma.patient_profiles$appointmentsArgs<ExtArgs>
   patient_documents?: boolean | Prisma.patient_profiles$patient_documentsArgs<ExtArgs>
   users?: boolean | Prisma.usersDefaultArgs<ExtArgs>
@@ -914,6 +1148,12 @@ export type patient_profilesSelectCreateManyAndReturn<ExtArgs extends runtime.Ty
   medical_notes?: boolean
   created_at?: boolean
   updated_at?: boolean
+  city?: boolean
+  current_medications?: boolean
+  governate?: boolean
+  insurance_policy?: boolean
+  insurance_provider?: boolean
+  profile_complete?: boolean
   users?: boolean | Prisma.usersDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["patient_profiles"]>
 
@@ -927,6 +1167,12 @@ export type patient_profilesSelectUpdateManyAndReturn<ExtArgs extends runtime.Ty
   medical_notes?: boolean
   created_at?: boolean
   updated_at?: boolean
+  city?: boolean
+  current_medications?: boolean
+  governate?: boolean
+  insurance_policy?: boolean
+  insurance_provider?: boolean
+  profile_complete?: boolean
   users?: boolean | Prisma.usersDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["patient_profiles"]>
 
@@ -940,9 +1186,15 @@ export type patient_profilesSelectScalar = {
   medical_notes?: boolean
   created_at?: boolean
   updated_at?: boolean
+  city?: boolean
+  current_medications?: boolean
+  governate?: boolean
+  insurance_policy?: boolean
+  insurance_provider?: boolean
+  profile_complete?: boolean
 }
 
-export type patient_profilesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "user_id" | "emergency_contact_name" | "emergency_contact_phone" | "blood_type" | "allergies" | "medical_notes" | "created_at" | "updated_at", ExtArgs["result"]["patient_profiles"]>
+export type patient_profilesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "user_id" | "emergency_contact_name" | "emergency_contact_phone" | "blood_type" | "allergies" | "medical_notes" | "created_at" | "updated_at" | "city" | "current_medications" | "governate" | "insurance_policy" | "insurance_provider" | "profile_complete", ExtArgs["result"]["patient_profiles"]>
 export type patient_profilesInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   appointments?: boolean | Prisma.patient_profiles$appointmentsArgs<ExtArgs>
   patient_documents?: boolean | Prisma.patient_profiles$patient_documentsArgs<ExtArgs>
@@ -975,6 +1227,12 @@ export type $patient_profilesPayload<ExtArgs extends runtime.Types.Extensions.In
     medical_notes: string | null
     created_at: Date
     updated_at: Date
+    city: string | null
+    current_medications: string | null
+    governate: string | null
+    insurance_policy: string | null
+    insurance_provider: string | null
+    profile_complete: boolean
   }, ExtArgs["result"]["patient_profiles"]>
   composites: {}
 }
@@ -1411,6 +1669,12 @@ export interface patient_profilesFieldRefs {
   readonly medical_notes: Prisma.FieldRef<"patient_profiles", 'String'>
   readonly created_at: Prisma.FieldRef<"patient_profiles", 'DateTime'>
   readonly updated_at: Prisma.FieldRef<"patient_profiles", 'DateTime'>
+  readonly city: Prisma.FieldRef<"patient_profiles", 'String'>
+  readonly current_medications: Prisma.FieldRef<"patient_profiles", 'String'>
+  readonly governate: Prisma.FieldRef<"patient_profiles", 'String'>
+  readonly insurance_policy: Prisma.FieldRef<"patient_profiles", 'String'>
+  readonly insurance_provider: Prisma.FieldRef<"patient_profiles", 'String'>
+  readonly profile_complete: Prisma.FieldRef<"patient_profiles", 'Boolean'>
 }
     
 

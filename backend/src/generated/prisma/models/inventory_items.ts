@@ -9,12 +9,12 @@
  * 🟢 You can import this file directly.
  */
 import type * as runtime from "@prisma/client/runtime/client"
-import type * as $Enums from "../enums.js"
-import type * as Prisma from "../internal/prismaNamespace.js"
+import type * as $Enums from "../enums"
+import type * as Prisma from "../internal/prismaNamespace"
 
 /**
  * Model inventory_items
- * This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+ * 
  */
 export type inventory_itemsModel = runtime.Types.Result.DefaultSelection<Prisma.$inventory_itemsPayload>
 
@@ -360,7 +360,7 @@ export type inventory_itemsCreateInput = {
   cost_price?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Date | string
   updated_at?: Date | string
-  inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutInventory_itemsInput
+  inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutItemInput
 }
 
 export type inventory_itemsUncheckedCreateInput = {
@@ -375,7 +375,7 @@ export type inventory_itemsUncheckedCreateInput = {
   cost_price?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Date | string
   updated_at?: Date | string
-  inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutInventory_itemsInput
+  inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutItemInput
 }
 
 export type inventory_itemsUpdateInput = {
@@ -390,7 +390,7 @@ export type inventory_itemsUpdateInput = {
   cost_price?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutInventory_itemsNestedInput
+  inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutItemNestedInput
 }
 
 export type inventory_itemsUncheckedUpdateInput = {
@@ -405,7 +405,7 @@ export type inventory_itemsUncheckedUpdateInput = {
   cost_price?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutInventory_itemsNestedInput
+  inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutItemNestedInput
 }
 
 export type inventory_itemsCreateManyInput = {

@@ -12,16 +12,14 @@
 
 import * as process from 'node:process'
 import * as path from 'node:path'
-import { fileURLToPath } from 'node:url'
-globalThis['__dirname'] = path.dirname(fileURLToPath(import.meta.url))
 
 import * as runtime from "@prisma/client/runtime/client"
-import * as $Enums from "./enums.js"
-import * as $Class from "./internal/class.js"
-import * as Prisma from "./internal/prismaNamespace.js"
+import * as $Enums from "./enums"
+import * as $Class from "./internal/class"
+import * as Prisma from "./internal/prismaNamespace"
 
-export * as $Enums from './enums.js'
-export * from "./enums.js"
+export * as $Enums from './enums'
+export * from "./enums"
 /**
  * ## Prisma Client
  * 
@@ -31,8 +29,8 @@ export * from "./enums.js"
  * const prisma = new PrismaClient({
  *   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL })
  * })
- * // Fetch zero or more Appointments
- * const appointments = await prisma.appointments.findMany()
+ * // Fetch zero or more Users
+ * const users = await prisma.users.findMany()
  * ```
  * 
  * Read more in our [docs](https://pris.ly/d/client).
@@ -42,47 +40,57 @@ export type PrismaClient<LogOpts extends Prisma.LogLevel = never, OmitOpts exten
 export { Prisma }
 
 /**
- * Model appointments
- * This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
- */
-export type appointments = Prisma.appointmentsModel
-/**
- * Model audit_logs
+ * Model users
  * 
  */
-export type audit_logs = Prisma.audit_logsModel
-/**
- * Model clinic_profile
- * 
- */
-export type clinic_profile = Prisma.clinic_profileModel
-/**
- * Model inventory_items
- * This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
- */
-export type inventory_items = Prisma.inventory_itemsModel
-/**
- * Model inventory_movements
- * This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
- */
-export type inventory_movements = Prisma.inventory_movementsModel
-/**
- * Model patient_documents
- * This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
- */
-export type patient_documents = Prisma.patient_documentsModel
+export type users = Prisma.usersModel
 /**
  * Model patient_profiles
  * 
  */
 export type patient_profiles = Prisma.patient_profilesModel
 /**
+ * Model appointment_slots
+ * 
+ */
+export type appointment_slots = Prisma.appointment_slotsModel
+/**
+ * Model appointments
+ * 
+ */
+export type appointments = Prisma.appointmentsModel
+/**
  * Model patient_records
- * This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+ * 
  */
 export type patient_records = Prisma.patient_recordsModel
 /**
- * Model users
- * This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+ * Model patient_documents
+ * 
  */
-export type users = Prisma.usersModel
+export type patient_documents = Prisma.patient_documentsModel
+/**
+ * Model inventory_items
+ * 
+ */
+export type inventory_items = Prisma.inventory_itemsModel
+/**
+ * Model inventory_movements
+ * 
+ */
+export type inventory_movements = Prisma.inventory_movementsModel
+/**
+ * Model clinic_profile
+ * 
+ */
+export type clinic_profile = Prisma.clinic_profileModel
+/**
+ * Model notifications
+ * 
+ */
+export type notifications = Prisma.notificationsModel
+/**
+ * Model audit_logs
+ * 
+ */
+export type audit_logs = Prisma.audit_logsModel

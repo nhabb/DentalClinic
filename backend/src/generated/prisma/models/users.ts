@@ -9,12 +9,12 @@
  * 🟢 You can import this file directly.
  */
 import type * as runtime from "@prisma/client/runtime/client"
-import type * as $Enums from "../enums.js"
-import type * as Prisma from "../internal/prismaNamespace.js"
+import type * as $Enums from "../enums"
+import type * as Prisma from "../internal/prismaNamespace"
 
 /**
  * Model users
- * This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+ * 
  */
 export type usersModel = runtime.Types.Result.DefaultSelection<Prisma.$usersPayload>
 
@@ -280,11 +280,14 @@ export type usersWhereInput = {
   is_active?: Prisma.BoolFilter<"users"> | boolean
   created_at?: Prisma.DateTimeFilter<"users"> | Date | string
   updated_at?: Prisma.DateTimeFilter<"users"> | Date | string
-  appointments?: Prisma.AppointmentsListRelationFilter
+  doctor_slots?: Prisma.Appointment_slotsListRelationFilter
+  created_appointments?: Prisma.AppointmentsListRelationFilter
+  doctor_appointments?: Prisma.AppointmentsListRelationFilter
   audit_logs?: Prisma.Audit_logsListRelationFilter
   inventory_movements?: Prisma.Inventory_movementsListRelationFilter
+  notifications?: Prisma.NotificationsListRelationFilter
   patient_documents?: Prisma.Patient_documentsListRelationFilter
-  patient_profiles?: Prisma.XOR<Prisma.Patient_profilesNullableScalarRelationFilter, Prisma.patient_profilesWhereInput> | null
+  patient_profile?: Prisma.XOR<Prisma.Patient_profilesNullableScalarRelationFilter, Prisma.patient_profilesWhereInput> | null
   patient_records?: Prisma.Patient_recordsListRelationFilter
 }
 
@@ -302,11 +305,14 @@ export type usersOrderByWithRelationInput = {
   is_active?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
-  appointments?: Prisma.appointmentsOrderByRelationAggregateInput
+  doctor_slots?: Prisma.appointment_slotsOrderByRelationAggregateInput
+  created_appointments?: Prisma.appointmentsOrderByRelationAggregateInput
+  doctor_appointments?: Prisma.appointmentsOrderByRelationAggregateInput
   audit_logs?: Prisma.audit_logsOrderByRelationAggregateInput
   inventory_movements?: Prisma.inventory_movementsOrderByRelationAggregateInput
+  notifications?: Prisma.notificationsOrderByRelationAggregateInput
   patient_documents?: Prisma.patient_documentsOrderByRelationAggregateInput
-  patient_profiles?: Prisma.patient_profilesOrderByWithRelationInput
+  patient_profile?: Prisma.patient_profilesOrderByWithRelationInput
   patient_records?: Prisma.patient_recordsOrderByRelationAggregateInput
 }
 
@@ -327,11 +333,14 @@ export type usersWhereUniqueInput = Prisma.AtLeast<{
   is_active?: Prisma.BoolFilter<"users"> | boolean
   created_at?: Prisma.DateTimeFilter<"users"> | Date | string
   updated_at?: Prisma.DateTimeFilter<"users"> | Date | string
-  appointments?: Prisma.AppointmentsListRelationFilter
+  doctor_slots?: Prisma.Appointment_slotsListRelationFilter
+  created_appointments?: Prisma.AppointmentsListRelationFilter
+  doctor_appointments?: Prisma.AppointmentsListRelationFilter
   audit_logs?: Prisma.Audit_logsListRelationFilter
   inventory_movements?: Prisma.Inventory_movementsListRelationFilter
+  notifications?: Prisma.NotificationsListRelationFilter
   patient_documents?: Prisma.Patient_documentsListRelationFilter
-  patient_profiles?: Prisma.XOR<Prisma.Patient_profilesNullableScalarRelationFilter, Prisma.patient_profilesWhereInput> | null
+  patient_profile?: Prisma.XOR<Prisma.Patient_profilesNullableScalarRelationFilter, Prisma.patient_profilesWhereInput> | null
   patient_records?: Prisma.Patient_recordsListRelationFilter
 }, "id" | "email">
 
@@ -389,12 +398,15 @@ export type usersCreateInput = {
   is_active?: boolean
   created_at?: Date | string
   updated_at?: Date | string
-  appointments?: Prisma.appointmentsCreateNestedManyWithoutUsersInput
-  audit_logs?: Prisma.audit_logsCreateNestedManyWithoutUsersInput
-  inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutUsersInput
-  patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutUsersInput
-  patient_profiles?: Prisma.patient_profilesCreateNestedOneWithoutUsersInput
-  patient_records?: Prisma.patient_recordsCreateNestedManyWithoutUsersInput
+  doctor_slots?: Prisma.appointment_slotsCreateNestedManyWithoutDoctorInput
+  created_appointments?: Prisma.appointmentsCreateNestedManyWithoutCreated_by_userInput
+  doctor_appointments?: Prisma.appointmentsCreateNestedManyWithoutDoctorInput
+  audit_logs?: Prisma.audit_logsCreateNestedManyWithoutUserInput
+  inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutPerformed_by_userInput
+  notifications?: Prisma.notificationsCreateNestedManyWithoutUserInput
+  patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutUploaded_by_userInput
+  patient_profile?: Prisma.patient_profilesCreateNestedOneWithoutUsersInput
+  patient_records?: Prisma.patient_recordsCreateNestedManyWithoutCreated_by_userInput
 }
 
 export type usersUncheckedCreateInput = {
@@ -411,12 +423,15 @@ export type usersUncheckedCreateInput = {
   is_active?: boolean
   created_at?: Date | string
   updated_at?: Date | string
-  appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutUsersInput
-  audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutUsersInput
-  inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutUsersInput
-  patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutUsersInput
-  patient_profiles?: Prisma.patient_profilesUncheckedCreateNestedOneWithoutUsersInput
-  patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutUsersInput
+  doctor_slots?: Prisma.appointment_slotsUncheckedCreateNestedManyWithoutDoctorInput
+  created_appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutCreated_by_userInput
+  doctor_appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutDoctorInput
+  audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutUserInput
+  inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutPerformed_by_userInput
+  notifications?: Prisma.notificationsUncheckedCreateNestedManyWithoutUserInput
+  patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutUploaded_by_userInput
+  patient_profile?: Prisma.patient_profilesUncheckedCreateNestedOneWithoutUsersInput
+  patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutCreated_by_userInput
 }
 
 export type usersUpdateInput = {
@@ -433,12 +448,15 @@ export type usersUpdateInput = {
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  appointments?: Prisma.appointmentsUpdateManyWithoutUsersNestedInput
-  audit_logs?: Prisma.audit_logsUpdateManyWithoutUsersNestedInput
-  inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutUsersNestedInput
-  patient_documents?: Prisma.patient_documentsUpdateManyWithoutUsersNestedInput
-  patient_profiles?: Prisma.patient_profilesUpdateOneWithoutUsersNestedInput
-  patient_records?: Prisma.patient_recordsUpdateManyWithoutUsersNestedInput
+  doctor_slots?: Prisma.appointment_slotsUpdateManyWithoutDoctorNestedInput
+  created_appointments?: Prisma.appointmentsUpdateManyWithoutCreated_by_userNestedInput
+  doctor_appointments?: Prisma.appointmentsUpdateManyWithoutDoctorNestedInput
+  audit_logs?: Prisma.audit_logsUpdateManyWithoutUserNestedInput
+  inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutPerformed_by_userNestedInput
+  notifications?: Prisma.notificationsUpdateManyWithoutUserNestedInput
+  patient_documents?: Prisma.patient_documentsUpdateManyWithoutUploaded_by_userNestedInput
+  patient_profile?: Prisma.patient_profilesUpdateOneWithoutUsersNestedInput
+  patient_records?: Prisma.patient_recordsUpdateManyWithoutCreated_by_userNestedInput
 }
 
 export type usersUncheckedUpdateInput = {
@@ -455,12 +473,15 @@ export type usersUncheckedUpdateInput = {
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutUsersNestedInput
-  audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutUsersNestedInput
-  inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutUsersNestedInput
-  patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutUsersNestedInput
-  patient_profiles?: Prisma.patient_profilesUncheckedUpdateOneWithoutUsersNestedInput
-  patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutUsersNestedInput
+  doctor_slots?: Prisma.appointment_slotsUncheckedUpdateManyWithoutDoctorNestedInput
+  created_appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutCreated_by_userNestedInput
+  doctor_appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutDoctorNestedInput
+  audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutUserNestedInput
+  inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutPerformed_by_userNestedInput
+  notifications?: Prisma.notificationsUncheckedUpdateManyWithoutUserNestedInput
+  patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutUploaded_by_userNestedInput
+  patient_profile?: Prisma.patient_profilesUncheckedUpdateOneWithoutUsersNestedInput
+  patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutCreated_by_userNestedInput
 }
 
 export type usersCreateManyInput = {
@@ -509,16 +530,6 @@ export type usersUncheckedUpdateManyInput = {
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-}
-
-export type UsersNullableScalarRelationFilter = {
-  is?: Prisma.usersWhereInput | null
-  isNot?: Prisma.usersWhereInput | null
-}
-
-export type UsersScalarRelationFilter = {
-  is?: Prisma.usersWhereInput
-  isNot?: Prisma.usersWhereInput
 }
 
 export type usersCountOrderByAggregateInput = {
@@ -577,82 +588,100 @@ export type usersSumOrderByAggregateInput = {
   id?: Prisma.SortOrder
 }
 
-export type usersCreateNestedOneWithoutAppointmentsInput = {
-  create?: Prisma.XOR<Prisma.usersCreateWithoutAppointmentsInput, Prisma.usersUncheckedCreateWithoutAppointmentsInput>
-  connectOrCreate?: Prisma.usersCreateOrConnectWithoutAppointmentsInput
+export type UsersScalarRelationFilter = {
+  is?: Prisma.usersWhereInput
+  isNot?: Prisma.usersWhereInput
+}
+
+export type UsersNullableScalarRelationFilter = {
+  is?: Prisma.usersWhereInput | null
+  isNot?: Prisma.usersWhereInput | null
+}
+
+export type BigIntFieldUpdateOperationsInput = {
+  set?: bigint | number
+  increment?: bigint | number
+  decrement?: bigint | number
+  multiply?: bigint | number
+  divide?: bigint | number
+}
+
+export type StringFieldUpdateOperationsInput = {
+  set?: string
+}
+
+export type NullableStringFieldUpdateOperationsInput = {
+  set?: string | null
+}
+
+export type NullableDateTimeFieldUpdateOperationsInput = {
+  set?: Date | string | null
+}
+
+export type BoolFieldUpdateOperationsInput = {
+  set?: boolean
+}
+
+export type DateTimeFieldUpdateOperationsInput = {
+  set?: Date | string
+}
+
+export type usersCreateNestedOneWithoutPatient_profileInput = {
+  create?: Prisma.XOR<Prisma.usersCreateWithoutPatient_profileInput, Prisma.usersUncheckedCreateWithoutPatient_profileInput>
+  connectOrCreate?: Prisma.usersCreateOrConnectWithoutPatient_profileInput
   connect?: Prisma.usersWhereUniqueInput
 }
 
-export type usersUpdateOneWithoutAppointmentsNestedInput = {
-  create?: Prisma.XOR<Prisma.usersCreateWithoutAppointmentsInput, Prisma.usersUncheckedCreateWithoutAppointmentsInput>
-  connectOrCreate?: Prisma.usersCreateOrConnectWithoutAppointmentsInput
-  upsert?: Prisma.usersUpsertWithoutAppointmentsInput
+export type usersUpdateOneRequiredWithoutPatient_profileNestedInput = {
+  create?: Prisma.XOR<Prisma.usersCreateWithoutPatient_profileInput, Prisma.usersUncheckedCreateWithoutPatient_profileInput>
+  connectOrCreate?: Prisma.usersCreateOrConnectWithoutPatient_profileInput
+  upsert?: Prisma.usersUpsertWithoutPatient_profileInput
+  connect?: Prisma.usersWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.usersUpdateToOneWithWhereWithoutPatient_profileInput, Prisma.usersUpdateWithoutPatient_profileInput>, Prisma.usersUncheckedUpdateWithoutPatient_profileInput>
+}
+
+export type usersCreateNestedOneWithoutDoctor_slotsInput = {
+  create?: Prisma.XOR<Prisma.usersCreateWithoutDoctor_slotsInput, Prisma.usersUncheckedCreateWithoutDoctor_slotsInput>
+  connectOrCreate?: Prisma.usersCreateOrConnectWithoutDoctor_slotsInput
+  connect?: Prisma.usersWhereUniqueInput
+}
+
+export type usersUpdateOneRequiredWithoutDoctor_slotsNestedInput = {
+  create?: Prisma.XOR<Prisma.usersCreateWithoutDoctor_slotsInput, Prisma.usersUncheckedCreateWithoutDoctor_slotsInput>
+  connectOrCreate?: Prisma.usersCreateOrConnectWithoutDoctor_slotsInput
+  upsert?: Prisma.usersUpsertWithoutDoctor_slotsInput
+  connect?: Prisma.usersWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.usersUpdateToOneWithWhereWithoutDoctor_slotsInput, Prisma.usersUpdateWithoutDoctor_slotsInput>, Prisma.usersUncheckedUpdateWithoutDoctor_slotsInput>
+}
+
+export type usersCreateNestedOneWithoutCreated_appointmentsInput = {
+  create?: Prisma.XOR<Prisma.usersCreateWithoutCreated_appointmentsInput, Prisma.usersUncheckedCreateWithoutCreated_appointmentsInput>
+  connectOrCreate?: Prisma.usersCreateOrConnectWithoutCreated_appointmentsInput
+  connect?: Prisma.usersWhereUniqueInput
+}
+
+export type usersCreateNestedOneWithoutDoctor_appointmentsInput = {
+  create?: Prisma.XOR<Prisma.usersCreateWithoutDoctor_appointmentsInput, Prisma.usersUncheckedCreateWithoutDoctor_appointmentsInput>
+  connectOrCreate?: Prisma.usersCreateOrConnectWithoutDoctor_appointmentsInput
+  connect?: Prisma.usersWhereUniqueInput
+}
+
+export type usersUpdateOneWithoutCreated_appointmentsNestedInput = {
+  create?: Prisma.XOR<Prisma.usersCreateWithoutCreated_appointmentsInput, Prisma.usersUncheckedCreateWithoutCreated_appointmentsInput>
+  connectOrCreate?: Prisma.usersCreateOrConnectWithoutCreated_appointmentsInput
+  upsert?: Prisma.usersUpsertWithoutCreated_appointmentsInput
   disconnect?: Prisma.usersWhereInput | boolean
   delete?: Prisma.usersWhereInput | boolean
   connect?: Prisma.usersWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.usersUpdateToOneWithWhereWithoutAppointmentsInput, Prisma.usersUpdateWithoutAppointmentsInput>, Prisma.usersUncheckedUpdateWithoutAppointmentsInput>
+  update?: Prisma.XOR<Prisma.XOR<Prisma.usersUpdateToOneWithWhereWithoutCreated_appointmentsInput, Prisma.usersUpdateWithoutCreated_appointmentsInput>, Prisma.usersUncheckedUpdateWithoutCreated_appointmentsInput>
 }
 
-export type usersCreateNestedOneWithoutAudit_logsInput = {
-  create?: Prisma.XOR<Prisma.usersCreateWithoutAudit_logsInput, Prisma.usersUncheckedCreateWithoutAudit_logsInput>
-  connectOrCreate?: Prisma.usersCreateOrConnectWithoutAudit_logsInput
+export type usersUpdateOneRequiredWithoutDoctor_appointmentsNestedInput = {
+  create?: Prisma.XOR<Prisma.usersCreateWithoutDoctor_appointmentsInput, Prisma.usersUncheckedCreateWithoutDoctor_appointmentsInput>
+  connectOrCreate?: Prisma.usersCreateOrConnectWithoutDoctor_appointmentsInput
+  upsert?: Prisma.usersUpsertWithoutDoctor_appointmentsInput
   connect?: Prisma.usersWhereUniqueInput
-}
-
-export type usersUpdateOneWithoutAudit_logsNestedInput = {
-  create?: Prisma.XOR<Prisma.usersCreateWithoutAudit_logsInput, Prisma.usersUncheckedCreateWithoutAudit_logsInput>
-  connectOrCreate?: Prisma.usersCreateOrConnectWithoutAudit_logsInput
-  upsert?: Prisma.usersUpsertWithoutAudit_logsInput
-  disconnect?: Prisma.usersWhereInput | boolean
-  delete?: Prisma.usersWhereInput | boolean
-  connect?: Prisma.usersWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.usersUpdateToOneWithWhereWithoutAudit_logsInput, Prisma.usersUpdateWithoutAudit_logsInput>, Prisma.usersUncheckedUpdateWithoutAudit_logsInput>
-}
-
-export type usersCreateNestedOneWithoutInventory_movementsInput = {
-  create?: Prisma.XOR<Prisma.usersCreateWithoutInventory_movementsInput, Prisma.usersUncheckedCreateWithoutInventory_movementsInput>
-  connectOrCreate?: Prisma.usersCreateOrConnectWithoutInventory_movementsInput
-  connect?: Prisma.usersWhereUniqueInput
-}
-
-export type usersUpdateOneWithoutInventory_movementsNestedInput = {
-  create?: Prisma.XOR<Prisma.usersCreateWithoutInventory_movementsInput, Prisma.usersUncheckedCreateWithoutInventory_movementsInput>
-  connectOrCreate?: Prisma.usersCreateOrConnectWithoutInventory_movementsInput
-  upsert?: Prisma.usersUpsertWithoutInventory_movementsInput
-  disconnect?: Prisma.usersWhereInput | boolean
-  delete?: Prisma.usersWhereInput | boolean
-  connect?: Prisma.usersWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.usersUpdateToOneWithWhereWithoutInventory_movementsInput, Prisma.usersUpdateWithoutInventory_movementsInput>, Prisma.usersUncheckedUpdateWithoutInventory_movementsInput>
-}
-
-export type usersCreateNestedOneWithoutPatient_documentsInput = {
-  create?: Prisma.XOR<Prisma.usersCreateWithoutPatient_documentsInput, Prisma.usersUncheckedCreateWithoutPatient_documentsInput>
-  connectOrCreate?: Prisma.usersCreateOrConnectWithoutPatient_documentsInput
-  connect?: Prisma.usersWhereUniqueInput
-}
-
-export type usersUpdateOneWithoutPatient_documentsNestedInput = {
-  create?: Prisma.XOR<Prisma.usersCreateWithoutPatient_documentsInput, Prisma.usersUncheckedCreateWithoutPatient_documentsInput>
-  connectOrCreate?: Prisma.usersCreateOrConnectWithoutPatient_documentsInput
-  upsert?: Prisma.usersUpsertWithoutPatient_documentsInput
-  disconnect?: Prisma.usersWhereInput | boolean
-  delete?: Prisma.usersWhereInput | boolean
-  connect?: Prisma.usersWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.usersUpdateToOneWithWhereWithoutPatient_documentsInput, Prisma.usersUpdateWithoutPatient_documentsInput>, Prisma.usersUncheckedUpdateWithoutPatient_documentsInput>
-}
-
-export type usersCreateNestedOneWithoutPatient_profilesInput = {
-  create?: Prisma.XOR<Prisma.usersCreateWithoutPatient_profilesInput, Prisma.usersUncheckedCreateWithoutPatient_profilesInput>
-  connectOrCreate?: Prisma.usersCreateOrConnectWithoutPatient_profilesInput
-  connect?: Prisma.usersWhereUniqueInput
-}
-
-export type usersUpdateOneRequiredWithoutPatient_profilesNestedInput = {
-  create?: Prisma.XOR<Prisma.usersCreateWithoutPatient_profilesInput, Prisma.usersUncheckedCreateWithoutPatient_profilesInput>
-  connectOrCreate?: Prisma.usersCreateOrConnectWithoutPatient_profilesInput
-  upsert?: Prisma.usersUpsertWithoutPatient_profilesInput
-  connect?: Prisma.usersWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.usersUpdateToOneWithWhereWithoutPatient_profilesInput, Prisma.usersUpdateWithoutPatient_profilesInput>, Prisma.usersUncheckedUpdateWithoutPatient_profilesInput>
+  update?: Prisma.XOR<Prisma.XOR<Prisma.usersUpdateToOneWithWhereWithoutDoctor_appointmentsInput, Prisma.usersUpdateWithoutDoctor_appointmentsInput>, Prisma.usersUncheckedUpdateWithoutDoctor_appointmentsInput>
 }
 
 export type usersCreateNestedOneWithoutPatient_recordsInput = {
@@ -671,11 +700,69 @@ export type usersUpdateOneWithoutPatient_recordsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.usersUpdateToOneWithWhereWithoutPatient_recordsInput, Prisma.usersUpdateWithoutPatient_recordsInput>, Prisma.usersUncheckedUpdateWithoutPatient_recordsInput>
 }
 
-export type BoolFieldUpdateOperationsInput = {
-  set?: boolean
+export type usersCreateNestedOneWithoutPatient_documentsInput = {
+  create?: Prisma.XOR<Prisma.usersCreateWithoutPatient_documentsInput, Prisma.usersUncheckedCreateWithoutPatient_documentsInput>
+  connectOrCreate?: Prisma.usersCreateOrConnectWithoutPatient_documentsInput
+  connect?: Prisma.usersWhereUniqueInput
 }
 
-export type usersCreateWithoutAppointmentsInput = {
+export type usersUpdateOneWithoutPatient_documentsNestedInput = {
+  create?: Prisma.XOR<Prisma.usersCreateWithoutPatient_documentsInput, Prisma.usersUncheckedCreateWithoutPatient_documentsInput>
+  connectOrCreate?: Prisma.usersCreateOrConnectWithoutPatient_documentsInput
+  upsert?: Prisma.usersUpsertWithoutPatient_documentsInput
+  disconnect?: Prisma.usersWhereInput | boolean
+  delete?: Prisma.usersWhereInput | boolean
+  connect?: Prisma.usersWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.usersUpdateToOneWithWhereWithoutPatient_documentsInput, Prisma.usersUpdateWithoutPatient_documentsInput>, Prisma.usersUncheckedUpdateWithoutPatient_documentsInput>
+}
+
+export type usersCreateNestedOneWithoutInventory_movementsInput = {
+  create?: Prisma.XOR<Prisma.usersCreateWithoutInventory_movementsInput, Prisma.usersUncheckedCreateWithoutInventory_movementsInput>
+  connectOrCreate?: Prisma.usersCreateOrConnectWithoutInventory_movementsInput
+  connect?: Prisma.usersWhereUniqueInput
+}
+
+export type usersUpdateOneWithoutInventory_movementsNestedInput = {
+  create?: Prisma.XOR<Prisma.usersCreateWithoutInventory_movementsInput, Prisma.usersUncheckedCreateWithoutInventory_movementsInput>
+  connectOrCreate?: Prisma.usersCreateOrConnectWithoutInventory_movementsInput
+  upsert?: Prisma.usersUpsertWithoutInventory_movementsInput
+  disconnect?: Prisma.usersWhereInput | boolean
+  delete?: Prisma.usersWhereInput | boolean
+  connect?: Prisma.usersWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.usersUpdateToOneWithWhereWithoutInventory_movementsInput, Prisma.usersUpdateWithoutInventory_movementsInput>, Prisma.usersUncheckedUpdateWithoutInventory_movementsInput>
+}
+
+export type usersCreateNestedOneWithoutNotificationsInput = {
+  create?: Prisma.XOR<Prisma.usersCreateWithoutNotificationsInput, Prisma.usersUncheckedCreateWithoutNotificationsInput>
+  connectOrCreate?: Prisma.usersCreateOrConnectWithoutNotificationsInput
+  connect?: Prisma.usersWhereUniqueInput
+}
+
+export type usersUpdateOneRequiredWithoutNotificationsNestedInput = {
+  create?: Prisma.XOR<Prisma.usersCreateWithoutNotificationsInput, Prisma.usersUncheckedCreateWithoutNotificationsInput>
+  connectOrCreate?: Prisma.usersCreateOrConnectWithoutNotificationsInput
+  upsert?: Prisma.usersUpsertWithoutNotificationsInput
+  connect?: Prisma.usersWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.usersUpdateToOneWithWhereWithoutNotificationsInput, Prisma.usersUpdateWithoutNotificationsInput>, Prisma.usersUncheckedUpdateWithoutNotificationsInput>
+}
+
+export type usersCreateNestedOneWithoutAudit_logsInput = {
+  create?: Prisma.XOR<Prisma.usersCreateWithoutAudit_logsInput, Prisma.usersUncheckedCreateWithoutAudit_logsInput>
+  connectOrCreate?: Prisma.usersCreateOrConnectWithoutAudit_logsInput
+  connect?: Prisma.usersWhereUniqueInput
+}
+
+export type usersUpdateOneWithoutAudit_logsNestedInput = {
+  create?: Prisma.XOR<Prisma.usersCreateWithoutAudit_logsInput, Prisma.usersUncheckedCreateWithoutAudit_logsInput>
+  connectOrCreate?: Prisma.usersCreateOrConnectWithoutAudit_logsInput
+  upsert?: Prisma.usersUpsertWithoutAudit_logsInput
+  disconnect?: Prisma.usersWhereInput | boolean
+  delete?: Prisma.usersWhereInput | boolean
+  connect?: Prisma.usersWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.usersUpdateToOneWithWhereWithoutAudit_logsInput, Prisma.usersUpdateWithoutAudit_logsInput>, Prisma.usersUncheckedUpdateWithoutAudit_logsInput>
+}
+
+export type usersCreateWithoutPatient_profileInput = {
   id?: bigint | number
   email: string
   password_hash: string
@@ -689,14 +776,17 @@ export type usersCreateWithoutAppointmentsInput = {
   is_active?: boolean
   created_at?: Date | string
   updated_at?: Date | string
-  audit_logs?: Prisma.audit_logsCreateNestedManyWithoutUsersInput
-  inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutUsersInput
-  patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutUsersInput
-  patient_profiles?: Prisma.patient_profilesCreateNestedOneWithoutUsersInput
-  patient_records?: Prisma.patient_recordsCreateNestedManyWithoutUsersInput
+  doctor_slots?: Prisma.appointment_slotsCreateNestedManyWithoutDoctorInput
+  created_appointments?: Prisma.appointmentsCreateNestedManyWithoutCreated_by_userInput
+  doctor_appointments?: Prisma.appointmentsCreateNestedManyWithoutDoctorInput
+  audit_logs?: Prisma.audit_logsCreateNestedManyWithoutUserInput
+  inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutPerformed_by_userInput
+  notifications?: Prisma.notificationsCreateNestedManyWithoutUserInput
+  patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutUploaded_by_userInput
+  patient_records?: Prisma.patient_recordsCreateNestedManyWithoutCreated_by_userInput
 }
 
-export type usersUncheckedCreateWithoutAppointmentsInput = {
+export type usersUncheckedCreateWithoutPatient_profileInput = {
   id?: bigint | number
   email: string
   password_hash: string
@@ -710,30 +800,33 @@ export type usersUncheckedCreateWithoutAppointmentsInput = {
   is_active?: boolean
   created_at?: Date | string
   updated_at?: Date | string
-  audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutUsersInput
-  inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutUsersInput
-  patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutUsersInput
-  patient_profiles?: Prisma.patient_profilesUncheckedCreateNestedOneWithoutUsersInput
-  patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutUsersInput
+  doctor_slots?: Prisma.appointment_slotsUncheckedCreateNestedManyWithoutDoctorInput
+  created_appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutCreated_by_userInput
+  doctor_appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutDoctorInput
+  audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutUserInput
+  inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutPerformed_by_userInput
+  notifications?: Prisma.notificationsUncheckedCreateNestedManyWithoutUserInput
+  patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutUploaded_by_userInput
+  patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutCreated_by_userInput
 }
 
-export type usersCreateOrConnectWithoutAppointmentsInput = {
+export type usersCreateOrConnectWithoutPatient_profileInput = {
   where: Prisma.usersWhereUniqueInput
-  create: Prisma.XOR<Prisma.usersCreateWithoutAppointmentsInput, Prisma.usersUncheckedCreateWithoutAppointmentsInput>
+  create: Prisma.XOR<Prisma.usersCreateWithoutPatient_profileInput, Prisma.usersUncheckedCreateWithoutPatient_profileInput>
 }
 
-export type usersUpsertWithoutAppointmentsInput = {
-  update: Prisma.XOR<Prisma.usersUpdateWithoutAppointmentsInput, Prisma.usersUncheckedUpdateWithoutAppointmentsInput>
-  create: Prisma.XOR<Prisma.usersCreateWithoutAppointmentsInput, Prisma.usersUncheckedCreateWithoutAppointmentsInput>
+export type usersUpsertWithoutPatient_profileInput = {
+  update: Prisma.XOR<Prisma.usersUpdateWithoutPatient_profileInput, Prisma.usersUncheckedUpdateWithoutPatient_profileInput>
+  create: Prisma.XOR<Prisma.usersCreateWithoutPatient_profileInput, Prisma.usersUncheckedCreateWithoutPatient_profileInput>
   where?: Prisma.usersWhereInput
 }
 
-export type usersUpdateToOneWithWhereWithoutAppointmentsInput = {
+export type usersUpdateToOneWithWhereWithoutPatient_profileInput = {
   where?: Prisma.usersWhereInput
-  data: Prisma.XOR<Prisma.usersUpdateWithoutAppointmentsInput, Prisma.usersUncheckedUpdateWithoutAppointmentsInput>
+  data: Prisma.XOR<Prisma.usersUpdateWithoutPatient_profileInput, Prisma.usersUncheckedUpdateWithoutPatient_profileInput>
 }
 
-export type usersUpdateWithoutAppointmentsInput = {
+export type usersUpdateWithoutPatient_profileInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   email?: Prisma.StringFieldUpdateOperationsInput | string
   password_hash?: Prisma.StringFieldUpdateOperationsInput | string
@@ -747,14 +840,17 @@ export type usersUpdateWithoutAppointmentsInput = {
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  audit_logs?: Prisma.audit_logsUpdateManyWithoutUsersNestedInput
-  inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutUsersNestedInput
-  patient_documents?: Prisma.patient_documentsUpdateManyWithoutUsersNestedInput
-  patient_profiles?: Prisma.patient_profilesUpdateOneWithoutUsersNestedInput
-  patient_records?: Prisma.patient_recordsUpdateManyWithoutUsersNestedInput
+  doctor_slots?: Prisma.appointment_slotsUpdateManyWithoutDoctorNestedInput
+  created_appointments?: Prisma.appointmentsUpdateManyWithoutCreated_by_userNestedInput
+  doctor_appointments?: Prisma.appointmentsUpdateManyWithoutDoctorNestedInput
+  audit_logs?: Prisma.audit_logsUpdateManyWithoutUserNestedInput
+  inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutPerformed_by_userNestedInput
+  notifications?: Prisma.notificationsUpdateManyWithoutUserNestedInput
+  patient_documents?: Prisma.patient_documentsUpdateManyWithoutUploaded_by_userNestedInput
+  patient_records?: Prisma.patient_recordsUpdateManyWithoutCreated_by_userNestedInput
 }
 
-export type usersUncheckedUpdateWithoutAppointmentsInput = {
+export type usersUncheckedUpdateWithoutPatient_profileInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   email?: Prisma.StringFieldUpdateOperationsInput | string
   password_hash?: Prisma.StringFieldUpdateOperationsInput | string
@@ -768,14 +864,17 @@ export type usersUncheckedUpdateWithoutAppointmentsInput = {
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutUsersNestedInput
-  inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutUsersNestedInput
-  patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutUsersNestedInput
-  patient_profiles?: Prisma.patient_profilesUncheckedUpdateOneWithoutUsersNestedInput
-  patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutUsersNestedInput
+  doctor_slots?: Prisma.appointment_slotsUncheckedUpdateManyWithoutDoctorNestedInput
+  created_appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutCreated_by_userNestedInput
+  doctor_appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutDoctorNestedInput
+  audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutUserNestedInput
+  inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutPerformed_by_userNestedInput
+  notifications?: Prisma.notificationsUncheckedUpdateManyWithoutUserNestedInput
+  patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutUploaded_by_userNestedInput
+  patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutCreated_by_userNestedInput
 }
 
-export type usersCreateWithoutAudit_logsInput = {
+export type usersCreateWithoutDoctor_slotsInput = {
   id?: bigint | number
   email: string
   password_hash: string
@@ -789,14 +888,17 @@ export type usersCreateWithoutAudit_logsInput = {
   is_active?: boolean
   created_at?: Date | string
   updated_at?: Date | string
-  appointments?: Prisma.appointmentsCreateNestedManyWithoutUsersInput
-  inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutUsersInput
-  patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutUsersInput
-  patient_profiles?: Prisma.patient_profilesCreateNestedOneWithoutUsersInput
-  patient_records?: Prisma.patient_recordsCreateNestedManyWithoutUsersInput
+  created_appointments?: Prisma.appointmentsCreateNestedManyWithoutCreated_by_userInput
+  doctor_appointments?: Prisma.appointmentsCreateNestedManyWithoutDoctorInput
+  audit_logs?: Prisma.audit_logsCreateNestedManyWithoutUserInput
+  inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutPerformed_by_userInput
+  notifications?: Prisma.notificationsCreateNestedManyWithoutUserInput
+  patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutUploaded_by_userInput
+  patient_profile?: Prisma.patient_profilesCreateNestedOneWithoutUsersInput
+  patient_records?: Prisma.patient_recordsCreateNestedManyWithoutCreated_by_userInput
 }
 
-export type usersUncheckedCreateWithoutAudit_logsInput = {
+export type usersUncheckedCreateWithoutDoctor_slotsInput = {
   id?: bigint | number
   email: string
   password_hash: string
@@ -810,30 +912,33 @@ export type usersUncheckedCreateWithoutAudit_logsInput = {
   is_active?: boolean
   created_at?: Date | string
   updated_at?: Date | string
-  appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutUsersInput
-  inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutUsersInput
-  patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutUsersInput
-  patient_profiles?: Prisma.patient_profilesUncheckedCreateNestedOneWithoutUsersInput
-  patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutUsersInput
+  created_appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutCreated_by_userInput
+  doctor_appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutDoctorInput
+  audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutUserInput
+  inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutPerformed_by_userInput
+  notifications?: Prisma.notificationsUncheckedCreateNestedManyWithoutUserInput
+  patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutUploaded_by_userInput
+  patient_profile?: Prisma.patient_profilesUncheckedCreateNestedOneWithoutUsersInput
+  patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutCreated_by_userInput
 }
 
-export type usersCreateOrConnectWithoutAudit_logsInput = {
+export type usersCreateOrConnectWithoutDoctor_slotsInput = {
   where: Prisma.usersWhereUniqueInput
-  create: Prisma.XOR<Prisma.usersCreateWithoutAudit_logsInput, Prisma.usersUncheckedCreateWithoutAudit_logsInput>
+  create: Prisma.XOR<Prisma.usersCreateWithoutDoctor_slotsInput, Prisma.usersUncheckedCreateWithoutDoctor_slotsInput>
 }
 
-export type usersUpsertWithoutAudit_logsInput = {
-  update: Prisma.XOR<Prisma.usersUpdateWithoutAudit_logsInput, Prisma.usersUncheckedUpdateWithoutAudit_logsInput>
-  create: Prisma.XOR<Prisma.usersCreateWithoutAudit_logsInput, Prisma.usersUncheckedCreateWithoutAudit_logsInput>
+export type usersUpsertWithoutDoctor_slotsInput = {
+  update: Prisma.XOR<Prisma.usersUpdateWithoutDoctor_slotsInput, Prisma.usersUncheckedUpdateWithoutDoctor_slotsInput>
+  create: Prisma.XOR<Prisma.usersCreateWithoutDoctor_slotsInput, Prisma.usersUncheckedCreateWithoutDoctor_slotsInput>
   where?: Prisma.usersWhereInput
 }
 
-export type usersUpdateToOneWithWhereWithoutAudit_logsInput = {
+export type usersUpdateToOneWithWhereWithoutDoctor_slotsInput = {
   where?: Prisma.usersWhereInput
-  data: Prisma.XOR<Prisma.usersUpdateWithoutAudit_logsInput, Prisma.usersUncheckedUpdateWithoutAudit_logsInput>
+  data: Prisma.XOR<Prisma.usersUpdateWithoutDoctor_slotsInput, Prisma.usersUncheckedUpdateWithoutDoctor_slotsInput>
 }
 
-export type usersUpdateWithoutAudit_logsInput = {
+export type usersUpdateWithoutDoctor_slotsInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   email?: Prisma.StringFieldUpdateOperationsInput | string
   password_hash?: Prisma.StringFieldUpdateOperationsInput | string
@@ -847,14 +952,17 @@ export type usersUpdateWithoutAudit_logsInput = {
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  appointments?: Prisma.appointmentsUpdateManyWithoutUsersNestedInput
-  inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutUsersNestedInput
-  patient_documents?: Prisma.patient_documentsUpdateManyWithoutUsersNestedInput
-  patient_profiles?: Prisma.patient_profilesUpdateOneWithoutUsersNestedInput
-  patient_records?: Prisma.patient_recordsUpdateManyWithoutUsersNestedInput
+  created_appointments?: Prisma.appointmentsUpdateManyWithoutCreated_by_userNestedInput
+  doctor_appointments?: Prisma.appointmentsUpdateManyWithoutDoctorNestedInput
+  audit_logs?: Prisma.audit_logsUpdateManyWithoutUserNestedInput
+  inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutPerformed_by_userNestedInput
+  notifications?: Prisma.notificationsUpdateManyWithoutUserNestedInput
+  patient_documents?: Prisma.patient_documentsUpdateManyWithoutUploaded_by_userNestedInput
+  patient_profile?: Prisma.patient_profilesUpdateOneWithoutUsersNestedInput
+  patient_records?: Prisma.patient_recordsUpdateManyWithoutCreated_by_userNestedInput
 }
 
-export type usersUncheckedUpdateWithoutAudit_logsInput = {
+export type usersUncheckedUpdateWithoutDoctor_slotsInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   email?: Prisma.StringFieldUpdateOperationsInput | string
   password_hash?: Prisma.StringFieldUpdateOperationsInput | string
@@ -868,14 +976,17 @@ export type usersUncheckedUpdateWithoutAudit_logsInput = {
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutUsersNestedInput
-  inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutUsersNestedInput
-  patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutUsersNestedInput
-  patient_profiles?: Prisma.patient_profilesUncheckedUpdateOneWithoutUsersNestedInput
-  patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutUsersNestedInput
+  created_appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutCreated_by_userNestedInput
+  doctor_appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutDoctorNestedInput
+  audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutUserNestedInput
+  inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutPerformed_by_userNestedInput
+  notifications?: Prisma.notificationsUncheckedUpdateManyWithoutUserNestedInput
+  patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutUploaded_by_userNestedInput
+  patient_profile?: Prisma.patient_profilesUncheckedUpdateOneWithoutUsersNestedInput
+  patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutCreated_by_userNestedInput
 }
 
-export type usersCreateWithoutInventory_movementsInput = {
+export type usersCreateWithoutCreated_appointmentsInput = {
   id?: bigint | number
   email: string
   password_hash: string
@@ -889,14 +1000,17 @@ export type usersCreateWithoutInventory_movementsInput = {
   is_active?: boolean
   created_at?: Date | string
   updated_at?: Date | string
-  appointments?: Prisma.appointmentsCreateNestedManyWithoutUsersInput
-  audit_logs?: Prisma.audit_logsCreateNestedManyWithoutUsersInput
-  patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutUsersInput
-  patient_profiles?: Prisma.patient_profilesCreateNestedOneWithoutUsersInput
-  patient_records?: Prisma.patient_recordsCreateNestedManyWithoutUsersInput
+  doctor_slots?: Prisma.appointment_slotsCreateNestedManyWithoutDoctorInput
+  doctor_appointments?: Prisma.appointmentsCreateNestedManyWithoutDoctorInput
+  audit_logs?: Prisma.audit_logsCreateNestedManyWithoutUserInput
+  inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutPerformed_by_userInput
+  notifications?: Prisma.notificationsCreateNestedManyWithoutUserInput
+  patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutUploaded_by_userInput
+  patient_profile?: Prisma.patient_profilesCreateNestedOneWithoutUsersInput
+  patient_records?: Prisma.patient_recordsCreateNestedManyWithoutCreated_by_userInput
 }
 
-export type usersUncheckedCreateWithoutInventory_movementsInput = {
+export type usersUncheckedCreateWithoutCreated_appointmentsInput = {
   id?: bigint | number
   email: string
   password_hash: string
@@ -910,72 +1024,22 @@ export type usersUncheckedCreateWithoutInventory_movementsInput = {
   is_active?: boolean
   created_at?: Date | string
   updated_at?: Date | string
-  appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutUsersInput
-  audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutUsersInput
-  patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutUsersInput
-  patient_profiles?: Prisma.patient_profilesUncheckedCreateNestedOneWithoutUsersInput
-  patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutUsersInput
+  doctor_slots?: Prisma.appointment_slotsUncheckedCreateNestedManyWithoutDoctorInput
+  doctor_appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutDoctorInput
+  audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutUserInput
+  inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutPerformed_by_userInput
+  notifications?: Prisma.notificationsUncheckedCreateNestedManyWithoutUserInput
+  patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutUploaded_by_userInput
+  patient_profile?: Prisma.patient_profilesUncheckedCreateNestedOneWithoutUsersInput
+  patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutCreated_by_userInput
 }
 
-export type usersCreateOrConnectWithoutInventory_movementsInput = {
+export type usersCreateOrConnectWithoutCreated_appointmentsInput = {
   where: Prisma.usersWhereUniqueInput
-  create: Prisma.XOR<Prisma.usersCreateWithoutInventory_movementsInput, Prisma.usersUncheckedCreateWithoutInventory_movementsInput>
+  create: Prisma.XOR<Prisma.usersCreateWithoutCreated_appointmentsInput, Prisma.usersUncheckedCreateWithoutCreated_appointmentsInput>
 }
 
-export type usersUpsertWithoutInventory_movementsInput = {
-  update: Prisma.XOR<Prisma.usersUpdateWithoutInventory_movementsInput, Prisma.usersUncheckedUpdateWithoutInventory_movementsInput>
-  create: Prisma.XOR<Prisma.usersCreateWithoutInventory_movementsInput, Prisma.usersUncheckedCreateWithoutInventory_movementsInput>
-  where?: Prisma.usersWhereInput
-}
-
-export type usersUpdateToOneWithWhereWithoutInventory_movementsInput = {
-  where?: Prisma.usersWhereInput
-  data: Prisma.XOR<Prisma.usersUpdateWithoutInventory_movementsInput, Prisma.usersUncheckedUpdateWithoutInventory_movementsInput>
-}
-
-export type usersUpdateWithoutInventory_movementsInput = {
-  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  email?: Prisma.StringFieldUpdateOperationsInput | string
-  password_hash?: Prisma.StringFieldUpdateOperationsInput | string
-  first_name?: Prisma.StringFieldUpdateOperationsInput | string
-  last_name?: Prisma.StringFieldUpdateOperationsInput | string
-  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  date_of_birth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.StringFieldUpdateOperationsInput | string
-  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  appointments?: Prisma.appointmentsUpdateManyWithoutUsersNestedInput
-  audit_logs?: Prisma.audit_logsUpdateManyWithoutUsersNestedInput
-  patient_documents?: Prisma.patient_documentsUpdateManyWithoutUsersNestedInput
-  patient_profiles?: Prisma.patient_profilesUpdateOneWithoutUsersNestedInput
-  patient_records?: Prisma.patient_recordsUpdateManyWithoutUsersNestedInput
-}
-
-export type usersUncheckedUpdateWithoutInventory_movementsInput = {
-  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  email?: Prisma.StringFieldUpdateOperationsInput | string
-  password_hash?: Prisma.StringFieldUpdateOperationsInput | string
-  first_name?: Prisma.StringFieldUpdateOperationsInput | string
-  last_name?: Prisma.StringFieldUpdateOperationsInput | string
-  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  date_of_birth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.StringFieldUpdateOperationsInput | string
-  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutUsersNestedInput
-  audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutUsersNestedInput
-  patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutUsersNestedInput
-  patient_profiles?: Prisma.patient_profilesUncheckedUpdateOneWithoutUsersNestedInput
-  patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutUsersNestedInput
-}
-
-export type usersCreateWithoutPatient_documentsInput = {
+export type usersCreateWithoutDoctor_appointmentsInput = {
   id?: bigint | number
   email: string
   password_hash: string
@@ -989,14 +1053,17 @@ export type usersCreateWithoutPatient_documentsInput = {
   is_active?: boolean
   created_at?: Date | string
   updated_at?: Date | string
-  appointments?: Prisma.appointmentsCreateNestedManyWithoutUsersInput
-  audit_logs?: Prisma.audit_logsCreateNestedManyWithoutUsersInput
-  inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutUsersInput
-  patient_profiles?: Prisma.patient_profilesCreateNestedOneWithoutUsersInput
-  patient_records?: Prisma.patient_recordsCreateNestedManyWithoutUsersInput
+  doctor_slots?: Prisma.appointment_slotsCreateNestedManyWithoutDoctorInput
+  created_appointments?: Prisma.appointmentsCreateNestedManyWithoutCreated_by_userInput
+  audit_logs?: Prisma.audit_logsCreateNestedManyWithoutUserInput
+  inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutPerformed_by_userInput
+  notifications?: Prisma.notificationsCreateNestedManyWithoutUserInput
+  patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutUploaded_by_userInput
+  patient_profile?: Prisma.patient_profilesCreateNestedOneWithoutUsersInput
+  patient_records?: Prisma.patient_recordsCreateNestedManyWithoutCreated_by_userInput
 }
 
-export type usersUncheckedCreateWithoutPatient_documentsInput = {
+export type usersUncheckedCreateWithoutDoctor_appointmentsInput = {
   id?: bigint | number
   email: string
   password_hash: string
@@ -1010,30 +1077,33 @@ export type usersUncheckedCreateWithoutPatient_documentsInput = {
   is_active?: boolean
   created_at?: Date | string
   updated_at?: Date | string
-  appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutUsersInput
-  audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutUsersInput
-  inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutUsersInput
-  patient_profiles?: Prisma.patient_profilesUncheckedCreateNestedOneWithoutUsersInput
-  patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutUsersInput
+  doctor_slots?: Prisma.appointment_slotsUncheckedCreateNestedManyWithoutDoctorInput
+  created_appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutCreated_by_userInput
+  audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutUserInput
+  inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutPerformed_by_userInput
+  notifications?: Prisma.notificationsUncheckedCreateNestedManyWithoutUserInput
+  patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutUploaded_by_userInput
+  patient_profile?: Prisma.patient_profilesUncheckedCreateNestedOneWithoutUsersInput
+  patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutCreated_by_userInput
 }
 
-export type usersCreateOrConnectWithoutPatient_documentsInput = {
+export type usersCreateOrConnectWithoutDoctor_appointmentsInput = {
   where: Prisma.usersWhereUniqueInput
-  create: Prisma.XOR<Prisma.usersCreateWithoutPatient_documentsInput, Prisma.usersUncheckedCreateWithoutPatient_documentsInput>
+  create: Prisma.XOR<Prisma.usersCreateWithoutDoctor_appointmentsInput, Prisma.usersUncheckedCreateWithoutDoctor_appointmentsInput>
 }
 
-export type usersUpsertWithoutPatient_documentsInput = {
-  update: Prisma.XOR<Prisma.usersUpdateWithoutPatient_documentsInput, Prisma.usersUncheckedUpdateWithoutPatient_documentsInput>
-  create: Prisma.XOR<Prisma.usersCreateWithoutPatient_documentsInput, Prisma.usersUncheckedCreateWithoutPatient_documentsInput>
+export type usersUpsertWithoutCreated_appointmentsInput = {
+  update: Prisma.XOR<Prisma.usersUpdateWithoutCreated_appointmentsInput, Prisma.usersUncheckedUpdateWithoutCreated_appointmentsInput>
+  create: Prisma.XOR<Prisma.usersCreateWithoutCreated_appointmentsInput, Prisma.usersUncheckedCreateWithoutCreated_appointmentsInput>
   where?: Prisma.usersWhereInput
 }
 
-export type usersUpdateToOneWithWhereWithoutPatient_documentsInput = {
+export type usersUpdateToOneWithWhereWithoutCreated_appointmentsInput = {
   where?: Prisma.usersWhereInput
-  data: Prisma.XOR<Prisma.usersUpdateWithoutPatient_documentsInput, Prisma.usersUncheckedUpdateWithoutPatient_documentsInput>
+  data: Prisma.XOR<Prisma.usersUpdateWithoutCreated_appointmentsInput, Prisma.usersUncheckedUpdateWithoutCreated_appointmentsInput>
 }
 
-export type usersUpdateWithoutPatient_documentsInput = {
+export type usersUpdateWithoutCreated_appointmentsInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   email?: Prisma.StringFieldUpdateOperationsInput | string
   password_hash?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1047,14 +1117,17 @@ export type usersUpdateWithoutPatient_documentsInput = {
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  appointments?: Prisma.appointmentsUpdateManyWithoutUsersNestedInput
-  audit_logs?: Prisma.audit_logsUpdateManyWithoutUsersNestedInput
-  inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutUsersNestedInput
-  patient_profiles?: Prisma.patient_profilesUpdateOneWithoutUsersNestedInput
-  patient_records?: Prisma.patient_recordsUpdateManyWithoutUsersNestedInput
+  doctor_slots?: Prisma.appointment_slotsUpdateManyWithoutDoctorNestedInput
+  doctor_appointments?: Prisma.appointmentsUpdateManyWithoutDoctorNestedInput
+  audit_logs?: Prisma.audit_logsUpdateManyWithoutUserNestedInput
+  inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutPerformed_by_userNestedInput
+  notifications?: Prisma.notificationsUpdateManyWithoutUserNestedInput
+  patient_documents?: Prisma.patient_documentsUpdateManyWithoutUploaded_by_userNestedInput
+  patient_profile?: Prisma.patient_profilesUpdateOneWithoutUsersNestedInput
+  patient_records?: Prisma.patient_recordsUpdateManyWithoutCreated_by_userNestedInput
 }
 
-export type usersUncheckedUpdateWithoutPatient_documentsInput = {
+export type usersUncheckedUpdateWithoutCreated_appointmentsInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   email?: Prisma.StringFieldUpdateOperationsInput | string
   password_hash?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1068,72 +1141,28 @@ export type usersUncheckedUpdateWithoutPatient_documentsInput = {
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutUsersNestedInput
-  audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutUsersNestedInput
-  inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutUsersNestedInput
-  patient_profiles?: Prisma.patient_profilesUncheckedUpdateOneWithoutUsersNestedInput
-  patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutUsersNestedInput
+  doctor_slots?: Prisma.appointment_slotsUncheckedUpdateManyWithoutDoctorNestedInput
+  doctor_appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutDoctorNestedInput
+  audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutUserNestedInput
+  inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutPerformed_by_userNestedInput
+  notifications?: Prisma.notificationsUncheckedUpdateManyWithoutUserNestedInput
+  patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutUploaded_by_userNestedInput
+  patient_profile?: Prisma.patient_profilesUncheckedUpdateOneWithoutUsersNestedInput
+  patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutCreated_by_userNestedInput
 }
 
-export type usersCreateWithoutPatient_profilesInput = {
-  id?: bigint | number
-  email: string
-  password_hash: string
-  first_name: string
-  last_name: string
-  phone?: string | null
-  date_of_birth?: Date | string | null
-  gender?: string | null
-  address?: string | null
-  role?: string
-  is_active?: boolean
-  created_at?: Date | string
-  updated_at?: Date | string
-  appointments?: Prisma.appointmentsCreateNestedManyWithoutUsersInput
-  audit_logs?: Prisma.audit_logsCreateNestedManyWithoutUsersInput
-  inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutUsersInput
-  patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutUsersInput
-  patient_records?: Prisma.patient_recordsCreateNestedManyWithoutUsersInput
-}
-
-export type usersUncheckedCreateWithoutPatient_profilesInput = {
-  id?: bigint | number
-  email: string
-  password_hash: string
-  first_name: string
-  last_name: string
-  phone?: string | null
-  date_of_birth?: Date | string | null
-  gender?: string | null
-  address?: string | null
-  role?: string
-  is_active?: boolean
-  created_at?: Date | string
-  updated_at?: Date | string
-  appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutUsersInput
-  audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutUsersInput
-  inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutUsersInput
-  patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutUsersInput
-  patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutUsersInput
-}
-
-export type usersCreateOrConnectWithoutPatient_profilesInput = {
-  where: Prisma.usersWhereUniqueInput
-  create: Prisma.XOR<Prisma.usersCreateWithoutPatient_profilesInput, Prisma.usersUncheckedCreateWithoutPatient_profilesInput>
-}
-
-export type usersUpsertWithoutPatient_profilesInput = {
-  update: Prisma.XOR<Prisma.usersUpdateWithoutPatient_profilesInput, Prisma.usersUncheckedUpdateWithoutPatient_profilesInput>
-  create: Prisma.XOR<Prisma.usersCreateWithoutPatient_profilesInput, Prisma.usersUncheckedCreateWithoutPatient_profilesInput>
+export type usersUpsertWithoutDoctor_appointmentsInput = {
+  update: Prisma.XOR<Prisma.usersUpdateWithoutDoctor_appointmentsInput, Prisma.usersUncheckedUpdateWithoutDoctor_appointmentsInput>
+  create: Prisma.XOR<Prisma.usersCreateWithoutDoctor_appointmentsInput, Prisma.usersUncheckedCreateWithoutDoctor_appointmentsInput>
   where?: Prisma.usersWhereInput
 }
 
-export type usersUpdateToOneWithWhereWithoutPatient_profilesInput = {
+export type usersUpdateToOneWithWhereWithoutDoctor_appointmentsInput = {
   where?: Prisma.usersWhereInput
-  data: Prisma.XOR<Prisma.usersUpdateWithoutPatient_profilesInput, Prisma.usersUncheckedUpdateWithoutPatient_profilesInput>
+  data: Prisma.XOR<Prisma.usersUpdateWithoutDoctor_appointmentsInput, Prisma.usersUncheckedUpdateWithoutDoctor_appointmentsInput>
 }
 
-export type usersUpdateWithoutPatient_profilesInput = {
+export type usersUpdateWithoutDoctor_appointmentsInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   email?: Prisma.StringFieldUpdateOperationsInput | string
   password_hash?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1147,14 +1176,17 @@ export type usersUpdateWithoutPatient_profilesInput = {
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  appointments?: Prisma.appointmentsUpdateManyWithoutUsersNestedInput
-  audit_logs?: Prisma.audit_logsUpdateManyWithoutUsersNestedInput
-  inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutUsersNestedInput
-  patient_documents?: Prisma.patient_documentsUpdateManyWithoutUsersNestedInput
-  patient_records?: Prisma.patient_recordsUpdateManyWithoutUsersNestedInput
+  doctor_slots?: Prisma.appointment_slotsUpdateManyWithoutDoctorNestedInput
+  created_appointments?: Prisma.appointmentsUpdateManyWithoutCreated_by_userNestedInput
+  audit_logs?: Prisma.audit_logsUpdateManyWithoutUserNestedInput
+  inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutPerformed_by_userNestedInput
+  notifications?: Prisma.notificationsUpdateManyWithoutUserNestedInput
+  patient_documents?: Prisma.patient_documentsUpdateManyWithoutUploaded_by_userNestedInput
+  patient_profile?: Prisma.patient_profilesUpdateOneWithoutUsersNestedInput
+  patient_records?: Prisma.patient_recordsUpdateManyWithoutCreated_by_userNestedInput
 }
 
-export type usersUncheckedUpdateWithoutPatient_profilesInput = {
+export type usersUncheckedUpdateWithoutDoctor_appointmentsInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   email?: Prisma.StringFieldUpdateOperationsInput | string
   password_hash?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1168,11 +1200,14 @@ export type usersUncheckedUpdateWithoutPatient_profilesInput = {
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutUsersNestedInput
-  audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutUsersNestedInput
-  inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutUsersNestedInput
-  patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutUsersNestedInput
-  patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutUsersNestedInput
+  doctor_slots?: Prisma.appointment_slotsUncheckedUpdateManyWithoutDoctorNestedInput
+  created_appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutCreated_by_userNestedInput
+  audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutUserNestedInput
+  inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutPerformed_by_userNestedInput
+  notifications?: Prisma.notificationsUncheckedUpdateManyWithoutUserNestedInput
+  patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutUploaded_by_userNestedInput
+  patient_profile?: Prisma.patient_profilesUncheckedUpdateOneWithoutUsersNestedInput
+  patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutCreated_by_userNestedInput
 }
 
 export type usersCreateWithoutPatient_recordsInput = {
@@ -1189,11 +1224,14 @@ export type usersCreateWithoutPatient_recordsInput = {
   is_active?: boolean
   created_at?: Date | string
   updated_at?: Date | string
-  appointments?: Prisma.appointmentsCreateNestedManyWithoutUsersInput
-  audit_logs?: Prisma.audit_logsCreateNestedManyWithoutUsersInput
-  inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutUsersInput
-  patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutUsersInput
-  patient_profiles?: Prisma.patient_profilesCreateNestedOneWithoutUsersInput
+  doctor_slots?: Prisma.appointment_slotsCreateNestedManyWithoutDoctorInput
+  created_appointments?: Prisma.appointmentsCreateNestedManyWithoutCreated_by_userInput
+  doctor_appointments?: Prisma.appointmentsCreateNestedManyWithoutDoctorInput
+  audit_logs?: Prisma.audit_logsCreateNestedManyWithoutUserInput
+  inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutPerformed_by_userInput
+  notifications?: Prisma.notificationsCreateNestedManyWithoutUserInput
+  patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutUploaded_by_userInput
+  patient_profile?: Prisma.patient_profilesCreateNestedOneWithoutUsersInput
 }
 
 export type usersUncheckedCreateWithoutPatient_recordsInput = {
@@ -1210,11 +1248,14 @@ export type usersUncheckedCreateWithoutPatient_recordsInput = {
   is_active?: boolean
   created_at?: Date | string
   updated_at?: Date | string
-  appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutUsersInput
-  audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutUsersInput
-  inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutUsersInput
-  patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutUsersInput
-  patient_profiles?: Prisma.patient_profilesUncheckedCreateNestedOneWithoutUsersInput
+  doctor_slots?: Prisma.appointment_slotsUncheckedCreateNestedManyWithoutDoctorInput
+  created_appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutCreated_by_userInput
+  doctor_appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutDoctorInput
+  audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutUserInput
+  inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutPerformed_by_userInput
+  notifications?: Prisma.notificationsUncheckedCreateNestedManyWithoutUserInput
+  patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutUploaded_by_userInput
+  patient_profile?: Prisma.patient_profilesUncheckedCreateNestedOneWithoutUsersInput
 }
 
 export type usersCreateOrConnectWithoutPatient_recordsInput = {
@@ -1247,11 +1288,14 @@ export type usersUpdateWithoutPatient_recordsInput = {
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  appointments?: Prisma.appointmentsUpdateManyWithoutUsersNestedInput
-  audit_logs?: Prisma.audit_logsUpdateManyWithoutUsersNestedInput
-  inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutUsersNestedInput
-  patient_documents?: Prisma.patient_documentsUpdateManyWithoutUsersNestedInput
-  patient_profiles?: Prisma.patient_profilesUpdateOneWithoutUsersNestedInput
+  doctor_slots?: Prisma.appointment_slotsUpdateManyWithoutDoctorNestedInput
+  created_appointments?: Prisma.appointmentsUpdateManyWithoutCreated_by_userNestedInput
+  doctor_appointments?: Prisma.appointmentsUpdateManyWithoutDoctorNestedInput
+  audit_logs?: Prisma.audit_logsUpdateManyWithoutUserNestedInput
+  inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutPerformed_by_userNestedInput
+  notifications?: Prisma.notificationsUpdateManyWithoutUserNestedInput
+  patient_documents?: Prisma.patient_documentsUpdateManyWithoutUploaded_by_userNestedInput
+  patient_profile?: Prisma.patient_profilesUpdateOneWithoutUsersNestedInput
 }
 
 export type usersUncheckedUpdateWithoutPatient_recordsInput = {
@@ -1268,11 +1312,462 @@ export type usersUncheckedUpdateWithoutPatient_recordsInput = {
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutUsersNestedInput
-  audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutUsersNestedInput
-  inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutUsersNestedInput
-  patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutUsersNestedInput
-  patient_profiles?: Prisma.patient_profilesUncheckedUpdateOneWithoutUsersNestedInput
+  doctor_slots?: Prisma.appointment_slotsUncheckedUpdateManyWithoutDoctorNestedInput
+  created_appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutCreated_by_userNestedInput
+  doctor_appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutDoctorNestedInput
+  audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutUserNestedInput
+  inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutPerformed_by_userNestedInput
+  notifications?: Prisma.notificationsUncheckedUpdateManyWithoutUserNestedInput
+  patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutUploaded_by_userNestedInput
+  patient_profile?: Prisma.patient_profilesUncheckedUpdateOneWithoutUsersNestedInput
+}
+
+export type usersCreateWithoutPatient_documentsInput = {
+  id?: bigint | number
+  email: string
+  password_hash: string
+  first_name: string
+  last_name: string
+  phone?: string | null
+  date_of_birth?: Date | string | null
+  gender?: string | null
+  address?: string | null
+  role?: string
+  is_active?: boolean
+  created_at?: Date | string
+  updated_at?: Date | string
+  doctor_slots?: Prisma.appointment_slotsCreateNestedManyWithoutDoctorInput
+  created_appointments?: Prisma.appointmentsCreateNestedManyWithoutCreated_by_userInput
+  doctor_appointments?: Prisma.appointmentsCreateNestedManyWithoutDoctorInput
+  audit_logs?: Prisma.audit_logsCreateNestedManyWithoutUserInput
+  inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutPerformed_by_userInput
+  notifications?: Prisma.notificationsCreateNestedManyWithoutUserInput
+  patient_profile?: Prisma.patient_profilesCreateNestedOneWithoutUsersInput
+  patient_records?: Prisma.patient_recordsCreateNestedManyWithoutCreated_by_userInput
+}
+
+export type usersUncheckedCreateWithoutPatient_documentsInput = {
+  id?: bigint | number
+  email: string
+  password_hash: string
+  first_name: string
+  last_name: string
+  phone?: string | null
+  date_of_birth?: Date | string | null
+  gender?: string | null
+  address?: string | null
+  role?: string
+  is_active?: boolean
+  created_at?: Date | string
+  updated_at?: Date | string
+  doctor_slots?: Prisma.appointment_slotsUncheckedCreateNestedManyWithoutDoctorInput
+  created_appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutCreated_by_userInput
+  doctor_appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutDoctorInput
+  audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutUserInput
+  inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutPerformed_by_userInput
+  notifications?: Prisma.notificationsUncheckedCreateNestedManyWithoutUserInput
+  patient_profile?: Prisma.patient_profilesUncheckedCreateNestedOneWithoutUsersInput
+  patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutCreated_by_userInput
+}
+
+export type usersCreateOrConnectWithoutPatient_documentsInput = {
+  where: Prisma.usersWhereUniqueInput
+  create: Prisma.XOR<Prisma.usersCreateWithoutPatient_documentsInput, Prisma.usersUncheckedCreateWithoutPatient_documentsInput>
+}
+
+export type usersUpsertWithoutPatient_documentsInput = {
+  update: Prisma.XOR<Prisma.usersUpdateWithoutPatient_documentsInput, Prisma.usersUncheckedUpdateWithoutPatient_documentsInput>
+  create: Prisma.XOR<Prisma.usersCreateWithoutPatient_documentsInput, Prisma.usersUncheckedCreateWithoutPatient_documentsInput>
+  where?: Prisma.usersWhereInput
+}
+
+export type usersUpdateToOneWithWhereWithoutPatient_documentsInput = {
+  where?: Prisma.usersWhereInput
+  data: Prisma.XOR<Prisma.usersUpdateWithoutPatient_documentsInput, Prisma.usersUncheckedUpdateWithoutPatient_documentsInput>
+}
+
+export type usersUpdateWithoutPatient_documentsInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  password_hash?: Prisma.StringFieldUpdateOperationsInput | string
+  first_name?: Prisma.StringFieldUpdateOperationsInput | string
+  last_name?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  date_of_birth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  doctor_slots?: Prisma.appointment_slotsUpdateManyWithoutDoctorNestedInput
+  created_appointments?: Prisma.appointmentsUpdateManyWithoutCreated_by_userNestedInput
+  doctor_appointments?: Prisma.appointmentsUpdateManyWithoutDoctorNestedInput
+  audit_logs?: Prisma.audit_logsUpdateManyWithoutUserNestedInput
+  inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutPerformed_by_userNestedInput
+  notifications?: Prisma.notificationsUpdateManyWithoutUserNestedInput
+  patient_profile?: Prisma.patient_profilesUpdateOneWithoutUsersNestedInput
+  patient_records?: Prisma.patient_recordsUpdateManyWithoutCreated_by_userNestedInput
+}
+
+export type usersUncheckedUpdateWithoutPatient_documentsInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  password_hash?: Prisma.StringFieldUpdateOperationsInput | string
+  first_name?: Prisma.StringFieldUpdateOperationsInput | string
+  last_name?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  date_of_birth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  doctor_slots?: Prisma.appointment_slotsUncheckedUpdateManyWithoutDoctorNestedInput
+  created_appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutCreated_by_userNestedInput
+  doctor_appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutDoctorNestedInput
+  audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutUserNestedInput
+  inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutPerformed_by_userNestedInput
+  notifications?: Prisma.notificationsUncheckedUpdateManyWithoutUserNestedInput
+  patient_profile?: Prisma.patient_profilesUncheckedUpdateOneWithoutUsersNestedInput
+  patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutCreated_by_userNestedInput
+}
+
+export type usersCreateWithoutInventory_movementsInput = {
+  id?: bigint | number
+  email: string
+  password_hash: string
+  first_name: string
+  last_name: string
+  phone?: string | null
+  date_of_birth?: Date | string | null
+  gender?: string | null
+  address?: string | null
+  role?: string
+  is_active?: boolean
+  created_at?: Date | string
+  updated_at?: Date | string
+  doctor_slots?: Prisma.appointment_slotsCreateNestedManyWithoutDoctorInput
+  created_appointments?: Prisma.appointmentsCreateNestedManyWithoutCreated_by_userInput
+  doctor_appointments?: Prisma.appointmentsCreateNestedManyWithoutDoctorInput
+  audit_logs?: Prisma.audit_logsCreateNestedManyWithoutUserInput
+  notifications?: Prisma.notificationsCreateNestedManyWithoutUserInput
+  patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutUploaded_by_userInput
+  patient_profile?: Prisma.patient_profilesCreateNestedOneWithoutUsersInput
+  patient_records?: Prisma.patient_recordsCreateNestedManyWithoutCreated_by_userInput
+}
+
+export type usersUncheckedCreateWithoutInventory_movementsInput = {
+  id?: bigint | number
+  email: string
+  password_hash: string
+  first_name: string
+  last_name: string
+  phone?: string | null
+  date_of_birth?: Date | string | null
+  gender?: string | null
+  address?: string | null
+  role?: string
+  is_active?: boolean
+  created_at?: Date | string
+  updated_at?: Date | string
+  doctor_slots?: Prisma.appointment_slotsUncheckedCreateNestedManyWithoutDoctorInput
+  created_appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutCreated_by_userInput
+  doctor_appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutDoctorInput
+  audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutUserInput
+  notifications?: Prisma.notificationsUncheckedCreateNestedManyWithoutUserInput
+  patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutUploaded_by_userInput
+  patient_profile?: Prisma.patient_profilesUncheckedCreateNestedOneWithoutUsersInput
+  patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutCreated_by_userInput
+}
+
+export type usersCreateOrConnectWithoutInventory_movementsInput = {
+  where: Prisma.usersWhereUniqueInput
+  create: Prisma.XOR<Prisma.usersCreateWithoutInventory_movementsInput, Prisma.usersUncheckedCreateWithoutInventory_movementsInput>
+}
+
+export type usersUpsertWithoutInventory_movementsInput = {
+  update: Prisma.XOR<Prisma.usersUpdateWithoutInventory_movementsInput, Prisma.usersUncheckedUpdateWithoutInventory_movementsInput>
+  create: Prisma.XOR<Prisma.usersCreateWithoutInventory_movementsInput, Prisma.usersUncheckedCreateWithoutInventory_movementsInput>
+  where?: Prisma.usersWhereInput
+}
+
+export type usersUpdateToOneWithWhereWithoutInventory_movementsInput = {
+  where?: Prisma.usersWhereInput
+  data: Prisma.XOR<Prisma.usersUpdateWithoutInventory_movementsInput, Prisma.usersUncheckedUpdateWithoutInventory_movementsInput>
+}
+
+export type usersUpdateWithoutInventory_movementsInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  password_hash?: Prisma.StringFieldUpdateOperationsInput | string
+  first_name?: Prisma.StringFieldUpdateOperationsInput | string
+  last_name?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  date_of_birth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  doctor_slots?: Prisma.appointment_slotsUpdateManyWithoutDoctorNestedInput
+  created_appointments?: Prisma.appointmentsUpdateManyWithoutCreated_by_userNestedInput
+  doctor_appointments?: Prisma.appointmentsUpdateManyWithoutDoctorNestedInput
+  audit_logs?: Prisma.audit_logsUpdateManyWithoutUserNestedInput
+  notifications?: Prisma.notificationsUpdateManyWithoutUserNestedInput
+  patient_documents?: Prisma.patient_documentsUpdateManyWithoutUploaded_by_userNestedInput
+  patient_profile?: Prisma.patient_profilesUpdateOneWithoutUsersNestedInput
+  patient_records?: Prisma.patient_recordsUpdateManyWithoutCreated_by_userNestedInput
+}
+
+export type usersUncheckedUpdateWithoutInventory_movementsInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  password_hash?: Prisma.StringFieldUpdateOperationsInput | string
+  first_name?: Prisma.StringFieldUpdateOperationsInput | string
+  last_name?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  date_of_birth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  doctor_slots?: Prisma.appointment_slotsUncheckedUpdateManyWithoutDoctorNestedInput
+  created_appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutCreated_by_userNestedInput
+  doctor_appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutDoctorNestedInput
+  audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutUserNestedInput
+  notifications?: Prisma.notificationsUncheckedUpdateManyWithoutUserNestedInput
+  patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutUploaded_by_userNestedInput
+  patient_profile?: Prisma.patient_profilesUncheckedUpdateOneWithoutUsersNestedInput
+  patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutCreated_by_userNestedInput
+}
+
+export type usersCreateWithoutNotificationsInput = {
+  id?: bigint | number
+  email: string
+  password_hash: string
+  first_name: string
+  last_name: string
+  phone?: string | null
+  date_of_birth?: Date | string | null
+  gender?: string | null
+  address?: string | null
+  role?: string
+  is_active?: boolean
+  created_at?: Date | string
+  updated_at?: Date | string
+  doctor_slots?: Prisma.appointment_slotsCreateNestedManyWithoutDoctorInput
+  created_appointments?: Prisma.appointmentsCreateNestedManyWithoutCreated_by_userInput
+  doctor_appointments?: Prisma.appointmentsCreateNestedManyWithoutDoctorInput
+  audit_logs?: Prisma.audit_logsCreateNestedManyWithoutUserInput
+  inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutPerformed_by_userInput
+  patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutUploaded_by_userInput
+  patient_profile?: Prisma.patient_profilesCreateNestedOneWithoutUsersInput
+  patient_records?: Prisma.patient_recordsCreateNestedManyWithoutCreated_by_userInput
+}
+
+export type usersUncheckedCreateWithoutNotificationsInput = {
+  id?: bigint | number
+  email: string
+  password_hash: string
+  first_name: string
+  last_name: string
+  phone?: string | null
+  date_of_birth?: Date | string | null
+  gender?: string | null
+  address?: string | null
+  role?: string
+  is_active?: boolean
+  created_at?: Date | string
+  updated_at?: Date | string
+  doctor_slots?: Prisma.appointment_slotsUncheckedCreateNestedManyWithoutDoctorInput
+  created_appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutCreated_by_userInput
+  doctor_appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutDoctorInput
+  audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutUserInput
+  inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutPerformed_by_userInput
+  patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutUploaded_by_userInput
+  patient_profile?: Prisma.patient_profilesUncheckedCreateNestedOneWithoutUsersInput
+  patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutCreated_by_userInput
+}
+
+export type usersCreateOrConnectWithoutNotificationsInput = {
+  where: Prisma.usersWhereUniqueInput
+  create: Prisma.XOR<Prisma.usersCreateWithoutNotificationsInput, Prisma.usersUncheckedCreateWithoutNotificationsInput>
+}
+
+export type usersUpsertWithoutNotificationsInput = {
+  update: Prisma.XOR<Prisma.usersUpdateWithoutNotificationsInput, Prisma.usersUncheckedUpdateWithoutNotificationsInput>
+  create: Prisma.XOR<Prisma.usersCreateWithoutNotificationsInput, Prisma.usersUncheckedCreateWithoutNotificationsInput>
+  where?: Prisma.usersWhereInput
+}
+
+export type usersUpdateToOneWithWhereWithoutNotificationsInput = {
+  where?: Prisma.usersWhereInput
+  data: Prisma.XOR<Prisma.usersUpdateWithoutNotificationsInput, Prisma.usersUncheckedUpdateWithoutNotificationsInput>
+}
+
+export type usersUpdateWithoutNotificationsInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  password_hash?: Prisma.StringFieldUpdateOperationsInput | string
+  first_name?: Prisma.StringFieldUpdateOperationsInput | string
+  last_name?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  date_of_birth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  doctor_slots?: Prisma.appointment_slotsUpdateManyWithoutDoctorNestedInput
+  created_appointments?: Prisma.appointmentsUpdateManyWithoutCreated_by_userNestedInput
+  doctor_appointments?: Prisma.appointmentsUpdateManyWithoutDoctorNestedInput
+  audit_logs?: Prisma.audit_logsUpdateManyWithoutUserNestedInput
+  inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutPerformed_by_userNestedInput
+  patient_documents?: Prisma.patient_documentsUpdateManyWithoutUploaded_by_userNestedInput
+  patient_profile?: Prisma.patient_profilesUpdateOneWithoutUsersNestedInput
+  patient_records?: Prisma.patient_recordsUpdateManyWithoutCreated_by_userNestedInput
+}
+
+export type usersUncheckedUpdateWithoutNotificationsInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  password_hash?: Prisma.StringFieldUpdateOperationsInput | string
+  first_name?: Prisma.StringFieldUpdateOperationsInput | string
+  last_name?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  date_of_birth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  doctor_slots?: Prisma.appointment_slotsUncheckedUpdateManyWithoutDoctorNestedInput
+  created_appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutCreated_by_userNestedInput
+  doctor_appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutDoctorNestedInput
+  audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutUserNestedInput
+  inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutPerformed_by_userNestedInput
+  patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutUploaded_by_userNestedInput
+  patient_profile?: Prisma.patient_profilesUncheckedUpdateOneWithoutUsersNestedInput
+  patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutCreated_by_userNestedInput
+}
+
+export type usersCreateWithoutAudit_logsInput = {
+  id?: bigint | number
+  email: string
+  password_hash: string
+  first_name: string
+  last_name: string
+  phone?: string | null
+  date_of_birth?: Date | string | null
+  gender?: string | null
+  address?: string | null
+  role?: string
+  is_active?: boolean
+  created_at?: Date | string
+  updated_at?: Date | string
+  doctor_slots?: Prisma.appointment_slotsCreateNestedManyWithoutDoctorInput
+  created_appointments?: Prisma.appointmentsCreateNestedManyWithoutCreated_by_userInput
+  doctor_appointments?: Prisma.appointmentsCreateNestedManyWithoutDoctorInput
+  inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutPerformed_by_userInput
+  notifications?: Prisma.notificationsCreateNestedManyWithoutUserInput
+  patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutUploaded_by_userInput
+  patient_profile?: Prisma.patient_profilesCreateNestedOneWithoutUsersInput
+  patient_records?: Prisma.patient_recordsCreateNestedManyWithoutCreated_by_userInput
+}
+
+export type usersUncheckedCreateWithoutAudit_logsInput = {
+  id?: bigint | number
+  email: string
+  password_hash: string
+  first_name: string
+  last_name: string
+  phone?: string | null
+  date_of_birth?: Date | string | null
+  gender?: string | null
+  address?: string | null
+  role?: string
+  is_active?: boolean
+  created_at?: Date | string
+  updated_at?: Date | string
+  doctor_slots?: Prisma.appointment_slotsUncheckedCreateNestedManyWithoutDoctorInput
+  created_appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutCreated_by_userInput
+  doctor_appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutDoctorInput
+  inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutPerformed_by_userInput
+  notifications?: Prisma.notificationsUncheckedCreateNestedManyWithoutUserInput
+  patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutUploaded_by_userInput
+  patient_profile?: Prisma.patient_profilesUncheckedCreateNestedOneWithoutUsersInput
+  patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutCreated_by_userInput
+}
+
+export type usersCreateOrConnectWithoutAudit_logsInput = {
+  where: Prisma.usersWhereUniqueInput
+  create: Prisma.XOR<Prisma.usersCreateWithoutAudit_logsInput, Prisma.usersUncheckedCreateWithoutAudit_logsInput>
+}
+
+export type usersUpsertWithoutAudit_logsInput = {
+  update: Prisma.XOR<Prisma.usersUpdateWithoutAudit_logsInput, Prisma.usersUncheckedUpdateWithoutAudit_logsInput>
+  create: Prisma.XOR<Prisma.usersCreateWithoutAudit_logsInput, Prisma.usersUncheckedCreateWithoutAudit_logsInput>
+  where?: Prisma.usersWhereInput
+}
+
+export type usersUpdateToOneWithWhereWithoutAudit_logsInput = {
+  where?: Prisma.usersWhereInput
+  data: Prisma.XOR<Prisma.usersUpdateWithoutAudit_logsInput, Prisma.usersUncheckedUpdateWithoutAudit_logsInput>
+}
+
+export type usersUpdateWithoutAudit_logsInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  password_hash?: Prisma.StringFieldUpdateOperationsInput | string
+  first_name?: Prisma.StringFieldUpdateOperationsInput | string
+  last_name?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  date_of_birth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  doctor_slots?: Prisma.appointment_slotsUpdateManyWithoutDoctorNestedInput
+  created_appointments?: Prisma.appointmentsUpdateManyWithoutCreated_by_userNestedInput
+  doctor_appointments?: Prisma.appointmentsUpdateManyWithoutDoctorNestedInput
+  inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutPerformed_by_userNestedInput
+  notifications?: Prisma.notificationsUpdateManyWithoutUserNestedInput
+  patient_documents?: Prisma.patient_documentsUpdateManyWithoutUploaded_by_userNestedInput
+  patient_profile?: Prisma.patient_profilesUpdateOneWithoutUsersNestedInput
+  patient_records?: Prisma.patient_recordsUpdateManyWithoutCreated_by_userNestedInput
+}
+
+export type usersUncheckedUpdateWithoutAudit_logsInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  password_hash?: Prisma.StringFieldUpdateOperationsInput | string
+  first_name?: Prisma.StringFieldUpdateOperationsInput | string
+  last_name?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  date_of_birth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  doctor_slots?: Prisma.appointment_slotsUncheckedUpdateManyWithoutDoctorNestedInput
+  created_appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutCreated_by_userNestedInput
+  doctor_appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutDoctorNestedInput
+  inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutPerformed_by_userNestedInput
+  notifications?: Prisma.notificationsUncheckedUpdateManyWithoutUserNestedInput
+  patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutUploaded_by_userNestedInput
+  patient_profile?: Prisma.patient_profilesUncheckedUpdateOneWithoutUsersNestedInput
+  patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutCreated_by_userNestedInput
 }
 
 
@@ -1281,17 +1776,23 @@ export type usersUncheckedUpdateWithoutPatient_recordsInput = {
  */
 
 export type UsersCountOutputType = {
-  appointments: number
+  doctor_slots: number
+  created_appointments: number
+  doctor_appointments: number
   audit_logs: number
   inventory_movements: number
+  notifications: number
   patient_documents: number
   patient_records: number
 }
 
 export type UsersCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  appointments?: boolean | UsersCountOutputTypeCountAppointmentsArgs
+  doctor_slots?: boolean | UsersCountOutputTypeCountDoctor_slotsArgs
+  created_appointments?: boolean | UsersCountOutputTypeCountCreated_appointmentsArgs
+  doctor_appointments?: boolean | UsersCountOutputTypeCountDoctor_appointmentsArgs
   audit_logs?: boolean | UsersCountOutputTypeCountAudit_logsArgs
   inventory_movements?: boolean | UsersCountOutputTypeCountInventory_movementsArgs
+  notifications?: boolean | UsersCountOutputTypeCountNotificationsArgs
   patient_documents?: boolean | UsersCountOutputTypeCountPatient_documentsArgs
   patient_records?: boolean | UsersCountOutputTypeCountPatient_recordsArgs
 }
@@ -1309,7 +1810,21 @@ export type UsersCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extens
 /**
  * UsersCountOutputType without action
  */
-export type UsersCountOutputTypeCountAppointmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+export type UsersCountOutputTypeCountDoctor_slotsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.appointment_slotsWhereInput
+}
+
+/**
+ * UsersCountOutputType without action
+ */
+export type UsersCountOutputTypeCountCreated_appointmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.appointmentsWhereInput
+}
+
+/**
+ * UsersCountOutputType without action
+ */
+export type UsersCountOutputTypeCountDoctor_appointmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.appointmentsWhereInput
 }
 
@@ -1325,6 +1840,13 @@ export type UsersCountOutputTypeCountAudit_logsArgs<ExtArgs extends runtime.Type
  */
 export type UsersCountOutputTypeCountInventory_movementsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.inventory_movementsWhereInput
+}
+
+/**
+ * UsersCountOutputType without action
+ */
+export type UsersCountOutputTypeCountNotificationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.notificationsWhereInput
 }
 
 /**
@@ -1356,11 +1878,14 @@ export type usersSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   is_active?: boolean
   created_at?: boolean
   updated_at?: boolean
-  appointments?: boolean | Prisma.users$appointmentsArgs<ExtArgs>
+  doctor_slots?: boolean | Prisma.users$doctor_slotsArgs<ExtArgs>
+  created_appointments?: boolean | Prisma.users$created_appointmentsArgs<ExtArgs>
+  doctor_appointments?: boolean | Prisma.users$doctor_appointmentsArgs<ExtArgs>
   audit_logs?: boolean | Prisma.users$audit_logsArgs<ExtArgs>
   inventory_movements?: boolean | Prisma.users$inventory_movementsArgs<ExtArgs>
+  notifications?: boolean | Prisma.users$notificationsArgs<ExtArgs>
   patient_documents?: boolean | Prisma.users$patient_documentsArgs<ExtArgs>
-  patient_profiles?: boolean | Prisma.users$patient_profilesArgs<ExtArgs>
+  patient_profile?: boolean | Prisma.users$patient_profileArgs<ExtArgs>
   patient_records?: boolean | Prisma.users$patient_recordsArgs<ExtArgs>
   _count?: boolean | Prisma.UsersCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["users"]>
@@ -1415,11 +1940,14 @@ export type usersSelectScalar = {
 
 export type usersOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "password_hash" | "first_name" | "last_name" | "phone" | "date_of_birth" | "gender" | "address" | "role" | "is_active" | "created_at" | "updated_at", ExtArgs["result"]["users"]>
 export type usersInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  appointments?: boolean | Prisma.users$appointmentsArgs<ExtArgs>
+  doctor_slots?: boolean | Prisma.users$doctor_slotsArgs<ExtArgs>
+  created_appointments?: boolean | Prisma.users$created_appointmentsArgs<ExtArgs>
+  doctor_appointments?: boolean | Prisma.users$doctor_appointmentsArgs<ExtArgs>
   audit_logs?: boolean | Prisma.users$audit_logsArgs<ExtArgs>
   inventory_movements?: boolean | Prisma.users$inventory_movementsArgs<ExtArgs>
+  notifications?: boolean | Prisma.users$notificationsArgs<ExtArgs>
   patient_documents?: boolean | Prisma.users$patient_documentsArgs<ExtArgs>
-  patient_profiles?: boolean | Prisma.users$patient_profilesArgs<ExtArgs>
+  patient_profile?: boolean | Prisma.users$patient_profileArgs<ExtArgs>
   patient_records?: boolean | Prisma.users$patient_recordsArgs<ExtArgs>
   _count?: boolean | Prisma.UsersCountOutputTypeDefaultArgs<ExtArgs>
 }
@@ -1429,11 +1957,14 @@ export type usersIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extens
 export type $usersPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "users"
   objects: {
-    appointments: Prisma.$appointmentsPayload<ExtArgs>[]
+    doctor_slots: Prisma.$appointment_slotsPayload<ExtArgs>[]
+    created_appointments: Prisma.$appointmentsPayload<ExtArgs>[]
+    doctor_appointments: Prisma.$appointmentsPayload<ExtArgs>[]
     audit_logs: Prisma.$audit_logsPayload<ExtArgs>[]
     inventory_movements: Prisma.$inventory_movementsPayload<ExtArgs>[]
+    notifications: Prisma.$notificationsPayload<ExtArgs>[]
     patient_documents: Prisma.$patient_documentsPayload<ExtArgs>[]
-    patient_profiles: Prisma.$patient_profilesPayload<ExtArgs> | null
+    patient_profile: Prisma.$patient_profilesPayload<ExtArgs> | null
     patient_records: Prisma.$patient_recordsPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
@@ -1844,11 +2375,14 @@ readonly fields: usersFieldRefs;
  */
 export interface Prisma__usersClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  appointments<T extends Prisma.users$appointmentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.users$appointmentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$appointmentsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  doctor_slots<T extends Prisma.users$doctor_slotsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.users$doctor_slotsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$appointment_slotsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  created_appointments<T extends Prisma.users$created_appointmentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.users$created_appointmentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$appointmentsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  doctor_appointments<T extends Prisma.users$doctor_appointmentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.users$doctor_appointmentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$appointmentsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   audit_logs<T extends Prisma.users$audit_logsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.users$audit_logsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$audit_logsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   inventory_movements<T extends Prisma.users$inventory_movementsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.users$inventory_movementsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$inventory_movementsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  notifications<T extends Prisma.users$notificationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.users$notificationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$notificationsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   patient_documents<T extends Prisma.users$patient_documentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.users$patient_documentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$patient_documentsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  patient_profiles<T extends Prisma.users$patient_profilesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.users$patient_profilesArgs<ExtArgs>>): Prisma.Prisma__patient_profilesClient<runtime.Types.Result.GetResult<Prisma.$patient_profilesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  patient_profile<T extends Prisma.users$patient_profileArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.users$patient_profileArgs<ExtArgs>>): Prisma.Prisma__patient_profilesClient<runtime.Types.Result.GetResult<Prisma.$patient_profilesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   patient_records<T extends Prisma.users$patient_recordsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.users$patient_recordsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$patient_recordsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -2285,9 +2819,57 @@ export type usersDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Interna
 }
 
 /**
- * users.appointments
+ * users.doctor_slots
  */
-export type users$appointmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+export type users$doctor_slotsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the appointment_slots
+   */
+  select?: Prisma.appointment_slotsSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the appointment_slots
+   */
+  omit?: Prisma.appointment_slotsOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.appointment_slotsInclude<ExtArgs> | null
+  where?: Prisma.appointment_slotsWhereInput
+  orderBy?: Prisma.appointment_slotsOrderByWithRelationInput | Prisma.appointment_slotsOrderByWithRelationInput[]
+  cursor?: Prisma.appointment_slotsWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.Appointment_slotsScalarFieldEnum | Prisma.Appointment_slotsScalarFieldEnum[]
+}
+
+/**
+ * users.created_appointments
+ */
+export type users$created_appointmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the appointments
+   */
+  select?: Prisma.appointmentsSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the appointments
+   */
+  omit?: Prisma.appointmentsOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.appointmentsInclude<ExtArgs> | null
+  where?: Prisma.appointmentsWhereInput
+  orderBy?: Prisma.appointmentsOrderByWithRelationInput | Prisma.appointmentsOrderByWithRelationInput[]
+  cursor?: Prisma.appointmentsWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.AppointmentsScalarFieldEnum | Prisma.AppointmentsScalarFieldEnum[]
+}
+
+/**
+ * users.doctor_appointments
+ */
+export type users$doctor_appointmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
    * Select specific fields to fetch from the appointments
    */
@@ -2357,6 +2939,30 @@ export type users$inventory_movementsArgs<ExtArgs extends runtime.Types.Extensio
 }
 
 /**
+ * users.notifications
+ */
+export type users$notificationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the notifications
+   */
+  select?: Prisma.notificationsSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the notifications
+   */
+  omit?: Prisma.notificationsOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.notificationsInclude<ExtArgs> | null
+  where?: Prisma.notificationsWhereInput
+  orderBy?: Prisma.notificationsOrderByWithRelationInput | Prisma.notificationsOrderByWithRelationInput[]
+  cursor?: Prisma.notificationsWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.NotificationsScalarFieldEnum | Prisma.NotificationsScalarFieldEnum[]
+}
+
+/**
  * users.patient_documents
  */
 export type users$patient_documentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2381,9 +2987,9 @@ export type users$patient_documentsArgs<ExtArgs extends runtime.Types.Extensions
 }
 
 /**
- * users.patient_profiles
+ * users.patient_profile
  */
-export type users$patient_profilesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+export type users$patient_profileArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
    * Select specific fields to fetch from the patient_profiles
    */

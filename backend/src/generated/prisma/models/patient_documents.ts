@@ -9,12 +9,12 @@
  * 🟢 You can import this file directly.
  */
 import type * as runtime from "@prisma/client/runtime/client"
-import type * as $Enums from "../enums.js"
-import type * as Prisma from "../internal/prismaNamespace.js"
+import type * as $Enums from "../enums"
+import type * as Prisma from "../internal/prismaNamespace"
 
 /**
  * Model patient_documents
- * This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+ * 
  */
 export type patient_documentsModel = runtime.Types.Result.DefaultSelection<Prisma.$patient_documentsPayload>
 
@@ -252,9 +252,9 @@ export type patient_documentsWhereInput = {
   document_type?: Prisma.StringNullableFilter<"patient_documents"> | string | null
   uploaded_by?: Prisma.BigIntNullableFilter<"patient_documents"> | bigint | number | null
   uploaded_at?: Prisma.DateTimeFilter<"patient_documents"> | Date | string
-  patient_profiles?: Prisma.XOR<Prisma.Patient_profilesScalarRelationFilter, Prisma.patient_profilesWhereInput>
-  patient_records?: Prisma.XOR<Prisma.Patient_recordsNullableScalarRelationFilter, Prisma.patient_recordsWhereInput> | null
-  users?: Prisma.XOR<Prisma.UsersNullableScalarRelationFilter, Prisma.usersWhereInput> | null
+  patient_profile?: Prisma.XOR<Prisma.Patient_profilesScalarRelationFilter, Prisma.patient_profilesWhereInput>
+  record?: Prisma.XOR<Prisma.Patient_recordsNullableScalarRelationFilter, Prisma.patient_recordsWhereInput> | null
+  uploaded_by_user?: Prisma.XOR<Prisma.UsersNullableScalarRelationFilter, Prisma.usersWhereInput> | null
 }
 
 export type patient_documentsOrderByWithRelationInput = {
@@ -266,9 +266,9 @@ export type patient_documentsOrderByWithRelationInput = {
   document_type?: Prisma.SortOrderInput | Prisma.SortOrder
   uploaded_by?: Prisma.SortOrderInput | Prisma.SortOrder
   uploaded_at?: Prisma.SortOrder
-  patient_profiles?: Prisma.patient_profilesOrderByWithRelationInput
-  patient_records?: Prisma.patient_recordsOrderByWithRelationInput
-  users?: Prisma.usersOrderByWithRelationInput
+  patient_profile?: Prisma.patient_profilesOrderByWithRelationInput
+  record?: Prisma.patient_recordsOrderByWithRelationInput
+  uploaded_by_user?: Prisma.usersOrderByWithRelationInput
 }
 
 export type patient_documentsWhereUniqueInput = Prisma.AtLeast<{
@@ -283,9 +283,9 @@ export type patient_documentsWhereUniqueInput = Prisma.AtLeast<{
   document_type?: Prisma.StringNullableFilter<"patient_documents"> | string | null
   uploaded_by?: Prisma.BigIntNullableFilter<"patient_documents"> | bigint | number | null
   uploaded_at?: Prisma.DateTimeFilter<"patient_documents"> | Date | string
-  patient_profiles?: Prisma.XOR<Prisma.Patient_profilesScalarRelationFilter, Prisma.patient_profilesWhereInput>
-  patient_records?: Prisma.XOR<Prisma.Patient_recordsNullableScalarRelationFilter, Prisma.patient_recordsWhereInput> | null
-  users?: Prisma.XOR<Prisma.UsersNullableScalarRelationFilter, Prisma.usersWhereInput> | null
+  patient_profile?: Prisma.XOR<Prisma.Patient_profilesScalarRelationFilter, Prisma.patient_profilesWhereInput>
+  record?: Prisma.XOR<Prisma.Patient_recordsNullableScalarRelationFilter, Prisma.patient_recordsWhereInput> | null
+  uploaded_by_user?: Prisma.XOR<Prisma.UsersNullableScalarRelationFilter, Prisma.usersWhereInput> | null
 }, "id">
 
 export type patient_documentsOrderByWithAggregationInput = {
@@ -324,9 +324,9 @@ export type patient_documentsCreateInput = {
   file_path: string
   document_type?: string | null
   uploaded_at?: Date | string
-  patient_profiles: Prisma.patient_profilesCreateNestedOneWithoutPatient_documentsInput
-  patient_records?: Prisma.patient_recordsCreateNestedOneWithoutPatient_documentsInput
-  users?: Prisma.usersCreateNestedOneWithoutPatient_documentsInput
+  patient_profile: Prisma.patient_profilesCreateNestedOneWithoutPatient_documentsInput
+  record?: Prisma.patient_recordsCreateNestedOneWithoutPatient_documentsInput
+  uploaded_by_user?: Prisma.usersCreateNestedOneWithoutPatient_documentsInput
 }
 
 export type patient_documentsUncheckedCreateInput = {
@@ -346,9 +346,9 @@ export type patient_documentsUpdateInput = {
   file_path?: Prisma.StringFieldUpdateOperationsInput | string
   document_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uploaded_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  patient_profiles?: Prisma.patient_profilesUpdateOneRequiredWithoutPatient_documentsNestedInput
-  patient_records?: Prisma.patient_recordsUpdateOneWithoutPatient_documentsNestedInput
-  users?: Prisma.usersUpdateOneWithoutPatient_documentsNestedInput
+  patient_profile?: Prisma.patient_profilesUpdateOneRequiredWithoutPatient_documentsNestedInput
+  record?: Prisma.patient_recordsUpdateOneWithoutPatient_documentsNestedInput
+  uploaded_by_user?: Prisma.usersUpdateOneWithoutPatient_documentsNestedInput
 }
 
 export type patient_documentsUncheckedUpdateInput = {
@@ -390,6 +390,16 @@ export type patient_documentsUncheckedUpdateManyInput = {
   document_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uploaded_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   uploaded_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type Patient_documentsListRelationFilter = {
+  every?: Prisma.patient_documentsWhereInput
+  some?: Prisma.patient_documentsWhereInput
+  none?: Prisma.patient_documentsWhereInput
+}
+
+export type patient_documentsOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
 }
 
 export type patient_documentsCountOrderByAggregateInput = {
@@ -439,186 +449,176 @@ export type patient_documentsSumOrderByAggregateInput = {
   uploaded_by?: Prisma.SortOrder
 }
 
-export type Patient_documentsListRelationFilter = {
-  every?: Prisma.patient_documentsWhereInput
-  some?: Prisma.patient_documentsWhereInput
-  none?: Prisma.patient_documentsWhereInput
-}
-
-export type patient_documentsOrderByRelationAggregateInput = {
-  _count?: Prisma.SortOrder
-}
-
-export type patient_documentsCreateNestedManyWithoutPatient_profilesInput = {
-  create?: Prisma.XOR<Prisma.patient_documentsCreateWithoutPatient_profilesInput, Prisma.patient_documentsUncheckedCreateWithoutPatient_profilesInput> | Prisma.patient_documentsCreateWithoutPatient_profilesInput[] | Prisma.patient_documentsUncheckedCreateWithoutPatient_profilesInput[]
-  connectOrCreate?: Prisma.patient_documentsCreateOrConnectWithoutPatient_profilesInput | Prisma.patient_documentsCreateOrConnectWithoutPatient_profilesInput[]
-  createMany?: Prisma.patient_documentsCreateManyPatient_profilesInputEnvelope
+export type patient_documentsCreateNestedManyWithoutUploaded_by_userInput = {
+  create?: Prisma.XOR<Prisma.patient_documentsCreateWithoutUploaded_by_userInput, Prisma.patient_documentsUncheckedCreateWithoutUploaded_by_userInput> | Prisma.patient_documentsCreateWithoutUploaded_by_userInput[] | Prisma.patient_documentsUncheckedCreateWithoutUploaded_by_userInput[]
+  connectOrCreate?: Prisma.patient_documentsCreateOrConnectWithoutUploaded_by_userInput | Prisma.patient_documentsCreateOrConnectWithoutUploaded_by_userInput[]
+  createMany?: Prisma.patient_documentsCreateManyUploaded_by_userInputEnvelope
   connect?: Prisma.patient_documentsWhereUniqueInput | Prisma.patient_documentsWhereUniqueInput[]
 }
 
-export type patient_documentsUncheckedCreateNestedManyWithoutPatient_profilesInput = {
-  create?: Prisma.XOR<Prisma.patient_documentsCreateWithoutPatient_profilesInput, Prisma.patient_documentsUncheckedCreateWithoutPatient_profilesInput> | Prisma.patient_documentsCreateWithoutPatient_profilesInput[] | Prisma.patient_documentsUncheckedCreateWithoutPatient_profilesInput[]
-  connectOrCreate?: Prisma.patient_documentsCreateOrConnectWithoutPatient_profilesInput | Prisma.patient_documentsCreateOrConnectWithoutPatient_profilesInput[]
-  createMany?: Prisma.patient_documentsCreateManyPatient_profilesInputEnvelope
+export type patient_documentsUncheckedCreateNestedManyWithoutUploaded_by_userInput = {
+  create?: Prisma.XOR<Prisma.patient_documentsCreateWithoutUploaded_by_userInput, Prisma.patient_documentsUncheckedCreateWithoutUploaded_by_userInput> | Prisma.patient_documentsCreateWithoutUploaded_by_userInput[] | Prisma.patient_documentsUncheckedCreateWithoutUploaded_by_userInput[]
+  connectOrCreate?: Prisma.patient_documentsCreateOrConnectWithoutUploaded_by_userInput | Prisma.patient_documentsCreateOrConnectWithoutUploaded_by_userInput[]
+  createMany?: Prisma.patient_documentsCreateManyUploaded_by_userInputEnvelope
   connect?: Prisma.patient_documentsWhereUniqueInput | Prisma.patient_documentsWhereUniqueInput[]
 }
 
-export type patient_documentsUpdateManyWithoutPatient_profilesNestedInput = {
-  create?: Prisma.XOR<Prisma.patient_documentsCreateWithoutPatient_profilesInput, Prisma.patient_documentsUncheckedCreateWithoutPatient_profilesInput> | Prisma.patient_documentsCreateWithoutPatient_profilesInput[] | Prisma.patient_documentsUncheckedCreateWithoutPatient_profilesInput[]
-  connectOrCreate?: Prisma.patient_documentsCreateOrConnectWithoutPatient_profilesInput | Prisma.patient_documentsCreateOrConnectWithoutPatient_profilesInput[]
-  upsert?: Prisma.patient_documentsUpsertWithWhereUniqueWithoutPatient_profilesInput | Prisma.patient_documentsUpsertWithWhereUniqueWithoutPatient_profilesInput[]
-  createMany?: Prisma.patient_documentsCreateManyPatient_profilesInputEnvelope
+export type patient_documentsUpdateManyWithoutUploaded_by_userNestedInput = {
+  create?: Prisma.XOR<Prisma.patient_documentsCreateWithoutUploaded_by_userInput, Prisma.patient_documentsUncheckedCreateWithoutUploaded_by_userInput> | Prisma.patient_documentsCreateWithoutUploaded_by_userInput[] | Prisma.patient_documentsUncheckedCreateWithoutUploaded_by_userInput[]
+  connectOrCreate?: Prisma.patient_documentsCreateOrConnectWithoutUploaded_by_userInput | Prisma.patient_documentsCreateOrConnectWithoutUploaded_by_userInput[]
+  upsert?: Prisma.patient_documentsUpsertWithWhereUniqueWithoutUploaded_by_userInput | Prisma.patient_documentsUpsertWithWhereUniqueWithoutUploaded_by_userInput[]
+  createMany?: Prisma.patient_documentsCreateManyUploaded_by_userInputEnvelope
   set?: Prisma.patient_documentsWhereUniqueInput | Prisma.patient_documentsWhereUniqueInput[]
   disconnect?: Prisma.patient_documentsWhereUniqueInput | Prisma.patient_documentsWhereUniqueInput[]
   delete?: Prisma.patient_documentsWhereUniqueInput | Prisma.patient_documentsWhereUniqueInput[]
   connect?: Prisma.patient_documentsWhereUniqueInput | Prisma.patient_documentsWhereUniqueInput[]
-  update?: Prisma.patient_documentsUpdateWithWhereUniqueWithoutPatient_profilesInput | Prisma.patient_documentsUpdateWithWhereUniqueWithoutPatient_profilesInput[]
-  updateMany?: Prisma.patient_documentsUpdateManyWithWhereWithoutPatient_profilesInput | Prisma.patient_documentsUpdateManyWithWhereWithoutPatient_profilesInput[]
+  update?: Prisma.patient_documentsUpdateWithWhereUniqueWithoutUploaded_by_userInput | Prisma.patient_documentsUpdateWithWhereUniqueWithoutUploaded_by_userInput[]
+  updateMany?: Prisma.patient_documentsUpdateManyWithWhereWithoutUploaded_by_userInput | Prisma.patient_documentsUpdateManyWithWhereWithoutUploaded_by_userInput[]
   deleteMany?: Prisma.patient_documentsScalarWhereInput | Prisma.patient_documentsScalarWhereInput[]
 }
 
-export type patient_documentsUncheckedUpdateManyWithoutPatient_profilesNestedInput = {
-  create?: Prisma.XOR<Prisma.patient_documentsCreateWithoutPatient_profilesInput, Prisma.patient_documentsUncheckedCreateWithoutPatient_profilesInput> | Prisma.patient_documentsCreateWithoutPatient_profilesInput[] | Prisma.patient_documentsUncheckedCreateWithoutPatient_profilesInput[]
-  connectOrCreate?: Prisma.patient_documentsCreateOrConnectWithoutPatient_profilesInput | Prisma.patient_documentsCreateOrConnectWithoutPatient_profilesInput[]
-  upsert?: Prisma.patient_documentsUpsertWithWhereUniqueWithoutPatient_profilesInput | Prisma.patient_documentsUpsertWithWhereUniqueWithoutPatient_profilesInput[]
-  createMany?: Prisma.patient_documentsCreateManyPatient_profilesInputEnvelope
+export type patient_documentsUncheckedUpdateManyWithoutUploaded_by_userNestedInput = {
+  create?: Prisma.XOR<Prisma.patient_documentsCreateWithoutUploaded_by_userInput, Prisma.patient_documentsUncheckedCreateWithoutUploaded_by_userInput> | Prisma.patient_documentsCreateWithoutUploaded_by_userInput[] | Prisma.patient_documentsUncheckedCreateWithoutUploaded_by_userInput[]
+  connectOrCreate?: Prisma.patient_documentsCreateOrConnectWithoutUploaded_by_userInput | Prisma.patient_documentsCreateOrConnectWithoutUploaded_by_userInput[]
+  upsert?: Prisma.patient_documentsUpsertWithWhereUniqueWithoutUploaded_by_userInput | Prisma.patient_documentsUpsertWithWhereUniqueWithoutUploaded_by_userInput[]
+  createMany?: Prisma.patient_documentsCreateManyUploaded_by_userInputEnvelope
   set?: Prisma.patient_documentsWhereUniqueInput | Prisma.patient_documentsWhereUniqueInput[]
   disconnect?: Prisma.patient_documentsWhereUniqueInput | Prisma.patient_documentsWhereUniqueInput[]
   delete?: Prisma.patient_documentsWhereUniqueInput | Prisma.patient_documentsWhereUniqueInput[]
   connect?: Prisma.patient_documentsWhereUniqueInput | Prisma.patient_documentsWhereUniqueInput[]
-  update?: Prisma.patient_documentsUpdateWithWhereUniqueWithoutPatient_profilesInput | Prisma.patient_documentsUpdateWithWhereUniqueWithoutPatient_profilesInput[]
-  updateMany?: Prisma.patient_documentsUpdateManyWithWhereWithoutPatient_profilesInput | Prisma.patient_documentsUpdateManyWithWhereWithoutPatient_profilesInput[]
+  update?: Prisma.patient_documentsUpdateWithWhereUniqueWithoutUploaded_by_userInput | Prisma.patient_documentsUpdateWithWhereUniqueWithoutUploaded_by_userInput[]
+  updateMany?: Prisma.patient_documentsUpdateManyWithWhereWithoutUploaded_by_userInput | Prisma.patient_documentsUpdateManyWithWhereWithoutUploaded_by_userInput[]
   deleteMany?: Prisma.patient_documentsScalarWhereInput | Prisma.patient_documentsScalarWhereInput[]
 }
 
-export type patient_documentsCreateNestedManyWithoutPatient_recordsInput = {
-  create?: Prisma.XOR<Prisma.patient_documentsCreateWithoutPatient_recordsInput, Prisma.patient_documentsUncheckedCreateWithoutPatient_recordsInput> | Prisma.patient_documentsCreateWithoutPatient_recordsInput[] | Prisma.patient_documentsUncheckedCreateWithoutPatient_recordsInput[]
-  connectOrCreate?: Prisma.patient_documentsCreateOrConnectWithoutPatient_recordsInput | Prisma.patient_documentsCreateOrConnectWithoutPatient_recordsInput[]
-  createMany?: Prisma.patient_documentsCreateManyPatient_recordsInputEnvelope
+export type patient_documentsCreateNestedManyWithoutPatient_profileInput = {
+  create?: Prisma.XOR<Prisma.patient_documentsCreateWithoutPatient_profileInput, Prisma.patient_documentsUncheckedCreateWithoutPatient_profileInput> | Prisma.patient_documentsCreateWithoutPatient_profileInput[] | Prisma.patient_documentsUncheckedCreateWithoutPatient_profileInput[]
+  connectOrCreate?: Prisma.patient_documentsCreateOrConnectWithoutPatient_profileInput | Prisma.patient_documentsCreateOrConnectWithoutPatient_profileInput[]
+  createMany?: Prisma.patient_documentsCreateManyPatient_profileInputEnvelope
   connect?: Prisma.patient_documentsWhereUniqueInput | Prisma.patient_documentsWhereUniqueInput[]
 }
 
-export type patient_documentsUncheckedCreateNestedManyWithoutPatient_recordsInput = {
-  create?: Prisma.XOR<Prisma.patient_documentsCreateWithoutPatient_recordsInput, Prisma.patient_documentsUncheckedCreateWithoutPatient_recordsInput> | Prisma.patient_documentsCreateWithoutPatient_recordsInput[] | Prisma.patient_documentsUncheckedCreateWithoutPatient_recordsInput[]
-  connectOrCreate?: Prisma.patient_documentsCreateOrConnectWithoutPatient_recordsInput | Prisma.patient_documentsCreateOrConnectWithoutPatient_recordsInput[]
-  createMany?: Prisma.patient_documentsCreateManyPatient_recordsInputEnvelope
+export type patient_documentsUncheckedCreateNestedManyWithoutPatient_profileInput = {
+  create?: Prisma.XOR<Prisma.patient_documentsCreateWithoutPatient_profileInput, Prisma.patient_documentsUncheckedCreateWithoutPatient_profileInput> | Prisma.patient_documentsCreateWithoutPatient_profileInput[] | Prisma.patient_documentsUncheckedCreateWithoutPatient_profileInput[]
+  connectOrCreate?: Prisma.patient_documentsCreateOrConnectWithoutPatient_profileInput | Prisma.patient_documentsCreateOrConnectWithoutPatient_profileInput[]
+  createMany?: Prisma.patient_documentsCreateManyPatient_profileInputEnvelope
   connect?: Prisma.patient_documentsWhereUniqueInput | Prisma.patient_documentsWhereUniqueInput[]
 }
 
-export type patient_documentsUpdateManyWithoutPatient_recordsNestedInput = {
-  create?: Prisma.XOR<Prisma.patient_documentsCreateWithoutPatient_recordsInput, Prisma.patient_documentsUncheckedCreateWithoutPatient_recordsInput> | Prisma.patient_documentsCreateWithoutPatient_recordsInput[] | Prisma.patient_documentsUncheckedCreateWithoutPatient_recordsInput[]
-  connectOrCreate?: Prisma.patient_documentsCreateOrConnectWithoutPatient_recordsInput | Prisma.patient_documentsCreateOrConnectWithoutPatient_recordsInput[]
-  upsert?: Prisma.patient_documentsUpsertWithWhereUniqueWithoutPatient_recordsInput | Prisma.patient_documentsUpsertWithWhereUniqueWithoutPatient_recordsInput[]
-  createMany?: Prisma.patient_documentsCreateManyPatient_recordsInputEnvelope
+export type patient_documentsUpdateManyWithoutPatient_profileNestedInput = {
+  create?: Prisma.XOR<Prisma.patient_documentsCreateWithoutPatient_profileInput, Prisma.patient_documentsUncheckedCreateWithoutPatient_profileInput> | Prisma.patient_documentsCreateWithoutPatient_profileInput[] | Prisma.patient_documentsUncheckedCreateWithoutPatient_profileInput[]
+  connectOrCreate?: Prisma.patient_documentsCreateOrConnectWithoutPatient_profileInput | Prisma.patient_documentsCreateOrConnectWithoutPatient_profileInput[]
+  upsert?: Prisma.patient_documentsUpsertWithWhereUniqueWithoutPatient_profileInput | Prisma.patient_documentsUpsertWithWhereUniqueWithoutPatient_profileInput[]
+  createMany?: Prisma.patient_documentsCreateManyPatient_profileInputEnvelope
   set?: Prisma.patient_documentsWhereUniqueInput | Prisma.patient_documentsWhereUniqueInput[]
   disconnect?: Prisma.patient_documentsWhereUniqueInput | Prisma.patient_documentsWhereUniqueInput[]
   delete?: Prisma.patient_documentsWhereUniqueInput | Prisma.patient_documentsWhereUniqueInput[]
   connect?: Prisma.patient_documentsWhereUniqueInput | Prisma.patient_documentsWhereUniqueInput[]
-  update?: Prisma.patient_documentsUpdateWithWhereUniqueWithoutPatient_recordsInput | Prisma.patient_documentsUpdateWithWhereUniqueWithoutPatient_recordsInput[]
-  updateMany?: Prisma.patient_documentsUpdateManyWithWhereWithoutPatient_recordsInput | Prisma.patient_documentsUpdateManyWithWhereWithoutPatient_recordsInput[]
+  update?: Prisma.patient_documentsUpdateWithWhereUniqueWithoutPatient_profileInput | Prisma.patient_documentsUpdateWithWhereUniqueWithoutPatient_profileInput[]
+  updateMany?: Prisma.patient_documentsUpdateManyWithWhereWithoutPatient_profileInput | Prisma.patient_documentsUpdateManyWithWhereWithoutPatient_profileInput[]
   deleteMany?: Prisma.patient_documentsScalarWhereInput | Prisma.patient_documentsScalarWhereInput[]
 }
 
-export type patient_documentsUncheckedUpdateManyWithoutPatient_recordsNestedInput = {
-  create?: Prisma.XOR<Prisma.patient_documentsCreateWithoutPatient_recordsInput, Prisma.patient_documentsUncheckedCreateWithoutPatient_recordsInput> | Prisma.patient_documentsCreateWithoutPatient_recordsInput[] | Prisma.patient_documentsUncheckedCreateWithoutPatient_recordsInput[]
-  connectOrCreate?: Prisma.patient_documentsCreateOrConnectWithoutPatient_recordsInput | Prisma.patient_documentsCreateOrConnectWithoutPatient_recordsInput[]
-  upsert?: Prisma.patient_documentsUpsertWithWhereUniqueWithoutPatient_recordsInput | Prisma.patient_documentsUpsertWithWhereUniqueWithoutPatient_recordsInput[]
-  createMany?: Prisma.patient_documentsCreateManyPatient_recordsInputEnvelope
+export type patient_documentsUncheckedUpdateManyWithoutPatient_profileNestedInput = {
+  create?: Prisma.XOR<Prisma.patient_documentsCreateWithoutPatient_profileInput, Prisma.patient_documentsUncheckedCreateWithoutPatient_profileInput> | Prisma.patient_documentsCreateWithoutPatient_profileInput[] | Prisma.patient_documentsUncheckedCreateWithoutPatient_profileInput[]
+  connectOrCreate?: Prisma.patient_documentsCreateOrConnectWithoutPatient_profileInput | Prisma.patient_documentsCreateOrConnectWithoutPatient_profileInput[]
+  upsert?: Prisma.patient_documentsUpsertWithWhereUniqueWithoutPatient_profileInput | Prisma.patient_documentsUpsertWithWhereUniqueWithoutPatient_profileInput[]
+  createMany?: Prisma.patient_documentsCreateManyPatient_profileInputEnvelope
   set?: Prisma.patient_documentsWhereUniqueInput | Prisma.patient_documentsWhereUniqueInput[]
   disconnect?: Prisma.patient_documentsWhereUniqueInput | Prisma.patient_documentsWhereUniqueInput[]
   delete?: Prisma.patient_documentsWhereUniqueInput | Prisma.patient_documentsWhereUniqueInput[]
   connect?: Prisma.patient_documentsWhereUniqueInput | Prisma.patient_documentsWhereUniqueInput[]
-  update?: Prisma.patient_documentsUpdateWithWhereUniqueWithoutPatient_recordsInput | Prisma.patient_documentsUpdateWithWhereUniqueWithoutPatient_recordsInput[]
-  updateMany?: Prisma.patient_documentsUpdateManyWithWhereWithoutPatient_recordsInput | Prisma.patient_documentsUpdateManyWithWhereWithoutPatient_recordsInput[]
+  update?: Prisma.patient_documentsUpdateWithWhereUniqueWithoutPatient_profileInput | Prisma.patient_documentsUpdateWithWhereUniqueWithoutPatient_profileInput[]
+  updateMany?: Prisma.patient_documentsUpdateManyWithWhereWithoutPatient_profileInput | Prisma.patient_documentsUpdateManyWithWhereWithoutPatient_profileInput[]
   deleteMany?: Prisma.patient_documentsScalarWhereInput | Prisma.patient_documentsScalarWhereInput[]
 }
 
-export type patient_documentsCreateNestedManyWithoutUsersInput = {
-  create?: Prisma.XOR<Prisma.patient_documentsCreateWithoutUsersInput, Prisma.patient_documentsUncheckedCreateWithoutUsersInput> | Prisma.patient_documentsCreateWithoutUsersInput[] | Prisma.patient_documentsUncheckedCreateWithoutUsersInput[]
-  connectOrCreate?: Prisma.patient_documentsCreateOrConnectWithoutUsersInput | Prisma.patient_documentsCreateOrConnectWithoutUsersInput[]
-  createMany?: Prisma.patient_documentsCreateManyUsersInputEnvelope
+export type patient_documentsCreateNestedManyWithoutRecordInput = {
+  create?: Prisma.XOR<Prisma.patient_documentsCreateWithoutRecordInput, Prisma.patient_documentsUncheckedCreateWithoutRecordInput> | Prisma.patient_documentsCreateWithoutRecordInput[] | Prisma.patient_documentsUncheckedCreateWithoutRecordInput[]
+  connectOrCreate?: Prisma.patient_documentsCreateOrConnectWithoutRecordInput | Prisma.patient_documentsCreateOrConnectWithoutRecordInput[]
+  createMany?: Prisma.patient_documentsCreateManyRecordInputEnvelope
   connect?: Prisma.patient_documentsWhereUniqueInput | Prisma.patient_documentsWhereUniqueInput[]
 }
 
-export type patient_documentsUncheckedCreateNestedManyWithoutUsersInput = {
-  create?: Prisma.XOR<Prisma.patient_documentsCreateWithoutUsersInput, Prisma.patient_documentsUncheckedCreateWithoutUsersInput> | Prisma.patient_documentsCreateWithoutUsersInput[] | Prisma.patient_documentsUncheckedCreateWithoutUsersInput[]
-  connectOrCreate?: Prisma.patient_documentsCreateOrConnectWithoutUsersInput | Prisma.patient_documentsCreateOrConnectWithoutUsersInput[]
-  createMany?: Prisma.patient_documentsCreateManyUsersInputEnvelope
+export type patient_documentsUncheckedCreateNestedManyWithoutRecordInput = {
+  create?: Prisma.XOR<Prisma.patient_documentsCreateWithoutRecordInput, Prisma.patient_documentsUncheckedCreateWithoutRecordInput> | Prisma.patient_documentsCreateWithoutRecordInput[] | Prisma.patient_documentsUncheckedCreateWithoutRecordInput[]
+  connectOrCreate?: Prisma.patient_documentsCreateOrConnectWithoutRecordInput | Prisma.patient_documentsCreateOrConnectWithoutRecordInput[]
+  createMany?: Prisma.patient_documentsCreateManyRecordInputEnvelope
   connect?: Prisma.patient_documentsWhereUniqueInput | Prisma.patient_documentsWhereUniqueInput[]
 }
 
-export type patient_documentsUpdateManyWithoutUsersNestedInput = {
-  create?: Prisma.XOR<Prisma.patient_documentsCreateWithoutUsersInput, Prisma.patient_documentsUncheckedCreateWithoutUsersInput> | Prisma.patient_documentsCreateWithoutUsersInput[] | Prisma.patient_documentsUncheckedCreateWithoutUsersInput[]
-  connectOrCreate?: Prisma.patient_documentsCreateOrConnectWithoutUsersInput | Prisma.patient_documentsCreateOrConnectWithoutUsersInput[]
-  upsert?: Prisma.patient_documentsUpsertWithWhereUniqueWithoutUsersInput | Prisma.patient_documentsUpsertWithWhereUniqueWithoutUsersInput[]
-  createMany?: Prisma.patient_documentsCreateManyUsersInputEnvelope
+export type patient_documentsUpdateManyWithoutRecordNestedInput = {
+  create?: Prisma.XOR<Prisma.patient_documentsCreateWithoutRecordInput, Prisma.patient_documentsUncheckedCreateWithoutRecordInput> | Prisma.patient_documentsCreateWithoutRecordInput[] | Prisma.patient_documentsUncheckedCreateWithoutRecordInput[]
+  connectOrCreate?: Prisma.patient_documentsCreateOrConnectWithoutRecordInput | Prisma.patient_documentsCreateOrConnectWithoutRecordInput[]
+  upsert?: Prisma.patient_documentsUpsertWithWhereUniqueWithoutRecordInput | Prisma.patient_documentsUpsertWithWhereUniqueWithoutRecordInput[]
+  createMany?: Prisma.patient_documentsCreateManyRecordInputEnvelope
   set?: Prisma.patient_documentsWhereUniqueInput | Prisma.patient_documentsWhereUniqueInput[]
   disconnect?: Prisma.patient_documentsWhereUniqueInput | Prisma.patient_documentsWhereUniqueInput[]
   delete?: Prisma.patient_documentsWhereUniqueInput | Prisma.patient_documentsWhereUniqueInput[]
   connect?: Prisma.patient_documentsWhereUniqueInput | Prisma.patient_documentsWhereUniqueInput[]
-  update?: Prisma.patient_documentsUpdateWithWhereUniqueWithoutUsersInput | Prisma.patient_documentsUpdateWithWhereUniqueWithoutUsersInput[]
-  updateMany?: Prisma.patient_documentsUpdateManyWithWhereWithoutUsersInput | Prisma.patient_documentsUpdateManyWithWhereWithoutUsersInput[]
+  update?: Prisma.patient_documentsUpdateWithWhereUniqueWithoutRecordInput | Prisma.patient_documentsUpdateWithWhereUniqueWithoutRecordInput[]
+  updateMany?: Prisma.patient_documentsUpdateManyWithWhereWithoutRecordInput | Prisma.patient_documentsUpdateManyWithWhereWithoutRecordInput[]
   deleteMany?: Prisma.patient_documentsScalarWhereInput | Prisma.patient_documentsScalarWhereInput[]
 }
 
-export type patient_documentsUncheckedUpdateManyWithoutUsersNestedInput = {
-  create?: Prisma.XOR<Prisma.patient_documentsCreateWithoutUsersInput, Prisma.patient_documentsUncheckedCreateWithoutUsersInput> | Prisma.patient_documentsCreateWithoutUsersInput[] | Prisma.patient_documentsUncheckedCreateWithoutUsersInput[]
-  connectOrCreate?: Prisma.patient_documentsCreateOrConnectWithoutUsersInput | Prisma.patient_documentsCreateOrConnectWithoutUsersInput[]
-  upsert?: Prisma.patient_documentsUpsertWithWhereUniqueWithoutUsersInput | Prisma.patient_documentsUpsertWithWhereUniqueWithoutUsersInput[]
-  createMany?: Prisma.patient_documentsCreateManyUsersInputEnvelope
+export type patient_documentsUncheckedUpdateManyWithoutRecordNestedInput = {
+  create?: Prisma.XOR<Prisma.patient_documentsCreateWithoutRecordInput, Prisma.patient_documentsUncheckedCreateWithoutRecordInput> | Prisma.patient_documentsCreateWithoutRecordInput[] | Prisma.patient_documentsUncheckedCreateWithoutRecordInput[]
+  connectOrCreate?: Prisma.patient_documentsCreateOrConnectWithoutRecordInput | Prisma.patient_documentsCreateOrConnectWithoutRecordInput[]
+  upsert?: Prisma.patient_documentsUpsertWithWhereUniqueWithoutRecordInput | Prisma.patient_documentsUpsertWithWhereUniqueWithoutRecordInput[]
+  createMany?: Prisma.patient_documentsCreateManyRecordInputEnvelope
   set?: Prisma.patient_documentsWhereUniqueInput | Prisma.patient_documentsWhereUniqueInput[]
   disconnect?: Prisma.patient_documentsWhereUniqueInput | Prisma.patient_documentsWhereUniqueInput[]
   delete?: Prisma.patient_documentsWhereUniqueInput | Prisma.patient_documentsWhereUniqueInput[]
   connect?: Prisma.patient_documentsWhereUniqueInput | Prisma.patient_documentsWhereUniqueInput[]
-  update?: Prisma.patient_documentsUpdateWithWhereUniqueWithoutUsersInput | Prisma.patient_documentsUpdateWithWhereUniqueWithoutUsersInput[]
-  updateMany?: Prisma.patient_documentsUpdateManyWithWhereWithoutUsersInput | Prisma.patient_documentsUpdateManyWithWhereWithoutUsersInput[]
+  update?: Prisma.patient_documentsUpdateWithWhereUniqueWithoutRecordInput | Prisma.patient_documentsUpdateWithWhereUniqueWithoutRecordInput[]
+  updateMany?: Prisma.patient_documentsUpdateManyWithWhereWithoutRecordInput | Prisma.patient_documentsUpdateManyWithWhereWithoutRecordInput[]
   deleteMany?: Prisma.patient_documentsScalarWhereInput | Prisma.patient_documentsScalarWhereInput[]
 }
 
-export type patient_documentsCreateWithoutPatient_profilesInput = {
+export type patient_documentsCreateWithoutUploaded_by_userInput = {
   id?: bigint | number
   file_name: string
   file_path: string
   document_type?: string | null
   uploaded_at?: Date | string
-  patient_records?: Prisma.patient_recordsCreateNestedOneWithoutPatient_documentsInput
-  users?: Prisma.usersCreateNestedOneWithoutPatient_documentsInput
+  patient_profile: Prisma.patient_profilesCreateNestedOneWithoutPatient_documentsInput
+  record?: Prisma.patient_recordsCreateNestedOneWithoutPatient_documentsInput
 }
 
-export type patient_documentsUncheckedCreateWithoutPatient_profilesInput = {
+export type patient_documentsUncheckedCreateWithoutUploaded_by_userInput = {
   id?: bigint | number
+  patient_id: bigint | number
   record_id?: bigint | number | null
   file_name: string
   file_path: string
   document_type?: string | null
-  uploaded_by?: bigint | number | null
   uploaded_at?: Date | string
 }
 
-export type patient_documentsCreateOrConnectWithoutPatient_profilesInput = {
+export type patient_documentsCreateOrConnectWithoutUploaded_by_userInput = {
   where: Prisma.patient_documentsWhereUniqueInput
-  create: Prisma.XOR<Prisma.patient_documentsCreateWithoutPatient_profilesInput, Prisma.patient_documentsUncheckedCreateWithoutPatient_profilesInput>
+  create: Prisma.XOR<Prisma.patient_documentsCreateWithoutUploaded_by_userInput, Prisma.patient_documentsUncheckedCreateWithoutUploaded_by_userInput>
 }
 
-export type patient_documentsCreateManyPatient_profilesInputEnvelope = {
-  data: Prisma.patient_documentsCreateManyPatient_profilesInput | Prisma.patient_documentsCreateManyPatient_profilesInput[]
+export type patient_documentsCreateManyUploaded_by_userInputEnvelope = {
+  data: Prisma.patient_documentsCreateManyUploaded_by_userInput | Prisma.patient_documentsCreateManyUploaded_by_userInput[]
   skipDuplicates?: boolean
 }
 
-export type patient_documentsUpsertWithWhereUniqueWithoutPatient_profilesInput = {
+export type patient_documentsUpsertWithWhereUniqueWithoutUploaded_by_userInput = {
   where: Prisma.patient_documentsWhereUniqueInput
-  update: Prisma.XOR<Prisma.patient_documentsUpdateWithoutPatient_profilesInput, Prisma.patient_documentsUncheckedUpdateWithoutPatient_profilesInput>
-  create: Prisma.XOR<Prisma.patient_documentsCreateWithoutPatient_profilesInput, Prisma.patient_documentsUncheckedCreateWithoutPatient_profilesInput>
+  update: Prisma.XOR<Prisma.patient_documentsUpdateWithoutUploaded_by_userInput, Prisma.patient_documentsUncheckedUpdateWithoutUploaded_by_userInput>
+  create: Prisma.XOR<Prisma.patient_documentsCreateWithoutUploaded_by_userInput, Prisma.patient_documentsUncheckedCreateWithoutUploaded_by_userInput>
 }
 
-export type patient_documentsUpdateWithWhereUniqueWithoutPatient_profilesInput = {
+export type patient_documentsUpdateWithWhereUniqueWithoutUploaded_by_userInput = {
   where: Prisma.patient_documentsWhereUniqueInput
-  data: Prisma.XOR<Prisma.patient_documentsUpdateWithoutPatient_profilesInput, Prisma.patient_documentsUncheckedUpdateWithoutPatient_profilesInput>
+  data: Prisma.XOR<Prisma.patient_documentsUpdateWithoutUploaded_by_userInput, Prisma.patient_documentsUncheckedUpdateWithoutUploaded_by_userInput>
 }
 
-export type patient_documentsUpdateManyWithWhereWithoutPatient_profilesInput = {
+export type patient_documentsUpdateManyWithWhereWithoutUploaded_by_userInput = {
   where: Prisma.patient_documentsScalarWhereInput
-  data: Prisma.XOR<Prisma.patient_documentsUpdateManyMutationInput, Prisma.patient_documentsUncheckedUpdateManyWithoutPatient_profilesInput>
+  data: Prisma.XOR<Prisma.patient_documentsUpdateManyMutationInput, Prisma.patient_documentsUncheckedUpdateManyWithoutUploaded_by_userInput>
 }
 
 export type patient_documentsScalarWhereInput = {
@@ -635,19 +635,19 @@ export type patient_documentsScalarWhereInput = {
   uploaded_at?: Prisma.DateTimeFilter<"patient_documents"> | Date | string
 }
 
-export type patient_documentsCreateWithoutPatient_recordsInput = {
+export type patient_documentsCreateWithoutPatient_profileInput = {
   id?: bigint | number
   file_name: string
   file_path: string
   document_type?: string | null
   uploaded_at?: Date | string
-  patient_profiles: Prisma.patient_profilesCreateNestedOneWithoutPatient_documentsInput
-  users?: Prisma.usersCreateNestedOneWithoutPatient_documentsInput
+  record?: Prisma.patient_recordsCreateNestedOneWithoutPatient_documentsInput
+  uploaded_by_user?: Prisma.usersCreateNestedOneWithoutPatient_documentsInput
 }
 
-export type patient_documentsUncheckedCreateWithoutPatient_recordsInput = {
+export type patient_documentsUncheckedCreateWithoutPatient_profileInput = {
   id?: bigint | number
-  patient_id: bigint | number
+  record_id?: bigint | number | null
   file_name: string
   file_path: string
   document_type?: string | null
@@ -655,159 +655,79 @@ export type patient_documentsUncheckedCreateWithoutPatient_recordsInput = {
   uploaded_at?: Date | string
 }
 
-export type patient_documentsCreateOrConnectWithoutPatient_recordsInput = {
+export type patient_documentsCreateOrConnectWithoutPatient_profileInput = {
   where: Prisma.patient_documentsWhereUniqueInput
-  create: Prisma.XOR<Prisma.patient_documentsCreateWithoutPatient_recordsInput, Prisma.patient_documentsUncheckedCreateWithoutPatient_recordsInput>
+  create: Prisma.XOR<Prisma.patient_documentsCreateWithoutPatient_profileInput, Prisma.patient_documentsUncheckedCreateWithoutPatient_profileInput>
 }
 
-export type patient_documentsCreateManyPatient_recordsInputEnvelope = {
-  data: Prisma.patient_documentsCreateManyPatient_recordsInput | Prisma.patient_documentsCreateManyPatient_recordsInput[]
+export type patient_documentsCreateManyPatient_profileInputEnvelope = {
+  data: Prisma.patient_documentsCreateManyPatient_profileInput | Prisma.patient_documentsCreateManyPatient_profileInput[]
   skipDuplicates?: boolean
 }
 
-export type patient_documentsUpsertWithWhereUniqueWithoutPatient_recordsInput = {
+export type patient_documentsUpsertWithWhereUniqueWithoutPatient_profileInput = {
   where: Prisma.patient_documentsWhereUniqueInput
-  update: Prisma.XOR<Prisma.patient_documentsUpdateWithoutPatient_recordsInput, Prisma.patient_documentsUncheckedUpdateWithoutPatient_recordsInput>
-  create: Prisma.XOR<Prisma.patient_documentsCreateWithoutPatient_recordsInput, Prisma.patient_documentsUncheckedCreateWithoutPatient_recordsInput>
+  update: Prisma.XOR<Prisma.patient_documentsUpdateWithoutPatient_profileInput, Prisma.patient_documentsUncheckedUpdateWithoutPatient_profileInput>
+  create: Prisma.XOR<Prisma.patient_documentsCreateWithoutPatient_profileInput, Prisma.patient_documentsUncheckedCreateWithoutPatient_profileInput>
 }
 
-export type patient_documentsUpdateWithWhereUniqueWithoutPatient_recordsInput = {
+export type patient_documentsUpdateWithWhereUniqueWithoutPatient_profileInput = {
   where: Prisma.patient_documentsWhereUniqueInput
-  data: Prisma.XOR<Prisma.patient_documentsUpdateWithoutPatient_recordsInput, Prisma.patient_documentsUncheckedUpdateWithoutPatient_recordsInput>
+  data: Prisma.XOR<Prisma.patient_documentsUpdateWithoutPatient_profileInput, Prisma.patient_documentsUncheckedUpdateWithoutPatient_profileInput>
 }
 
-export type patient_documentsUpdateManyWithWhereWithoutPatient_recordsInput = {
+export type patient_documentsUpdateManyWithWhereWithoutPatient_profileInput = {
   where: Prisma.patient_documentsScalarWhereInput
-  data: Prisma.XOR<Prisma.patient_documentsUpdateManyMutationInput, Prisma.patient_documentsUncheckedUpdateManyWithoutPatient_recordsInput>
+  data: Prisma.XOR<Prisma.patient_documentsUpdateManyMutationInput, Prisma.patient_documentsUncheckedUpdateManyWithoutPatient_profileInput>
 }
 
-export type patient_documentsCreateWithoutUsersInput = {
+export type patient_documentsCreateWithoutRecordInput = {
   id?: bigint | number
   file_name: string
   file_path: string
   document_type?: string | null
   uploaded_at?: Date | string
-  patient_profiles: Prisma.patient_profilesCreateNestedOneWithoutPatient_documentsInput
-  patient_records?: Prisma.patient_recordsCreateNestedOneWithoutPatient_documentsInput
+  patient_profile: Prisma.patient_profilesCreateNestedOneWithoutPatient_documentsInput
+  uploaded_by_user?: Prisma.usersCreateNestedOneWithoutPatient_documentsInput
 }
 
-export type patient_documentsUncheckedCreateWithoutUsersInput = {
+export type patient_documentsUncheckedCreateWithoutRecordInput = {
   id?: bigint | number
   patient_id: bigint | number
-  record_id?: bigint | number | null
   file_name: string
   file_path: string
   document_type?: string | null
+  uploaded_by?: bigint | number | null
   uploaded_at?: Date | string
 }
 
-export type patient_documentsCreateOrConnectWithoutUsersInput = {
+export type patient_documentsCreateOrConnectWithoutRecordInput = {
   where: Prisma.patient_documentsWhereUniqueInput
-  create: Prisma.XOR<Prisma.patient_documentsCreateWithoutUsersInput, Prisma.patient_documentsUncheckedCreateWithoutUsersInput>
+  create: Prisma.XOR<Prisma.patient_documentsCreateWithoutRecordInput, Prisma.patient_documentsUncheckedCreateWithoutRecordInput>
 }
 
-export type patient_documentsCreateManyUsersInputEnvelope = {
-  data: Prisma.patient_documentsCreateManyUsersInput | Prisma.patient_documentsCreateManyUsersInput[]
+export type patient_documentsCreateManyRecordInputEnvelope = {
+  data: Prisma.patient_documentsCreateManyRecordInput | Prisma.patient_documentsCreateManyRecordInput[]
   skipDuplicates?: boolean
 }
 
-export type patient_documentsUpsertWithWhereUniqueWithoutUsersInput = {
+export type patient_documentsUpsertWithWhereUniqueWithoutRecordInput = {
   where: Prisma.patient_documentsWhereUniqueInput
-  update: Prisma.XOR<Prisma.patient_documentsUpdateWithoutUsersInput, Prisma.patient_documentsUncheckedUpdateWithoutUsersInput>
-  create: Prisma.XOR<Prisma.patient_documentsCreateWithoutUsersInput, Prisma.patient_documentsUncheckedCreateWithoutUsersInput>
+  update: Prisma.XOR<Prisma.patient_documentsUpdateWithoutRecordInput, Prisma.patient_documentsUncheckedUpdateWithoutRecordInput>
+  create: Prisma.XOR<Prisma.patient_documentsCreateWithoutRecordInput, Prisma.patient_documentsUncheckedCreateWithoutRecordInput>
 }
 
-export type patient_documentsUpdateWithWhereUniqueWithoutUsersInput = {
+export type patient_documentsUpdateWithWhereUniqueWithoutRecordInput = {
   where: Prisma.patient_documentsWhereUniqueInput
-  data: Prisma.XOR<Prisma.patient_documentsUpdateWithoutUsersInput, Prisma.patient_documentsUncheckedUpdateWithoutUsersInput>
+  data: Prisma.XOR<Prisma.patient_documentsUpdateWithoutRecordInput, Prisma.patient_documentsUncheckedUpdateWithoutRecordInput>
 }
 
-export type patient_documentsUpdateManyWithWhereWithoutUsersInput = {
+export type patient_documentsUpdateManyWithWhereWithoutRecordInput = {
   where: Prisma.patient_documentsScalarWhereInput
-  data: Prisma.XOR<Prisma.patient_documentsUpdateManyMutationInput, Prisma.patient_documentsUncheckedUpdateManyWithoutUsersInput>
+  data: Prisma.XOR<Prisma.patient_documentsUpdateManyMutationInput, Prisma.patient_documentsUncheckedUpdateManyWithoutRecordInput>
 }
 
-export type patient_documentsCreateManyPatient_profilesInput = {
-  id?: bigint | number
-  record_id?: bigint | number | null
-  file_name: string
-  file_path: string
-  document_type?: string | null
-  uploaded_by?: bigint | number | null
-  uploaded_at?: Date | string
-}
-
-export type patient_documentsUpdateWithoutPatient_profilesInput = {
-  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  file_name?: Prisma.StringFieldUpdateOperationsInput | string
-  file_path?: Prisma.StringFieldUpdateOperationsInput | string
-  document_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  uploaded_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  patient_records?: Prisma.patient_recordsUpdateOneWithoutPatient_documentsNestedInput
-  users?: Prisma.usersUpdateOneWithoutPatient_documentsNestedInput
-}
-
-export type patient_documentsUncheckedUpdateWithoutPatient_profilesInput = {
-  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  record_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  file_name?: Prisma.StringFieldUpdateOperationsInput | string
-  file_path?: Prisma.StringFieldUpdateOperationsInput | string
-  document_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  uploaded_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  uploaded_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-}
-
-export type patient_documentsUncheckedUpdateManyWithoutPatient_profilesInput = {
-  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  record_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  file_name?: Prisma.StringFieldUpdateOperationsInput | string
-  file_path?: Prisma.StringFieldUpdateOperationsInput | string
-  document_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  uploaded_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  uploaded_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-}
-
-export type patient_documentsCreateManyPatient_recordsInput = {
-  id?: bigint | number
-  patient_id: bigint | number
-  file_name: string
-  file_path: string
-  document_type?: string | null
-  uploaded_by?: bigint | number | null
-  uploaded_at?: Date | string
-}
-
-export type patient_documentsUpdateWithoutPatient_recordsInput = {
-  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  file_name?: Prisma.StringFieldUpdateOperationsInput | string
-  file_path?: Prisma.StringFieldUpdateOperationsInput | string
-  document_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  uploaded_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  patient_profiles?: Prisma.patient_profilesUpdateOneRequiredWithoutPatient_documentsNestedInput
-  users?: Prisma.usersUpdateOneWithoutPatient_documentsNestedInput
-}
-
-export type patient_documentsUncheckedUpdateWithoutPatient_recordsInput = {
-  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  file_name?: Prisma.StringFieldUpdateOperationsInput | string
-  file_path?: Prisma.StringFieldUpdateOperationsInput | string
-  document_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  uploaded_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  uploaded_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-}
-
-export type patient_documentsUncheckedUpdateManyWithoutPatient_recordsInput = {
-  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  file_name?: Prisma.StringFieldUpdateOperationsInput | string
-  file_path?: Prisma.StringFieldUpdateOperationsInput | string
-  document_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  uploaded_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  uploaded_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-}
-
-export type patient_documentsCreateManyUsersInput = {
+export type patient_documentsCreateManyUploaded_by_userInput = {
   id?: bigint | number
   patient_id: bigint | number
   record_id?: bigint | number | null
@@ -817,17 +737,17 @@ export type patient_documentsCreateManyUsersInput = {
   uploaded_at?: Date | string
 }
 
-export type patient_documentsUpdateWithoutUsersInput = {
+export type patient_documentsUpdateWithoutUploaded_by_userInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   file_name?: Prisma.StringFieldUpdateOperationsInput | string
   file_path?: Prisma.StringFieldUpdateOperationsInput | string
   document_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uploaded_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  patient_profiles?: Prisma.patient_profilesUpdateOneRequiredWithoutPatient_documentsNestedInput
-  patient_records?: Prisma.patient_recordsUpdateOneWithoutPatient_documentsNestedInput
+  patient_profile?: Prisma.patient_profilesUpdateOneRequiredWithoutPatient_documentsNestedInput
+  record?: Prisma.patient_recordsUpdateOneWithoutPatient_documentsNestedInput
 }
 
-export type patient_documentsUncheckedUpdateWithoutUsersInput = {
+export type patient_documentsUncheckedUpdateWithoutUploaded_by_userInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   record_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
@@ -837,13 +757,93 @@ export type patient_documentsUncheckedUpdateWithoutUsersInput = {
   uploaded_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
-export type patient_documentsUncheckedUpdateManyWithoutUsersInput = {
+export type patient_documentsUncheckedUpdateManyWithoutUploaded_by_userInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   record_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   file_name?: Prisma.StringFieldUpdateOperationsInput | string
   file_path?: Prisma.StringFieldUpdateOperationsInput | string
   document_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  uploaded_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type patient_documentsCreateManyPatient_profileInput = {
+  id?: bigint | number
+  record_id?: bigint | number | null
+  file_name: string
+  file_path: string
+  document_type?: string | null
+  uploaded_by?: bigint | number | null
+  uploaded_at?: Date | string
+}
+
+export type patient_documentsUpdateWithoutPatient_profileInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  file_name?: Prisma.StringFieldUpdateOperationsInput | string
+  file_path?: Prisma.StringFieldUpdateOperationsInput | string
+  document_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  uploaded_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  record?: Prisma.patient_recordsUpdateOneWithoutPatient_documentsNestedInput
+  uploaded_by_user?: Prisma.usersUpdateOneWithoutPatient_documentsNestedInput
+}
+
+export type patient_documentsUncheckedUpdateWithoutPatient_profileInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  record_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  file_name?: Prisma.StringFieldUpdateOperationsInput | string
+  file_path?: Prisma.StringFieldUpdateOperationsInput | string
+  document_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  uploaded_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  uploaded_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type patient_documentsUncheckedUpdateManyWithoutPatient_profileInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  record_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  file_name?: Prisma.StringFieldUpdateOperationsInput | string
+  file_path?: Prisma.StringFieldUpdateOperationsInput | string
+  document_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  uploaded_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  uploaded_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type patient_documentsCreateManyRecordInput = {
+  id?: bigint | number
+  patient_id: bigint | number
+  file_name: string
+  file_path: string
+  document_type?: string | null
+  uploaded_by?: bigint | number | null
+  uploaded_at?: Date | string
+}
+
+export type patient_documentsUpdateWithoutRecordInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  file_name?: Prisma.StringFieldUpdateOperationsInput | string
+  file_path?: Prisma.StringFieldUpdateOperationsInput | string
+  document_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  uploaded_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  patient_profile?: Prisma.patient_profilesUpdateOneRequiredWithoutPatient_documentsNestedInput
+  uploaded_by_user?: Prisma.usersUpdateOneWithoutPatient_documentsNestedInput
+}
+
+export type patient_documentsUncheckedUpdateWithoutRecordInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  file_name?: Prisma.StringFieldUpdateOperationsInput | string
+  file_path?: Prisma.StringFieldUpdateOperationsInput | string
+  document_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  uploaded_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  uploaded_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type patient_documentsUncheckedUpdateManyWithoutRecordInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  file_name?: Prisma.StringFieldUpdateOperationsInput | string
+  file_path?: Prisma.StringFieldUpdateOperationsInput | string
+  document_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  uploaded_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   uploaded_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -858,9 +858,9 @@ export type patient_documentsSelect<ExtArgs extends runtime.Types.Extensions.Int
   document_type?: boolean
   uploaded_by?: boolean
   uploaded_at?: boolean
-  patient_profiles?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
-  patient_records?: boolean | Prisma.patient_documents$patient_recordsArgs<ExtArgs>
-  users?: boolean | Prisma.patient_documents$usersArgs<ExtArgs>
+  patient_profile?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
+  record?: boolean | Prisma.patient_documents$recordArgs<ExtArgs>
+  uploaded_by_user?: boolean | Prisma.patient_documents$uploaded_by_userArgs<ExtArgs>
 }, ExtArgs["result"]["patient_documents"]>
 
 export type patient_documentsSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -872,9 +872,9 @@ export type patient_documentsSelectCreateManyAndReturn<ExtArgs extends runtime.T
   document_type?: boolean
   uploaded_by?: boolean
   uploaded_at?: boolean
-  patient_profiles?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
-  patient_records?: boolean | Prisma.patient_documents$patient_recordsArgs<ExtArgs>
-  users?: boolean | Prisma.patient_documents$usersArgs<ExtArgs>
+  patient_profile?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
+  record?: boolean | Prisma.patient_documents$recordArgs<ExtArgs>
+  uploaded_by_user?: boolean | Prisma.patient_documents$uploaded_by_userArgs<ExtArgs>
 }, ExtArgs["result"]["patient_documents"]>
 
 export type patient_documentsSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -886,9 +886,9 @@ export type patient_documentsSelectUpdateManyAndReturn<ExtArgs extends runtime.T
   document_type?: boolean
   uploaded_by?: boolean
   uploaded_at?: boolean
-  patient_profiles?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
-  patient_records?: boolean | Prisma.patient_documents$patient_recordsArgs<ExtArgs>
-  users?: boolean | Prisma.patient_documents$usersArgs<ExtArgs>
+  patient_profile?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
+  record?: boolean | Prisma.patient_documents$recordArgs<ExtArgs>
+  uploaded_by_user?: boolean | Prisma.patient_documents$uploaded_by_userArgs<ExtArgs>
 }, ExtArgs["result"]["patient_documents"]>
 
 export type patient_documentsSelectScalar = {
@@ -904,27 +904,27 @@ export type patient_documentsSelectScalar = {
 
 export type patient_documentsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "patient_id" | "record_id" | "file_name" | "file_path" | "document_type" | "uploaded_by" | "uploaded_at", ExtArgs["result"]["patient_documents"]>
 export type patient_documentsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  patient_profiles?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
-  patient_records?: boolean | Prisma.patient_documents$patient_recordsArgs<ExtArgs>
-  users?: boolean | Prisma.patient_documents$usersArgs<ExtArgs>
+  patient_profile?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
+  record?: boolean | Prisma.patient_documents$recordArgs<ExtArgs>
+  uploaded_by_user?: boolean | Prisma.patient_documents$uploaded_by_userArgs<ExtArgs>
 }
 export type patient_documentsIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  patient_profiles?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
-  patient_records?: boolean | Prisma.patient_documents$patient_recordsArgs<ExtArgs>
-  users?: boolean | Prisma.patient_documents$usersArgs<ExtArgs>
+  patient_profile?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
+  record?: boolean | Prisma.patient_documents$recordArgs<ExtArgs>
+  uploaded_by_user?: boolean | Prisma.patient_documents$uploaded_by_userArgs<ExtArgs>
 }
 export type patient_documentsIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  patient_profiles?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
-  patient_records?: boolean | Prisma.patient_documents$patient_recordsArgs<ExtArgs>
-  users?: boolean | Prisma.patient_documents$usersArgs<ExtArgs>
+  patient_profile?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
+  record?: boolean | Prisma.patient_documents$recordArgs<ExtArgs>
+  uploaded_by_user?: boolean | Prisma.patient_documents$uploaded_by_userArgs<ExtArgs>
 }
 
 export type $patient_documentsPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "patient_documents"
   objects: {
-    patient_profiles: Prisma.$patient_profilesPayload<ExtArgs>
-    patient_records: Prisma.$patient_recordsPayload<ExtArgs> | null
-    users: Prisma.$usersPayload<ExtArgs> | null
+    patient_profile: Prisma.$patient_profilesPayload<ExtArgs>
+    record: Prisma.$patient_recordsPayload<ExtArgs> | null
+    uploaded_by_user: Prisma.$usersPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: bigint
@@ -1329,9 +1329,9 @@ readonly fields: patient_documentsFieldRefs;
  */
 export interface Prisma__patient_documentsClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  patient_profiles<T extends Prisma.patient_profilesDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.patient_profilesDefaultArgs<ExtArgs>>): Prisma.Prisma__patient_profilesClient<runtime.Types.Result.GetResult<Prisma.$patient_profilesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-  patient_records<T extends Prisma.patient_documents$patient_recordsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.patient_documents$patient_recordsArgs<ExtArgs>>): Prisma.Prisma__patient_recordsClient<runtime.Types.Result.GetResult<Prisma.$patient_recordsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-  users<T extends Prisma.patient_documents$usersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.patient_documents$usersArgs<ExtArgs>>): Prisma.Prisma__usersClient<runtime.Types.Result.GetResult<Prisma.$usersPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  patient_profile<T extends Prisma.patient_profilesDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.patient_profilesDefaultArgs<ExtArgs>>): Prisma.Prisma__patient_profilesClient<runtime.Types.Result.GetResult<Prisma.$patient_profilesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  record<T extends Prisma.patient_documents$recordArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.patient_documents$recordArgs<ExtArgs>>): Prisma.Prisma__patient_recordsClient<runtime.Types.Result.GetResult<Prisma.$patient_recordsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  uploaded_by_user<T extends Prisma.patient_documents$uploaded_by_userArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.patient_documents$uploaded_by_userArgs<ExtArgs>>): Prisma.Prisma__usersClient<runtime.Types.Result.GetResult<Prisma.$usersPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1770,9 +1770,9 @@ export type patient_documentsDeleteManyArgs<ExtArgs extends runtime.Types.Extens
 }
 
 /**
- * patient_documents.patient_records
+ * patient_documents.record
  */
-export type patient_documents$patient_recordsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+export type patient_documents$recordArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
    * Select specific fields to fetch from the patient_records
    */
@@ -1789,9 +1789,9 @@ export type patient_documents$patient_recordsArgs<ExtArgs extends runtime.Types.
 }
 
 /**
- * patient_documents.users
+ * patient_documents.uploaded_by_user
  */
-export type patient_documents$usersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+export type patient_documents$uploaded_by_userArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
    * Select specific fields to fetch from the users
    */

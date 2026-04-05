@@ -9,12 +9,12 @@
  * 🟢 You can import this file directly.
  */
 import type * as runtime from "@prisma/client/runtime/client"
-import type * as $Enums from "../enums.js"
-import type * as Prisma from "../internal/prismaNamespace.js"
+import type * as $Enums from "../enums"
+import type * as Prisma from "../internal/prismaNamespace"
 
 /**
  * Model patient_records
- * This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+ * 
  */
 export type patient_recordsModel = runtime.Types.Result.DefaultSelection<Prisma.$patient_recordsPayload>
 
@@ -277,9 +277,9 @@ export type patient_recordsWhereInput = {
   created_at?: Prisma.DateTimeFilter<"patient_records"> | Date | string
   updated_at?: Prisma.DateTimeFilter<"patient_records"> | Date | string
   patient_documents?: Prisma.Patient_documentsListRelationFilter
-  appointments?: Prisma.XOR<Prisma.AppointmentsNullableScalarRelationFilter, Prisma.appointmentsWhereInput> | null
-  users?: Prisma.XOR<Prisma.UsersNullableScalarRelationFilter, Prisma.usersWhereInput> | null
-  patient_profiles?: Prisma.XOR<Prisma.Patient_profilesScalarRelationFilter, Prisma.patient_profilesWhereInput>
+  appointment?: Prisma.XOR<Prisma.AppointmentsNullableScalarRelationFilter, Prisma.appointmentsWhereInput> | null
+  created_by_user?: Prisma.XOR<Prisma.UsersNullableScalarRelationFilter, Prisma.usersWhereInput> | null
+  patient_profile?: Prisma.XOR<Prisma.Patient_profilesScalarRelationFilter, Prisma.patient_profilesWhereInput>
 }
 
 export type patient_recordsOrderByWithRelationInput = {
@@ -295,9 +295,9 @@ export type patient_recordsOrderByWithRelationInput = {
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
   patient_documents?: Prisma.patient_documentsOrderByRelationAggregateInput
-  appointments?: Prisma.appointmentsOrderByWithRelationInput
-  users?: Prisma.usersOrderByWithRelationInput
-  patient_profiles?: Prisma.patient_profilesOrderByWithRelationInput
+  appointment?: Prisma.appointmentsOrderByWithRelationInput
+  created_by_user?: Prisma.usersOrderByWithRelationInput
+  patient_profile?: Prisma.patient_profilesOrderByWithRelationInput
 }
 
 export type patient_recordsWhereUniqueInput = Prisma.AtLeast<{
@@ -316,9 +316,9 @@ export type patient_recordsWhereUniqueInput = Prisma.AtLeast<{
   created_at?: Prisma.DateTimeFilter<"patient_records"> | Date | string
   updated_at?: Prisma.DateTimeFilter<"patient_records"> | Date | string
   patient_documents?: Prisma.Patient_documentsListRelationFilter
-  appointments?: Prisma.XOR<Prisma.AppointmentsNullableScalarRelationFilter, Prisma.appointmentsWhereInput> | null
-  users?: Prisma.XOR<Prisma.UsersNullableScalarRelationFilter, Prisma.usersWhereInput> | null
-  patient_profiles?: Prisma.XOR<Prisma.Patient_profilesScalarRelationFilter, Prisma.patient_profilesWhereInput>
+  appointment?: Prisma.XOR<Prisma.AppointmentsNullableScalarRelationFilter, Prisma.appointmentsWhereInput> | null
+  created_by_user?: Prisma.XOR<Prisma.UsersNullableScalarRelationFilter, Prisma.usersWhereInput> | null
+  patient_profile?: Prisma.XOR<Prisma.Patient_profilesScalarRelationFilter, Prisma.patient_profilesWhereInput>
 }, "id">
 
 export type patient_recordsOrderByWithAggregationInput = {
@@ -366,10 +366,10 @@ export type patient_recordsCreateInput = {
   treatment_date?: Date | string | null
   created_at?: Date | string
   updated_at?: Date | string
-  patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutPatient_recordsInput
-  appointments?: Prisma.appointmentsCreateNestedOneWithoutPatient_recordsInput
-  users?: Prisma.usersCreateNestedOneWithoutPatient_recordsInput
-  patient_profiles: Prisma.patient_profilesCreateNestedOneWithoutPatient_recordsInput
+  patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutRecordInput
+  appointment?: Prisma.appointmentsCreateNestedOneWithoutPatient_recordsInput
+  created_by_user?: Prisma.usersCreateNestedOneWithoutPatient_recordsInput
+  patient_profile: Prisma.patient_profilesCreateNestedOneWithoutPatient_recordsInput
 }
 
 export type patient_recordsUncheckedCreateInput = {
@@ -384,7 +384,7 @@ export type patient_recordsUncheckedCreateInput = {
   created_by?: bigint | number | null
   created_at?: Date | string
   updated_at?: Date | string
-  patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutPatient_recordsInput
+  patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutRecordInput
 }
 
 export type patient_recordsUpdateInput = {
@@ -396,10 +396,10 @@ export type patient_recordsUpdateInput = {
   treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  patient_documents?: Prisma.patient_documentsUpdateManyWithoutPatient_recordsNestedInput
-  appointments?: Prisma.appointmentsUpdateOneWithoutPatient_recordsNestedInput
-  users?: Prisma.usersUpdateOneWithoutPatient_recordsNestedInput
-  patient_profiles?: Prisma.patient_profilesUpdateOneRequiredWithoutPatient_recordsNestedInput
+  patient_documents?: Prisma.patient_documentsUpdateManyWithoutRecordNestedInput
+  appointment?: Prisma.appointmentsUpdateOneWithoutPatient_recordsNestedInput
+  created_by_user?: Prisma.usersUpdateOneWithoutPatient_recordsNestedInput
+  patient_profile?: Prisma.patient_profilesUpdateOneRequiredWithoutPatient_recordsNestedInput
 }
 
 export type patient_recordsUncheckedUpdateInput = {
@@ -414,7 +414,7 @@ export type patient_recordsUncheckedUpdateInput = {
   created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutPatient_recordsNestedInput
+  patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutRecordNestedInput
 }
 
 export type patient_recordsCreateManyInput = {
@@ -464,11 +464,6 @@ export type Patient_recordsListRelationFilter = {
 
 export type patient_recordsOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
-}
-
-export type Patient_recordsNullableScalarRelationFilter = {
-  is?: Prisma.patient_recordsWhereInput | null
-  isNot?: Prisma.patient_recordsWhereInput | null
 }
 
 export type patient_recordsCountOrderByAggregateInput = {
@@ -527,45 +522,134 @@ export type patient_recordsSumOrderByAggregateInput = {
   created_by?: Prisma.SortOrder
 }
 
-export type patient_recordsCreateNestedManyWithoutAppointmentsInput = {
-  create?: Prisma.XOR<Prisma.patient_recordsCreateWithoutAppointmentsInput, Prisma.patient_recordsUncheckedCreateWithoutAppointmentsInput> | Prisma.patient_recordsCreateWithoutAppointmentsInput[] | Prisma.patient_recordsUncheckedCreateWithoutAppointmentsInput[]
-  connectOrCreate?: Prisma.patient_recordsCreateOrConnectWithoutAppointmentsInput | Prisma.patient_recordsCreateOrConnectWithoutAppointmentsInput[]
-  createMany?: Prisma.patient_recordsCreateManyAppointmentsInputEnvelope
+export type Patient_recordsNullableScalarRelationFilter = {
+  is?: Prisma.patient_recordsWhereInput | null
+  isNot?: Prisma.patient_recordsWhereInput | null
+}
+
+export type patient_recordsCreateNestedManyWithoutCreated_by_userInput = {
+  create?: Prisma.XOR<Prisma.patient_recordsCreateWithoutCreated_by_userInput, Prisma.patient_recordsUncheckedCreateWithoutCreated_by_userInput> | Prisma.patient_recordsCreateWithoutCreated_by_userInput[] | Prisma.patient_recordsUncheckedCreateWithoutCreated_by_userInput[]
+  connectOrCreate?: Prisma.patient_recordsCreateOrConnectWithoutCreated_by_userInput | Prisma.patient_recordsCreateOrConnectWithoutCreated_by_userInput[]
+  createMany?: Prisma.patient_recordsCreateManyCreated_by_userInputEnvelope
   connect?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
 }
 
-export type patient_recordsUncheckedCreateNestedManyWithoutAppointmentsInput = {
-  create?: Prisma.XOR<Prisma.patient_recordsCreateWithoutAppointmentsInput, Prisma.patient_recordsUncheckedCreateWithoutAppointmentsInput> | Prisma.patient_recordsCreateWithoutAppointmentsInput[] | Prisma.patient_recordsUncheckedCreateWithoutAppointmentsInput[]
-  connectOrCreate?: Prisma.patient_recordsCreateOrConnectWithoutAppointmentsInput | Prisma.patient_recordsCreateOrConnectWithoutAppointmentsInput[]
-  createMany?: Prisma.patient_recordsCreateManyAppointmentsInputEnvelope
+export type patient_recordsUncheckedCreateNestedManyWithoutCreated_by_userInput = {
+  create?: Prisma.XOR<Prisma.patient_recordsCreateWithoutCreated_by_userInput, Prisma.patient_recordsUncheckedCreateWithoutCreated_by_userInput> | Prisma.patient_recordsCreateWithoutCreated_by_userInput[] | Prisma.patient_recordsUncheckedCreateWithoutCreated_by_userInput[]
+  connectOrCreate?: Prisma.patient_recordsCreateOrConnectWithoutCreated_by_userInput | Prisma.patient_recordsCreateOrConnectWithoutCreated_by_userInput[]
+  createMany?: Prisma.patient_recordsCreateManyCreated_by_userInputEnvelope
   connect?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
 }
 
-export type patient_recordsUpdateManyWithoutAppointmentsNestedInput = {
-  create?: Prisma.XOR<Prisma.patient_recordsCreateWithoutAppointmentsInput, Prisma.patient_recordsUncheckedCreateWithoutAppointmentsInput> | Prisma.patient_recordsCreateWithoutAppointmentsInput[] | Prisma.patient_recordsUncheckedCreateWithoutAppointmentsInput[]
-  connectOrCreate?: Prisma.patient_recordsCreateOrConnectWithoutAppointmentsInput | Prisma.patient_recordsCreateOrConnectWithoutAppointmentsInput[]
-  upsert?: Prisma.patient_recordsUpsertWithWhereUniqueWithoutAppointmentsInput | Prisma.patient_recordsUpsertWithWhereUniqueWithoutAppointmentsInput[]
-  createMany?: Prisma.patient_recordsCreateManyAppointmentsInputEnvelope
+export type patient_recordsUpdateManyWithoutCreated_by_userNestedInput = {
+  create?: Prisma.XOR<Prisma.patient_recordsCreateWithoutCreated_by_userInput, Prisma.patient_recordsUncheckedCreateWithoutCreated_by_userInput> | Prisma.patient_recordsCreateWithoutCreated_by_userInput[] | Prisma.patient_recordsUncheckedCreateWithoutCreated_by_userInput[]
+  connectOrCreate?: Prisma.patient_recordsCreateOrConnectWithoutCreated_by_userInput | Prisma.patient_recordsCreateOrConnectWithoutCreated_by_userInput[]
+  upsert?: Prisma.patient_recordsUpsertWithWhereUniqueWithoutCreated_by_userInput | Prisma.patient_recordsUpsertWithWhereUniqueWithoutCreated_by_userInput[]
+  createMany?: Prisma.patient_recordsCreateManyCreated_by_userInputEnvelope
   set?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
   disconnect?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
   delete?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
   connect?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
-  update?: Prisma.patient_recordsUpdateWithWhereUniqueWithoutAppointmentsInput | Prisma.patient_recordsUpdateWithWhereUniqueWithoutAppointmentsInput[]
-  updateMany?: Prisma.patient_recordsUpdateManyWithWhereWithoutAppointmentsInput | Prisma.patient_recordsUpdateManyWithWhereWithoutAppointmentsInput[]
+  update?: Prisma.patient_recordsUpdateWithWhereUniqueWithoutCreated_by_userInput | Prisma.patient_recordsUpdateWithWhereUniqueWithoutCreated_by_userInput[]
+  updateMany?: Prisma.patient_recordsUpdateManyWithWhereWithoutCreated_by_userInput | Prisma.patient_recordsUpdateManyWithWhereWithoutCreated_by_userInput[]
   deleteMany?: Prisma.patient_recordsScalarWhereInput | Prisma.patient_recordsScalarWhereInput[]
 }
 
-export type patient_recordsUncheckedUpdateManyWithoutAppointmentsNestedInput = {
-  create?: Prisma.XOR<Prisma.patient_recordsCreateWithoutAppointmentsInput, Prisma.patient_recordsUncheckedCreateWithoutAppointmentsInput> | Prisma.patient_recordsCreateWithoutAppointmentsInput[] | Prisma.patient_recordsUncheckedCreateWithoutAppointmentsInput[]
-  connectOrCreate?: Prisma.patient_recordsCreateOrConnectWithoutAppointmentsInput | Prisma.patient_recordsCreateOrConnectWithoutAppointmentsInput[]
-  upsert?: Prisma.patient_recordsUpsertWithWhereUniqueWithoutAppointmentsInput | Prisma.patient_recordsUpsertWithWhereUniqueWithoutAppointmentsInput[]
-  createMany?: Prisma.patient_recordsCreateManyAppointmentsInputEnvelope
+export type patient_recordsUncheckedUpdateManyWithoutCreated_by_userNestedInput = {
+  create?: Prisma.XOR<Prisma.patient_recordsCreateWithoutCreated_by_userInput, Prisma.patient_recordsUncheckedCreateWithoutCreated_by_userInput> | Prisma.patient_recordsCreateWithoutCreated_by_userInput[] | Prisma.patient_recordsUncheckedCreateWithoutCreated_by_userInput[]
+  connectOrCreate?: Prisma.patient_recordsCreateOrConnectWithoutCreated_by_userInput | Prisma.patient_recordsCreateOrConnectWithoutCreated_by_userInput[]
+  upsert?: Prisma.patient_recordsUpsertWithWhereUniqueWithoutCreated_by_userInput | Prisma.patient_recordsUpsertWithWhereUniqueWithoutCreated_by_userInput[]
+  createMany?: Prisma.patient_recordsCreateManyCreated_by_userInputEnvelope
   set?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
   disconnect?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
   delete?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
   connect?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
-  update?: Prisma.patient_recordsUpdateWithWhereUniqueWithoutAppointmentsInput | Prisma.patient_recordsUpdateWithWhereUniqueWithoutAppointmentsInput[]
-  updateMany?: Prisma.patient_recordsUpdateManyWithWhereWithoutAppointmentsInput | Prisma.patient_recordsUpdateManyWithWhereWithoutAppointmentsInput[]
+  update?: Prisma.patient_recordsUpdateWithWhereUniqueWithoutCreated_by_userInput | Prisma.patient_recordsUpdateWithWhereUniqueWithoutCreated_by_userInput[]
+  updateMany?: Prisma.patient_recordsUpdateManyWithWhereWithoutCreated_by_userInput | Prisma.patient_recordsUpdateManyWithWhereWithoutCreated_by_userInput[]
+  deleteMany?: Prisma.patient_recordsScalarWhereInput | Prisma.patient_recordsScalarWhereInput[]
+}
+
+export type patient_recordsCreateNestedManyWithoutPatient_profileInput = {
+  create?: Prisma.XOR<Prisma.patient_recordsCreateWithoutPatient_profileInput, Prisma.patient_recordsUncheckedCreateWithoutPatient_profileInput> | Prisma.patient_recordsCreateWithoutPatient_profileInput[] | Prisma.patient_recordsUncheckedCreateWithoutPatient_profileInput[]
+  connectOrCreate?: Prisma.patient_recordsCreateOrConnectWithoutPatient_profileInput | Prisma.patient_recordsCreateOrConnectWithoutPatient_profileInput[]
+  createMany?: Prisma.patient_recordsCreateManyPatient_profileInputEnvelope
+  connect?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
+}
+
+export type patient_recordsUncheckedCreateNestedManyWithoutPatient_profileInput = {
+  create?: Prisma.XOR<Prisma.patient_recordsCreateWithoutPatient_profileInput, Prisma.patient_recordsUncheckedCreateWithoutPatient_profileInput> | Prisma.patient_recordsCreateWithoutPatient_profileInput[] | Prisma.patient_recordsUncheckedCreateWithoutPatient_profileInput[]
+  connectOrCreate?: Prisma.patient_recordsCreateOrConnectWithoutPatient_profileInput | Prisma.patient_recordsCreateOrConnectWithoutPatient_profileInput[]
+  createMany?: Prisma.patient_recordsCreateManyPatient_profileInputEnvelope
+  connect?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
+}
+
+export type patient_recordsUpdateManyWithoutPatient_profileNestedInput = {
+  create?: Prisma.XOR<Prisma.patient_recordsCreateWithoutPatient_profileInput, Prisma.patient_recordsUncheckedCreateWithoutPatient_profileInput> | Prisma.patient_recordsCreateWithoutPatient_profileInput[] | Prisma.patient_recordsUncheckedCreateWithoutPatient_profileInput[]
+  connectOrCreate?: Prisma.patient_recordsCreateOrConnectWithoutPatient_profileInput | Prisma.patient_recordsCreateOrConnectWithoutPatient_profileInput[]
+  upsert?: Prisma.patient_recordsUpsertWithWhereUniqueWithoutPatient_profileInput | Prisma.patient_recordsUpsertWithWhereUniqueWithoutPatient_profileInput[]
+  createMany?: Prisma.patient_recordsCreateManyPatient_profileInputEnvelope
+  set?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
+  disconnect?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
+  delete?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
+  connect?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
+  update?: Prisma.patient_recordsUpdateWithWhereUniqueWithoutPatient_profileInput | Prisma.patient_recordsUpdateWithWhereUniqueWithoutPatient_profileInput[]
+  updateMany?: Prisma.patient_recordsUpdateManyWithWhereWithoutPatient_profileInput | Prisma.patient_recordsUpdateManyWithWhereWithoutPatient_profileInput[]
+  deleteMany?: Prisma.patient_recordsScalarWhereInput | Prisma.patient_recordsScalarWhereInput[]
+}
+
+export type patient_recordsUncheckedUpdateManyWithoutPatient_profileNestedInput = {
+  create?: Prisma.XOR<Prisma.patient_recordsCreateWithoutPatient_profileInput, Prisma.patient_recordsUncheckedCreateWithoutPatient_profileInput> | Prisma.patient_recordsCreateWithoutPatient_profileInput[] | Prisma.patient_recordsUncheckedCreateWithoutPatient_profileInput[]
+  connectOrCreate?: Prisma.patient_recordsCreateOrConnectWithoutPatient_profileInput | Prisma.patient_recordsCreateOrConnectWithoutPatient_profileInput[]
+  upsert?: Prisma.patient_recordsUpsertWithWhereUniqueWithoutPatient_profileInput | Prisma.patient_recordsUpsertWithWhereUniqueWithoutPatient_profileInput[]
+  createMany?: Prisma.patient_recordsCreateManyPatient_profileInputEnvelope
+  set?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
+  disconnect?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
+  delete?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
+  connect?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
+  update?: Prisma.patient_recordsUpdateWithWhereUniqueWithoutPatient_profileInput | Prisma.patient_recordsUpdateWithWhereUniqueWithoutPatient_profileInput[]
+  updateMany?: Prisma.patient_recordsUpdateManyWithWhereWithoutPatient_profileInput | Prisma.patient_recordsUpdateManyWithWhereWithoutPatient_profileInput[]
+  deleteMany?: Prisma.patient_recordsScalarWhereInput | Prisma.patient_recordsScalarWhereInput[]
+}
+
+export type patient_recordsCreateNestedManyWithoutAppointmentInput = {
+  create?: Prisma.XOR<Prisma.patient_recordsCreateWithoutAppointmentInput, Prisma.patient_recordsUncheckedCreateWithoutAppointmentInput> | Prisma.patient_recordsCreateWithoutAppointmentInput[] | Prisma.patient_recordsUncheckedCreateWithoutAppointmentInput[]
+  connectOrCreate?: Prisma.patient_recordsCreateOrConnectWithoutAppointmentInput | Prisma.patient_recordsCreateOrConnectWithoutAppointmentInput[]
+  createMany?: Prisma.patient_recordsCreateManyAppointmentInputEnvelope
+  connect?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
+}
+
+export type patient_recordsUncheckedCreateNestedManyWithoutAppointmentInput = {
+  create?: Prisma.XOR<Prisma.patient_recordsCreateWithoutAppointmentInput, Prisma.patient_recordsUncheckedCreateWithoutAppointmentInput> | Prisma.patient_recordsCreateWithoutAppointmentInput[] | Prisma.patient_recordsUncheckedCreateWithoutAppointmentInput[]
+  connectOrCreate?: Prisma.patient_recordsCreateOrConnectWithoutAppointmentInput | Prisma.patient_recordsCreateOrConnectWithoutAppointmentInput[]
+  createMany?: Prisma.patient_recordsCreateManyAppointmentInputEnvelope
+  connect?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
+}
+
+export type patient_recordsUpdateManyWithoutAppointmentNestedInput = {
+  create?: Prisma.XOR<Prisma.patient_recordsCreateWithoutAppointmentInput, Prisma.patient_recordsUncheckedCreateWithoutAppointmentInput> | Prisma.patient_recordsCreateWithoutAppointmentInput[] | Prisma.patient_recordsUncheckedCreateWithoutAppointmentInput[]
+  connectOrCreate?: Prisma.patient_recordsCreateOrConnectWithoutAppointmentInput | Prisma.patient_recordsCreateOrConnectWithoutAppointmentInput[]
+  upsert?: Prisma.patient_recordsUpsertWithWhereUniqueWithoutAppointmentInput | Prisma.patient_recordsUpsertWithWhereUniqueWithoutAppointmentInput[]
+  createMany?: Prisma.patient_recordsCreateManyAppointmentInputEnvelope
+  set?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
+  disconnect?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
+  delete?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
+  connect?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
+  update?: Prisma.patient_recordsUpdateWithWhereUniqueWithoutAppointmentInput | Prisma.patient_recordsUpdateWithWhereUniqueWithoutAppointmentInput[]
+  updateMany?: Prisma.patient_recordsUpdateManyWithWhereWithoutAppointmentInput | Prisma.patient_recordsUpdateManyWithWhereWithoutAppointmentInput[]
+  deleteMany?: Prisma.patient_recordsScalarWhereInput | Prisma.patient_recordsScalarWhereInput[]
+}
+
+export type patient_recordsUncheckedUpdateManyWithoutAppointmentNestedInput = {
+  create?: Prisma.XOR<Prisma.patient_recordsCreateWithoutAppointmentInput, Prisma.patient_recordsUncheckedCreateWithoutAppointmentInput> | Prisma.patient_recordsCreateWithoutAppointmentInput[] | Prisma.patient_recordsUncheckedCreateWithoutAppointmentInput[]
+  connectOrCreate?: Prisma.patient_recordsCreateOrConnectWithoutAppointmentInput | Prisma.patient_recordsCreateOrConnectWithoutAppointmentInput[]
+  upsert?: Prisma.patient_recordsUpsertWithWhereUniqueWithoutAppointmentInput | Prisma.patient_recordsUpsertWithWhereUniqueWithoutAppointmentInput[]
+  createMany?: Prisma.patient_recordsCreateManyAppointmentInputEnvelope
+  set?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
+  disconnect?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
+  delete?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
+  connect?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
+  update?: Prisma.patient_recordsUpdateWithWhereUniqueWithoutAppointmentInput | Prisma.patient_recordsUpdateWithWhereUniqueWithoutAppointmentInput[]
+  updateMany?: Prisma.patient_recordsUpdateManyWithWhereWithoutAppointmentInput | Prisma.patient_recordsUpdateManyWithWhereWithoutAppointmentInput[]
   deleteMany?: Prisma.patient_recordsScalarWhereInput | Prisma.patient_recordsScalarWhereInput[]
 }
 
@@ -585,95 +669,7 @@ export type patient_recordsUpdateOneWithoutPatient_documentsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.patient_recordsUpdateToOneWithWhereWithoutPatient_documentsInput, Prisma.patient_recordsUpdateWithoutPatient_documentsInput>, Prisma.patient_recordsUncheckedUpdateWithoutPatient_documentsInput>
 }
 
-export type patient_recordsCreateNestedManyWithoutPatient_profilesInput = {
-  create?: Prisma.XOR<Prisma.patient_recordsCreateWithoutPatient_profilesInput, Prisma.patient_recordsUncheckedCreateWithoutPatient_profilesInput> | Prisma.patient_recordsCreateWithoutPatient_profilesInput[] | Prisma.patient_recordsUncheckedCreateWithoutPatient_profilesInput[]
-  connectOrCreate?: Prisma.patient_recordsCreateOrConnectWithoutPatient_profilesInput | Prisma.patient_recordsCreateOrConnectWithoutPatient_profilesInput[]
-  createMany?: Prisma.patient_recordsCreateManyPatient_profilesInputEnvelope
-  connect?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
-}
-
-export type patient_recordsUncheckedCreateNestedManyWithoutPatient_profilesInput = {
-  create?: Prisma.XOR<Prisma.patient_recordsCreateWithoutPatient_profilesInput, Prisma.patient_recordsUncheckedCreateWithoutPatient_profilesInput> | Prisma.patient_recordsCreateWithoutPatient_profilesInput[] | Prisma.patient_recordsUncheckedCreateWithoutPatient_profilesInput[]
-  connectOrCreate?: Prisma.patient_recordsCreateOrConnectWithoutPatient_profilesInput | Prisma.patient_recordsCreateOrConnectWithoutPatient_profilesInput[]
-  createMany?: Prisma.patient_recordsCreateManyPatient_profilesInputEnvelope
-  connect?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
-}
-
-export type patient_recordsUpdateManyWithoutPatient_profilesNestedInput = {
-  create?: Prisma.XOR<Prisma.patient_recordsCreateWithoutPatient_profilesInput, Prisma.patient_recordsUncheckedCreateWithoutPatient_profilesInput> | Prisma.patient_recordsCreateWithoutPatient_profilesInput[] | Prisma.patient_recordsUncheckedCreateWithoutPatient_profilesInput[]
-  connectOrCreate?: Prisma.patient_recordsCreateOrConnectWithoutPatient_profilesInput | Prisma.patient_recordsCreateOrConnectWithoutPatient_profilesInput[]
-  upsert?: Prisma.patient_recordsUpsertWithWhereUniqueWithoutPatient_profilesInput | Prisma.patient_recordsUpsertWithWhereUniqueWithoutPatient_profilesInput[]
-  createMany?: Prisma.patient_recordsCreateManyPatient_profilesInputEnvelope
-  set?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
-  disconnect?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
-  delete?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
-  connect?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
-  update?: Prisma.patient_recordsUpdateWithWhereUniqueWithoutPatient_profilesInput | Prisma.patient_recordsUpdateWithWhereUniqueWithoutPatient_profilesInput[]
-  updateMany?: Prisma.patient_recordsUpdateManyWithWhereWithoutPatient_profilesInput | Prisma.patient_recordsUpdateManyWithWhereWithoutPatient_profilesInput[]
-  deleteMany?: Prisma.patient_recordsScalarWhereInput | Prisma.patient_recordsScalarWhereInput[]
-}
-
-export type patient_recordsUncheckedUpdateManyWithoutPatient_profilesNestedInput = {
-  create?: Prisma.XOR<Prisma.patient_recordsCreateWithoutPatient_profilesInput, Prisma.patient_recordsUncheckedCreateWithoutPatient_profilesInput> | Prisma.patient_recordsCreateWithoutPatient_profilesInput[] | Prisma.patient_recordsUncheckedCreateWithoutPatient_profilesInput[]
-  connectOrCreate?: Prisma.patient_recordsCreateOrConnectWithoutPatient_profilesInput | Prisma.patient_recordsCreateOrConnectWithoutPatient_profilesInput[]
-  upsert?: Prisma.patient_recordsUpsertWithWhereUniqueWithoutPatient_profilesInput | Prisma.patient_recordsUpsertWithWhereUniqueWithoutPatient_profilesInput[]
-  createMany?: Prisma.patient_recordsCreateManyPatient_profilesInputEnvelope
-  set?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
-  disconnect?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
-  delete?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
-  connect?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
-  update?: Prisma.patient_recordsUpdateWithWhereUniqueWithoutPatient_profilesInput | Prisma.patient_recordsUpdateWithWhereUniqueWithoutPatient_profilesInput[]
-  updateMany?: Prisma.patient_recordsUpdateManyWithWhereWithoutPatient_profilesInput | Prisma.patient_recordsUpdateManyWithWhereWithoutPatient_profilesInput[]
-  deleteMany?: Prisma.patient_recordsScalarWhereInput | Prisma.patient_recordsScalarWhereInput[]
-}
-
-export type NullableDateTimeFieldUpdateOperationsInput = {
-  set?: Date | string | null
-}
-
-export type patient_recordsCreateNestedManyWithoutUsersInput = {
-  create?: Prisma.XOR<Prisma.patient_recordsCreateWithoutUsersInput, Prisma.patient_recordsUncheckedCreateWithoutUsersInput> | Prisma.patient_recordsCreateWithoutUsersInput[] | Prisma.patient_recordsUncheckedCreateWithoutUsersInput[]
-  connectOrCreate?: Prisma.patient_recordsCreateOrConnectWithoutUsersInput | Prisma.patient_recordsCreateOrConnectWithoutUsersInput[]
-  createMany?: Prisma.patient_recordsCreateManyUsersInputEnvelope
-  connect?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
-}
-
-export type patient_recordsUncheckedCreateNestedManyWithoutUsersInput = {
-  create?: Prisma.XOR<Prisma.patient_recordsCreateWithoutUsersInput, Prisma.patient_recordsUncheckedCreateWithoutUsersInput> | Prisma.patient_recordsCreateWithoutUsersInput[] | Prisma.patient_recordsUncheckedCreateWithoutUsersInput[]
-  connectOrCreate?: Prisma.patient_recordsCreateOrConnectWithoutUsersInput | Prisma.patient_recordsCreateOrConnectWithoutUsersInput[]
-  createMany?: Prisma.patient_recordsCreateManyUsersInputEnvelope
-  connect?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
-}
-
-export type patient_recordsUpdateManyWithoutUsersNestedInput = {
-  create?: Prisma.XOR<Prisma.patient_recordsCreateWithoutUsersInput, Prisma.patient_recordsUncheckedCreateWithoutUsersInput> | Prisma.patient_recordsCreateWithoutUsersInput[] | Prisma.patient_recordsUncheckedCreateWithoutUsersInput[]
-  connectOrCreate?: Prisma.patient_recordsCreateOrConnectWithoutUsersInput | Prisma.patient_recordsCreateOrConnectWithoutUsersInput[]
-  upsert?: Prisma.patient_recordsUpsertWithWhereUniqueWithoutUsersInput | Prisma.patient_recordsUpsertWithWhereUniqueWithoutUsersInput[]
-  createMany?: Prisma.patient_recordsCreateManyUsersInputEnvelope
-  set?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
-  disconnect?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
-  delete?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
-  connect?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
-  update?: Prisma.patient_recordsUpdateWithWhereUniqueWithoutUsersInput | Prisma.patient_recordsUpdateWithWhereUniqueWithoutUsersInput[]
-  updateMany?: Prisma.patient_recordsUpdateManyWithWhereWithoutUsersInput | Prisma.patient_recordsUpdateManyWithWhereWithoutUsersInput[]
-  deleteMany?: Prisma.patient_recordsScalarWhereInput | Prisma.patient_recordsScalarWhereInput[]
-}
-
-export type patient_recordsUncheckedUpdateManyWithoutUsersNestedInput = {
-  create?: Prisma.XOR<Prisma.patient_recordsCreateWithoutUsersInput, Prisma.patient_recordsUncheckedCreateWithoutUsersInput> | Prisma.patient_recordsCreateWithoutUsersInput[] | Prisma.patient_recordsUncheckedCreateWithoutUsersInput[]
-  connectOrCreate?: Prisma.patient_recordsCreateOrConnectWithoutUsersInput | Prisma.patient_recordsCreateOrConnectWithoutUsersInput[]
-  upsert?: Prisma.patient_recordsUpsertWithWhereUniqueWithoutUsersInput | Prisma.patient_recordsUpsertWithWhereUniqueWithoutUsersInput[]
-  createMany?: Prisma.patient_recordsCreateManyUsersInputEnvelope
-  set?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
-  disconnect?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
-  delete?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
-  connect?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
-  update?: Prisma.patient_recordsUpdateWithWhereUniqueWithoutUsersInput | Prisma.patient_recordsUpdateWithWhereUniqueWithoutUsersInput[]
-  updateMany?: Prisma.patient_recordsUpdateManyWithWhereWithoutUsersInput | Prisma.patient_recordsUpdateManyWithWhereWithoutUsersInput[]
-  deleteMany?: Prisma.patient_recordsScalarWhereInput | Prisma.patient_recordsScalarWhereInput[]
-}
-
-export type patient_recordsCreateWithoutAppointmentsInput = {
+export type patient_recordsCreateWithoutCreated_by_userInput = {
   id?: bigint | number
   record_type?: string
   title: string
@@ -682,49 +678,49 @@ export type patient_recordsCreateWithoutAppointmentsInput = {
   treatment_date?: Date | string | null
   created_at?: Date | string
   updated_at?: Date | string
-  patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutPatient_recordsInput
-  users?: Prisma.usersCreateNestedOneWithoutPatient_recordsInput
-  patient_profiles: Prisma.patient_profilesCreateNestedOneWithoutPatient_recordsInput
+  patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutRecordInput
+  appointment?: Prisma.appointmentsCreateNestedOneWithoutPatient_recordsInput
+  patient_profile: Prisma.patient_profilesCreateNestedOneWithoutPatient_recordsInput
 }
 
-export type patient_recordsUncheckedCreateWithoutAppointmentsInput = {
+export type patient_recordsUncheckedCreateWithoutCreated_by_userInput = {
   id?: bigint | number
   patient_id: bigint | number
+  appointment_id?: bigint | number | null
   record_type?: string
   title: string
   description: string
   tooth_number?: string | null
   treatment_date?: Date | string | null
-  created_by?: bigint | number | null
   created_at?: Date | string
   updated_at?: Date | string
-  patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutPatient_recordsInput
+  patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutRecordInput
 }
 
-export type patient_recordsCreateOrConnectWithoutAppointmentsInput = {
+export type patient_recordsCreateOrConnectWithoutCreated_by_userInput = {
   where: Prisma.patient_recordsWhereUniqueInput
-  create: Prisma.XOR<Prisma.patient_recordsCreateWithoutAppointmentsInput, Prisma.patient_recordsUncheckedCreateWithoutAppointmentsInput>
+  create: Prisma.XOR<Prisma.patient_recordsCreateWithoutCreated_by_userInput, Prisma.patient_recordsUncheckedCreateWithoutCreated_by_userInput>
 }
 
-export type patient_recordsCreateManyAppointmentsInputEnvelope = {
-  data: Prisma.patient_recordsCreateManyAppointmentsInput | Prisma.patient_recordsCreateManyAppointmentsInput[]
+export type patient_recordsCreateManyCreated_by_userInputEnvelope = {
+  data: Prisma.patient_recordsCreateManyCreated_by_userInput | Prisma.patient_recordsCreateManyCreated_by_userInput[]
   skipDuplicates?: boolean
 }
 
-export type patient_recordsUpsertWithWhereUniqueWithoutAppointmentsInput = {
+export type patient_recordsUpsertWithWhereUniqueWithoutCreated_by_userInput = {
   where: Prisma.patient_recordsWhereUniqueInput
-  update: Prisma.XOR<Prisma.patient_recordsUpdateWithoutAppointmentsInput, Prisma.patient_recordsUncheckedUpdateWithoutAppointmentsInput>
-  create: Prisma.XOR<Prisma.patient_recordsCreateWithoutAppointmentsInput, Prisma.patient_recordsUncheckedCreateWithoutAppointmentsInput>
+  update: Prisma.XOR<Prisma.patient_recordsUpdateWithoutCreated_by_userInput, Prisma.patient_recordsUncheckedUpdateWithoutCreated_by_userInput>
+  create: Prisma.XOR<Prisma.patient_recordsCreateWithoutCreated_by_userInput, Prisma.patient_recordsUncheckedCreateWithoutCreated_by_userInput>
 }
 
-export type patient_recordsUpdateWithWhereUniqueWithoutAppointmentsInput = {
+export type patient_recordsUpdateWithWhereUniqueWithoutCreated_by_userInput = {
   where: Prisma.patient_recordsWhereUniqueInput
-  data: Prisma.XOR<Prisma.patient_recordsUpdateWithoutAppointmentsInput, Prisma.patient_recordsUncheckedUpdateWithoutAppointmentsInput>
+  data: Prisma.XOR<Prisma.patient_recordsUpdateWithoutCreated_by_userInput, Prisma.patient_recordsUncheckedUpdateWithoutCreated_by_userInput>
 }
 
-export type patient_recordsUpdateManyWithWhereWithoutAppointmentsInput = {
+export type patient_recordsUpdateManyWithWhereWithoutCreated_by_userInput = {
   where: Prisma.patient_recordsScalarWhereInput
-  data: Prisma.XOR<Prisma.patient_recordsUpdateManyMutationInput, Prisma.patient_recordsUncheckedUpdateManyWithoutAppointmentsInput>
+  data: Prisma.XOR<Prisma.patient_recordsUpdateManyMutationInput, Prisma.patient_recordsUncheckedUpdateManyWithoutCreated_by_userInput>
 }
 
 export type patient_recordsScalarWhereInput = {
@@ -744,6 +740,114 @@ export type patient_recordsScalarWhereInput = {
   updated_at?: Prisma.DateTimeFilter<"patient_records"> | Date | string
 }
 
+export type patient_recordsCreateWithoutPatient_profileInput = {
+  id?: bigint | number
+  record_type?: string
+  title: string
+  description: string
+  tooth_number?: string | null
+  treatment_date?: Date | string | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutRecordInput
+  appointment?: Prisma.appointmentsCreateNestedOneWithoutPatient_recordsInput
+  created_by_user?: Prisma.usersCreateNestedOneWithoutPatient_recordsInput
+}
+
+export type patient_recordsUncheckedCreateWithoutPatient_profileInput = {
+  id?: bigint | number
+  appointment_id?: bigint | number | null
+  record_type?: string
+  title: string
+  description: string
+  tooth_number?: string | null
+  treatment_date?: Date | string | null
+  created_by?: bigint | number | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutRecordInput
+}
+
+export type patient_recordsCreateOrConnectWithoutPatient_profileInput = {
+  where: Prisma.patient_recordsWhereUniqueInput
+  create: Prisma.XOR<Prisma.patient_recordsCreateWithoutPatient_profileInput, Prisma.patient_recordsUncheckedCreateWithoutPatient_profileInput>
+}
+
+export type patient_recordsCreateManyPatient_profileInputEnvelope = {
+  data: Prisma.patient_recordsCreateManyPatient_profileInput | Prisma.patient_recordsCreateManyPatient_profileInput[]
+  skipDuplicates?: boolean
+}
+
+export type patient_recordsUpsertWithWhereUniqueWithoutPatient_profileInput = {
+  where: Prisma.patient_recordsWhereUniqueInput
+  update: Prisma.XOR<Prisma.patient_recordsUpdateWithoutPatient_profileInput, Prisma.patient_recordsUncheckedUpdateWithoutPatient_profileInput>
+  create: Prisma.XOR<Prisma.patient_recordsCreateWithoutPatient_profileInput, Prisma.patient_recordsUncheckedCreateWithoutPatient_profileInput>
+}
+
+export type patient_recordsUpdateWithWhereUniqueWithoutPatient_profileInput = {
+  where: Prisma.patient_recordsWhereUniqueInput
+  data: Prisma.XOR<Prisma.patient_recordsUpdateWithoutPatient_profileInput, Prisma.patient_recordsUncheckedUpdateWithoutPatient_profileInput>
+}
+
+export type patient_recordsUpdateManyWithWhereWithoutPatient_profileInput = {
+  where: Prisma.patient_recordsScalarWhereInput
+  data: Prisma.XOR<Prisma.patient_recordsUpdateManyMutationInput, Prisma.patient_recordsUncheckedUpdateManyWithoutPatient_profileInput>
+}
+
+export type patient_recordsCreateWithoutAppointmentInput = {
+  id?: bigint | number
+  record_type?: string
+  title: string
+  description: string
+  tooth_number?: string | null
+  treatment_date?: Date | string | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutRecordInput
+  created_by_user?: Prisma.usersCreateNestedOneWithoutPatient_recordsInput
+  patient_profile: Prisma.patient_profilesCreateNestedOneWithoutPatient_recordsInput
+}
+
+export type patient_recordsUncheckedCreateWithoutAppointmentInput = {
+  id?: bigint | number
+  patient_id: bigint | number
+  record_type?: string
+  title: string
+  description: string
+  tooth_number?: string | null
+  treatment_date?: Date | string | null
+  created_by?: bigint | number | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutRecordInput
+}
+
+export type patient_recordsCreateOrConnectWithoutAppointmentInput = {
+  where: Prisma.patient_recordsWhereUniqueInput
+  create: Prisma.XOR<Prisma.patient_recordsCreateWithoutAppointmentInput, Prisma.patient_recordsUncheckedCreateWithoutAppointmentInput>
+}
+
+export type patient_recordsCreateManyAppointmentInputEnvelope = {
+  data: Prisma.patient_recordsCreateManyAppointmentInput | Prisma.patient_recordsCreateManyAppointmentInput[]
+  skipDuplicates?: boolean
+}
+
+export type patient_recordsUpsertWithWhereUniqueWithoutAppointmentInput = {
+  where: Prisma.patient_recordsWhereUniqueInput
+  update: Prisma.XOR<Prisma.patient_recordsUpdateWithoutAppointmentInput, Prisma.patient_recordsUncheckedUpdateWithoutAppointmentInput>
+  create: Prisma.XOR<Prisma.patient_recordsCreateWithoutAppointmentInput, Prisma.patient_recordsUncheckedCreateWithoutAppointmentInput>
+}
+
+export type patient_recordsUpdateWithWhereUniqueWithoutAppointmentInput = {
+  where: Prisma.patient_recordsWhereUniqueInput
+  data: Prisma.XOR<Prisma.patient_recordsUpdateWithoutAppointmentInput, Prisma.patient_recordsUncheckedUpdateWithoutAppointmentInput>
+}
+
+export type patient_recordsUpdateManyWithWhereWithoutAppointmentInput = {
+  where: Prisma.patient_recordsScalarWhereInput
+  data: Prisma.XOR<Prisma.patient_recordsUpdateManyMutationInput, Prisma.patient_recordsUncheckedUpdateManyWithoutAppointmentInput>
+}
+
 export type patient_recordsCreateWithoutPatient_documentsInput = {
   id?: bigint | number
   record_type?: string
@@ -753,9 +857,9 @@ export type patient_recordsCreateWithoutPatient_documentsInput = {
   treatment_date?: Date | string | null
   created_at?: Date | string
   updated_at?: Date | string
-  appointments?: Prisma.appointmentsCreateNestedOneWithoutPatient_recordsInput
-  users?: Prisma.usersCreateNestedOneWithoutPatient_recordsInput
-  patient_profiles: Prisma.patient_profilesCreateNestedOneWithoutPatient_recordsInput
+  appointment?: Prisma.appointmentsCreateNestedOneWithoutPatient_recordsInput
+  created_by_user?: Prisma.usersCreateNestedOneWithoutPatient_recordsInput
+  patient_profile: Prisma.patient_profilesCreateNestedOneWithoutPatient_recordsInput
 }
 
 export type patient_recordsUncheckedCreateWithoutPatient_documentsInput = {
@@ -797,9 +901,9 @@ export type patient_recordsUpdateWithoutPatient_documentsInput = {
   treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  appointments?: Prisma.appointmentsUpdateOneWithoutPatient_recordsNestedInput
-  users?: Prisma.usersUpdateOneWithoutPatient_recordsNestedInput
-  patient_profiles?: Prisma.patient_profilesUpdateOneRequiredWithoutPatient_recordsNestedInput
+  appointment?: Prisma.appointmentsUpdateOneWithoutPatient_recordsNestedInput
+  created_by_user?: Prisma.usersUpdateOneWithoutPatient_recordsNestedInput
+  patient_profile?: Prisma.patient_profilesUpdateOneRequiredWithoutPatient_recordsNestedInput
 }
 
 export type patient_recordsUncheckedUpdateWithoutPatient_documentsInput = {
@@ -816,223 +920,7 @@ export type patient_recordsUncheckedUpdateWithoutPatient_documentsInput = {
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
-export type patient_recordsCreateWithoutPatient_profilesInput = {
-  id?: bigint | number
-  record_type?: string
-  title: string
-  description: string
-  tooth_number?: string | null
-  treatment_date?: Date | string | null
-  created_at?: Date | string
-  updated_at?: Date | string
-  patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutPatient_recordsInput
-  appointments?: Prisma.appointmentsCreateNestedOneWithoutPatient_recordsInput
-  users?: Prisma.usersCreateNestedOneWithoutPatient_recordsInput
-}
-
-export type patient_recordsUncheckedCreateWithoutPatient_profilesInput = {
-  id?: bigint | number
-  appointment_id?: bigint | number | null
-  record_type?: string
-  title: string
-  description: string
-  tooth_number?: string | null
-  treatment_date?: Date | string | null
-  created_by?: bigint | number | null
-  created_at?: Date | string
-  updated_at?: Date | string
-  patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutPatient_recordsInput
-}
-
-export type patient_recordsCreateOrConnectWithoutPatient_profilesInput = {
-  where: Prisma.patient_recordsWhereUniqueInput
-  create: Prisma.XOR<Prisma.patient_recordsCreateWithoutPatient_profilesInput, Prisma.patient_recordsUncheckedCreateWithoutPatient_profilesInput>
-}
-
-export type patient_recordsCreateManyPatient_profilesInputEnvelope = {
-  data: Prisma.patient_recordsCreateManyPatient_profilesInput | Prisma.patient_recordsCreateManyPatient_profilesInput[]
-  skipDuplicates?: boolean
-}
-
-export type patient_recordsUpsertWithWhereUniqueWithoutPatient_profilesInput = {
-  where: Prisma.patient_recordsWhereUniqueInput
-  update: Prisma.XOR<Prisma.patient_recordsUpdateWithoutPatient_profilesInput, Prisma.patient_recordsUncheckedUpdateWithoutPatient_profilesInput>
-  create: Prisma.XOR<Prisma.patient_recordsCreateWithoutPatient_profilesInput, Prisma.patient_recordsUncheckedCreateWithoutPatient_profilesInput>
-}
-
-export type patient_recordsUpdateWithWhereUniqueWithoutPatient_profilesInput = {
-  where: Prisma.patient_recordsWhereUniqueInput
-  data: Prisma.XOR<Prisma.patient_recordsUpdateWithoutPatient_profilesInput, Prisma.patient_recordsUncheckedUpdateWithoutPatient_profilesInput>
-}
-
-export type patient_recordsUpdateManyWithWhereWithoutPatient_profilesInput = {
-  where: Prisma.patient_recordsScalarWhereInput
-  data: Prisma.XOR<Prisma.patient_recordsUpdateManyMutationInput, Prisma.patient_recordsUncheckedUpdateManyWithoutPatient_profilesInput>
-}
-
-export type patient_recordsCreateWithoutUsersInput = {
-  id?: bigint | number
-  record_type?: string
-  title: string
-  description: string
-  tooth_number?: string | null
-  treatment_date?: Date | string | null
-  created_at?: Date | string
-  updated_at?: Date | string
-  patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutPatient_recordsInput
-  appointments?: Prisma.appointmentsCreateNestedOneWithoutPatient_recordsInput
-  patient_profiles: Prisma.patient_profilesCreateNestedOneWithoutPatient_recordsInput
-}
-
-export type patient_recordsUncheckedCreateWithoutUsersInput = {
-  id?: bigint | number
-  patient_id: bigint | number
-  appointment_id?: bigint | number | null
-  record_type?: string
-  title: string
-  description: string
-  tooth_number?: string | null
-  treatment_date?: Date | string | null
-  created_at?: Date | string
-  updated_at?: Date | string
-  patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutPatient_recordsInput
-}
-
-export type patient_recordsCreateOrConnectWithoutUsersInput = {
-  where: Prisma.patient_recordsWhereUniqueInput
-  create: Prisma.XOR<Prisma.patient_recordsCreateWithoutUsersInput, Prisma.patient_recordsUncheckedCreateWithoutUsersInput>
-}
-
-export type patient_recordsCreateManyUsersInputEnvelope = {
-  data: Prisma.patient_recordsCreateManyUsersInput | Prisma.patient_recordsCreateManyUsersInput[]
-  skipDuplicates?: boolean
-}
-
-export type patient_recordsUpsertWithWhereUniqueWithoutUsersInput = {
-  where: Prisma.patient_recordsWhereUniqueInput
-  update: Prisma.XOR<Prisma.patient_recordsUpdateWithoutUsersInput, Prisma.patient_recordsUncheckedUpdateWithoutUsersInput>
-  create: Prisma.XOR<Prisma.patient_recordsCreateWithoutUsersInput, Prisma.patient_recordsUncheckedCreateWithoutUsersInput>
-}
-
-export type patient_recordsUpdateWithWhereUniqueWithoutUsersInput = {
-  where: Prisma.patient_recordsWhereUniqueInput
-  data: Prisma.XOR<Prisma.patient_recordsUpdateWithoutUsersInput, Prisma.patient_recordsUncheckedUpdateWithoutUsersInput>
-}
-
-export type patient_recordsUpdateManyWithWhereWithoutUsersInput = {
-  where: Prisma.patient_recordsScalarWhereInput
-  data: Prisma.XOR<Prisma.patient_recordsUpdateManyMutationInput, Prisma.patient_recordsUncheckedUpdateManyWithoutUsersInput>
-}
-
-export type patient_recordsCreateManyAppointmentsInput = {
-  id?: bigint | number
-  patient_id: bigint | number
-  record_type?: string
-  title: string
-  description: string
-  tooth_number?: string | null
-  treatment_date?: Date | string | null
-  created_by?: bigint | number | null
-  created_at?: Date | string
-  updated_at?: Date | string
-}
-
-export type patient_recordsUpdateWithoutAppointmentsInput = {
-  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  record_type?: Prisma.StringFieldUpdateOperationsInput | string
-  title?: Prisma.StringFieldUpdateOperationsInput | string
-  description?: Prisma.StringFieldUpdateOperationsInput | string
-  tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  patient_documents?: Prisma.patient_documentsUpdateManyWithoutPatient_recordsNestedInput
-  users?: Prisma.usersUpdateOneWithoutPatient_recordsNestedInput
-  patient_profiles?: Prisma.patient_profilesUpdateOneRequiredWithoutPatient_recordsNestedInput
-}
-
-export type patient_recordsUncheckedUpdateWithoutAppointmentsInput = {
-  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  record_type?: Prisma.StringFieldUpdateOperationsInput | string
-  title?: Prisma.StringFieldUpdateOperationsInput | string
-  description?: Prisma.StringFieldUpdateOperationsInput | string
-  tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutPatient_recordsNestedInput
-}
-
-export type patient_recordsUncheckedUpdateManyWithoutAppointmentsInput = {
-  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  record_type?: Prisma.StringFieldUpdateOperationsInput | string
-  title?: Prisma.StringFieldUpdateOperationsInput | string
-  description?: Prisma.StringFieldUpdateOperationsInput | string
-  tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-}
-
-export type patient_recordsCreateManyPatient_profilesInput = {
-  id?: bigint | number
-  appointment_id?: bigint | number | null
-  record_type?: string
-  title: string
-  description: string
-  tooth_number?: string | null
-  treatment_date?: Date | string | null
-  created_by?: bigint | number | null
-  created_at?: Date | string
-  updated_at?: Date | string
-}
-
-export type patient_recordsUpdateWithoutPatient_profilesInput = {
-  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  record_type?: Prisma.StringFieldUpdateOperationsInput | string
-  title?: Prisma.StringFieldUpdateOperationsInput | string
-  description?: Prisma.StringFieldUpdateOperationsInput | string
-  tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  patient_documents?: Prisma.patient_documentsUpdateManyWithoutPatient_recordsNestedInput
-  appointments?: Prisma.appointmentsUpdateOneWithoutPatient_recordsNestedInput
-  users?: Prisma.usersUpdateOneWithoutPatient_recordsNestedInput
-}
-
-export type patient_recordsUncheckedUpdateWithoutPatient_profilesInput = {
-  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  appointment_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  record_type?: Prisma.StringFieldUpdateOperationsInput | string
-  title?: Prisma.StringFieldUpdateOperationsInput | string
-  description?: Prisma.StringFieldUpdateOperationsInput | string
-  tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutPatient_recordsNestedInput
-}
-
-export type patient_recordsUncheckedUpdateManyWithoutPatient_profilesInput = {
-  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  appointment_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  record_type?: Prisma.StringFieldUpdateOperationsInput | string
-  title?: Prisma.StringFieldUpdateOperationsInput | string
-  description?: Prisma.StringFieldUpdateOperationsInput | string
-  tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-}
-
-export type patient_recordsCreateManyUsersInput = {
+export type patient_recordsCreateManyCreated_by_userInput = {
   id?: bigint | number
   patient_id: bigint | number
   appointment_id?: bigint | number | null
@@ -1045,7 +933,7 @@ export type patient_recordsCreateManyUsersInput = {
   updated_at?: Date | string
 }
 
-export type patient_recordsUpdateWithoutUsersInput = {
+export type patient_recordsUpdateWithoutCreated_by_userInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   record_type?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1054,12 +942,12 @@ export type patient_recordsUpdateWithoutUsersInput = {
   treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  patient_documents?: Prisma.patient_documentsUpdateManyWithoutPatient_recordsNestedInput
-  appointments?: Prisma.appointmentsUpdateOneWithoutPatient_recordsNestedInput
-  patient_profiles?: Prisma.patient_profilesUpdateOneRequiredWithoutPatient_recordsNestedInput
+  patient_documents?: Prisma.patient_documentsUpdateManyWithoutRecordNestedInput
+  appointment?: Prisma.appointmentsUpdateOneWithoutPatient_recordsNestedInput
+  patient_profile?: Prisma.patient_profilesUpdateOneRequiredWithoutPatient_recordsNestedInput
 }
 
-export type patient_recordsUncheckedUpdateWithoutUsersInput = {
+export type patient_recordsUncheckedUpdateWithoutCreated_by_userInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   appointment_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
@@ -1070,10 +958,10 @@ export type patient_recordsUncheckedUpdateWithoutUsersInput = {
   treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutPatient_recordsNestedInput
+  patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutRecordNestedInput
 }
 
-export type patient_recordsUncheckedUpdateManyWithoutUsersInput = {
+export type patient_recordsUncheckedUpdateManyWithoutCreated_by_userInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   appointment_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
@@ -1082,6 +970,114 @@ export type patient_recordsUncheckedUpdateManyWithoutUsersInput = {
   description?: Prisma.StringFieldUpdateOperationsInput | string
   tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type patient_recordsCreateManyPatient_profileInput = {
+  id?: bigint | number
+  appointment_id?: bigint | number | null
+  record_type?: string
+  title: string
+  description: string
+  tooth_number?: string | null
+  treatment_date?: Date | string | null
+  created_by?: bigint | number | null
+  created_at?: Date | string
+  updated_at?: Date | string
+}
+
+export type patient_recordsUpdateWithoutPatient_profileInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  record_type?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  patient_documents?: Prisma.patient_documentsUpdateManyWithoutRecordNestedInput
+  appointment?: Prisma.appointmentsUpdateOneWithoutPatient_recordsNestedInput
+  created_by_user?: Prisma.usersUpdateOneWithoutPatient_recordsNestedInput
+}
+
+export type patient_recordsUncheckedUpdateWithoutPatient_profileInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  appointment_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  record_type?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutRecordNestedInput
+}
+
+export type patient_recordsUncheckedUpdateManyWithoutPatient_profileInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  appointment_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  record_type?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type patient_recordsCreateManyAppointmentInput = {
+  id?: bigint | number
+  patient_id: bigint | number
+  record_type?: string
+  title: string
+  description: string
+  tooth_number?: string | null
+  treatment_date?: Date | string | null
+  created_by?: bigint | number | null
+  created_at?: Date | string
+  updated_at?: Date | string
+}
+
+export type patient_recordsUpdateWithoutAppointmentInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  record_type?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  patient_documents?: Prisma.patient_documentsUpdateManyWithoutRecordNestedInput
+  created_by_user?: Prisma.usersUpdateOneWithoutPatient_recordsNestedInput
+  patient_profile?: Prisma.patient_profilesUpdateOneRequiredWithoutPatient_recordsNestedInput
+}
+
+export type patient_recordsUncheckedUpdateWithoutAppointmentInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  record_type?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutRecordNestedInput
+}
+
+export type patient_recordsUncheckedUpdateManyWithoutAppointmentInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  record_type?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1130,9 +1126,9 @@ export type patient_recordsSelect<ExtArgs extends runtime.Types.Extensions.Inter
   created_at?: boolean
   updated_at?: boolean
   patient_documents?: boolean | Prisma.patient_records$patient_documentsArgs<ExtArgs>
-  appointments?: boolean | Prisma.patient_records$appointmentsArgs<ExtArgs>
-  users?: boolean | Prisma.patient_records$usersArgs<ExtArgs>
-  patient_profiles?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
+  appointment?: boolean | Prisma.patient_records$appointmentArgs<ExtArgs>
+  created_by_user?: boolean | Prisma.patient_records$created_by_userArgs<ExtArgs>
+  patient_profile?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
   _count?: boolean | Prisma.Patient_recordsCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["patient_records"]>
 
@@ -1148,9 +1144,9 @@ export type patient_recordsSelectCreateManyAndReturn<ExtArgs extends runtime.Typ
   created_by?: boolean
   created_at?: boolean
   updated_at?: boolean
-  appointments?: boolean | Prisma.patient_records$appointmentsArgs<ExtArgs>
-  users?: boolean | Prisma.patient_records$usersArgs<ExtArgs>
-  patient_profiles?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
+  appointment?: boolean | Prisma.patient_records$appointmentArgs<ExtArgs>
+  created_by_user?: boolean | Prisma.patient_records$created_by_userArgs<ExtArgs>
+  patient_profile?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["patient_records"]>
 
 export type patient_recordsSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -1165,9 +1161,9 @@ export type patient_recordsSelectUpdateManyAndReturn<ExtArgs extends runtime.Typ
   created_by?: boolean
   created_at?: boolean
   updated_at?: boolean
-  appointments?: boolean | Prisma.patient_records$appointmentsArgs<ExtArgs>
-  users?: boolean | Prisma.patient_records$usersArgs<ExtArgs>
-  patient_profiles?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
+  appointment?: boolean | Prisma.patient_records$appointmentArgs<ExtArgs>
+  created_by_user?: boolean | Prisma.patient_records$created_by_userArgs<ExtArgs>
+  patient_profile?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["patient_records"]>
 
 export type patient_recordsSelectScalar = {
@@ -1187,29 +1183,29 @@ export type patient_recordsSelectScalar = {
 export type patient_recordsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "patient_id" | "appointment_id" | "record_type" | "title" | "description" | "tooth_number" | "treatment_date" | "created_by" | "created_at" | "updated_at", ExtArgs["result"]["patient_records"]>
 export type patient_recordsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   patient_documents?: boolean | Prisma.patient_records$patient_documentsArgs<ExtArgs>
-  appointments?: boolean | Prisma.patient_records$appointmentsArgs<ExtArgs>
-  users?: boolean | Prisma.patient_records$usersArgs<ExtArgs>
-  patient_profiles?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
+  appointment?: boolean | Prisma.patient_records$appointmentArgs<ExtArgs>
+  created_by_user?: boolean | Prisma.patient_records$created_by_userArgs<ExtArgs>
+  patient_profile?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
   _count?: boolean | Prisma.Patient_recordsCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type patient_recordsIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  appointments?: boolean | Prisma.patient_records$appointmentsArgs<ExtArgs>
-  users?: boolean | Prisma.patient_records$usersArgs<ExtArgs>
-  patient_profiles?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
+  appointment?: boolean | Prisma.patient_records$appointmentArgs<ExtArgs>
+  created_by_user?: boolean | Prisma.patient_records$created_by_userArgs<ExtArgs>
+  patient_profile?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
 }
 export type patient_recordsIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  appointments?: boolean | Prisma.patient_records$appointmentsArgs<ExtArgs>
-  users?: boolean | Prisma.patient_records$usersArgs<ExtArgs>
-  patient_profiles?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
+  appointment?: boolean | Prisma.patient_records$appointmentArgs<ExtArgs>
+  created_by_user?: boolean | Prisma.patient_records$created_by_userArgs<ExtArgs>
+  patient_profile?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
 }
 
 export type $patient_recordsPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "patient_records"
   objects: {
     patient_documents: Prisma.$patient_documentsPayload<ExtArgs>[]
-    appointments: Prisma.$appointmentsPayload<ExtArgs> | null
-    users: Prisma.$usersPayload<ExtArgs> | null
-    patient_profiles: Prisma.$patient_profilesPayload<ExtArgs>
+    appointment: Prisma.$appointmentsPayload<ExtArgs> | null
+    created_by_user: Prisma.$usersPayload<ExtArgs> | null
+    patient_profile: Prisma.$patient_profilesPayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: bigint
@@ -1618,9 +1614,9 @@ readonly fields: patient_recordsFieldRefs;
 export interface Prisma__patient_recordsClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   patient_documents<T extends Prisma.patient_records$patient_documentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.patient_records$patient_documentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$patient_documentsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  appointments<T extends Prisma.patient_records$appointmentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.patient_records$appointmentsArgs<ExtArgs>>): Prisma.Prisma__appointmentsClient<runtime.Types.Result.GetResult<Prisma.$appointmentsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-  users<T extends Prisma.patient_records$usersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.patient_records$usersArgs<ExtArgs>>): Prisma.Prisma__usersClient<runtime.Types.Result.GetResult<Prisma.$usersPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-  patient_profiles<T extends Prisma.patient_profilesDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.patient_profilesDefaultArgs<ExtArgs>>): Prisma.Prisma__patient_profilesClient<runtime.Types.Result.GetResult<Prisma.$patient_profilesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  appointment<T extends Prisma.patient_records$appointmentArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.patient_records$appointmentArgs<ExtArgs>>): Prisma.Prisma__appointmentsClient<runtime.Types.Result.GetResult<Prisma.$appointmentsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  created_by_user<T extends Prisma.patient_records$created_by_userArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.patient_records$created_by_userArgs<ExtArgs>>): Prisma.Prisma__usersClient<runtime.Types.Result.GetResult<Prisma.$usersPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  patient_profile<T extends Prisma.patient_profilesDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.patient_profilesDefaultArgs<ExtArgs>>): Prisma.Prisma__patient_profilesClient<runtime.Types.Result.GetResult<Prisma.$patient_profilesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2086,9 +2082,9 @@ export type patient_records$patient_documentsArgs<ExtArgs extends runtime.Types.
 }
 
 /**
- * patient_records.appointments
+ * patient_records.appointment
  */
-export type patient_records$appointmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+export type patient_records$appointmentArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
    * Select specific fields to fetch from the appointments
    */
@@ -2105,9 +2101,9 @@ export type patient_records$appointmentsArgs<ExtArgs extends runtime.Types.Exten
 }
 
 /**
- * patient_records.users
+ * patient_records.created_by_user
  */
-export type patient_records$usersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+export type patient_records$created_by_userArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
    * Select specific fields to fetch from the users
    */
