@@ -1,102 +1,51 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { safeStorage } from "@/lib/browser-compat";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/lib/i18n";
+import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import {
   FaTooth,
   FaCalendarAlt,
   FaClipboardList,
   FaPills,
-  FaCreditCard,
-  FaClock,
   FaBell,
-  FaHospital,
   FaSignOutAlt,
-  FaChevronDown,
 } from "react-icons/fa";
-
-interface SelectedClinic {
-  id: number;
-  clinicName: string;
-  ownerName: string;
-  city: string;
-  specialty: string;
-}
-
-const SPECIALTY_LABELS: Record<string, string> = {
-  general:      "General Dentistry",
-  orthodontics: "Orthodontics",
-  pediatric:    "Pediatric Dentistry",
-  cosmetic:     "Cosmetic Dentistry",
-  oral_surgery: "Oral Surgery",
-  periodontics: "Periodontics",
-  multi:        "Multi-Specialty",
-};
 
 export default function PatientDashboard() {
   const router = useRouter();
-  const [clinic, setClinic] = useState<SelectedClinic | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const stored = localStorage.getItem("selectedClinic");
-    if (!stored) {
-      router.replace("/select-clinic");
-      return;
-    }
-    setClinic(JSON.parse(stored));
-    setLoading(false);
-  }, [router]);
+  const { t } = useTranslation();
 
   const handleLogout = () => {
-    localStorage.removeItem("patientAuth");
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("userRole");
-    localStorage.removeItem("selectedClinic");
+    safeStorage.removeItem("patientAuth");
+    safeStorage.removeItem("authToken");
+    safeStorage.removeItem("userRole");
     router.push("/login");
-  };
-
-  const handleChangeClinic = () => {
-    localStorage.removeItem("selectedClinic");
-    router.push("/select-clinic");
   };
 
   const quickActions = [
     {
-      title: "Book Appointment",
-      description: "Schedule your next dental visit",
+      title: t("patientDashboard.bookAppointment"),
+      description: t("patientDashboard.bookAppointmentDesc"),
       icon: <FaCalendarAlt className="text-4xl text-dental-blue" />,
       href: "/book-appointment",
     },
     {
-      title: "View Records",
-      description: "Access your medical history",
+      title: t("patientDashboard.viewRecords"),
+      description: t("patientDashboard.viewRecordsDesc"),
       icon: <FaClipboardList className="text-4xl text-dental-blue" />,
       href: "/medical-records",
     },
     {
-      title: "Prescriptions",
-      description: "View and refill prescriptions",
+      title: t("patientDashboard.prescriptions"),
+      description: t("patientDashboard.prescriptionsDesc"),
       icon: <FaPills className="text-4xl text-dental-blue" />,
       href: "/prescriptions",
     },
-    {
-      title: "Billing",
-      description: "View bills and payment history",
-      icon: <FaCreditCard className="text-4xl text-dental-blue" />,
-      href: "/billing",
-    },
   ];
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-white">
-        <div className="w-8 h-8 border-4 border-dental-blue/30 border-t-dental-blue rounded-full animate-spin" />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 to-white">
@@ -112,28 +61,9 @@ export default function PatientDashboard() {
               <span className="text-xl font-bold text-gray-900">BrightSmile</span>
             </Link>
 
-            {/* Clinic pill + actions */}
+            {/* Actions */}
             <div className="flex items-center gap-3">
-              {/* Selected clinic chip */}
-              {clinic && (
-                <button
-                  onClick={handleChangeClinic}
-                  className="hidden sm:flex items-center gap-2 px-3 py-2 bg-dental-blue/8 border border-dental-blue/20 rounded-xl hover:bg-dental-blue/15 transition-all text-sm"
-                >
-                  <FaHospital className="text-dental-blue text-xs" />
-                  <span className="font-medium text-dental-blue">{clinic.clinicName}</span>
-                  <FaChevronDown className="text-dental-blue text-[10px]" />
-                </button>
-              )}
-
-              <Link
-                href="/notifications"
-                className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <FaBell className="text-xl" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
-              </Link>
-
+              <LanguageSwitcher />
               {/* Avatar */}
               <div className="w-10 h-10 bg-gradient-to-r from-dental-blue to-dental-teal rounded-full flex items-center justify-center text-white font-semibold text-sm">
                 P
@@ -144,7 +74,7 @@ export default function PatientDashboard() {
                 className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors"
               >
                 <FaSignOutAlt />
-                <span className="hidden sm:inline">Logout</span>
+                <span className="hidden sm:inline">{t("common.logout")}</span>
               </button>
             </div>
           </div>
@@ -156,27 +86,8 @@ export default function PatientDashboard() {
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-1">
-            Welcome back!
+            {t("patientDashboard.welcomeBack")}
           </h1>
-          {clinic && (
-            <div className="flex items-center gap-2 mt-2">
-              <FaHospital className="text-dental-blue text-sm" />
-              <span className="text-gray-600 text-sm">
-                Your portal for{" "}
-                <span className="font-semibold text-dental-blue">{clinic.clinicName}</span>
-                {" "}·{" "}
-                <span className="text-gray-500">{SPECIALTY_LABELS[clinic.specialty] || clinic.specialty}</span>
-                {" "}·{" "}
-                <span className="text-gray-500">{clinic.city}</span>
-              </span>
-              <button
-                onClick={handleChangeClinic}
-                className="text-xs text-dental-blue underline hover:no-underline ml-1"
-              >
-                Change clinic
-              </button>
-            </div>
-          )}
         </div>
 
         {/* Quick Actions Grid */}
@@ -200,50 +111,50 @@ export default function PatientDashboard() {
           <div className="bg-white rounded-xl shadow-lg p-6">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-gray-900">
-                Upcoming Appointments
+                {t("patientDashboard.upcomingAppointments")}
               </h2>
               <Link href="/book-appointment">
                 <Button size="sm" className="gradient-auth-card hover:shadow-lg transition-all">
-                  Book New
+                  {t("patientDashboard.bookNew")}
                 </Button>
               </Link>
             </div>
-            <p className="text-center text-gray-500 py-8">No upcoming appointments</p>
+            <p className="text-center text-gray-500 py-8">{t("patientDashboard.noUpcomingAppointments")}</p>
           </div>
 
           {/* Recent Visits */}
           <div className="bg-white rounded-xl shadow-lg p-6">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Recent Visits</h2>
+              <h2 className="text-2xl font-bold text-gray-900">{t("patientDashboard.recentVisits")}</h2>
               <Link href="/medical-records">
                 <Button
                   variant="outline"
                   size="sm"
                   className="text-dental-blue border-dental-blue hover:bg-dental-blue/10"
                 >
-                  View All
+                  {t("common.viewAll")}
                 </Button>
               </Link>
             </div>
-            <p className="text-center text-gray-500 py-8">No recent visits</p>
+            <p className="text-center text-gray-500 py-8">{t("patientDashboard.noRecentVisits")}</p>
           </div>
         </div>
 
         {/* Health Summary Card */}
         <div className="mt-8 bg-gradient-to-r from-dental-blue to-dental-teal rounded-xl p-6 text-white shadow-lg">
-          <h2 className="text-2xl font-bold mb-4">Your Dental Health Score</h2>
+          <h2 className="text-2xl font-bold mb-4">{t("patientDashboard.dentalHealthScore")}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-              <p className="text-sm opacity-90 mb-1">Overall Health</p>
-              <p className="text-3xl font-bold">Excellent</p>
+              <p className="text-sm opacity-90 mb-1">{t("patientDashboard.overallHealth")}</p>
+              <p className="text-3xl font-bold">{t("patientDashboard.excellent")}</p>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-              <p className="text-sm opacity-90 mb-1">Last Checkup</p>
-              <p className="text-3xl font-bold">2 months ago</p>
+              <p className="text-sm opacity-90 mb-1">{t("patientDashboard.lastCheckup")}</p>
+              <p className="text-3xl font-bold">{t("patientDashboard.twoMonthsAgo")}</p>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-              <p className="text-sm opacity-90 mb-1">Next Cleaning</p>
-              <p className="text-3xl font-bold">3 days</p>
+              <p className="text-sm opacity-90 mb-1">{t("patientDashboard.nextCleaning")}</p>
+              <p className="text-3xl font-bold">{t("patientDashboard.threeDays")}</p>
             </div>
           </div>
         </div>

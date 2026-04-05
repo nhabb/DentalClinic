@@ -4,17 +4,19 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { safeStorage } from "@/lib/browser-compat";
+import { useTranslation } from "@/lib/i18n";
+import AdminSidebar from "@/components/ui/AdminSidebar";
+import { StatsCard } from "@/components/ui/StatsCard";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { Badge } from "@/components/ui/Badge";
+import { AdminPageHeader } from "@/components/ui/AdminPageHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Modal } from "@/components/ui/Modal";
+import { FormField, inputClass } from "@/components/ui/FormField";
 import {
-  FaTooth,
   FaCalendarAlt,
-  FaBoxes,
-  FaMoneyBillWave,
-  FaUsers,
-  FaChartLine,
-  FaCog,
-  FaSignOutAlt,
   FaSearch,
-  FaPlus,
   FaCheckCircle,
   FaClock,
   FaTimes,
@@ -52,6 +54,8 @@ interface Doctor {
 
 export default function AppointmentsManagement() {
   const router = useRouter();
+  const { t } = useTranslation();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<"day" | "week">("day");
   const [searchQuery, setSearchQuery] = useState("");
@@ -72,16 +76,16 @@ export default function AppointmentsManagement() {
   // Check auth and load user data (auth disabled)
   useEffect(() => {
     // Auth disabled - allow access
-    // const isAuthenticated = localStorage.getItem("adminAuth") === "true";
+    // const isAuthenticated = safeStorage.getItem("adminAuth") === "true";
     // if (!isAuthenticated) {
     //   router.push("/admin/login");
     //   return;
     // }
 
-    const role = localStorage.getItem("userRole") || "doctor";
-    const storedDoctorId = localStorage.getItem("doctorId");
-    const storedAssignedIds = localStorage.getItem("assignedDoctorIds");
-    const storedUser = localStorage.getItem("adminUser");
+    const role = safeStorage.getItem("userRole") || "doctor";
+    const storedDoctorId = safeStorage.getItem("doctorId");
+    const storedAssignedIds = safeStorage.getItem("assignedDoctorIds");
+    const storedUser = safeStorage.getItem("adminUser");
 
     setUserRole(role);
     if (storedDoctorId) setDoctorId(parseInt(storedDoctorId));
@@ -104,14 +108,13 @@ export default function AppointmentsManagement() {
   }, [selectedDate, userRole, doctorId, assignedDoctorIds]);
 
   const handleLogout = () => {
-    localStorage.removeItem("adminAuth");
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("adminUser");
-    localStorage.removeItem("userRole");
-    localStorage.removeItem("doctorId");
-    localStorage.removeItem("assignedDoctorIds");
-    // Logout disabled - no redirect
-    // router.push("/admin/login");
+    safeStorage.removeItem("adminAuth");
+    safeStorage.removeItem("authToken");
+    safeStorage.removeItem("adminUser");
+    safeStorage.removeItem("userRole");
+    safeStorage.removeItem("doctorId");
+    safeStorage.removeItem("assignedDoctorIds");
+    router.push("/admin/login");
   };
 
   const formatDate = (date: Date) => {
@@ -127,27 +130,35 @@ export default function AppointmentsManagement() {
     switch (status) {
       case "completed":
         return (
-          <span className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
-            <FaCheckCircle className="text-xs" /> Completed
-          </span>
+          <Badge
+            icon={FaCheckCircle}
+            bgClass="bg-green-100"
+            textClass="text-green-700"
+          >
+            {t("appointments.completed")}
+          </Badge>
         );
       case "in_progress":
         return (
-          <span className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
-            <FaClock className="text-xs" /> In Progress
-          </span>
+          <Badge icon={FaClock} bgClass="bg-blue-100" textClass="text-blue-700">
+            {t("appointments.inProgress")}
+          </Badge>
         );
       case "upcoming":
         return (
-          <span className="flex items-center gap-1 px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-full">
-            <FaClock className="text-xs" /> Upcoming
-          </span>
+          <Badge
+            icon={FaClock}
+            bgClass="bg-yellow-100"
+            textClass="text-yellow-700"
+          >
+            {t("appointments.upcoming")}
+          </Badge>
         );
       case "cancelled":
         return (
-          <span className="flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">
-            <FaTimes className="text-xs" /> Cancelled
-          </span>
+          <Badge icon={FaTimes} bgClass="bg-red-100" textClass="text-red-700">
+            {t("appointments.cancelled")}
+          </Badge>
         );
       default:
         return null;
@@ -218,167 +229,62 @@ export default function AppointmentsManagement() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <aside className="w-64 bg-gradient-to-b from-gray-900 to-gray-800 text-white flex flex-col">
-        {/* Logo */}
-        <div className="p-6 border-b border-gray-700">
-          <Link href="/admin" className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-dental-blue to-dental-teal rounded-lg flex items-center justify-center">
-              <FaTooth className="text-white text-xl" />
-            </div>
-            <div>
-              <span className="text-lg font-bold">BrightSmile</span>
-              <p className="text-xs text-gray-400">Admin Panel</p>
-            </div>
-          </Link>
-        </div>
-
-        {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-2">
-          <Link
-            href="/admin"
-            className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
-          >
-            <FaChartLine className="text-lg" />
-            <span className="font-medium">Dashboard</span>
-          </Link>
-          <Link
-            href="/admin/appointments"
-            className="flex items-center space-x-3 px-4 py-3 bg-dental-blue/20 text-dental-lightblue rounded-xl"
-          >
-            <FaCalendarAlt className="text-lg" />
-            <span className="font-medium">Appointments</span>
-          </Link>
-          <Link
-            href="/admin/inventory"
-            className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
-          >
-            <FaBoxes className="text-lg" />
-            <span className="font-medium">Inventory</span>
-          </Link>
-          {userRole === "doctor" && (
-            <Link
-              href="/admin/transactions"
-              className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
-            >
-              <FaMoneyBillWave className="text-lg" />
-              <span className="font-medium">Transactions</span>
-            </Link>
-          )}
-          <Link
-            href="/admin/patients"
-            className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
-          >
-            <FaUsers className="text-lg" />
-            <span className="font-medium">Patients</span>
-          </Link>
-        </nav>
-
-        {/* Bottom Section */}
-        <div className="p-4 border-t border-gray-700 space-y-2">
-          {userRole === "doctor" && (
-            <Link
-              href="/admin/settings"
-              className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
-            >
-              <FaCog className="text-lg" />
-              <span className="font-medium">Settings</span>
-            </Link>
-          )}
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-red-500/20 hover:text-red-400 rounded-xl transition-colors"
-          >
-            <FaSignOutAlt className="text-lg" />
-            <span className="font-medium">Logout</span>
-          </button>
-        </div>
-      </aside>
+      <AdminSidebar
+        activePage="appointments"
+        sidebarOpen={sidebarOpen}
+        onLogout={handleLogout}
+      />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <header className="bg-white shadow-sm px-8 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Appointments</h1>
-            <p className="text-gray-500 text-sm">
-              {currentUser
-                ? `${currentUser.firstName} ${currentUser.lastName}'s`
-                : "Manage"}{" "}
-              appointments
-            </p>
-          </div>
-          <Button
-            onClick={() => setShowAddModal(true)}
-            className="bg-dental-blue hover:bg-dental-blue/90"
-          >
-            <FaPlus className="mr-2" />
-            New Appointment
-          </Button>
-        </header>
+        <AdminPageHeader
+          title={t("appointments.appointments")}
+          subtitle={`${currentUser ? `${currentUser.firstName} ${currentUser.lastName}'s` : t("common.manage")} ${t("appointments.manageAppointments")}`}
+          data={appointments}
+          filename="appointments"
+          onImport={(rows) =>
+            setAppointments((prev) => [...prev, ...(rows as Appointment[])])
+          }
+          onAdd={() => setShowAddModal(true)}
+          addLabel={t("appointments.newAppointment")}
+        />
 
         {/* Content */}
         <main className="flex-1 p-8 overflow-auto">
           {isLoading ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="w-8 h-8 border-4 border-dental-blue/30 border-t-dental-blue rounded-full animate-spin"></div>
-            </div>
+            <LoadingSpinner />
           ) : (
             <>
               {/* Stats Cards */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                      <FaCalendarAlt className="text-blue-600 text-xl" />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {todayStats.total}
-                      </p>
-                      <p className="text-sm text-gray-500">Today's Total</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                      <FaCalendarCheck className="text-green-600 text-xl" />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {todayStats.completed}
-                      </p>
-                      <p className="text-sm text-gray-500">Completed</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
-                      <FaClock className="text-yellow-600 text-xl" />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {todayStats.upcoming}
-                      </p>
-                      <p className="text-sm text-gray-500">Upcoming</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
-                      <FaCalendarTimes className="text-red-600 text-xl" />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {todayStats.cancelled}
-                      </p>
-                      <p className="text-sm text-gray-500">Cancelled</p>
-                    </div>
-                  </div>
-                </div>
+                <StatsCard
+                  icon={FaCalendarAlt}
+                  iconBgClass="bg-blue-100"
+                  iconColorClass="text-blue-600"
+                  value={todayStats.total}
+                  label={t("appointments.todaysTotal")}
+                />
+                <StatsCard
+                  icon={FaCalendarCheck}
+                  iconBgClass="bg-green-100"
+                  iconColorClass="text-green-600"
+                  value={todayStats.completed}
+                  label={t("appointments.completed")}
+                />
+                <StatsCard
+                  icon={FaClock}
+                  iconBgClass="bg-yellow-100"
+                  iconColorClass="text-yellow-600"
+                  value={todayStats.upcoming}
+                  label={t("appointments.upcoming")}
+                />
+                <StatsCard
+                  icon={FaCalendarTimes}
+                  iconBgClass="bg-red-100"
+                  iconColorClass="text-red-600"
+                  value={todayStats.cancelled}
+                  label={t("appointments.cancelled")}
+                />
               </div>
 
               {/* Date Navigation & Filters */}
@@ -390,7 +296,7 @@ export default function AppointmentsManagement() {
                       onClick={() => navigateDate("prev")}
                       className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                     >
-                      <FaChevronLeft className="text-gray-600" />
+                      <FaChevronLeft className="text-gray-600 rtl:rotate-180" />
                     </button>
                     <div className="text-center min-w-[250px]">
                       <p className="text-lg font-bold text-gray-900">
@@ -401,27 +307,27 @@ export default function AppointmentsManagement() {
                       onClick={() => navigateDate("next")}
                       className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                     >
-                      <FaChevronRight className="text-gray-600" />
+                      <FaChevronRight className="text-gray-600 rtl:rotate-180" />
                     </button>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setSelectedDate(new Date())}
                     >
-                      Today
+                      {t("common.today")}
                     </Button>
                   </div>
 
                   {/* Filters */}
                   <div className="flex gap-4">
                     <div className="relative">
-                      <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <FaSearch className="absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2 text-gray-400" />
                       <input
                         type="text"
-                        placeholder="Search patient or type..."
+                        placeholder={t("appointments.searchPlaceholder")}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue w-64"
+                        className="pl-10 rtl:pl-4 rtl:pr-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue w-64"
                       />
                     </div>
                     {visibleDoctors.length > 1 && (
@@ -430,7 +336,9 @@ export default function AppointmentsManagement() {
                         onChange={(e) => setSelectedDoctor(e.target.value)}
                         className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
                       >
-                        <option value="all">All Doctors</option>
+                        <option value="all">
+                          {t("appointments.allDoctors")}
+                        </option>
                         {visibleDoctors.map((doctor) => (
                           <option key={doctor.id} value={doctor.name}>
                             {doctor.name}
@@ -507,7 +415,7 @@ export default function AppointmentsManagement() {
                               </div>
                               {apt.notes && (
                                 <p className="text-sm text-gray-400 mt-2 italic">
-                                  Note: {apt.notes}
+                                  {t("appointments.notePrefix")} {apt.notes}
                                 </p>
                               )}
                             </div>
@@ -522,7 +430,8 @@ export default function AppointmentsManagement() {
                                   className="bg-green-600 hover:bg-green-700"
                                   onClick={() => handleStartAppointment(apt.id)}
                                 >
-                                  <FaCheckCircle className="mr-1" /> Start
+                                  <FaCheckCircle className="mr-1 rtl:mr-0 rtl:ml-1" />{" "}
+                                  {t("appointments.start")}
                                 </Button>
                                 <Button
                                   size="sm"
@@ -532,7 +441,8 @@ export default function AppointmentsManagement() {
                                     handleCancelAppointment(apt.id)
                                   }
                                 >
-                                  <FaTimes className="mr-1" /> Cancel
+                                  <FaTimes className="mr-1 rtl:mr-0 rtl:ml-1" />{" "}
+                                  {t("appointments.cancel")}
                                 </Button>
                               </>
                             )}
@@ -544,7 +454,8 @@ export default function AppointmentsManagement() {
                                   handleCompleteAppointment(apt.id)
                                 }
                               >
-                                <FaCheckCircle className="mr-1" /> Complete
+                                <FaCheckCircle className="mr-1 rtl:mr-0 rtl:ml-1" />{" "}
+                                {t("appointments.complete")}
                               </Button>
                             )}
                             <button className="p-2 hover:bg-gray-100 rounded-lg text-gray-500">
@@ -556,17 +467,11 @@ export default function AppointmentsManagement() {
                     ))}
                   </div>
                 ) : (
-                  <div className="p-12 text-center">
-                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <FaCalendarAlt className="text-gray-400 text-2xl" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      No Appointments
-                    </h3>
-                    <p className="text-gray-500">
-                      No appointments scheduled for this date.
-                    </p>
-                  </div>
+                  <EmptyState
+                    icon={FaCalendarAlt}
+                    title={t("appointments.noAppointments")}
+                    description={t("appointments.noAppointmentsDesc")}
+                  />
                 )}
               </div>
             </>
@@ -575,113 +480,88 @@ export default function AppointmentsManagement() {
       </div>
 
       {/* Add Appointment Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">
-              New Appointment
-            </h2>
+      <Modal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        title={t("appointments.newAppointment")}
+      >
+        <div className="space-y-4">
+          <FormField label={t("appointments.patientName")}>
+            <input
+              type="text"
+              placeholder={t("appointments.patientNamePlaceholder")}
+              className={inputClass}
+            />
+          </FormField>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Patient Name
-                </label>
-                <input
-                  type="text"
-                  placeholder="Search or enter patient name"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Date
-                  </label>
-                  <input
-                    type="date"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Time
-                  </label>
-                  <select className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue">
-                    <option>09:00 AM</option>
-                    <option>09:30 AM</option>
-                    <option>10:00 AM</option>
-                    <option>10:30 AM</option>
-                    <option>11:00 AM</option>
-                    <option>11:30 AM</option>
-                    <option>02:00 PM</option>
-                    <option>02:30 PM</option>
-                    <option>03:00 PM</option>
-                    <option>03:30 PM</option>
-                    <option>04:00 PM</option>
-                    <option>04:30 PM</option>
-                    <option>05:00 PM</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Appointment Type
-                  </label>
-                  <select className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue">
-                    <option>Regular Checkup</option>
-                    <option>Teeth Cleaning</option>
-                    <option>Cavity Filling</option>
-                    <option>Root Canal</option>
-                    <option>Teeth Whitening</option>
-                    <option>Crown Fitting</option>
-                    <option>Extraction</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Doctor
-                  </label>
-                  <select className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue">
-                    {visibleDoctors.map((doctor) => (
-                      <option key={doctor.id} value={doctor.id}>
-                        {doctor.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Notes (Optional)
-                </label>
-                <textarea
-                  rows={3}
-                  placeholder="Add any notes for this appointment"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue resize-none"
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-3 mt-6">
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => setShowAddModal(false)}
-              >
-                Cancel
-              </Button>
-              <Button className="flex-1 bg-dental-blue hover:bg-dental-blue/90">
-                Schedule Appointment
-              </Button>
-            </div>
+          <div className="grid grid-cols-2 gap-4">
+            <FormField label={t("appointments.date")}>
+              <input type="date" className={inputClass} />
+            </FormField>
+            <FormField label={t("appointments.time")}>
+              <select className={inputClass}>
+                <option>09:00 AM</option>
+                <option>09:30 AM</option>
+                <option>10:00 AM</option>
+                <option>10:30 AM</option>
+                <option>11:00 AM</option>
+                <option>11:30 AM</option>
+                <option>02:00 PM</option>
+                <option>02:30 PM</option>
+                <option>03:00 PM</option>
+                <option>03:30 PM</option>
+                <option>04:00 PM</option>
+                <option>04:30 PM</option>
+                <option>05:00 PM</option>
+              </select>
+            </FormField>
           </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <FormField label={t("appointments.appointmentType")}>
+              <select className={inputClass}>
+                <option>{t("appointments.regularCheckup")}</option>
+                <option>{t("appointments.teethCleaning")}</option>
+                <option>{t("appointments.cavityFilling")}</option>
+                <option>{t("appointments.rootCanal")}</option>
+                <option>{t("appointments.teethWhitening")}</option>
+                <option>{t("appointments.crownFitting")}</option>
+                <option>{t("appointments.extraction")}</option>
+              </select>
+            </FormField>
+            <FormField label={t("appointments.doctor")}>
+              <select className={inputClass}>
+                {visibleDoctors.map((doctor) => (
+                  <option key={doctor.id} value={doctor.id}>
+                    {doctor.name}
+                  </option>
+                ))}
+              </select>
+            </FormField>
+          </div>
+
+          <FormField label={t("appointments.notesOptional")}>
+            <textarea
+              rows={3}
+              placeholder={t("appointments.notesPlaceholder")}
+              className={`${inputClass} resize-none`}
+            />
+          </FormField>
         </div>
-      )}
+
+        <div className="flex gap-3 mt-6">
+          <Button
+            variant="outline"
+            className="flex-1"
+            onClick={() => setShowAddModal(false)}
+          >
+            {t("common.cancel")}
+          </Button>
+          <Button className="flex-1 bg-dental-blue hover:bg-dental-blue/90">
+            {t("appointments.scheduleAppointment")}
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 }

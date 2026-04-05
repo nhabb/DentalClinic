@@ -1,50 +1,52 @@
-import { Sparkles, User } from "lucide-react";
-// Server Component (default in Next.js App Router)
+"use client";
+
+import { User } from "lucide-react";
+import { useTranslation } from "@/lib/i18n";
+
 export default function About() {
+  const { t } = useTranslation();
+
   const stats = [
     {
       number: "15+",
-      label: "Years Experience",
-      description: "Serving the community since 2010",
+      label: t("landing.yearsExperience"),
+      description: t("landing.yearsExperienceDesc"),
     },
     {
       number: "10,000+",
-      label: "Happy Patients",
-      description: "Trusted by families",
+      label: t("landing.happyPatients"),
+      description: t("landing.happyPatientsDesc"),
     },
     {
       number: "98%",
-      label: "Satisfaction Rate",
-      description: "Highly rated care",
+      label: t("landing.satisfactionRate"),
+      description: t("landing.satisfactionRateDesc"),
     },
     {
       number: "24/7",
-      label: "Emergency Care",
-      description: "Always here for you",
+      label: t("landing.emergencyCareLabel"),
+      description: t("landing.emergencyCareDesc"),
     },
   ];
 
   const teamMembers = [
     {
       name: "Dr. Sarah Mitchell",
-      role: "Lead Dentist",
+      role: t("landing.leadDentist"),
       education: "DDS, Harvard School of Dental Medicine",
-      description:
-        "Specializing in cosmetic and restorative dentistry with over 15 years of experience.",
+      description: t("landing.drMitchellDesc"),
     },
     {
       name: "Dr. James Chen",
-      role: "Orthodontist",
+      role: t("landing.orthodontist"),
       education: "DMD, University of Pennsylvania",
-      description:
-        "Expert in orthodontics and clear aligner therapy for children and adults.",
+      description: t("landing.drChenDesc"),
     },
     {
       name: "Dr. Emily Rodriguez",
-      role: "Pediatric Dentist",
+      role: t("landing.pediatricDentist"),
       education: "DDS, UCSF School of Dentistry",
-      description:
-        "Dedicated to making dental visits fun and comfortable for young patients.",
+      description: t("landing.drRodriguezDesc"),
     },
   ];
 
@@ -57,18 +59,13 @@ export default function About() {
         {/* Clinic Story */}
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
-            About BrightSmile Dental
+            {t("landing.aboutTitle")}
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-4">
-            Since 2010, we've been dedicated to providing exceptional dental
-            care to our community. Our state-of-the-art facility and experienced
-            team ensure you receive the highest quality treatment in a
-            comfortable, welcoming environment.
+            {t("landing.aboutP1")}
           </p>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-            We believe everyone deserves a healthy, beautiful smile. That's why
-            we offer comprehensive services for the whole family, from
-            preventive care to advanced cosmetic procedures.
+            {t("landing.aboutP2")}
           </p>
         </div>
 
@@ -78,7 +75,7 @@ export default function About() {
         {/* Meet the Team */}
         <div className="mt-20">
           <h3 className="text-2xl md:text-3xl font-bold text-gray-900 text-center mb-12">
-            Meet Our Expert Team
+            {t("landing.meetOurTeam")}
           </h3>
           <div className="grid md:grid-cols-3 gap-8">
             {teamMembers.map((member, index) => (
@@ -91,32 +88,30 @@ export default function About() {
         <div className="mt-20 grid md:grid-cols-2 gap-8">
           <div className="bg-white p-8 rounded-xl shadow-md">
             <h4 className="text-xl font-bold text-gray-900 mb-4">
-              Our Mission
+              {t("landing.ourMission")}
             </h4>
             <p className="text-gray-600">
-              To provide personalized, gentle dental care that exceeds
-              expectations. We combine advanced technology with a compassionate
-              approach to create positive experiences for every patient.
+              {t("landing.missionText")}
             </p>
           </div>
           <div className="bg-white p-8 rounded-xl shadow-md">
-            <h4 className="text-xl font-bold text-gray-900 mb-4">Our Values</h4>
+            <h4 className="text-xl font-bold text-gray-900 mb-4">{t("landing.ourValues")}</h4>
             <ul className="space-y-2 text-gray-600">
               <li className="flex items-start space-x-2">
                 <span className="text-dental-blue font-bold">•</span>
-                <span>Patient-centered care and comfort</span>
+                <span>{t("landing.value1")}</span>
               </li>
               <li className="flex items-start space-x-2">
                 <span className="text-dental-blue font-bold">•</span>
-                <span>Continuous education and innovation</span>
+                <span>{t("landing.value2")}</span>
               </li>
               <li className="flex items-start space-x-2">
                 <span className="text-dental-blue font-bold">•</span>
-                <span>Honesty and transparent communication</span>
+                <span>{t("landing.value3")}</span>
               </li>
               <li className="flex items-start space-x-2">
                 <span className="text-dental-blue font-bold">•</span>
-                <span>Community involvement and giving back</span>
+                <span>{t("landing.value4")}</span>
               </li>
             </ul>
           </div>

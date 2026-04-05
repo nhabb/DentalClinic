@@ -2,39 +2,32 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { FaTooth, FaUser, FaUserMd, FaUserTie, FaShieldAlt } from "react-icons/fa";
+import { FaTooth, FaUser, FaUserMd } from "react-icons/fa";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "@/lib/i18n";
+import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
+import { supabase } from "@/lib/supabase/client";
 
-type UserRole = "patient" | "doctor" | "secretary" | "superadmin";
+type UserRole = "patient" | "doctor";
 
 const ROLE_REDIRECTS: Record<UserRole, string> = {
-  patient: "/select-clinic",
+  patient: "/patient-dashboard",
   doctor: "/admin",
-  secretary: "/admin",
-  superadmin: "/superadmin",
 };
 
 const DEMO_ACCOUNTS = [
-  { role: "Patient",     email: "patient@demo.com",   password: "demo123", icon: FaUser,      color: "text-blue-500"  },
-  { role: "Doctor",      email: "doctor@demo.com",    password: "demo123", icon: FaUserMd,    color: "text-teal-500"  },
-  { role: "Secretary",   email: "secretary@demo.com", password: "demo123", icon: FaUserTie,   color: "text-purple-500" },
-  { role: "Super Admin", email: "super@demo.com",     password: "demo123", icon: FaShieldAlt, color: "text-orange-500" },
+  { role: "Patient", email: "patient@demo.com", password: "demo123", icon: FaUser,   color: "text-blue-500" },
+  { role: "Doctor",  email: "doctor@demo.com",  password: "demo123", icon: FaUserMd, color: "text-teal-500" },
 ];
-
-async function mockLogin(email: string, _password: string): Promise<{ role: UserRole }> {
-  await new Promise((r) => setTimeout(r, 600));
-  if (email === "super@demo.com")      return { role: "superadmin" };
-  if (email === "doctor@demo.com")     return { role: "doctor" };
-  if (email === "secretary@demo.com")  return { role: "secretary" };
-  return { role: "patient" };
-}
 
 export default function LoginPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [oauthLoading, setOauthLoading] = useState(false);
   const [error, setError]       = useState("");
 
   const fillDemo = (acc: typeof DEMO_ACCOUNTS[0]) => {
@@ -48,26 +41,28 @@ export default function LoginPage() {
     setIsLoading(true);
     setError("");
 
-    try {
-      const { role } = await mockLogin(email, password);
+    const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password });
 
-      localStorage.setItem("userRole", role);
-      localStorage.setItem("authToken", "demo-token");
-
-      if (role === "patient") {
-        localStorage.setItem("patientAuth", "true");
-      } else if (role === "superadmin") {
-        localStorage.setItem("superAdminAuth", "true");
-      } else {
-        localStorage.setItem("adminAuth", "true");
-        localStorage.setItem("adminUser", JSON.stringify({ email }));
-      }
-
-      router.push(ROLE_REDIRECTS[role]);
-    } catch {
-      setError("Invalid email or password. Please try again.");
-    } finally {
+    if (authError) {
+      setError(authError.message);
       setIsLoading(false);
+      return;
+    }
+
+    const role: UserRole = data.user?.user_metadata?.role === "doctor" ? "doctor" : "patient";
+    router.push(ROLE_REDIRECTS[role]);
+  };
+
+  const onGoogleLogin = async () => {
+    setOauthLoading(true);
+    setError("");
+    const { error: authError } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    });
+    if (authError) {
+      setError(authError.message);
+      setOauthLoading(false);
     }
   };
 
@@ -77,15 +72,18 @@ export default function LoginPage() {
         <div className="bg-white rounded-2xl shadow-2xl p-8 md:p-10 space-y-7">
           {/* Logo */}
           <div className="text-center">
+            <div className="flex justify-end mb-2">
+              <LanguageSwitcher />
+            </div>
             <Link href="/" className="inline-flex items-center space-x-2">
               <div className="w-12 h-12 bg-gradient-to-br from-dental-blue to-dental-teal rounded-lg flex items-center justify-center shadow-lg">
                 <FaTooth className="text-white text-2xl" />
               </div>
               <span className="text-2xl font-bold text-gray-900">BrightSmile</span>
             </Link>
-            <h2 className="mt-6 text-3xl font-bold text-gray-900">Welcome back</h2>
+            <h2 className="mt-6 text-3xl font-bold text-gray-900">{t("login.welcomeBack")}</h2>
             <p className="mt-2 text-sm text-gray-600">
-              Sign in to access your dashboard
+              {t("login.signInSubtitle")}
             </p>
           </div>
 
@@ -100,7 +98,7 @@ export default function LoginPage() {
           <form className="space-y-5" onSubmit={onLogin}>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                Email address
+                {t("login.emailAddress")}
               </label>
               <input
                 value={email}
@@ -111,13 +109,13 @@ export default function LoginPage() {
                 autoComplete="email"
                 required
                 className="appearance-none block w-full px-4 py-3 border border-gray-300 placeholder-gray-400 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-auth-blue focus:border-transparent transition-all"
-                placeholder="Enter your email"
+                placeholder={t("login.emailPlaceholder")}
               />
             </div>
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                Password
+                {t("login.password")}
               </label>
               <input
                 id="password"
@@ -128,22 +126,8 @@ export default function LoginPage() {
                 autoComplete="current-password"
                 required
                 className="appearance-none block w-full px-4 py-3 border border-gray-300 placeholder-gray-400 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-auth-blue focus:border-transparent transition-all"
-                placeholder="Enter your password"
+                placeholder={t("login.passwordPlaceholder")}
               />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  id="remember-me"
-                  type="checkbox"
-                  className="h-4 w-4 text-auth-blue focus:ring-auth-blue border-gray-300 rounded"
-                />
-                <span className="text-sm text-gray-700">Remember me</span>
-              </label>
-              <Link href="/forgot-password" className="text-sm font-medium text-auth-blue hover:text-auth-blue-light">
-                Forgot password?
-              </Link>
             </div>
 
             <Button
@@ -155,10 +139,10 @@ export default function LoginPage() {
               {isLoading ? (
                 <span className="flex items-center gap-2">
                   <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                  Signing in...
+                  {t("login.signingIn")}
                 </span>
               ) : (
-                "Sign in"
+                t("login.signIn")
               )}
             </Button>
 
@@ -168,20 +152,29 @@ export default function LoginPage() {
                 <div className="w-full border-t border-gray-300" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                <span className="px-2 bg-white text-gray-500">{t("login.orContinueWith")}</span>
               </div>
             </div>
 
-            <Button type="button" variant="outline" className="w-full" size="lg">
-              <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5 mr-2" />
-              Continue with Google
+            <Button type="button" variant="outline" className="w-full" size="lg" onClick={onGoogleLogin} disabled={oauthLoading}>
+              {oauthLoading ? (
+                <span className="flex items-center gap-2">
+                  <span className="w-4 h-4 border-2 border-gray-400/40 border-t-gray-600 rounded-full animate-spin" />
+                  {t("login.continueWithGoogle")}
+                </span>
+              ) : (
+                <>
+                  <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5 mr-2" />
+                  {t("login.continueWithGoogle")}
+                </>
+              )}
             </Button>
           </form>
 
           {/* Demo Credentials */}
           <div className="border border-gray-200 rounded-xl p-4 bg-gray-50 space-y-3">
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-              Demo accounts — click to fill
+              {t("login.demoAccounts")}
             </p>
             <div className="grid grid-cols-2 gap-2">
               {DEMO_ACCOUNTS.map((acc) => (
@@ -199,14 +192,14 @@ export default function LoginPage() {
                 </button>
               ))}
             </div>
-            <p className="text-[10px] text-gray-400 text-center">Password for all: <span className="font-mono font-semibold">demo123</span></p>
+            <p className="text-[10px] text-gray-400 text-center">{t("login.passwordForAll")} <span className="font-mono font-semibold">demo123</span></p>
           </div>
 
           {/* Sign Up */}
           <p className="text-center text-sm text-gray-600">
-            Don&apos;t have an account?{" "}
+            {t("login.noAccount")}{" "}
             <Link href="/signup" className="font-semibold text-auth-blue hover:text-auth-blue-light">
-              Sign up
+              {t("login.signUp")}
             </Link>
           </p>
         </div>

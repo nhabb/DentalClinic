@@ -1,13 +1,19 @@
+"use client";
+
 import Link from "next/link";
 import { FaTooth } from "react-icons/fa";
 import { Menu } from "lucide-react";
+import { useTranslation } from "@/lib/i18n";
+import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 
-// Server Component - Navigation Bar
+// Client Component - Navigation Bar
 export default function Navbar() {
+  const { t } = useTranslation();
+
   const navLinks = [
-    { href: "#services", label: "Services" },
-    { href: "#about", label: "About" },
-    { href: "#credentials", label: "Credentials" },
+    { href: "#services", label: t("landing.services") },
+    { href: "#about", label: t("landing.about") },
+    { href: "#credentials", label: t("landing.credentials") },
   ];
 
   return (
@@ -18,7 +24,10 @@ export default function Navbar() {
           <Logo />
 
           {/* Desktop Navigation */}
-          <DesktopNav navLinks={navLinks} />
+          <DesktopNav
+            navLinks={navLinks}
+            patientPortalLabel={t("landing.patientPortal")}
+            />
 
           {/* Mobile Menu Button */}
           <MobileMenuButton />
@@ -45,11 +54,13 @@ export function Logo() {
 // Reusable Desktop Navigation Component
 function DesktopNav({
   navLinks,
+  patientPortalLabel,
 }: {
   navLinks: Array<{ href: string; label: string }>;
+  patientPortalLabel: string;
 }) {
   return (
-    <div className="hidden md:flex items-center space-x-8">
+    <div className="hidden md:flex items-center space-x-6">
       {navLinks.map((link) => (
         <Link
           key={link.href}
@@ -59,11 +70,12 @@ function DesktopNav({
           {link.label}
         </Link>
       ))}
+      <LanguageSwitcher />
       <Link
         href="/login"
         className="bg-dental-blue text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition-all transform hover:scale-105 font-semibold shadow-md"
       >
-        Patient Portal
+        {patientPortalLabel}
       </Link>
     </div>
   );

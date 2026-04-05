@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -316,11 +317,8 @@ export default function BookAppointment() {
                             : "border-gray-200 hover:border-dental-blue/50 hover:shadow-md"
                       }`}
                     >
-                      <div className="w-20 h-20 bg-gradient-to-br from-dental-blue to-dental-teal rounded-full flex items-center justify-center text-white text-2xl font-bold mb-4 mx-auto">
-                        {doctor.name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
+                      <div className="mb-4 mx-auto w-fit">
+                        <Avatar name={doctor.name} size="xl" />
                       </div>
                       <h3 className="text-lg font-bold text-gray-900 text-center">
                         {doctor.name}
@@ -472,12 +470,7 @@ export default function BookAppointment() {
 
               {/* Selected Doctor Info */}
               <div className="mt-8 p-4 bg-gray-50 rounded-xl flex items-center gap-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-dental-blue to-dental-teal rounded-full flex items-center justify-center text-white font-bold">
-                  {getSelectedDoctorInfo()
-                    ?.name.split(" ")
-                    .map((n) => n[0])
-                    .join("")}
-                </div>
+                <Avatar name={getSelectedDoctorInfo()?.name ?? ""} size="md" />
                 <div>
                   <p className="text-sm text-gray-500">Your selected doctor</p>
                   <p className="font-semibold text-gray-900">

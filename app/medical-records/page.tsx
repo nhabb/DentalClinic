@@ -1,11 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useState, useEffect } from "react";
+import { Avatar } from "@/components/ui/Avatar";
+import { PatientPageHeader } from "@/components/ui/PatientPageHeader";
 import { Button } from "@/components/ui/button";
 import {
   FaTooth,
-  FaArrowLeft,
   FaFileMedical,
   FaCalendarAlt,
   FaUserMd,
@@ -130,31 +130,7 @@ export default function MedicalRecords() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-primary-50">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
-            <Link
-              href="/patient-dashboard"
-              className="flex items-center space-x-2"
-            >
-              <div className="w-10 h-10 bg-gradient-to-br from-dental-blue to-dental-teal rounded-lg flex items-center justify-center">
-                <FaTooth className="text-white text-xl" />
-              </div>
-              <span className="text-xl font-bold text-gray-900">
-                BrightSmile
-              </span>
-            </Link>
-            <Link
-              href="/patient-dashboard"
-              className="text-gray-600 hover:text-dental-blue transition-colors flex items-center gap-2"
-            >
-              <FaArrowLeft className="text-sm" />
-              Back to Dashboard
-            </Link>
-          </div>
-        </div>
-      </header>
+      <PatientPageHeader />
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Title */}
@@ -172,12 +148,7 @@ export default function MedicalRecords() {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             {/* Patient Info */}
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-dental-blue to-dental-teal rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                {patientInfo.name
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")}
-              </div>
+              <Avatar name={patientInfo.name} size="xl" />
               <div>
                 <h2 className="text-xl font-bold text-gray-900">
                   {patientInfo.name}

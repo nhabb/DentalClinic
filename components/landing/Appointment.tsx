@@ -165,8 +165,8 @@ function BookingCard() {
         </div>
         <h3 className="text-2xl font-bold text-gray-900 mb-2">Book Online</h3>
         <p className="text-gray-600">
-          Access your patient portal to schedule appointments, view records, and
-          manage your dental care.
+          Access your portal to schedule appointments, view records, and manage
+          your dental care.
         </p>
       </div>
 
@@ -185,7 +185,7 @@ function BookingCard() {
         href="/login"
         className="block w-full bg-dental-blue text-white text-center px-8 py-4 rounded-lg font-semibold text-lg hover:bg-primary-700 transition-all transform hover:scale-105 shadow-lg mb-4"
       >
-        Access Patient Portal
+        Access portal
       </Link>
 
       {/* Alternative Contact */}

@@ -1,3 +1,5 @@
+"use client";
+
 import {
   CheckCircle,
   Sparkles,
@@ -6,43 +8,41 @@ import {
   Smile,
   Wrench,
 } from "lucide-react";
+import { useTranslation } from "@/lib/i18n";
+
 export default function Services() {
+  const { t } = useTranslation();
+
   const services = [
     {
       icon: <CheckCircle className="w-8 h-8" />,
-      title: "General Dentistry",
-      description:
-        "Comprehensive routine checkups, professional cleanings, cavity fillings, and preventive care to keep your teeth healthy.",
+      title: t("landing.generalDentistry"),
+      description: t("landing.generalDentistryDesc"),
     },
     {
       icon: <Sparkles className="w-8 h-8" />,
-      title: "Cosmetic Dentistry",
-      description:
-        "Professional teeth whitening, porcelain veneers, and cosmetic bonding to give you the smile of your dreams.",
+      title: t("landing.cosmeticDentistry"),
+      description: t("landing.cosmeticDentistryDesc"),
     },
     {
       icon: <Shield className="w-8 h-8" />,
-      title: "Orthodontics",
-      description:
-        "Traditional braces and Invisalign clear aligners to straighten teeth and correct bite issues for all ages.",
+      title: t("landing.orthodontics"),
+      description: t("landing.orthodonticsDesc"),
     },
     {
       icon: <Zap className="w-8 h-8" />,
-      title: "Implants & Restorations",
-      description:
-        "Dental implants, crowns, bridges, and dentures to restore your smile and improve oral function.",
+      title: t("landing.implantsRestorations"),
+      description: t("landing.implantsRestorationsDesc"),
     },
     {
       icon: <Wrench className="w-8 h-8" />,
-      title: "Emergency Dental Care",
-      description:
-        "Same-day appointments for dental emergencies including severe pain, broken teeth, and urgent care needs.",
+      title: t("landing.emergencyDentalCare"),
+      description: t("landing.emergencyDentalCareDesc"),
     },
     {
       icon: <Smile className="w-8 h-8" />,
-      title: "Pediatric Dentistry",
-      description:
-        "Specialized care for children with a gentle, friendly approach to make dental visits comfortable and fun.",
+      title: t("landing.pediatricDentistry"),
+      description: t("landing.pediatricDentistryDesc"),
     },
   ];
 
@@ -54,11 +54,10 @@ export default function Services() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Our Dental Services
+            {t("landing.ourServices")}
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Comprehensive dental care for the entire family, from routine
-            checkups to advanced procedures.
+            {t("landing.servicesSubtitle")}
           </p>
         </div>
 

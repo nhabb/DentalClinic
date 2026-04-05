@@ -1,54 +1,67 @@
-import { Award, CheckCircle, Star, TrendingUp } from "lucide-react";
-// Server Component - Diplomas and Certifications Section
+"use client";
+
+import { Award, CheckCircle, Star } from "lucide-react";
+import { useTranslation } from "@/lib/i18n";
+
 export default function Diplomas() {
+  const { t } = useTranslation();
+
   const credentials = [
     {
       institution: "American Dental Association",
-      credential: "Board Certified",
+      credential: t("landing.cred1"),
       year: "2010",
-      type: "Certification",
+      type: t("landing.typeCertification"),
+      typeKey: "Certification",
     },
     {
       institution: "Academy of General Dentistry",
-      credential: "Fellowship (FAGD)",
+      credential: t("landing.cred2"),
       year: "2015",
-      type: "Fellowship",
+      type: t("landing.typeFellowship"),
+      typeKey: "Fellowship",
     },
     {
       institution: "American Academy of Cosmetic Dentistry",
-      credential: "Accredited Member",
+      credential: t("landing.cred3"),
       year: "2016",
-      type: "Accreditation",
+      type: t("landing.typeAccreditation"),
+      typeKey: "Accreditation",
     },
     {
       institution: "Invisalign",
-      credential: "Certified Provider",
+      credential: t("landing.cred4"),
       year: "2018",
-      type: "Certification",
+      type: t("landing.typeCertification"),
+      typeKey: "Certification",
     },
     {
       institution: "International Congress of Oral Implantologists",
-      credential: "Diplomate Status",
+      credential: t("landing.cred5"),
       year: "2019",
-      type: "Certification",
+      type: t("landing.typeCertification"),
+      typeKey: "Certification",
     },
     {
       institution: "American Board of Pediatric Dentistry",
-      credential: "Board Certified",
+      credential: t("landing.cred6"),
       year: "2020",
-      type: "Certification",
+      type: t("landing.typeCertification"),
+      typeKey: "Certification",
     },
     {
       institution: "Dental Organization for Conscious Sedation",
-      credential: "Certified Provider",
+      credential: t("landing.cred7"),
       year: "2021",
-      type: "Certification",
+      type: t("landing.typeCertification"),
+      typeKey: "Certification",
     },
     {
       institution: "State Dental Board",
-      credential: "Active License",
+      credential: t("landing.cred8"),
       year: "2024",
-      type: "License",
+      type: t("landing.typeLicense"),
+      typeKey: "License",
     },
   ];
 
@@ -56,57 +69,40 @@ export default function Diplomas() {
     <section id="credentials" className="py-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <SectionHeader />
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            {t("landing.credentialsTitle")}
+          </h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            {t("landing.credentialsSubtitle")}
+          </p>
+        </div>
 
         {/* Featured Credential */}
-        <FeaturedCredential />
+        <div className="bg-gradient-to-r from-dental-blue to-dental-teal rounded-2xl p-8 md:p-12 text-white text-center shadow-xl">
+          <div className="flex justify-center mb-6">
+            <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center">
+              <Award className="w-12 h-12 text-dental-blue" />
+            </div>
+          </div>
+          <h3 className="text-2xl md:text-3xl font-bold mb-3">
+            American Dental Association
+          </h3>
+          <p className="text-xl mb-2">{t("landing.boardCertifiedPractice")}</p>
+          <p className="text-dental-lightblue">
+            {t("landing.adaRecognized")}
+          </p>
+        </div>
 
         {/* Credentials Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12">
           {credentials.map((credential, index) => (
             <CredentialCard key={index} {...credential} />
           ))}
-        </div>
 
-        {/* Trust Badges */}
-        {/* <TrustBadges /> */}
+        </div>
       </div>
     </section>
-  );
-}
-
-// Reusable Section Header Component
-function SectionHeader() {
-  return (
-    <div className="text-center mb-12">
-      <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-        Credentials & Certifications
-      </h2>
-      <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-        Our team maintains the highest standards of professional excellence
-        through continuous education and specialized certifications.
-      </p>
-    </div>
-  );
-}
-
-// Reusable Featured Credential Component
-function FeaturedCredential() {
-  return (
-    <div className="bg-gradient-to-r from-dental-blue to-dental-teal rounded-2xl p-8 md:p-12 text-white text-center shadow-xl">
-      <div className="flex justify-center mb-6">
-        <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center">
-          <Award className="w-12 h-12 text-dental-blue" />
-        </div>
-      </div>
-      <h3 className="text-2xl md:text-3xl font-bold mb-3">
-        American Dental Association
-      </h3>
-      <p className="text-xl mb-2">Board Certified Dental Practice</p>
-      <p className="text-dental-lightblue">
-        Recognized for excellence in patient care and professional standards
-      </p>
-    </div>
   );
 }
 
@@ -116,15 +112,16 @@ function CredentialCard({
   credential,
   year,
   type,
+  typeKey,
 }: {
   institution: string;
   credential: string;
   year: string;
   type: string;
+  typeKey: string;
 }) {
-  // Icon based on credential type
   const getIcon = () => {
-    switch (type) {
+    switch (typeKey) {
       case "Fellowship":
         return <Star className="w-8 h-8" />;
       case "License":
@@ -149,27 +146,3 @@ function CredentialCard({
     </div>
   );
 }
-
-// Reusable Trust Badges Component
-// function TrustBadges() {
-//   const badges = [
-//     { text: 'HIPAA Compliant', icon: '🔒' },
-//     { text: 'ADA Member', icon: '✓' },
-//     { text: 'Continuing Education', icon: '📚' },
-//     { text: 'Patient Safety First', icon: '🛡️' },
-//   ]
-
-//   return (
-//     <div className="mt-16 flex flex-wrap justify-center gap-4">
-//       {badges.map((badge, index) => (
-//         <div
-//           key={index}
-//           className="flex items-center space-x-2 px-4 py-2 bg-gray-100 rounded-full text-gray-700"
-//         >
-//           <span>{badge.icon}</span>
-//           <span className="font-medium text-sm">{badge.text}</span>
-//         </div>
-//       ))}
-//     </div>
-//   )
-// }
