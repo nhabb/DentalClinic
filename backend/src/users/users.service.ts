@@ -11,6 +11,39 @@ import { UpdateUserDto, ChangePasswordDto } from './dto/update-user.dto';
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
+  async create(data: {
+    email: string;
+    first_name: string;
+    last_name: string;
+    phone?: string;
+    role?: string;
+  }) {
+    const existing = await this.prisma.users.findUnique({ where: { email: data.email } });
+    if (existing) return existing;
+
+    const password_hash = await bcrypt.hash(Math.random().toString(36), 10);
+
+    const user = await this.prisma.users.create({
+      data: {
+        email: data.email,
+        first_name: data.first_name,
+        last_name: data.last_name,
+        phone: data.phone || null,
+        role: (data.role as any) || 'patient',
+        password_hash,
+        is_active: true,
+      },
+    });
+
+    if (user.role === 'patient') {
+      await this.prisma.patient_profiles.create({
+        data: { user_id: user.id },
+      });
+    }
+
+    return user;
+  }
+
   async findById(id: bigint) {
     const user = await this.prisma.users.findUnique({
       where: { id },
@@ -30,6 +63,15 @@ export class UsersService {
       },
     });
 
+    if (!user) throw new NotFoundException('User not found');
+    return user;
+  }
+
+  async findByEmail(email: string) {
+    const user = await this.prisma.users.findUnique({
+      where: { email },
+      select: { id: true, email: true, role: true },
+    });
     if (!user) throw new NotFoundException('User not found');
     return user;
   }

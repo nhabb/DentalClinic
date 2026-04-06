@@ -1,10 +1,12 @@
 "use client";
+import { apiFetch } from '@/lib/api/client';
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { safeStorage } from "@/lib/browser-compat";
+import { supabase } from "@/lib/supabase/client";
 import { useTranslation } from "@/lib/i18n";
 import AdminSidebar from "@/components/ui/AdminSidebar";
 import { StatsCard } from "@/components/ui/StatsCard";
@@ -14,6 +16,7 @@ import { AdminPageHeader } from "@/components/ui/AdminPageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Modal } from "@/components/ui/Modal";
 import { FormField, inputClass } from "@/components/ui/FormField";
+import AgentChat from "@/components/ui/AgentChat";
 import {
   FaCalendarAlt,
   FaSearch,
@@ -61,6 +64,30 @@ export default function AppointmentsManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDoctor, setSelectedDoctor] = useState<string>("all");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [newAppt, setNewAppt] = useState({ patientId: "", slotId: "", reason: "Regular Checkup" });
+  const [addError, setAddError] = useState("");
+  const [addLoading, setAddLoading] = useState(false);
+  const [availableSlots, setAvailableSlots] = useState<{ id: number; label: string }[]>([]);
+  const [patients, setPatients] = useState<{ id: number; name: string }[]>([]);
+  const [showAvailabilityModal, setShowAvailabilityModal] = useState(false);
+  const [availabilityDate, setAvailabilityDate] = useState("");
+  const [timeRanges, setTimeRanges] = useState<{ fromTime: string; toTime: string }[]>([
+    { fromTime: "09:00", toTime: "17:00" },
+  ]);
+  const [existingSlots, setExistingSlots] = useState<{ id: number; time: string; isBooked: boolean }[]>([]);
+  const [loadingExistingSlots, setLoadingExistingSlots] = useState(false);
+  const [selectedAvailabilityDoctorId, setSelectedAvailabilityDoctorId] = useState<number | null>(null);
+  const [availabilityMsg, setAvailabilityMsg] = useState("");
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
+  const [currentDoctorDbId, setCurrentDoctorDbId] = useState<number | null>(null);
+
+  // Slot calendar state
+  const [showSlotCalendar, setShowSlotCalendar] = useState(false);
+  const [calendarMonth, setCalendarMonth] = useState(new Date());
+  const [calendarDoctorId, setCalendarDoctorId] = useState<number | null>(null);
+  const [monthSlots, setMonthSlots] = useState<Record<string, { id: number; time: string; isBooked: boolean }[]>>({});
+  const [loadingMonthSlots, setLoadingMonthSlots] = useState(false);
+  const [calendarSelectedDay, setCalendarSelectedDay] = useState<string | null>(null);
 
   // Role-based state
   const [userRole, setUserRole] = useState<string>("doctor");
@@ -91,21 +118,88 @@ export default function AppointmentsManagement() {
     if (storedDoctorId) setDoctorId(parseInt(storedDoctorId));
     if (storedAssignedIds) setAssignedDoctorIds(JSON.parse(storedAssignedIds));
     if (storedUser) setCurrentUser(JSON.parse(storedUser));
+
+    // Resolve the logged-in user's DB id via Supabase session or localStorage fallback
+    const resolveDbUser = async () => {
+      let email: string | null = null;
+
+      // Try Supabase session first, fall back to localStorage
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.email) email = session.user.email;
+      } catch {}
+
+      if (!email) {
+        const stored = safeStorage.getItem("adminUser");
+        if (stored) {
+          try { email = JSON.parse(stored)?.email ?? null; } catch {}
+        }
+      }
+
+      if (!email) return;
+
+      try {
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+        const res = await fetch(`${API_URL}/api/users/by-email?email=${encodeURIComponent(email)}`);
+        if (!res.ok) return;
+        const user = await res.json();
+        if (user?.id) setCurrentDoctorDbId(Number(user.id));
+      } catch {}
+    };
+    resolveDbUser();
   }, [router]);
 
   // Fetch appointments and doctors
   useEffect(() => {
     const fetchData = async () => {
-      setIsLoading(false);
+      try {
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+        const [appointmentsRes, usersRes, doctorsRes] = await Promise.all([
+          apiFetch(`/api/appointments`),
+          apiFetch(`/api/users`),
+          fetch(`${API_URL}/api/users/doctors`),
+        ]);
+        const appointmentsData = await appointmentsRes.json();
+        const users: any[] = usersRes.ok ? await usersRes.json() : [];
+        const doctorsList: any[] = doctorsRes.ok ? await doctorsRes.json() : [];
+
+        const doctors = doctorsList.map((u, i) => ({
+          id: Number(u.id),
+          name: `${u.first_name} ${u.last_name}`,
+          specialty: "Dentist",
+          color: ["bg-blue-500", "bg-teal-500", "bg-purple-500"][i % 3],
+        }));
+        setDoctors(doctors);
+
+        const mapped = (appointmentsData.data || []).map((a: any) => {
+          const patient = users.find((u) => u.id === a.patient_id || u.id === String(a.patient_id));
+          const doctorId = a.doctor_id || a.created_by;
+          const doctor = users.find((u) => u.id === doctorId || u.id === String(doctorId));
+          const time = a.start_time ? new Date(a.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+          return {
+            id: Number(a.id),
+            date: a.appointment_date ? new Date(a.appointment_date).toLocaleDateString("en-CA") : "",
+            time,
+            patient: patient ? `${patient.first_name} ${patient.last_name}` : `Patient #${a.patient_id}`,
+            phone: patient?.phone || "",
+            type: a.reason || "Checkup",
+            duration: 30,
+            status: a.status,
+            notes: a.notes || "",
+            doctor: doctor ? `Dr. ${doctor.first_name} ${doctor.last_name}` : "",
+            doctorId: Number(doctorId),
+          };
+        });
+        setAppointments(mapped);
+      } catch (e) {
+        console.error("Failed to fetch appointments", e);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    if (
-      userRole &&
-      (doctorId || assignedDoctorIds.length > 0 || userRole === "admin")
-    ) {
-      fetchData();
-    }
-  }, [selectedDate, userRole, doctorId, assignedDoctorIds]);
+    fetchData();
+  }, [selectedDate]);
 
   const handleLogout = () => {
     safeStorage.removeItem("adminAuth");
@@ -170,26 +264,228 @@ export default function AppointmentsManagement() {
     return doctor?.color || "bg-gray-500";
   };
 
+  const selectedDateStr = (() => {
+    const d = selectedDate;
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  })();
+
   const filteredAppointments = appointments.filter((apt) => {
     const matchesSearch =
       apt.patient.toLowerCase().includes(searchQuery.toLowerCase()) ||
       apt.type.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesDoctor =
-      selectedDoctor === "all" || apt.doctor === selectedDoctor;
-    return matchesSearch && matchesDoctor;
+      selectedDoctor === "all" || apt.doctorId === Number(selectedDoctor);
+    const matchesDate = apt.date === selectedDateStr;
+    return matchesSearch && matchesDoctor && matchesDate;
   });
 
+  const dateAppointments = appointments.filter((a) => a.date === selectedDateStr);
+
   const todayStats = {
-    total: appointments.length,
-    completed: appointments.filter((a) => a.status === "completed").length,
-    upcoming: appointments.filter((a) => a.status === "upcoming").length,
-    cancelled: appointments.filter((a) => a.status === "cancelled").length,
+    total: dateAppointments.length,
+    completed: dateAppointments.filter((a) => a.status === "completed").length,
+    upcoming: dateAppointments.filter((a) => a.status === "upcoming").length,
+    cancelled: dateAppointments.filter((a) => a.status === "cancelled").length,
   };
 
   const navigateDate = (direction: "prev" | "next") => {
     const newDate = new Date(selectedDate);
     newDate.setDate(newDate.getDate() + (direction === "next" ? 1 : -1));
     setSelectedDate(newDate);
+  };
+
+  const fetchMonthSlots = async (doctorId: number) => {
+    setLoadingMonthSlots(true);
+    try {
+      const res = await apiFetch(`/api/appointment-slots?doctor_id=${doctorId}&limit=500`);
+      const data = await res.json();
+      const grouped: Record<string, { id: number; time: string; isBooked: boolean }[]> = {};
+      (data.data || []).forEach((s: any) => {
+        const date = s.slot_date ? new Date(s.slot_date).toLocaleDateString("en-CA") : "";
+        if (!date) return;
+        if (!grouped[date]) grouped[date] = [];
+        grouped[date].push({
+          id: Number(s.id),
+          time: new Date(s.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "UTC" }),
+          isBooked: s.is_booked,
+        });
+      });
+      setMonthSlots(grouped);
+    } catch {
+      setMonthSlots({});
+    } finally {
+      setLoadingMonthSlots(false);
+    }
+  };
+
+  const handleCalendarDeleteSlot = async (slotId: number, date: string) => {
+    try {
+      const res = await apiFetch(`/api/appointment-slots/${slotId}`, { method: "DELETE" });
+      if (!res.ok) return;
+      setMonthSlots((prev) => {
+        const updated = { ...prev };
+        updated[date] = (updated[date] || []).filter((s) => s.id !== slotId);
+        if (updated[date].length === 0) delete updated[date];
+        return updated;
+      });
+      if ((monthSlots[date] || []).filter((s) => s.id !== slotId).length === 0) {
+        setCalendarSelectedDay(null);
+      }
+    } catch {}
+  };
+
+  const fetchExistingSlots = async (doctorId: number, date: string) => {
+    if (!doctorId || !date) return;
+    setLoadingExistingSlots(true);
+    try {
+      const res = await apiFetch(`/api/appointment-slots?doctor_id=${doctorId}&date=${date}&limit=100`);
+      const data = await res.json();
+      setExistingSlots(
+        (data.data || []).map((s: any) => ({
+          id: Number(s.id),
+          time: new Date(s.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "UTC" }),
+          isBooked: s.is_booked,
+        }))
+      );
+    } catch {
+      setExistingSlots([]);
+    } finally {
+      setLoadingExistingSlots(false);
+    }
+  };
+
+  const handleDeleteSlot = async (slotId: number) => {
+    try {
+      const res = await apiFetch(`/api/appointment-slots/${slotId}`, { method: "DELETE" });
+      if (!res.ok) {
+        const err = await res.json();
+        setAvailabilityMsg(err.message || "Failed to delete slot.");
+        return;
+      }
+      setExistingSlots((prev) => prev.filter((s) => s.id !== slotId));
+    } catch {
+      setAvailabilityMsg("Failed to delete slot.");
+    }
+  };
+
+  const handleOpenAvailability = async () => {
+    if (!availabilityDate) { setAvailabilityMsg("Please select a date."); return; }
+    const doctorId = selectedAvailabilityDoctorId;
+    if (!doctorId) { setAvailabilityMsg("Please select a doctor."); return; }
+    setAvailabilityLoading(true);
+    setAvailabilityMsg("");
+    let totalCreated = 0, totalSkipped = 0;
+    try {
+      for (const range of timeRanges) {
+        const [fh, fm] = range.fromTime.split(":").map(Number);
+        const [th, tm] = range.toTime.split(":").map(Number);
+        const duration_minutes = (th * 60 + tm) - (fh * 60 + fm);
+        if (duration_minutes <= 0) continue;
+        const res = await apiFetch(`/api/appointment-slots/bulk`, {
+          method: "POST",
+          body: JSON.stringify({
+            doctor_id: doctorId,
+            slot_date: availabilityDate,
+            from_time: range.fromTime,
+            to_time: range.toTime,
+            duration_minutes,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Failed to create slots");
+        totalCreated += data.created;
+        totalSkipped += data.skipped;
+      }
+      setAvailabilityMsg(`Created ${totalCreated} slot(s)${totalSkipped > 0 ? `, skipped ${totalSkipped} duplicate(s)` : ""}.`);
+      fetchExistingSlots(doctorId, availabilityDate);
+    } catch (e: any) {
+      setAvailabilityMsg(e.message || "Failed to create slots.");
+    } finally {
+      setAvailabilityLoading(false);
+    }
+  };
+
+  const openAddModal = async () => {
+    setAddError("");
+    setNewAppt({ patientId: "", slotId: "", reason: "Regular Checkup" });
+    setShowAddModal(true);
+    try {
+      const [patientsRes, usersRes, slotsRes] = await Promise.all([
+        apiFetch(`/api/patients`),
+        apiFetch(`/api/users`),
+        apiFetch(`/api/appointment-slots`),
+      ]);
+      const patientsData = await patientsRes.json();
+      const users: any[] = await usersRes.json();
+      const slotsData = await slotsRes.json();
+
+      const mappedPatients = (patientsData.data || []).map((p: any) => {
+        const user = users.find((u: any) => u.id === p.user_id || u.id === String(p.user_id));
+        return { id: Number(p.id), name: user ? `${user.first_name} ${user.last_name}` : `Patient #${p.id}` };
+      });
+
+      const mappedSlots = (slotsData.data || [])
+        .filter((s: any) => !s.is_booked)
+        .map((s: any) => ({
+          id: Number(s.id),
+          label: `${s.slot_date?.split("T")[0]} at ${new Date(s.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
+        }));
+
+      setPatients(mappedPatients);
+      setAvailableSlots(mappedSlots);
+    } catch (e) {
+      setAddError("Failed to load patients or slots.");
+    }
+  };
+
+  const handleAddAppointment = async () => {
+    if (!newAppt.patientId || !newAppt.slotId) {
+      setAddError("Please select a patient and a slot.");
+      return;
+    }
+    setAddLoading(true);
+    setAddError("");
+    try {
+      const res = await apiFetch(`/api/appointments`, {
+        method: "POST",
+        body: JSON.stringify({
+          patient_id: Number(newAppt.patientId),
+          slot_id: Number(newAppt.slotId),
+          reason: newAppt.reason,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(Array.isArray(err.message) ? err.message.join(", ") : err.message);
+      }
+      setShowAddModal(false);
+      // Refresh appointments
+      const [appointmentsRes, usersRes] = await Promise.all([
+        apiFetch(`/api/appointments`),
+        apiFetch(`/api/users`),
+      ]);
+      const appointmentsData = await appointmentsRes.json();
+      const users: any[] = await usersRes.json();
+      const mapped = (appointmentsData.data || []).map((a: any) => {
+        const patient = users.find((u: any) => u.id === a.patient_id || u.id === String(a.patient_id));
+        const doctorId = a.doctor_id || a.created_by;
+        const doctor = users.find((u: any) => u.id === doctorId || u.id === String(doctorId));
+        const time = a.start_time ? new Date(a.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+        return {
+          id: Number(a.id), date: a.appointment_date ? new Date(a.appointment_date).toLocaleDateString("en-CA") : "",
+          time, patient: patient ? `${patient.first_name} ${patient.last_name}` : `Patient #${a.patient_id}`,
+          phone: patient?.phone || "", type: a.reason || "Checkup", duration: 30,
+          status: a.status, notes: a.notes || "",
+          doctor: doctor ? `Dr. ${doctor.first_name} ${doctor.last_name}` : "", doctorId: Number(doctorId),
+        };
+      });
+      setAppointments(mapped);
+    } catch (e: any) {
+      setAddError(e.message || "Failed to create appointment.");
+    } finally {
+      setAddLoading(false);
+    }
   };
 
   const handleStartAppointment = async (appointmentId: number) => {
@@ -245,8 +541,31 @@ export default function AppointmentsManagement() {
           onImport={(rows) =>
             setAppointments((prev) => [...prev, ...(rows as Appointment[])])
           }
-          onAdd={() => setShowAddModal(true)}
+          onAdd={openAddModal}
           addLabel={t("appointments.newAppointment")}
+          extraActions={
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setAvailabilityMsg(""); setExistingSlots([]); setAvailabilityDate(""); setTimeRanges([{ fromTime: "09:00", toTime: "17:00" }]); setShowAvailabilityModal(true); }}
+                className="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-sm font-medium transition-colors"
+              >
+                Open Availability
+              </button>
+              <button
+                onClick={() => {
+                  setCalendarMonth(new Date());
+                  setCalendarSelectedDay(null);
+                  const docId = currentDoctorDbId || (doctors[0]?.id ?? null);
+                  setCalendarDoctorId(docId);
+                  if (docId) fetchMonthSlots(docId);
+                  setShowSlotCalendar(true);
+                }}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+              >
+                <FaCalendarAlt className="text-xs" /> My Slots
+              </button>
+            </div>
+          }
         />
 
         {/* Content */}
@@ -340,7 +659,7 @@ export default function AppointmentsManagement() {
                           {t("appointments.allDoctors")}
                         </option>
                         {visibleDoctors.map((doctor) => (
-                          <option key={doctor.id} value={doctor.name}>
+                          <option key={doctor.id} value={String(doctor.id)}>
                             {doctor.name}
                           </option>
                         ))}
@@ -486,82 +805,336 @@ export default function AppointmentsManagement() {
         title={t("appointments.newAppointment")}
       >
         <div className="space-y-4">
-          <FormField label={t("appointments.patientName")}>
-            <input
-              type="text"
-              placeholder={t("appointments.patientNamePlaceholder")}
-              className={inputClass}
-            />
+          {addError && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">{addError}</p>}
+
+          <FormField label="Patient">
+            <select className={inputClass} value={newAppt.patientId} onChange={(e) => setNewAppt({ ...newAppt, patientId: e.target.value })}>
+              <option value="">Select a patient...</option>
+              {patients.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
           </FormField>
 
-          <div className="grid grid-cols-2 gap-4">
-            <FormField label={t("appointments.date")}>
-              <input type="date" className={inputClass} />
-            </FormField>
-            <FormField label={t("appointments.time")}>
-              <select className={inputClass}>
-                <option>09:00 AM</option>
-                <option>09:30 AM</option>
-                <option>10:00 AM</option>
-                <option>10:30 AM</option>
-                <option>11:00 AM</option>
-                <option>11:30 AM</option>
-                <option>02:00 PM</option>
-                <option>02:30 PM</option>
-                <option>03:00 PM</option>
-                <option>03:30 PM</option>
-                <option>04:00 PM</option>
-                <option>04:30 PM</option>
-                <option>05:00 PM</option>
-              </select>
-            </FormField>
-          </div>
+          <FormField label="Available Slot">
+            <select className={inputClass} value={newAppt.slotId} onChange={(e) => setNewAppt({ ...newAppt, slotId: e.target.value })}>
+              <option value="">Select a slot...</option>
+              {availableSlots.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
+            </select>
+          </FormField>
 
-          <div className="grid grid-cols-2 gap-4">
-            <FormField label={t("appointments.appointmentType")}>
-              <select className={inputClass}>
-                <option>{t("appointments.regularCheckup")}</option>
-                <option>{t("appointments.teethCleaning")}</option>
-                <option>{t("appointments.cavityFilling")}</option>
-                <option>{t("appointments.rootCanal")}</option>
-                <option>{t("appointments.teethWhitening")}</option>
-                <option>{t("appointments.crownFitting")}</option>
-                <option>{t("appointments.extraction")}</option>
-              </select>
-            </FormField>
-            <FormField label={t("appointments.doctor")}>
-              <select className={inputClass}>
-                {visibleDoctors.map((doctor) => (
-                  <option key={doctor.id} value={doctor.id}>
-                    {doctor.name}
-                  </option>
-                ))}
-              </select>
-            </FormField>
-          </div>
-
-          <FormField label={t("appointments.notesOptional")}>
-            <textarea
-              rows={3}
-              placeholder={t("appointments.notesPlaceholder")}
-              className={`${inputClass} resize-none`}
-            />
+          <FormField label="Reason">
+            <select className={inputClass} value={newAppt.reason} onChange={(e) => setNewAppt({ ...newAppt, reason: e.target.value })}>
+              <option>Regular Checkup</option>
+              <option>Teeth Cleaning</option>
+              <option>Cavity Filling</option>
+              <option>Root Canal</option>
+              <option>Teeth Whitening</option>
+              <option>Crown Fitting</option>
+              <option>Extraction</option>
+            </select>
           </FormField>
         </div>
 
         <div className="flex gap-3 mt-6">
-          <Button
-            variant="outline"
-            className="flex-1"
-            onClick={() => setShowAddModal(false)}
-          >
-            {t("common.cancel")}
+          <Button variant="outline" className="flex-1" onClick={() => setShowAddModal(false)}>
+            Cancel
           </Button>
-          <Button className="flex-1 bg-dental-blue hover:bg-dental-blue/90">
-            {t("appointments.scheduleAppointment")}
+          <Button className="flex-1 bg-dental-blue hover:bg-dental-blue/90" onClick={handleAddAppointment} disabled={addLoading}>
+            {addLoading ? "Scheduling..." : "Schedule Appointment"}
           </Button>
         </div>
       </Modal>
+
+      {/* Open Availability Modal */}
+      <Modal isOpen={showAvailabilityModal} onClose={() => setShowAvailabilityModal(false)} title="Manage Availability">
+        <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+
+          {availabilityMsg && (
+            <p className={`text-sm px-3 py-2 rounded border ${availabilityMsg.includes("Created") ? "bg-green-50 border-green-200 text-green-700" : "bg-red-50 border-red-200 text-red-600"}`}>
+              {availabilityMsg}
+            </p>
+          )}
+
+          {/* Doctor + Date */}
+          <div className="grid grid-cols-2 gap-4">
+            <FormField label="Doctor">
+              <select className={inputClass} value={selectedAvailabilityDoctorId ?? ""}
+                onChange={(e) => {
+                  const id = e.target.value ? Number(e.target.value) : null;
+                  setSelectedAvailabilityDoctorId(id);
+                  if (id && availabilityDate) fetchExistingSlots(id, availabilityDate);
+                }}>
+                <option value="">Select a doctor</option>
+                {doctors.map((d) => (
+                  <option key={d.id} value={d.id}>{d.name}</option>
+                ))}
+              </select>
+            </FormField>
+
+            <FormField label="Date">
+              <input type="date" className={inputClass} value={availabilityDate}
+                min={new Date().toISOString().split("T")[0]}
+                onChange={(e) => {
+                  setAvailabilityDate(e.target.value);
+                  if (selectedAvailabilityDoctorId && e.target.value) fetchExistingSlots(selectedAvailabilityDoctorId, e.target.value);
+                }} />
+            </FormField>
+          </div>
+
+          {/* Existing Slots */}
+          {(existingSlots.length > 0 || loadingExistingSlots) && (
+            <div>
+              <p className="text-sm font-medium text-gray-700 mb-2">Existing Slots</p>
+              {loadingExistingSlots ? (
+                <p className="text-xs text-gray-400">Loading...</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {existingSlots.map((s) => (
+                    <div key={s.id} className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${s.isBooked ? "bg-blue-50 border-blue-200 text-blue-700" : "bg-gray-50 border-gray-200 text-gray-700"}`}>
+                      <span>{s.time}</span>
+                      {s.isBooked ? (
+                        <span className="text-blue-400 text-[10px] ml-1">booked</span>
+                      ) : (
+                        <button
+                          onClick={() => handleDeleteSlot(s.id)}
+                          className="ml-1 text-red-400 hover:text-red-600 leading-none"
+                          title="Delete slot"
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Time Ranges */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-medium text-gray-700">Time Ranges</p>
+              <button
+                onClick={() => setTimeRanges((prev) => [...prev, { fromTime: "09:00", toTime: "17:00", duration: 30 }])}
+                className="text-xs text-teal-600 hover:text-teal-800 font-medium"
+              >
+                + Add Range
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {timeRanges.map((range, i) => {
+                const [fh, fm] = range.fromTime.split(":").map(Number);
+                const [th, tm] = range.toTime.split(":").map(Number);
+                const totalMin = (th * 60 + tm) - (fh * 60 + fm);
+                const preview = totalMin > 0
+                  ? `→ 1 slot (${Math.floor(totalMin / 60)}h${totalMin % 60 > 0 ? ` ${totalMin % 60}m` : ""})`
+                  : "Invalid range";
+                return (
+                  <div key={i} className="border border-gray-200 rounded-lg p-3 space-y-2 bg-gray-50">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-xs text-gray-500 mb-1 block">From</label>
+                        <input type="time" className={inputClass} value={range.fromTime}
+                          onChange={(e) => setTimeRanges((prev) => prev.map((r, j) => j === i ? { ...r, fromTime: e.target.value } : r))} />
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-500 mb-1 block">To</label>
+                        <input type="time" className={inputClass} value={range.toTime}
+                          onChange={(e) => setTimeRanges((prev) => prev.map((r, j) => j === i ? { ...r, toTime: e.target.value } : r))} />
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-400">{preview}</span>
+                      {timeRanges.length > 1 && (
+                        <button onClick={() => setTimeRanges((prev) => prev.filter((_, j) => j !== i))}
+                          className="text-xs text-red-400 hover:text-red-600">
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex gap-3 mt-6">
+          <Button variant="outline" className="flex-1" onClick={() => setShowAvailabilityModal(false)}>Close</Button>
+          <Button className="flex-1 bg-teal-600 hover:bg-teal-700" onClick={handleOpenAvailability} disabled={availabilityLoading}>
+            {availabilityLoading ? "Creating slots..." : "Create Slots"}
+          </Button>
+        </div>
+      </Modal>
+
+      {/* Slot Calendar Modal */}
+      <Modal isOpen={showSlotCalendar} onClose={() => setShowSlotCalendar(false)} title="My Opened Slots">
+        <div className="space-y-4">
+
+          {/* Doctor selector (admins only) */}
+          {doctors.length > 1 && (
+            <FormField label="Doctor">
+              <select className={inputClass} value={calendarDoctorId ?? ""}
+                onChange={(e) => {
+                  const id = e.target.value ? Number(e.target.value) : null;
+                  setCalendarDoctorId(id);
+                  setCalendarSelectedDay(null);
+                  if (id) fetchMonthSlots(id);
+                }}>
+                <option value="">Select a doctor</option>
+                {doctors.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+              </select>
+            </FormField>
+          )}
+
+          {/* Month navigation */}
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => {
+                const prev = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1);
+                setCalendarMonth(prev);
+                setCalendarSelectedDay(null);
+              }}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <FaChevronLeft className="text-gray-600" />
+            </button>
+            <p className="font-semibold text-gray-800">
+              {calendarMonth.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+            </p>
+            <button
+              onClick={() => {
+                const next = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1);
+                setCalendarMonth(next);
+                setCalendarSelectedDay(null);
+              }}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <FaChevronRight className="text-gray-600" />
+            </button>
+          </div>
+
+          {/* Calendar grid */}
+          {loadingMonthSlots ? (
+            <div className="text-center py-6 text-sm text-gray-400">Loading slots...</div>
+          ) : (
+            (() => {
+              const year = calendarMonth.getFullYear();
+              const month = calendarMonth.getMonth();
+              const firstDow = new Date(year, month, 1).getDay();
+              const daysInMonth = new Date(year, month + 1, 0).getDate();
+              const pad = (n: number) => String(n).padStart(2, "0");
+              const todayStr = new Date().toLocaleDateString("en-CA");
+              const cells: (number | null)[] = [
+                ...Array(firstDow).fill(null),
+                ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+              ];
+              // pad to full weeks
+              while (cells.length % 7 !== 0) cells.push(null);
+
+              return (
+                <div>
+                  {/* Day headers */}
+                  <div className="grid grid-cols-7 mb-1">
+                    {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((d) => (
+                      <div key={d} className="text-center text-xs font-medium text-gray-400 py-1">{d}</div>
+                    ))}
+                  </div>
+                  {/* Weeks */}
+                  {Array.from({ length: cells.length / 7 }, (_, wi) => (
+                    <div key={wi} className="grid grid-cols-7">
+                      {cells.slice(wi * 7, wi * 7 + 7).map((day, di) => {
+                        if (!day) return <div key={di} />;
+                        const dateStr = `${year}-${pad(month + 1)}-${pad(day)}`;
+                        const daySlots = monthSlots[dateStr] || [];
+                        const openCount = daySlots.filter((s) => !s.isBooked).length;
+                        const bookedCount = daySlots.filter((s) => s.isBooked).length;
+                        const isToday = dateStr === todayStr;
+                        const isSelected = dateStr === calendarSelectedDay;
+
+                        return (
+                          <div
+                            key={di}
+                            onClick={() => setCalendarSelectedDay(isSelected ? null : dateStr)}
+                            className={`relative m-0.5 rounded-lg p-1.5 cursor-pointer transition-colors min-h-[52px] flex flex-col items-center
+                              ${isSelected ? "bg-blue-100 border border-blue-400" : "hover:bg-gray-100"}
+                              ${isToday ? "ring-2 ring-blue-400" : ""}
+                            `}
+                          >
+                            <span className={`text-sm font-medium ${isToday ? "text-blue-600" : "text-gray-700"}`}>{day}</span>
+                            {daySlots.length > 0 && (
+                              <div className="flex gap-0.5 mt-1 flex-wrap justify-center">
+                                {openCount > 0 && (
+                                  <span className="w-2 h-2 rounded-full bg-teal-400" title={`${openCount} open`} />
+                                )}
+                                {bookedCount > 0 && (
+                                  <span className="w-2 h-2 rounded-full bg-blue-400" title={`${bookedCount} booked`} />
+                                )}
+                              </div>
+                            )}
+                            {daySlots.length > 0 && (
+                              <span className="text-[10px] text-gray-400 mt-0.5">{daySlots.length}</span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ))}
+
+                  {/* Legend */}
+                  <div className="flex gap-4 mt-2 justify-center">
+                    <div className="flex items-center gap-1 text-xs text-gray-500">
+                      <span className="w-2.5 h-2.5 rounded-full bg-teal-400 inline-block" /> Open
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-gray-500">
+                      <span className="w-2.5 h-2.5 rounded-full bg-blue-400 inline-block" /> Booked
+                    </div>
+                  </div>
+                </div>
+              );
+            })()
+          )}
+
+          {/* Selected day slots */}
+          {calendarSelectedDay && (
+            <div className="border-t pt-3">
+              <p className="text-sm font-semibold text-gray-700 mb-2">
+                {new Date(calendarSelectedDay + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+              </p>
+              {(monthSlots[calendarSelectedDay] || []).length === 0 ? (
+                <p className="text-xs text-gray-400">No slots for this day.</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {(monthSlots[calendarSelectedDay] || []).map((s) => (
+                    <div key={s.id} className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border
+                      ${s.isBooked ? "bg-blue-50 border-blue-200 text-blue-700" : "bg-teal-50 border-teal-200 text-teal-700"}`}>
+                      <span>{s.time}</span>
+                      {s.isBooked ? (
+                        <span className="text-blue-400 text-[10px] ml-1">booked</span>
+                      ) : (
+                        <button
+                          onClick={() => handleCalendarDeleteSlot(s.id, calendarSelectedDay)}
+                          className="ml-1 text-red-400 hover:text-red-600 leading-none font-bold"
+                          title="Delete slot"
+                        >×</button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="flex gap-3 mt-6">
+          <Button className="flex-1" variant="outline" onClick={() => setShowSlotCalendar(false)}>Close</Button>
+        </div>
+      </Modal>
+
+      <AgentChat
+        doctorName={currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : "Doctor"}
+        doctorId={currentDoctorDbId ?? undefined}
+      />
     </div>
   );
 }

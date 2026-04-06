@@ -23,9 +23,51 @@ export class AppointmentSlotsService {
     return d;
   }
 
+  async createBulk(dto: { doctor_id: number; slot_date: string; from_time: string; to_time: string; duration_minutes: number }) {
+    const doctor = await this.prisma.users.findFirst({
+      where: { id: BigInt(dto.doctor_id), role: { in: ['admin', 'doctor'] } },
+    });
+    if (!doctor) throw new NotFoundException('Doctor not found');
+
+    const [fromH, fromM] = dto.from_time.split(':').map(Number);
+    const [toH, toM] = dto.to_time.split(':').map(Number);
+    const fromMinutes = fromH * 60 + fromM;
+    const toMinutes = toH * 60 + toM;
+
+    if (fromMinutes >= toMinutes) throw new BadRequestException('from_time must be before to_time');
+
+    const slotDate = new Date(dto.slot_date);
+    const created: any[] = [];
+    const skipped: Date[] = [];
+
+    for (let min = fromMinutes; min + dto.duration_minutes <= toMinutes; min += dto.duration_minutes) {
+      const startH = Math.floor(min / 60);
+      const startM = min % 60;
+      const endMin = min + dto.duration_minutes;
+      const endH = Math.floor(endMin / 60);
+      const endM = endMin % 60;
+
+      const startTime = this.toTimeDate(`${String(startH).padStart(2, '0')}:${String(startM).padStart(2, '0')}`);
+      const endTime = this.toTimeDate(`${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`);
+
+      const existing = await this.prisma.appointment_slots.findFirst({
+        where: { doctor_id: BigInt(dto.doctor_id), slot_date: slotDate, start_time: startTime },
+      });
+
+      if (existing) { skipped.push(startTime); continue; }
+
+      const slot = await this.prisma.appointment_slots.create({
+        data: { doctor_id: BigInt(dto.doctor_id), slot_date: slotDate, start_time: startTime, end_time: endTime, is_booked: false },
+      });
+      created.push(slot);
+    }
+
+    return { created: created.length, skipped: skipped.length, slots: created };
+  }
+
   async create(dto: CreateSlotDto) {
     const doctor = await this.prisma.users.findFirst({
-      where: { id: BigInt(dto.doctor_id), role: 'admin' },
+      where: { id: BigInt(dto.doctor_id), role: { in: ['admin', 'doctor'] } },
     });
     if (!doctor) throw new NotFoundException('Doctor not found');
 

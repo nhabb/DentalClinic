@@ -1,4 +1,4 @@
-import {
+import { UseGuards,
   Controller,
   Get,
   Patch,
@@ -8,10 +8,13 @@ import {
   ParseIntPipe,
   DefaultValuePipe,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { ApiBearerAuth, ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { PatientsService } from './patients.service';
 import { UpdatePatientProfileDto } from './dto/update-patient-profile.dto';
 
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @ApiTags('Patients')
 @Controller('patients')
 export class PatientsController {

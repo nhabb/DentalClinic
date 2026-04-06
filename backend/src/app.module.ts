@@ -10,6 +10,7 @@ import { PatientRecordsModule } from './patient-records/patient-records.module';
 import { PatientDocumentsModule } from './patient-documents/patient-documents.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { AgentModule } from './agent/agent.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { NotificationsModule } from './notifications/notifications.module';
     PatientDocumentsModule,
     InventoryModule,
     NotificationsModule,
+    AgentModule,
   ],
   controllers: [AppController],
   providers: [AppService],

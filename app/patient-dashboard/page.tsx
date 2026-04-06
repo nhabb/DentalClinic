@@ -2,10 +2,13 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 import { safeStorage } from "@/lib/browser-compat";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/i18n";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
+import { apiFetch } from '@/lib/api/client';
+import { supabase } from "@/lib/supabase/client";
 import {
   FaTooth,
   FaCalendarAlt,
@@ -15,9 +18,70 @@ import {
   FaSignOutAlt,
 } from "react-icons/fa";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
 export default function PatientDashboard() {
   const router = useRouter();
   const { t } = useTranslation();
+  const [upcomingAppointments, setUpcomingAppointments] = useState<any[]>([]);
+  const [recentVisits, setRecentVisits] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        const [appointmentsRes, usersRes] = await Promise.all([
+          apiFetch(`/api/appointments`),
+          apiFetch(`/api/users`),
+        ]);
+        const appointmentsData = await appointmentsRes.json();
+        const users: any[] = await usersRes.json();
+
+        const dbUser = users.find((u) => u.email === user?.email);
+        const patientsRes = await apiFetch(`/api/patients`);
+        const patientsData = await patientsRes.json();
+        const patient = (patientsData.data || []).find((p: any) => p.user_id === dbUser?.id || p.user_id === String(dbUser?.id));
+
+        const today = new Date().toISOString().split("T")[0];
+        const all = (appointmentsData.data || []).filter((a: any) =>
+          patient && (a.patient_id === patient.id || a.patient_id === String(patient.id))
+        );
+
+        const upcoming = all
+          .filter((a: any) => a.appointment_date >= today && a.status !== "cancelled" && a.status !== "completed")
+          .map((a: any) => {
+            const doctor = users.find((u) => u.id === a.created_by || u.id === String(a.created_by));
+            return {
+              id: a.id,
+              date: new Date(a.appointment_date).toLocaleDateString(),
+              time: a.start_time ? new Date(a.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "",
+              doctor: doctor ? `Dr. ${doctor.first_name} ${doctor.last_name}` : "Doctor",
+              type: a.reason || "Checkup",
+              status: a.status,
+            };
+          });
+
+        const recent = all
+          .filter((a: any) => a.status === "completed")
+          .slice(0, 3)
+          .map((a: any) => {
+            const doctor = users.find((u) => u.id === a.created_by || u.id === String(a.created_by));
+            return {
+              id: a.id,
+              date: new Date(a.appointment_date).toLocaleDateString(),
+              doctor: doctor ? `Dr. ${doctor.first_name} ${doctor.last_name}` : "Doctor",
+              type: a.reason || "Checkup",
+            };
+          });
+
+        setUpcomingAppointments(upcoming);
+        setRecentVisits(recent);
+      } catch (e) {
+        console.error("Failed to fetch appointments", e);
+      }
+    };
+    fetchAppointments();
+  }, []);
 
   const handleLogout = () => {
     safeStorage.removeItem("patientAuth");
@@ -119,7 +183,21 @@ export default function PatientDashboard() {
                 </Button>
               </Link>
             </div>
-            <p className="text-center text-gray-500 py-8">{t("patientDashboard.noUpcomingAppointments")}</p>
+            {upcomingAppointments.length === 0 ? (
+              <p className="text-center text-gray-500 py-8">{t("patientDashboard.noUpcomingAppointments")}</p>
+            ) : (
+              <ul className="space-y-3">
+                {upcomingAppointments.map((appt) => (
+                  <li key={appt.id} className="flex justify-between items-center border rounded-lg px-4 py-3">
+                    <div>
+                      <p className="font-semibold text-gray-800">{appt.type}</p>
+                      <p className="text-sm text-gray-500">{appt.doctor} · {appt.date} {appt.time}</p>
+                    </div>
+                    <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full capitalize">{appt.status}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
 
           {/* Recent Visits */}
@@ -136,7 +214,21 @@ export default function PatientDashboard() {
                 </Button>
               </Link>
             </div>
-            <p className="text-center text-gray-500 py-8">{t("patientDashboard.noRecentVisits")}</p>
+            {recentVisits.length === 0 ? (
+              <p className="text-center text-gray-500 py-8">{t("patientDashboard.noRecentVisits")}</p>
+            ) : (
+              <ul className="space-y-3">
+                {recentVisits.map((visit) => (
+                  <li key={visit.id} className="flex justify-between items-center border rounded-lg px-4 py-3">
+                    <div>
+                      <p className="font-semibold text-gray-800">{visit.type}</p>
+                      <p className="text-sm text-gray-500">{visit.doctor} · {visit.date}</p>
+                    </div>
+                    <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">Completed</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
 

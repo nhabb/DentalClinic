@@ -1,4 +1,4 @@
-import {
+import { UseGuards,
   Controller,
   Get,
   Post,
@@ -10,17 +10,26 @@ import {
   DefaultValuePipe,
   ParseBoolPipe,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { ApiBearerAuth, ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { AppointmentSlotsService } from './appointment-slots.service';
 import { CreateSlotDto } from './dto/create-slot.dto';
 
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @ApiTags('Appointment Slots')
 @Controller('appointment-slots')
 export class AppointmentSlotsController {
   constructor(private readonly slotsService: AppointmentSlotsService) {}
 
+  @Post('bulk')
+  @ApiOperation({ summary: 'Doctor creates multiple slots from a time range' })
+  createBulk(@Body() dto: { doctor_id: number; slot_date: string; from_time: string; to_time: string; duration_minutes: number }) {
+    return this.slotsService.createBulk(dto);
+  }
+
   @Post()
-  @ApiOperation({ summary: 'Doctor creates an available slot' })
+  @ApiOperation({ summary: 'Doctor creates a single available slot' })
   create(@Body() dto: CreateSlotDto) {
     return this.slotsService.create(dto);
   }

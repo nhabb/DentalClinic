@@ -103,6 +103,20 @@ export default function SignupPage() {
       return;
     }
 
+    // Create user in backend DB
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+    await fetch(`${API_URL}/api/users/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: form.email,
+        first_name: form.firstName,
+        last_name: form.lastName,
+        phone: form.phone || undefined,
+        role: "patient",
+      }),
+    });
+
     router.push("/patient-dashboard");
   };
 

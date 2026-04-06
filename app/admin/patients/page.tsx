@@ -1,4 +1,5 @@
 "use client";
+import { apiFetch } from '@/lib/api/client';
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -113,21 +114,85 @@ export default function PatientsPage() {
   // Fetch patients
   useEffect(() => {
     const fetchPatients = async () => {
-      setIsLoading(false);
+      try {
+        const [patientsRes, usersRes] = await Promise.all([
+          apiFetch(`/api/patients`),
+          apiFetch(`/api/users`),
+        ]);
+        const patientsData = await patientsRes.json();
+        const users: any[] = await usersRes.json();
+
+        const mapped = (patientsData.data || []).map((p: any) => {
+          const user = users.find((u) => u.id === p.user_id || u.id === String(p.user_id));
+          return {
+            id: Number(p.id),
+            name: user ? `${user.first_name} ${user.last_name}` : `Patient #${p.id}`,
+            email: user?.email || "",
+            phone: user?.phone || "",
+            dateOfBirth: "",
+            address: `${p.city || ""}, ${p.governate || ""}`.trim().replace(/^,\s*|,\s*$/, ""),
+            bloodType: p.blood_type || "",
+            allergies: p.allergies ? p.allergies.split(",").map((a: string) => a.trim()) : [],
+            insurance: p.insurance_provider || "",
+            registeredDate: user?.created_at?.split("T")[0] || "",
+            lastVisit: "",
+            totalVisits: 0,
+            status: user?.is_active ? "active" : "inactive",
+            notes: p.medical_notes || "",
+          };
+        });
+        setPatients(mapped);
+      } catch (e) {
+        console.error("Failed to fetch patients", e);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    if (
-      userRole &&
-      (doctorId || assignedDoctorIds.length > 0 || userRole === "admin")
-    ) {
-      fetchPatients();
-    }
-  }, [userRole, doctorId, assignedDoctorIds]);
+    fetchPatients();
+  }, []);
 
   // Fetch patient history when patient is selected
   const fetchPatientHistory = async (patientId: number) => {
-    // API call removed
-    setPatientHistory(null);
+    try {
+      const [appointmentsRes, recordsRes, usersRes] = await Promise.all([
+        apiFetch(`/api/appointments`),
+        apiFetch(`/api/patient-records`),
+        apiFetch(`/api/users`),
+      ]);
+      const appointmentsData = await appointmentsRes.json();
+      const recordsData = await recordsRes.json();
+      const users: any[] = await usersRes.json();
+
+      const appointments = (appointmentsData.data || [])
+        .filter((a: any) => Number(a.patient_id) === patientId)
+        .map((a: any) => {
+          const doctor = users.find((u) => u.id === a.created_by || u.id === String(a.created_by));
+          return {
+            date: a.appointment_date?.split("T")[0] || "",
+            type: a.reason || "Checkup",
+            doctor: doctor ? `Dr. ${doctor.first_name} ${doctor.last_name}` : "",
+            status: a.status,
+          };
+        });
+
+      const treatments = (recordsData.data || [])
+        .filter((r: any) => Number(r.patient_id) === patientId)
+        .map((r: any) => {
+          const doctor = users.find((u) => u.id === r.created_by || u.id === String(r.created_by));
+          return {
+            tooth: r.tooth_number ? `Tooth ${r.tooth_number}` : "",
+            treatment: r.title || "",
+            date: r.treatment_date?.split("T")[0] || "",
+            doctor: doctor ? `Dr. ${doctor.first_name} ${doctor.last_name}` : "",
+          };
+        });
+
+      setPatientHistory({ appointments, treatments });
+    } catch (e) {
+      console.error("Failed to fetch patient history", e);
+      setPatientHistory(null);
+    }
   };
 
   const handleLogout = () => {

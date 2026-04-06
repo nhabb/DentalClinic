@@ -1,6 +1,7 @@
 "use client";
+import { apiFetch } from '@/lib/api/client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { safeStorage } from "@/lib/browser-compat";
@@ -38,11 +39,37 @@ type InventoryItem = {
 const categoryKeys = ["all", "disposables", "materials", "medications", "instruments"] as const;
 const categoryValues = ["All", "Disposables", "Materials", "Medications", "Instruments"];
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
 export default function InventoryManagement() {
   const router = useRouter();
   const { t } = useTranslation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
+
+  useEffect(() => {
+    const fetchInventory = async () => {
+      try {
+        const res = await apiFetch(`/api/inventory`);
+        const data = await res.json();
+        const mapped = (data.data || []).map((item: any) => ({
+          id: Number(item.id),
+          name: item.name,
+          category: item.category || "General",
+          currentStock: item.quantity,
+          minimumStock: item.minimum_quantity,
+          unit: item.unit,
+          supplier: item.description || "",
+          lastRestocked: item.updated_at?.split("T")[0] || "",
+          status: item.quantity <= item.minimum_quantity ? "low" : "ok",
+        }));
+        setInventoryItems(mapped);
+      } catch (e) {
+        console.error("Failed to fetch inventory", e);
+      }
+    };
+    fetchInventory();
+  }, []);
 
   const handleLogout = () => {
     safeStorage.removeItem("adminAuth");

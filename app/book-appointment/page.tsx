@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/api/client";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Avatar } from "@/components/ui/Avatar";
@@ -124,12 +125,50 @@ export default function BookAppointment() {
   }, [selectedDate, selectedDoctor]);
 
   const fetchDoctors = async () => {
-    setLoadingDoctors(false);
+    setLoadingDoctors(true);
+    try {
+      const res = await apiFetch(`/api/users`);
+      const users: any[] = await res.json();
+      const mapped = users
+        .filter((u) => u.role === "admin" || u.role === "doctor")
+        .map((u) => ({
+          id: Number(u.id),
+          name: `Dr. ${u.first_name} ${u.last_name}`,
+          specialty: "General Dentistry",
+          available: u.is_active,
+          bio: `Available for appointments`,
+        }));
+      if (mapped.length > 0) setDoctors(mapped);
+    } catch (e) {
+      console.error("Failed to fetch doctors", e);
+    } finally {
+      setLoadingDoctors(false);
+    }
   };
 
   const fetchAvailableSlots = async (date: Date, doctorId: number) => {
-    setLoadingSlots(false);
-    setTimeSlots(fallbackTimeSlots.map((time) => ({ time, available: true })));
+    setLoadingSlots(true);
+    try {
+      const pad = (n: number) => String(n).padStart(2, "0");
+      const dateStr = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+      const params = new URLSearchParams({
+        doctor_id: String(doctorId),
+        date: dateStr,
+        available_only: "true",
+        limit: "100",
+      });
+      const res = await apiFetch(`/api/appointment-slots?${params}`);
+      const data = await res.json();
+      const slots = (data.data || []).map((s: any) => ({
+        time: new Date(s.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "UTC" }),
+        available: true,
+      }));
+      setTimeSlots(slots);
+    } catch (e) {
+      setTimeSlots([]);
+    } finally {
+      setLoadingSlots(false);
+    }
   };
 
   const handleBookAppointment = async () => {
@@ -137,16 +176,57 @@ export default function BookAppointment() {
 
     setSubmitting(true);
     setError(null);
-    // API call removed
-    console.log("Appointment booked:", {
-      doctorId: selectedDoctor,
-      serviceType,
-      procedure: selectedProcedure,
-      date: selectedDate.toISOString().split("T")[0],
-      time: selectedTime,
-    });
-    setBookingSuccess(true);
-    setSubmitting(false);
+    try {
+      const { supabase } = await import("@/lib/supabase/client");
+      const { data: { user } } = await supabase.auth.getUser();
+
+      const [patientsRes, usersRes, slotsRes] = await Promise.all([
+        apiFetch(`/api/patients`),
+        apiFetch(`/api/users`),
+        apiFetch(`/api/appointment-slots`),
+      ]);
+      const patientsData = await patientsRes.json();
+      const users: any[] = await usersRes.json();
+      const slotsData = await slotsRes.json();
+
+      const dbUser = users.find((u) => u.email === user?.email);
+      const patient = (patientsData.data || []).find((p: any) =>
+        p.user_id === dbUser?.id || p.user_id === String(dbUser?.id)
+      );
+
+      // Find matching slot by doctor + date + time
+      const pad2 = (n: number) => String(n).padStart(2, "0");
+      const dateStr = `${selectedDate.getFullYear()}-${pad2(selectedDate.getMonth() + 1)}-${pad2(selectedDate.getDate())}`;
+      const slot = (slotsData.data || []).find((s: any) => {
+        const slotDate = s.slot_date ? new Date(s.slot_date).toLocaleDateString("en-CA") : "";
+        const slotTime = new Date(s.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "UTC" });
+        return Number(s.doctor_id) === selectedDoctor && slotDate === dateStr && slotTime === selectedTime && !s.is_booked;
+      });
+
+      if (!slot) {
+        throw new Error("This time slot is no longer available. Please select another slot.");
+      }
+
+      const res = await apiFetch(`/api/appointments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          patient_id: patient ? Number(patient.id) : 1,
+          slot_id: Number(slot.id),
+          reason: selectedProcedure || serviceType || "Checkup",
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(Array.isArray(err.message) ? err.message.join(", ") : err.message || "Booking failed");
+      }
+      setBookingSuccess(true);
+    } catch (e: any) {
+      setError(e.message || "Failed to book appointment. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const canProceed = () => {
@@ -560,6 +640,12 @@ export default function BookAppointment() {
                   <span className="ml-3 text-gray-600">
                     Loading {getSelectedDoctorInfo()?.name}'s available slots...
                   </span>
+                </div>
+              ) : timeSlots.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  <FaClock className="mx-auto text-4xl mb-3 text-gray-300" />
+                  <p className="font-medium">No available slots for this date.</p>
+                  <p className="text-sm mt-1">Please select a different date or doctor.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-4">

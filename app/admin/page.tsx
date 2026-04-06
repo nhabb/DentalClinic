@@ -1,4 +1,5 @@
 "use client";
+import { apiFetch } from '@/lib/api/client';
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -85,26 +86,89 @@ export default function AdminDashboard() {
     }
   }, []);
 
-  // Fetch admin stats (filtered by doctorId)
+  // Fetch admin stats
   useEffect(() => {
     const fetchStats = async () => {
-      // API call removed
+      try {
+        const [patientsRes, appointmentsRes, inventoryRes] = await Promise.all([
+          apiFetch(`/api/patients`),
+          apiFetch(`/api/appointments`),
+          apiFetch(`/api/inventory/low-stock`),
+        ]);
+        const patientsData = await patientsRes.json();
+        const appointmentsData = await appointmentsRes.json();
+        const inventoryData = await inventoryRes.json();
+
+        const today = new Date().toISOString().split("T")[0];
+        const todayAppts = (appointmentsData.data || []).filter((a: any) =>
+          a.appointment_date?.startsWith(today)
+        );
+        const completedToday = todayAppts.filter((a: any) => a.status === "completed").length;
+
+        setClinicStats({
+          todayAppointments: todayAppts.length,
+          completedToday,
+          lowStockItems: (inventoryData.data || []).length,
+          totalPatients: (patientsData.data || []).length,
+        });
+      } catch (e) {
+        console.error("Failed to fetch stats", e);
+      }
     };
     fetchStats();
-  }, [doctorId]);
+  }, []);
 
-  // Fetch today's appointments (filtered by doctorId)
+  // Fetch today's appointments
   useEffect(() => {
     const fetchTodayAppointments = async () => {
-      // API call removed
+      try {
+        const [appointmentsRes, usersRes] = await Promise.all([
+          apiFetch(`/api/appointments`),
+          apiFetch(`/api/users`),
+        ]);
+        const appointmentsData = await appointmentsRes.json();
+        const users: any[] = await usersRes.json();
+
+        const today = new Date().toISOString().split("T")[0];
+        const todayAppts = (appointmentsData.data || [])
+          .filter((a: any) => a.appointment_date?.startsWith(today))
+          .map((a: any) => {
+            const patient = users.find((u) => u.id === a.patient_id || u.id === String(a.patient_id));
+            const time = a.start_time ? new Date(a.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+            return {
+              id: Number(a.id),
+              time,
+              patient: patient ? `${patient.first_name} ${patient.last_name}` : `Patient #${a.patient_id}`,
+              type: a.reason || "Checkup",
+              status: a.status,
+            };
+          });
+        setTodayAppointments(todayAppts);
+      } catch (e) {
+        console.error("Failed to fetch today appointments", e);
+      }
     };
     fetchTodayAppointments();
-  }, [doctorId]);
+  }, []);
 
-  // Fetch low stock alerts (shared across clinic)
+  // Fetch low stock alerts
   useEffect(() => {
     const fetchLowStock = async () => {
-      setLoading(false);
+      try {
+        const res = await apiFetch(`/api/inventory/low-stock`);
+        const data = await res.json();
+        const alerts = (data.data || []).map((item: any) => ({
+          id: Number(item.id),
+          item: item.name,
+          current: item.quantity,
+          minimum: item.minimum_quantity,
+        }));
+        setLowStockAlerts(alerts);
+      } catch (e) {
+        console.error("Failed to fetch low stock", e);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchLowStock();
   }, []);

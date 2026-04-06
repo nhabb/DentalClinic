@@ -47,12 +47,19 @@ export default function AdminLogin() {
     setError("");
     setIsLoading(true);
 
-    // API call removed
+    // Resolve DB user id at login time so availability works without re-lookup
+    try {
+      const res = await fetch(
+        `${API_URL}/api/users/by-email?email=${encodeURIComponent(credentials.email)}`
+      );
+      if (res.ok) {
+        const user = await res.json();
+        if (user?.id) safeStorage.setItem("doctorDbId", String(user.id));
+      }
+    } catch {}
+
     safeStorage.setItem("adminAuth", "true");
-    safeStorage.setItem(
-      "adminUser",
-      JSON.stringify({ email: credentials.email }),
-    );
+    safeStorage.setItem("adminUser", JSON.stringify({ email: credentials.email }));
     safeStorage.setItem("userRole", role);
     router.push("/admin");
     setIsLoading(false);
@@ -226,7 +233,7 @@ export default function AdminLogin() {
                 <p className="text-gray-500">{t("adminLogin.email")}</p>
                 <p className="text-white font-mono text-xs">
                   {role === "doctor"
-                    ? "dr.sarah@clinic.com"
+                    ? "doctor@clinic.com"
                     : "reception@clinic.com"}
                 </p>
               </div>
