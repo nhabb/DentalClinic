@@ -117,7 +117,12 @@ export class AppointmentSlotsService {
 
     const where: any = {};
     if (doctor_id) where.doctor_id = BigInt(doctor_id);
-    if (date) where.slot_date = new Date(date);
+    if (date) {
+      where.slot_date = {
+        gte: new Date(`${date}T00:00:00.000Z`),
+        lte: new Date(`${date}T23:59:59.999Z`),
+      };
+    }
     if (available_only) where.is_booked = false;
 
     const [data, total] = await Promise.all([

@@ -16,7 +16,6 @@ import { AdminPageHeader } from "@/components/ui/AdminPageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Modal } from "@/components/ui/Modal";
 import { FormField, inputClass } from "@/components/ui/FormField";
-import AgentChat from "@/components/ui/AgentChat";
 import {
   FaCalendarAlt,
   FaSearch,
@@ -1131,10 +1130,6 @@ export default function AppointmentsManagement() {
         </div>
       </Modal>
 
-      <AgentChat
-        doctorName={currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : "Doctor"}
-        doctorId={currentDoctorDbId ?? undefined}
-      />
     </div>
   );
 }

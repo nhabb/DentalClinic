@@ -1,8 +1,7 @@
-import { Controller, Post, Body, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Controller, Post, Body } from '@nestjs/common';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { IsArray, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { AgentService, ChatMessage } from './agent.service';
 
 class ChatMessageDto {
@@ -20,8 +19,6 @@ class ChatRequestDto {
   @IsOptional() @IsNumber() doctorId?: number;
 }
 
-@ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
 @ApiTags('Agent')
 @Controller('agent')
 export class AgentController {

@@ -93,7 +93,13 @@ export class AppointmentsService {
     if (doctor_id) where.doctor_id = BigInt(doctor_id);
     if (patient_id) where.patient_id = BigInt(patient_id);
     if (status) where.status = status;
-    if (date) where.appointment_date = new Date(date);
+    if (date) {
+      // Use a full-day range to avoid timezone/time-component mismatches on @db.Date fields
+      where.appointment_date = {
+        gte: new Date(`${date}T00:00:00.000Z`),
+        lte: new Date(`${date}T23:59:59.999Z`),
+      };
+    }
 
     const [data, total] = await Promise.all([
       this.prisma.appointments.findMany({

@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s \"http://localhost:5000/api/notifications?userId=3\")",
+      "Bash(npm run:*)",
+      "Bash(echo \"Frontend PID: $!\")",
+      "Bash(echo \"Backend PID: $!\")"
+    ]
+  }
+}

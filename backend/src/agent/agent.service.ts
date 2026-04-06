@@ -33,17 +33,29 @@ export class AgentService {
 
   async chat(messages: ChatMessage[], context: { doctorName: string; doctorId?: number }): Promise<string> {
     const today = new Date().toLocaleDateString('en-CA');
+
+    // Resolve real name from DB if we have an ID
+    let displayName = context.doctorName;
+    if (context.doctorId) {
+      try {
+        const user = await this.users.findById(BigInt(context.doctorId));
+        if (user?.first_name) displayName = `${user.first_name} ${user.last_name}`;
+      } catch {}
+    }
+
     const systemPrompt = `You are the AI assistant for BrightSmile Dental Clinic's admin panel.
 You help doctors and staff manage appointments, patients, inventory, and clinic operations.
-Today's date is ${today}.
-You are speaking with ${context.doctorName}${context.doctorId ? ` (Doctor ID: ${context.doctorId})` : ''}.
+Today's date is ${today} (YYYY-MM-DD format). Always use this exact format when passing dates to tools.
+You are speaking with Dr. ${displayName}${context.doctorId ? ` (Doctor ID: ${context.doctorId})` : ''}.
+When the user asks about "my appointments" or "my patients", use doctor_id: ${context.doctorId ?? 'unknown'} in the filter.
 
 Guidelines:
 - Be concise and professional.
 - When listing data, present it clearly using bullet points or short lists.
 - Always confirm before taking irreversible actions (cancel, delete).
 - If a tool call fails, explain the error clearly.
-- Appointment flow: scheduled → confirmed → completed. cancelled and no_show are terminal states.`;
+- Appointment flow: scheduled → confirmed → completed. cancelled and no_show are terminal states.
+- Always pass dates in YYYY-MM-DD format (e.g., ${today}).`;
 
     let openaiMessages: OpenAI.ChatCompletionMessageParam[] = [
       { role: 'system', content: systemPrompt },
