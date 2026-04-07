@@ -69,21 +69,48 @@ export default function AdminDashboard() {
   >([]);
   const [loading, setLoading] = useState(true);
 
-  // Load user info from localStorage on mount
+  // Load user info from localStorage and resolve name from API
   useEffect(() => {
     const storedUser = safeStorage.getItem("adminUser");
     const storedRole = safeStorage.getItem("userRole");
     const storedDoctorId = safeStorage.getItem("doctorId");
+    const storedDbId = safeStorage.getItem("doctorDbId");
 
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    if (storedRole) {
-      setUserRole(storedRole);
-    }
-    if (storedDoctorId) {
-      setDoctorId(parseInt(storedDoctorId));
-    }
+    if (storedRole) setUserRole(storedRole);
+    if (storedDoctorId) setDoctorId(parseInt(storedDoctorId));
+
+    const resolveUser = async () => {
+      // Try resolving name from API using stored email
+      if (storedUser) {
+        const parsed = JSON.parse(storedUser);
+        const email = parsed.email;
+        if (email) {
+          try {
+            const res = await fetch(`${API_URL}/api/users/by-email?email=${encodeURIComponent(email)}`);
+            if (res.ok) {
+              const u = await res.json();
+              setUser({
+                id: Number(u.id),
+                firstName: u.first_name || "",
+                lastName: u.last_name || "",
+                email: u.email,
+                role: u.role,
+              });
+              if (u.id) safeStorage.setItem("doctorDbId", String(u.id));
+              return;
+            }
+          } catch {}
+        }
+        // Fallback: use whatever was stored
+        setUser({
+          ...parsed,
+          firstName: parsed.firstName || parsed.first_name || "",
+          lastName: parsed.lastName || parsed.last_name || "",
+        });
+      }
+    };
+
+    resolveUser();
   }, []);
 
   // Fetch admin stats
