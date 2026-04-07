@@ -48,7 +48,14 @@ export default function AdminLayout({
         const stored = safeStorage.getItem("adminUser");
         if (stored) {
           const u = JSON.parse(stored);
-          if (u?.email) await resolveByEmail(u.email);
+          // Use stored name directly if available, otherwise resolve by email
+          if (u?.first_name) {
+            setDoctorName(`${u.first_name} ${u.last_name}`.trim());
+            const storedId = safeStorage.getItem("doctorDbId");
+            if (storedId) setDoctorId(Number(storedId));
+          } else if (u?.email) {
+            await resolveByEmail(u.email);
+          }
         }
       } catch {}
     };

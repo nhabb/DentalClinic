@@ -55,11 +55,18 @@ export default function AdminLogin() {
       if (res.ok) {
         const user = await res.json();
         if (user?.id) safeStorage.setItem("doctorDbId", String(user.id));
+        safeStorage.setItem("adminUser", JSON.stringify({
+          email: credentials.email,
+          first_name: user?.first_name || "",
+          last_name: user?.last_name || "",
+        }));
       }
     } catch {}
 
     safeStorage.setItem("adminAuth", "true");
-    safeStorage.setItem("adminUser", JSON.stringify({ email: credentials.email }));
+    if (!safeStorage.getItem("adminUser")) {
+      safeStorage.setItem("adminUser", JSON.stringify({ email: credentials.email }));
+    }
     safeStorage.setItem("userRole", role);
     router.push("/admin");
     setIsLoading(false);
