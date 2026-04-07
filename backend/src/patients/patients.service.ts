@@ -42,8 +42,31 @@ export class PatientsService {
   async findAll(page = 1, limit = 20, search?: string) {
     const skip = (page - 1) * limit;
 
-    const where = search
-      ? {
+    let where: any = undefined;
+    if (search) {
+      const words = search.trim().split(/\s+/);
+      if (words.length >= 2) {
+        where = {
+          users: {
+            OR: [
+              {
+                AND: [
+                  { first_name: { contains: words[0], mode: 'insensitive' as const } },
+                  { last_name: { contains: words.slice(1).join(' '), mode: 'insensitive' as const } },
+                ],
+              },
+              {
+                AND: [
+                  { first_name: { contains: words[words.length - 1], mode: 'insensitive' as const } },
+                  { last_name: { contains: words.slice(0, -1).join(' '), mode: 'insensitive' as const } },
+                ],
+              },
+              ...words.map((w) => ({ email: { contains: w, mode: 'insensitive' as const } })),
+            ],
+          },
+        };
+      } else {
+        where = {
           users: {
             OR: [
               { first_name: { contains: search, mode: 'insensitive' as const } },
@@ -51,8 +74,9 @@ export class PatientsService {
               { email: { contains: search, mode: 'insensitive' as const } },
             ],
           },
-        }
-      : undefined;
+        };
+      }
+    }
 
     const [data, total] = await Promise.all([
       this.prisma.patient_profiles.findMany({

@@ -171,7 +171,7 @@ export default function AppointmentsManagement() {
         setDoctors(doctors);
 
         const mapped = (appointmentsData.data || []).map((a: any) => {
-          const patient = users.find((u) => u.id === a.patient_id || u.id === String(a.patient_id));
+          const patientUser = a.patient_profile?.users;
           const doctorId = a.doctor_id || a.created_by;
           const doctor = users.find((u) => u.id === doctorId || u.id === String(doctorId));
           const time = a.start_time ? new Date(a.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
@@ -179,8 +179,8 @@ export default function AppointmentsManagement() {
             id: Number(a.id),
             date: a.appointment_date ? new Date(a.appointment_date).toLocaleDateString("en-CA") : "",
             time,
-            patient: patient ? `${patient.first_name} ${patient.last_name}` : `Patient #${a.patient_id}`,
-            phone: patient?.phone || "",
+            patient: patientUser ? `${patientUser.first_name} ${patientUser.last_name}` : `Patient #${a.patient_id}`,
+            phone: patientUser?.phone || "",
             type: a.reason || "Checkup",
             duration: 30,
             status: a.status,
@@ -420,8 +420,7 @@ export default function AppointmentsManagement() {
       const slotsData = await slotsRes.json();
 
       const mappedPatients = (patientsData.data || []).map((p: any) => {
-        const user = users.find((u: any) => u.id === p.user_id || u.id === String(p.user_id));
-        return { id: Number(p.id), name: user ? `${user.first_name} ${user.last_name}` : `Patient #${p.id}` };
+        return { id: Number(p.id), name: p.users ? `${p.users.first_name} ${p.users.last_name}` : `Patient #${p.id}` };
       });
 
       const mappedSlots = (slotsData.data || [])
@@ -467,14 +466,14 @@ export default function AppointmentsManagement() {
       const appointmentsData = await appointmentsRes.json();
       const users: any[] = await usersRes.json();
       const mapped = (appointmentsData.data || []).map((a: any) => {
-        const patient = users.find((u: any) => u.id === a.patient_id || u.id === String(a.patient_id));
+        const patientUser = a.patient_profile?.users;
         const doctorId = a.doctor_id || a.created_by;
         const doctor = users.find((u: any) => u.id === doctorId || u.id === String(doctorId));
         const time = a.start_time ? new Date(a.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
         return {
           id: Number(a.id), date: a.appointment_date ? new Date(a.appointment_date).toLocaleDateString("en-CA") : "",
-          time, patient: patient ? `${patient.first_name} ${patient.last_name}` : `Patient #${a.patient_id}`,
-          phone: patient?.phone || "", type: a.reason || "Checkup", duration: 30,
+          time, patient: patientUser ? `${patientUser.first_name} ${patientUser.last_name}` : `Patient #${a.patient_id}`,
+          phone: patientUser?.phone || "", type: a.reason || "Checkup", duration: 30,
           status: a.status, notes: a.notes || "",
           doctor: doctor ? `Dr. ${doctor.first_name} ${doctor.last_name}` : "", doctorId: Number(doctorId),
         };
