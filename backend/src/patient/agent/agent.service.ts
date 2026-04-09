@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import OpenAI from 'openai';
-import { AppointmentsService } from '../appointments/appointments.service';
-import { AppointmentSlotsService } from '../appointment-slots/appointment-slots.service';
+import { AppointmentsService } from '../../doctor/appointments/appointments.service';
+import { AppointmentSlotsService } from '../../doctor/appointment-slots/appointment-slots.service';
 import { PatientsService } from '../patients/patients.service';
-import { InventoryService } from '../inventory/inventory.service';
-import { UsersService } from '../users/users.service';
-import { NotificationsService } from '../notifications/notifications.service';
+import { InventoryService } from '../../doctor/inventory/inventory.service';
+import { UsersService } from '../../shared/users/users.service';
+import { NotificationsService } from '../../shared/notifications/notifications.service';
 import { AGENT_TOOLS } from './agent.tools';
 
 export interface ChatMessage {

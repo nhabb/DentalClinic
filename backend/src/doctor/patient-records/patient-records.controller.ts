@@ -10,7 +10,7 @@ import { UseGuards,
   ParseIntPipe,
   DefaultValuePipe,
 } from '@nestjs/common';
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../../shared/common/guards/jwt-auth.guard';
 import { ApiBearerAuth, ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { PatientRecordsService } from './patient-records.service';
 import { CreatePatientRecordDto } from './dto/create-record.dto';

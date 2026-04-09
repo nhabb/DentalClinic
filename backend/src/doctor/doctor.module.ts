@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
-import { AppointmentsModule } from '../appointments/appointments.module';
-import { AppointmentSlotsModule } from '../appointment-slots/appointment-slots.module';
-import { InventoryModule } from '../inventory/inventory.module';
-import { PatientRecordsModule } from '../patient-records/patient-records.module';
+import { AppointmentsModule } from './appointments/appointments.module';
+import { AppointmentSlotsModule } from './appointment-slots/appointment-slots.module';
+import { InventoryModule } from './inventory/inventory.module';
+import { PatientRecordsModule } from './patient-records/patient-records.module';
 
 /**
  * Doctor/Admin panel modules.

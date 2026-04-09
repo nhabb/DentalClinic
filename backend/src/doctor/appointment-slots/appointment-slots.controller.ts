@@ -10,7 +10,7 @@ import { UseGuards,
   DefaultValuePipe,
   ParseBoolPipe,
 } from '@nestjs/common';
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../../shared/common/guards/jwt-auth.guard';
 import { ApiBearerAuth, ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { AppointmentSlotsService } from './appointment-slots.service';
 import { CreateSlotDto } from './dto/create-slot.dto';

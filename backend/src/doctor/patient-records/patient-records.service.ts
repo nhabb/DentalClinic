@@ -2,7 +2,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../../shared/prisma/prisma.service';
 import { CreatePatientRecordDto } from './dto/create-record.dto';
 import { UpdatePatientRecordDto } from './dto/update-record.dto';
 

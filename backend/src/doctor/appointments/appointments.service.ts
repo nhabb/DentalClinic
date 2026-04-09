@@ -3,8 +3,8 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { NotificationsService } from '../notifications/notifications.service';
+import { PrismaService } from '../../shared/prisma/prisma.service';
+import { NotificationsService } from '../../shared/notifications/notifications.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { CancelAppointmentDto, UpdateAppointmentNotesDto } from './dto/update-appointment.dto';
 

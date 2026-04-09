@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
-import { PatientsModule } from '../patients/patients.module';
-import { PatientDocumentsModule } from '../patient-documents/patient-documents.module';
-import { NotificationsModule } from '../notifications/notifications.module';
-import { AgentModule } from '../agent/agent.module';
+import { PatientsModule } from './patients/patients.module';
+import { PatientDocumentsModule } from './patient-documents/patient-documents.module';
+import { NotificationsModule } from '../shared/notifications/notifications.module';
+import { AgentModule } from './agent/agent.module';
 
 /**
  * Patient portal modules.
