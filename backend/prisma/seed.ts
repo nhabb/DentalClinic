@@ -10,6 +10,34 @@ async function main() {
   console.log('Seeding database...');
 
   const passwordHash = await bcrypt.hash('Test1234!', 10);
+  const demoHash = await bcrypt.hash('demo123', 10);
+
+  // Create demo accounts (used by the login page demo buttons)
+  await prisma.users.upsert({
+    where: { email: 'doctor@demo.com' },
+    update: { role: 'admin' },
+    create: { email: 'doctor@demo.com', password_hash: demoHash, first_name: 'Demo', last_name: 'Doctor', role: 'admin' },
+  });
+
+  await prisma.users.upsert({
+    where: { email: 'secretary@demo.com' },
+    update: { role: 'admin' },
+    create: { email: 'secretary@demo.com', password_hash: demoHash, first_name: 'Demo', last_name: 'Secretary', role: 'admin' },
+  });
+
+  const demoPatientUser = await prisma.users.upsert({
+    where: { email: 'patient@demo.com' },
+    update: { role: 'patient' },
+    create: { email: 'patient@demo.com', password_hash: demoHash, first_name: 'Demo', last_name: 'Patient', role: 'patient' },
+  });
+
+  await prisma.patient_profiles.upsert({
+    where: { user_id: demoPatientUser.id },
+    update: {},
+    create: { user_id: demoPatientUser.id },
+  });
+
+  console.log('Demo accounts created/updated');
 
   // Create doctor
   const doctor = await prisma.users.upsert({

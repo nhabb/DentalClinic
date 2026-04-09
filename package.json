@@ -1,61 +1,11 @@
 {
   "name": "dentalclinic",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "dev": "concurrently -n frontend,backend -c cyan,magenta \"cd frontend && npm run dev\" \"cd backend && npm run start:dev\"",
+    "install:all": "cd frontend && npm install && cd ../backend && npm install"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/nhabb/DentalClinic.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/nhabb/DentalClinic/issues"
-  },
-  "homepage": "https://github.com/nhabb/DentalClinic#readme",
-  "browserslist": [
-    "last 2 Chrome versions",
-    "last 2 Firefox versions",
-    "Firefox ESR",
-    "last 2 Safari versions",
-    "last 2 Edge versions",
-    "last 2 ChromeAndroid versions",
-    "last 2 iOS versions"
-  ],
-  "dependencies": {
-    "@radix-ui/react-dropdown-menu": "^2.1.16",
-    "@radix-ui/react-label": "^2.1.8",
-    "@radix-ui/react-popover": "^1.1.15",
-    "@radix-ui/react-separator": "^1.1.8",
-    "@radix-ui/react-slot": "^1.2.4",
-    "@supabase/supabase-js": "^2.101.1",
-    "@tailwindcss/postcss": "^4.1.18",
-    "@types/node": "^25.0.3",
-    "@types/react": "^19.2.7",
-    "autoprefixer": "^10.4.23",
-    "axios": "^1.13.2",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "date-fns": "^4.1.0",
-    "lucide-react": "^0.562.0",
-    "next": "^16.1.1",
-    "next-intl": "^4.8.3",
-    "postcss": "^8.5.6",
-    "react": "^19.2.3",
-    "react-day-picker": "^9.13.0",
-    "react-dom": "^19.2.3",
-    "react-icons": "^5.5.0",
-    "tailwind-merge": "^3.4.0",
-    "tailwindcss": "^4.1.18",
-    "tailwindcss-animate": "^1.0.7",
-    "typescript": "^5.9.3",
-    "xlsx": "^0.18.5"
+  "devDependencies": {
+    "concurrently": "^9.2.1"
   }
 }

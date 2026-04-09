@@ -49,15 +49,22 @@ export default function LoginPage() {
       return;
     }
 
-    // Check role from app DB (more reliable than Supabase user_metadata)
+    // Check role from app DB, fall back to Supabase user_metadata
     let role: UserRole = "patient";
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/users/by-email?email=${encodeURIComponent(email)}`);
       if (res.ok) {
         const u = await res.json();
         if (u?.role === "admin" || u?.role === "doctor") role = "doctor";
+      } else {
+        // User not in app DB — check Supabase user_metadata
+        const metaRole = data.user?.user_metadata?.role;
+        if (metaRole === "admin" || metaRole === "doctor") role = "doctor";
       }
-    } catch {}
+    } catch {
+      const metaRole = data.user?.user_metadata?.role;
+      if (metaRole === "admin" || metaRole === "doctor") role = "doctor";
+    }
 
     router.push(ROLE_REDIRECTS[role]);
   };
