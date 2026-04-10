@@ -7,16 +7,16 @@ import { CreatePatientRecordDto } from './dto/create-record.dto';
 import { UpdatePatientRecordDto } from './dto/update-record.dto';
 
 const recordInclude = {
-  patient_profile: {
+  patient_profiles: {
     select: {
       id: true,
       users: { select: { id: true, first_name: true, last_name: true } },
     },
   },
-  created_by_user: {
+  users: {
     select: { id: true, first_name: true, last_name: true },
   },
-  appointment: {
+  appointments: {
     select: { id: true, appointment_date: true, status: true },
   },
 };

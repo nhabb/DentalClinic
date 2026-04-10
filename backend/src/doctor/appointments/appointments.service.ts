@@ -11,16 +11,16 @@ import { CancelAppointmentDto, UpdateAppointmentNotesDto } from './dto/update-ap
 const VALID_STATUSES = ['scheduled', 'confirmed', 'completed', 'cancelled', 'no_show'];
 
 const appointmentInclude = {
-  patient_profile: {
+  patient_profiles: {
     select: {
       id: true,
       users: { select: { id: true, first_name: true, last_name: true, email: true, phone: true } },
     },
   },
-  doctor: {
+  users_appointments_doctor_idTousers: {
     select: { id: true, first_name: true, last_name: true, email: true },
   },
-  slot: true,
+  appointment_slots: true,
 };
 
 @Injectable()
@@ -34,7 +34,7 @@ export class AppointmentsService {
     // Validate slot
     const slot = await this.prisma.appointment_slots.findUnique({
       where: { id: BigInt(dto.slot_id) },
-      include: { doctor: { select: { id: true, first_name: true, last_name: true } } },
+      include: { users: { select: { id: true, first_name: true, last_name: true } } },
     });
     if (!slot) throw new NotFoundException('Appointment slot not found');
     if (slot.is_booked) throw new BadRequestException('This slot is already booked');
@@ -141,10 +141,10 @@ export class AppointmentsService {
 
     // Notify patient
     await this.notifications.create({
-      user_id: appointment.patient_profile.users.id,
+      user_id: appointment.patient_profiles.users.id,
       type: 'appointment_confirmed',
       title: 'Appointment Confirmed',
-      message: `Your appointment on ${appointment.appointment_date.toISOString().split('T')[0]} has been confirmed by Dr. ${appointment.doctor.last_name}.`,
+      message: `Your appointment on ${appointment.appointment_date.toISOString().split('T')[0]} has been confirmed by Dr. ${appointment.users_appointments_doctor_idTousers.last_name}.`,
     });
 
     return updated;
@@ -191,8 +191,8 @@ export class AppointmentsService {
     }
 
     // Notify the other party
-    const patientUserId = appointment.patient_profile.users.id;
-    const doctorId = appointment.doctor.id;
+    const patientUserId = appointment.patient_profiles.users.id;
+    const doctorId = appointment.users_appointments_doctor_idTousers.id;
 
     await this.notifications.create({
       user_id: patientUserId,
@@ -205,7 +205,7 @@ export class AppointmentsService {
       user_id: doctorId,
       type: 'appointment_cancelled',
       title: 'Appointment Cancelled',
-      message: `The appointment with ${appointment.patient_profile.users.first_name} ${appointment.patient_profile.users.last_name} on ${appointment.appointment_date.toISOString().split('T')[0]} has been cancelled.`,
+      message: `The appointment with ${appointment.patient_profiles.users.first_name} ${appointment.patient_profiles.users.last_name} on ${appointment.appointment_date.toISOString().split('T')[0]} has been cancelled.`,
     });
 
     return updated;

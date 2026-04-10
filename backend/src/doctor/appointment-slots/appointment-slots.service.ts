@@ -98,7 +98,7 @@ export class AppointmentSlotsService {
         is_booked: false,
       },
       include: {
-        doctor: {
+        users: {
           select: { id: true, first_name: true, last_name: true },
         },
       },
@@ -129,7 +129,7 @@ export class AppointmentSlotsService {
       this.prisma.appointment_slots.findMany({
         where,
         include: {
-          doctor: {
+          users: {
             select: { id: true, first_name: true, last_name: true },
           },
         },
@@ -150,7 +150,7 @@ export class AppointmentSlotsService {
     const slot = await this.prisma.appointment_slots.findUnique({
       where: { id },
       include: {
-        doctor: { select: { id: true, first_name: true, last_name: true } },
+        users: { select: { id: true, first_name: true, last_name: true } },
       },
     });
     if (!slot) throw new NotFoundException('Appointment slot not found');

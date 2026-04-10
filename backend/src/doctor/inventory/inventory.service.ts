@@ -163,7 +163,7 @@ export class InventoryService {
       this.prisma.inventory_movements.findMany({
         where: { item_id: itemId },
         include: {
-          performed_by_user: {
+          users: {
             select: { id: true, first_name: true, last_name: true },
           },
         },

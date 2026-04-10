@@ -5,6 +5,7 @@ export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
+    seed: "ts-node --compiler-options {\"module\":\"commonjs\"} prisma/seed.ts",
   },
   datasource: {
     url: process.env.DIRECT_URL ? env("DIRECT_URL") : env("DATABASE_URL"),

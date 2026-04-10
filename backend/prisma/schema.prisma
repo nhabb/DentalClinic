@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  output   = "../src/shared/generated/prisma"
 }
 
 datasource db {
@@ -44,6 +44,7 @@ model appointments {
   patient_profiles                     patient_profiles   @relation(fields: [patient_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "appointments_patient_fkey")
   appointment_slots                    appointment_slots? @relation(fields: [slot_id], references: [id], onUpdate: NoAction)
   patient_records                      patient_records[]
+  payments                             payments[]
 
   @@index([appointment_date], map: "idx_appointments_date")
   @@index([doctor_id], map: "idx_appointments_doctor_id")
@@ -166,6 +167,7 @@ model patient_profiles {
   patient_documents       patient_documents[]
   users                   users               @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "patient_profiles_user_fkey")
   patient_records         patient_records[]
+  payments                payments[]
 
   @@index([user_id], map: "idx_patient_profiles_user_id")
 }
@@ -217,6 +219,48 @@ model users {
   patient_documents                           patient_documents[]
   patient_profiles                            patient_profiles?
   patient_records                             patient_records[]
+  payments                                    payments[]
+  expenses                                    expenses[]
 
   @@index([role], map: "idx_users_role")
+}
+
+model payments {
+  id             BigInt            @id @default(autoincrement())
+  patient_id     BigInt
+  appointment_id BigInt?
+  amount         Decimal           @db.Decimal(10, 2)
+  amount_paid    Decimal           @default(0) @db.Decimal(10, 2)
+  payment_method String            @default("cash")
+  status         String            @default("pending")
+  description    String?
+  paid_at        DateTime?         @db.Timestamptz(6)
+  created_by     BigInt?
+  created_at     DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime          @default(now()) @db.Timestamptz(6)
+
+  patient        patient_profiles  @relation(fields: [patient_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  appointment    appointments?     @relation(fields: [appointment_id], references: [id], onUpdate: NoAction)
+  creator        users?            @relation(fields: [created_by], references: [id], onUpdate: NoAction)
+
+  @@index([patient_id], map: "idx_payments_patient_id")
+  @@index([status], map: "idx_payments_status")
+  @@index([created_at], map: "idx_payments_created_at")
+}
+
+model expenses {
+  id           BigInt   @id @default(autoincrement())
+  title        String   @db.VarChar
+  category     String   @default("other") @db.VarChar
+  amount       Decimal  @db.Decimal(10, 2)
+  description  String?
+  expense_date DateTime @db.Date
+  created_by   BigInt?
+  created_at   DateTime @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime @default(now()) @db.Timestamptz(6)
+
+  creator      users?   @relation(fields: [created_by], references: [id], onUpdate: NoAction)
+
+  @@index([expense_date], map: "idx_expenses_date")
+  @@index([category], map: "idx_expenses_category")
 }
