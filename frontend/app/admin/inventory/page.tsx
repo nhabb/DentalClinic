@@ -76,7 +76,7 @@ export default function InventoryManagement() {
     safeStorage.removeItem("adminUser");
     safeStorage.removeItem("authToken");
     safeStorage.removeItem("userRole");
-    router.push("/admin/login");
+    router.push("/login");
   };
 
   const [searchQuery, setSearchQuery] = useState("");

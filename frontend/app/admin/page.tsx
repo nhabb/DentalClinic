@@ -207,7 +207,7 @@ export default function AdminDashboard() {
     safeStorage.removeItem("userRole");
     safeStorage.removeItem("doctorId");
     safeStorage.removeItem("assignedDoctorIds");
-    router.push("/login");
+    router.push("/");
   };
 
   const getStatusBadge = (status: string) => {

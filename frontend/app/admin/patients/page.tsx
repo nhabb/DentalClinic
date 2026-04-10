@@ -202,7 +202,7 @@ export default function PatientsPage() {
     safeStorage.removeItem("userRole");
     safeStorage.removeItem("doctorId");
     safeStorage.removeItem("assignedDoctorIds");
-    router.push("/admin/login");
+    router.push("/login");
   };
 
   const calculateAge = (dateOfBirth: string) => {
