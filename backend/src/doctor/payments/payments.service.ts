@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
-import { UpdatePaymentStatusDto } from './dto/update-payment.dto';
+import { UpdatePaymentDto, UpdatePaymentStatusDto } from './dto/update-payment.dto';
 
 const paymentInclude = {
   patient: {
@@ -95,6 +95,45 @@ export class PaymentsService {
     });
     if (!payment) throw new NotFoundException('Payment not found');
     return { ...payment, remaining_balance: Number(payment.amount) - Number(payment.amount_paid) };
+  }
+
+  async update(id: bigint, dto: UpdatePaymentDto) {
+    const payment = await this.findOne(id);
+
+    // If the total amount is being reduced below what has already been paid, reject it
+    if (dto.amount !== undefined && dto.amount < Number(payment.amount_paid)) {
+      throw new BadRequestException(
+        `New amount (${dto.amount}) cannot be less than what has already been paid (${payment.amount_paid})`,
+      );
+    }
+
+    const data: any = { updated_at: new Date() };
+    if (dto.amount !== undefined) data.amount = dto.amount;
+    if (dto.payment_method !== undefined) data.payment_method = dto.payment_method;
+    if (dto.description !== undefined) data.description = dto.description;
+    if (dto.appointment_id !== undefined) {
+      data.appointment_id = dto.appointment_id ? BigInt(dto.appointment_id) : null;
+    }
+
+    // Recompute status if amount changed
+    if (dto.amount !== undefined) {
+      const paid = Number(payment.amount_paid);
+      const newTotal = dto.amount;
+      if (paid === 0) data.status = 'pending';
+      else if (paid < newTotal) data.status = 'partial';
+      else data.status = 'paid';
+    }
+
+    const updated = await this.prisma.payments.update({
+      where: { id },
+      data,
+      include: paymentInclude,
+    });
+
+    return {
+      ...updated,
+      remaining_balance: Number(updated.amount) - Number(updated.amount_paid),
+    };
   }
 
   async updateStatus(id: bigint, dto: UpdatePaymentStatusDto) {

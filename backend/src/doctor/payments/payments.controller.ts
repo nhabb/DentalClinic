@@ -14,7 +14,7 @@ import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger'
 import { JwtAuthGuard } from '../../shared/common/guards/jwt-auth.guard';
 import { PaymentsService } from './payments.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
-import { UpdatePaymentStatusDto } from './dto/update-payment.dto';
+import { UpdatePaymentDto, UpdatePaymentStatusDto } from './dto/update-payment.dto';
 
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
@@ -105,6 +105,15 @@ export class PaymentsController {
   @ApiOperation({ summary: 'Get a single payment by ID' })
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.paymentsService.findOne(BigInt(id));
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Edit invoice fields: amount, payment_method, description, appointment_id' })
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdatePaymentDto,
+  ) {
+    return this.paymentsService.update(BigInt(id), dto);
   }
 
   @Patch(':id/status')
