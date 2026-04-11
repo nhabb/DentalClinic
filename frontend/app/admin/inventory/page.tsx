@@ -1,7 +1,7 @@
 "use client";
 import { apiFetch } from '@/lib/api/client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { safeStorage } from "@/lib/browser-compat";
@@ -22,7 +22,14 @@ import {
   FaBoxOpen,
   FaSyringe,
   FaTeeth,
+  FaCamera,
 } from "react-icons/fa";
+
+// NOTE FOR BACKEND TEAM:
+// inventory_items needs an `image_url` (string, nullable) column.
+// Add a POST /api/inventory/:id/image endpoint that accepts multipart/form-data
+// with a field named "image" (image/jpeg, image/png, image/webp, max 5 MB).
+// It should store the file and return { image_url: string }.
 
 type InventoryItem = {
   id: number;
@@ -34,6 +41,7 @@ type InventoryItem = {
   supplier: string;
   lastRestocked: string;
   status: string;
+  image_url?: string;
 };
 
 const categoryKeys = ["all", "disposables", "materials", "medications", "instruments"] as const;
@@ -41,35 +49,101 @@ const categoryValues = ["All", "Disposables", "Materials", "Medications", "Instr
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
+// Clickable image upload box with preview
+function ImageUploadBox({
+  preview,
+  onFileChange,
+}: {
+  preview: string | null;
+  onFileChange: (file: File) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  return (
+    <div
+      onClick={() => inputRef.current?.click()}
+      className="relative w-full h-40 rounded-xl border-2 border-dashed border-gray-300 hover:border-dental-blue cursor-pointer overflow-hidden flex items-center justify-center bg-gray-50 transition-colors group"
+    >
+      {preview ? (
+        <>
+          <img src={preview} alt="preview" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            <span className="text-white text-sm font-medium flex items-center gap-2">
+              <FaCamera /> Change photo
+            </span>
+          </div>
+        </>
+      ) : (
+        <div className="flex flex-col items-center gap-2 text-gray-400 group-hover:text-dental-blue transition-colors">
+          <FaCamera className="text-3xl" />
+          <span className="text-sm font-medium">Upload item photo</span>
+          <span className="text-xs">PNG, JPG, WEBP · max 5 MB</span>
+        </div>
+      )}
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/webp"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) onFileChange(file);
+        }}
+      />
+    </div>
+  );
+}
+
+async function uploadItemImage(itemId: number, file: File): Promise<string | null> {
+  try {
+    const form = new FormData();
+    form.append("image", file);
+    const res = await apiFetch(`/api/inventory/${itemId}/image`, {
+      method: "POST",
+      body: form,
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.image_url ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export default function InventoryManagement() {
   const router = useRouter();
   const { t } = useTranslation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
 
-  useEffect(() => {
-    const fetchInventory = async () => {
-      try {
-        const res = await apiFetch(`/api/inventory`);
-        const data = await res.json();
-        const mapped = (data.data || []).map((item: any) => ({
-          id: Number(item.id),
-          name: item.name,
-          category: item.category || "General",
-          currentStock: item.quantity,
-          minimumStock: item.minimum_quantity,
-          unit: item.unit,
-          supplier: item.description || "",
-          lastRestocked: item.updated_at?.split("T")[0] || "",
-          status: item.quantity <= item.minimum_quantity ? "low" : "ok",
-        }));
-        setInventoryItems(mapped);
-      } catch (e) {
-        console.error("Failed to fetch inventory", e);
-      }
-    };
-    fetchInventory();
-  }, []);
+  const [addImageFile, setAddImageFile] = useState<File | null>(null);
+  const [addImagePreview, setAddImagePreview] = useState<string | null>(null);
+  const [editImageFile, setEditImageFile] = useState<File | null>(null);
+  const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
+
+  const fetchInventory = async () => {
+    try {
+      const res = await apiFetch(`/api/inventory`);
+      const data = await res.json();
+      const mapped = (data.data || []).map((item: any) => ({
+        id: Number(item.id),
+        name: item.name,
+        category: item.category || "General",
+        currentStock: item.quantity,
+        minimumStock: item.minimum_quantity,
+        unit: item.unit,
+        supplier: item.description || "",
+        lastRestocked: item.updated_at?.split("T")[0] || "",
+        status: item.quantity <= item.minimum_quantity ? "low" : "ok",
+        image_url: item.image_url ?? undefined,
+      }));
+      setInventoryItems(mapped);
+    } catch (e) {
+      console.error("Failed to fetch inventory", e);
+    }
+  };
+
+  useEffect(() => { fetchInventory(); }, []);
 
   const handleLogout = () => {
     safeStorage.removeItem("adminAuth");
@@ -97,24 +171,54 @@ export default function InventoryManagement() {
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case "Disposables":
-        return <FaBoxOpen className="text-blue-500" />;
-      case "Materials":
-        return <FaTeeth className="text-purple-500" />;
-      case "Medications":
-        return <FaSyringe className="text-green-500" />;
-      case "Instruments":
-        return <FaTooth className="text-orange-500" />;
-      default:
-        return <FaBoxes className="text-gray-500" />;
+      case "Disposables": return <FaBoxOpen className="text-blue-500" />;
+      case "Materials":   return <FaTeeth className="text-purple-500" />;
+      case "Medications": return <FaSyringe className="text-green-500" />;
+      case "Instruments": return <FaTooth className="text-orange-500" />;
+      default:            return <FaBoxes className="text-gray-500" />;
     }
+  };
+
+  const handleOpenEdit = (item: InventoryItem) => {
+    setSelectedItem(item);
+    setEditImageFile(null);
+    setEditImagePreview(item.image_url
+      ? `${API_URL}${item.image_url}`
+      : null);
+    setShowEditModal(true);
+  };
+
+  const handleAddClose = () => {
+    setShowAddModal(false);
+    setAddImageFile(null);
+    setAddImagePreview(null);
+  };
+
+  // Called after the backend creates the item and returns its id
+  const handleAfterAdd = async (newItemId: number) => {
+    if (addImageFile) await uploadItemImage(newItemId, addImageFile);
+    await fetchInventory();
+    handleAddClose();
+  };
+
+  const handleEditSave = async () => {
+    if (selectedItem && editImageFile) {
+      const url = await uploadItemImage(selectedItem.id, editImageFile);
+      if (url) {
+        setInventoryItems((prev) =>
+          prev.map((it) => it.id === selectedItem.id ? { ...it, image_url: url } : it)
+        );
+      }
+    }
+    setShowEditModal(false);
+    setEditImageFile(null);
+    setEditImagePreview(null);
   };
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <AdminSidebar activePage="inventory" sidebarOpen={sidebarOpen} onLogout={handleLogout} />
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col">
         <AdminPageHeader
           title={t("inventory.inventoryManagement")}
@@ -126,9 +230,7 @@ export default function InventoryManagement() {
           addLabel={t("inventory.addItem")}
         />
 
-        {/* Content */}
         <main className="flex-1 p-8 overflow-auto">
-          {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <StatsCard icon={FaBoxes} iconBgClass="bg-blue-100" iconColorClass="text-blue-600" value={inventoryItems.length} label={t("inventory.totalItems")} />
             <StatsCard icon={FaExclamationTriangle} iconBgClass="bg-red-100" iconColorClass="text-red-600" value={lowStockCount} label={t("inventory.lowStock")} />
@@ -147,7 +249,6 @@ export default function InventoryManagement() {
             onFilterChange={setSelectedCategory}
           />
 
-          {/* Inventory Table */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -166,8 +267,16 @@ export default function InventoryManagement() {
                     <tr key={item.id} className="hover:bg-gray-50 transition-colors">
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                            {getCategoryIcon(item.category)}
+                          <div className="w-10 h-10 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center flex-shrink-0">
+                            {item.image_url ? (
+                              <img
+                                src={`${API_URL}${item.image_url}`}
+                                alt={item.name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              getCategoryIcon(item.category)
+                            )}
                           </div>
                           <div>
                             <p className="font-semibold text-gray-900">{item.name}</p>
@@ -205,10 +314,7 @@ export default function InventoryManagement() {
                       <td className="py-4 px-6">
                         <div className="flex justify-center gap-2">
                           <button
-                            onClick={() => {
-                              setSelectedItem(item);
-                              setShowEditModal(true);
-                            }}
+                            onClick={() => handleOpenEdit(item)}
                             className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-dental-blue transition-colors"
                           >
                             <FaEdit />
@@ -228,8 +334,17 @@ export default function InventoryManagement() {
       </div>
 
       {/* Add Item Modal */}
-      <Modal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title={t("inventory.addNewItem")}>
+      <Modal isOpen={showAddModal} onClose={handleAddClose} title={t("inventory.addNewItem")}>
         <div className="space-y-4">
+          <FormField label="Item Photo">
+            <ImageUploadBox
+              preview={addImagePreview}
+              onFileChange={(file) => {
+                setAddImageFile(file);
+                setAddImagePreview(URL.createObjectURL(file));
+              }}
+            />
+          </FormField>
           <FormField label={t("inventory.itemName")}>
             <input type="text" placeholder={t("inventory.itemNamePlaceholder")} className={inputClass} />
           </FormField>
@@ -261,7 +376,7 @@ export default function InventoryManagement() {
           </div>
         </div>
         <div className="flex gap-3 mt-6">
-          <Button variant="outline" className="flex-1" onClick={() => setShowAddModal(false)}>
+          <Button variant="outline" className="flex-1" onClick={handleAddClose}>
             {t("common.cancel")}
           </Button>
           <Button className="flex-1 bg-dental-blue hover:bg-dental-blue/90">{t("inventory.addItem")}</Button>
@@ -273,6 +388,15 @@ export default function InventoryManagement() {
         {selectedItem && (
           <>
             <div className="space-y-4">
+              <FormField label="Item Photo">
+                <ImageUploadBox
+                  preview={editImagePreview}
+                  onFileChange={(file) => {
+                    setEditImageFile(file);
+                    setEditImagePreview(URL.createObjectURL(file));
+                  }}
+                />
+              </FormField>
               <FormField label={t("inventory.itemName")}>
                 <input type="text" defaultValue={selectedItem.name} className={inputClass} />
               </FormField>
@@ -289,7 +413,9 @@ export default function InventoryManagement() {
               <Button variant="outline" className="flex-1" onClick={() => setShowEditModal(false)}>
                 {t("common.cancel")}
               </Button>
-              <Button className="flex-1 bg-dental-blue hover:bg-dental-blue/90">{t("inventory.saveChanges")}</Button>
+              <Button className="flex-1 bg-dental-blue hover:bg-dental-blue/90" onClick={handleEditSave}>
+                {t("inventory.saveChanges")}
+              </Button>
             </div>
           </>
         )}

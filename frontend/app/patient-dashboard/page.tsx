@@ -102,13 +102,7 @@ export default function PatientDashboard() {
       description: t("patientDashboard.viewRecordsDesc"),
       icon: <FaClipboardList className="text-4xl text-dental-blue" />,
       href: "/medical-records",
-    },
-    {
-      title: t("patientDashboard.prescriptions"),
-      description: t("patientDashboard.prescriptionsDesc"),
-      icon: <FaPills className="text-4xl text-dental-blue" />,
-      href: "/prescriptions",
-    },
+    }
   ];
 
   return (
@@ -155,7 +149,7 @@ export default function PatientDashboard() {
         </div>
 
         {/* Quick Actions Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-8">
           {quickActions.map((action) => (
             <Link key={action.title} href={action.href} className="block group">
               <div className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] border-2 border-transparent hover:border-dental-blue/20">
