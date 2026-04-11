@@ -1,8 +1,12 @@
+"use client";
+
 import { ReactNode } from "react";
+import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
-import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
-import ImportExportMenu from "@/components/ui/ImportExportMenu";
 import { FaPlus } from "react-icons/fa";
+
+const LanguageSwitcher = dynamic(() => import("@/components/ui/LanguageSwitcher"), { ssr: false });
+const ImportExportMenu = dynamic(() => import("@/components/ui/ImportExportMenu"), { ssr: false });
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Row = Record<string, any>;
