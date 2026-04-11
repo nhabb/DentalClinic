@@ -9,6 +9,16 @@ import { safeStorage } from "@/lib/browser-compat";
 import { useTranslation } from "@/lib/i18n";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+} from "recharts";
+import {
   FaTooth,
   FaCalendarAlt,
   FaBoxes,
@@ -23,6 +33,8 @@ import {
   FaCalendarCheck,
   FaChevronRight,
   FaBars,
+  FaDollarSign,
+  FaWallet,
 } from "react-icons/fa";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
@@ -69,6 +81,10 @@ export default function AdminDashboard() {
   >([]);
   const [loading, setLoading] = useState(true);
   const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined);
+
+  // Financial state
+  const [kpis, setKpis] = useState<any>(null);
+  const [analyticsData, setAnalyticsData] = useState<any[]>([]);
 
   // Load user info from localStorage and resolve name from API
   useEffect(() => {
@@ -209,6 +225,72 @@ export default function AdminDashboard() {
       }
     };
     fetchLowStock();
+  }, []);
+
+  // Fetch financial KPIs and analytics (built from real endpoints)
+  useEffect(() => {
+    const fetchFinancials = async () => {
+      try {
+        const [summaryRes, paymentsRes, expensesRes] = await Promise.all([
+          apiFetch(`/api/payments/summary`),
+          apiFetch(`/api/payments?limit=500`),
+          apiFetch(`/api/expenses?limit=500`),
+        ]);
+
+        // Summary KPIs
+        if (summaryRes.ok) {
+          const s = await summaryRes.json();
+          setKpis({
+            total_income: Number(s.total_income ?? 0),
+            total_expenses: Number(s.total_expenses ?? 0),
+            net: Number(s.net ?? 0),
+            payments_count: s.payments_count ?? 0,
+          });
+        }
+
+        // Build monthly chart data for last 6 months
+        const payments: any[] = paymentsRes.ok ? ((await paymentsRes.json()).data ?? []) : [];
+        const expenses: any[] = expensesRes.ok ? ((await expensesRes.json()).data ?? []) : [];
+
+        // Generate last 6 month keys (YYYY-MM)
+        const monthKeys: string[] = [];
+        for (let i = 5; i >= 0; i--) {
+          const d = new Date();
+          d.setDate(1);
+          d.setMonth(d.getMonth() - i);
+          monthKeys.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+        }
+
+        const incomeByMonth: Record<string, number> = {};
+        const expensesByMonth: Record<string, number> = {};
+        monthKeys.forEach((k) => { incomeByMonth[k] = 0; expensesByMonth[k] = 0; });
+
+        payments.forEach((p: any) => {
+          const key = (p.created_at || "").slice(0, 7);
+          if (incomeByMonth[key] !== undefined) {
+            incomeByMonth[key] += Number(p.amount_paid ?? 0);
+          }
+        });
+
+        expenses.forEach((e: any) => {
+          const key = (e.expense_date || e.created_at || "").slice(0, 7);
+          if (expensesByMonth[key] !== undefined) {
+            expensesByMonth[key] += Number(e.amount ?? 0);
+          }
+        });
+
+        const formatted = monthKeys.map((k) => ({
+          month: k,
+          Income: incomeByMonth[k],
+          Expenses: expensesByMonth[k],
+          Net: incomeByMonth[k] - expensesByMonth[k],
+        }));
+        setAnalyticsData(formatted);
+      } catch (e) {
+        console.error("Failed to fetch financials", e);
+      }
+    };
+    fetchFinancials();
   }, []);
 
   const handleLogout = () => {
@@ -383,15 +465,11 @@ export default function AdminDashboard() {
         {/* Dashboard Content */}
         <main className="flex-1 p-8 overflow-auto">
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {/* Today's Appointments - shown for all roles */}
-            <div
-              className={`bg-white rounded-2xl p-6 shadow-sm border border-gray-100 ${userRole === "secretary" ? "col-span-2" : ""}`}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                  <FaCalendarCheck className="text-purple-600 text-xl" />
-                </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {/* Today's Appointments */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-4">
+                <FaCalendarCheck className="text-purple-600 text-xl" />
               </div>
               <p className="text-2xl font-bold text-gray-900">
                 {clinicStats.completedToday}/{clinicStats.todayAppointments}
@@ -401,13 +479,44 @@ export default function AdminDashboard() {
               </p>
             </div>
 
-            {/* Total Patients - shown for secretaries */}
+            {/* Total Income */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mb-4">
+                <FaDollarSign className="text-green-600 text-xl" />
+              </div>
+              <p className="text-2xl font-bold text-gray-900">
+                {kpis ? `$${kpis.total_income.toLocaleString()}` : "—"}
+              </p>
+              <p className="text-sm text-gray-500 mt-1">Total Income</p>
+            </div>
+
+            {/* Total Expenses */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mb-4">
+                <FaWallet className="text-orange-500 text-xl" />
+              </div>
+              <p className="text-2xl font-bold text-gray-900">
+                {kpis ? `$${kpis.total_expenses.toLocaleString()}` : "—"}
+              </p>
+              <p className="text-sm text-gray-500 mt-1">Total Expenses</p>
+            </div>
+
+            {/* Net Profit */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
+                <FaChartLine className="text-blue-600 text-xl" />
+              </div>
+              <p className={`text-2xl font-bold ${kpis && kpis.net < 0 ? "text-red-600" : "text-gray-900"}`}>
+                {kpis ? `$${kpis.net.toLocaleString()}` : "—"}
+              </p>
+              <p className="text-sm text-gray-500 mt-1">Net Profit</p>
+            </div>
+
+            {/* Total Patients - secretary only */}
             {userRole === "secretary" && (
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 col-span-2">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                    <FaUsers className="text-blue-600 text-xl" />
-                  </div>
+                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
+                  <FaUsers className="text-blue-600 text-xl" />
                 </div>
                 <p className="text-2xl font-bold text-gray-900">
                   {clinicStats.totalPatients}
@@ -522,6 +631,60 @@ export default function AdminDashboard() {
                   </p>
                 )}
               </div>
+            </div>
+          </div>
+
+          {/* ── Financial Overview ── */}
+          <div className="mt-8">
+            {/* Line Chart */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="text-base font-bold text-gray-900">Revenue vs Expenses</h3>
+                  <p className="text-xs text-gray-500">Last 6 months</p>
+                </div>
+                {kpis && (
+                  <div className="flex gap-4 text-sm">
+                    <span className="text-gray-500">
+                      Net profit:{" "}
+                      <span className="font-semibold text-gray-900">
+                        ${kpis.net.toLocaleString()}
+                      </span>
+                    </span>
+                  </div>
+                )}
+              </div>
+              {analyticsData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={280}>
+                  <LineChart data={analyticsData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis
+                      dataKey="month"
+                      tick={{ fontSize: 12, fill: "#9ca3af" }}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 12, fill: "#9ca3af" }}
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
+                    />
+                    <Tooltip
+                      formatter={(value: any, name: any) => [`$${Number(value).toLocaleString()}`, name]}
+                      contentStyle={{ borderRadius: "12px", border: "1px solid #e5e7eb", fontSize: 13 }}
+                    />
+                    <Legend wrapperStyle={{ fontSize: 13 }} />
+                    <Line type="monotone" dataKey="Income" stroke="#3b82f6" strokeWidth={2.5} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                    <Line type="monotone" dataKey="Expenses" stroke="#f97316" strokeWidth={2.5} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                    <Line type="monotone" dataKey="Net" stroke="#10b981" strokeWidth={2.5} strokeDasharray="5 5" dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-[280px] text-gray-400 text-sm">
+                  No financial data available
+                </div>
+              )}
             </div>
           </div>
         </main>

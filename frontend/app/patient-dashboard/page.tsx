@@ -44,45 +44,30 @@ export default function PatientDashboard() {
           if (saved) setPhotoUrl(saved);
         }
 
-        const [appointmentsRes, patientsRes] = await Promise.all([
-          apiFetch(`/api/appointments`),
-          apiFetch(`/api/patients`),
+        if (!dbUser) return;
+
+        const [upcomingRes, historyRes] = await Promise.all([
+          apiFetch(`/api/patient/appointments/upcoming?user_id=${dbUser.id}`),
+          apiFetch(`/api/patient/appointments/history?user_id=${dbUser.id}&limit=3`),
         ]);
-        const appointmentsData = await appointmentsRes.json();
-        const patientsData = await patientsRes.json();
+        const upcomingData = await upcomingRes.json();
+        const historyData = await historyRes.json();
 
-        const patient = (patientsData.data || []).find(
-          (p: any) => String(p.user_id) === String(dbUser?.id)
-        );
+        const mapAppt = (a: any) => ({
+          id: a.id,
+          date: new Date(a.appointment_date).toLocaleDateString(),
+          time: a.start_time
+            ? new Date(a.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+            : "",
+          doctor: a.users_appointments_doctor_idTousers
+            ? `Dr. ${a.users_appointments_doctor_idTousers.first_name} ${a.users_appointments_doctor_idTousers.last_name}`
+            : "Doctor",
+          type: a.reason || "Checkup",
+          status: a.status,
+        });
 
-        const today = new Date().toISOString().split("T")[0];
-        const all = (appointmentsData.data || []).filter(
-          (a: any) => patient && String(a.patient_id) === String(patient.id)
-        );
-
-        const upcoming = all
-          .filter((a: any) => a.appointment_date >= today && a.status !== "cancelled" && a.status !== "completed")
-          .map((a: any) => ({
-            id: a.id,
-            date: new Date(a.appointment_date).toLocaleDateString(),
-            time: a.start_time ? new Date(a.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "",
-            doctor: a.doctor ? `Dr. ${a.doctor.first_name} ${a.doctor.last_name}` : "Doctor",
-            type: a.reason || "Checkup",
-            status: a.status,
-          }));
-
-        const recent = all
-          .filter((a: any) => a.status === "completed")
-          .slice(0, 3)
-          .map((a: any) => ({
-            id: a.id,
-            date: new Date(a.appointment_date).toLocaleDateString(),
-            doctor: a.doctor ? `Dr. ${a.doctor.first_name} ${a.doctor.last_name}` : "Doctor",
-            type: a.reason || "Checkup",
-          }));
-
-        setUpcomingAppointments(upcoming);
-        setRecentVisits(recent);
+        setUpcomingAppointments((upcomingData.data || []).map(mapAppt));
+        setRecentVisits((historyData.data || []).map(mapAppt));
       } catch (e) {
         console.error("Failed to fetch patient data", e);
       }

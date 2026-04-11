@@ -161,10 +161,9 @@ export default function BookAppointment() {
     try {
       const params = new URLSearchParams({
         doctor_id: String(doctorId),
-        available_only: "true",
         limit: "500",
       });
-      const res = await apiFetch(`/api/appointment-slots?${params}`);
+      const res = await apiFetch(`/api/patient/available-slots?${params}`);
       const data = await res.json();
       const dates = new Set<string>(
         (data.data || []).map((s: any) =>
@@ -187,10 +186,9 @@ export default function BookAppointment() {
       const params = new URLSearchParams({
         doctor_id: String(doctorId),
         date: dateStr,
-        available_only: "true",
         limit: "100",
       });
-      const res = await apiFetch(`/api/appointment-slots?${params}`);
+      const res = await apiFetch(`/api/patient/available-slots?${params}`);
       const data = await res.json();
       const slots = (data.data || []).map((s: any) => ({
         time: new Date(s.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "UTC" }),
@@ -215,23 +213,24 @@ export default function BookAppointment() {
       if (!meRes.ok) throw new Error("Could not resolve your account. Please log in again.");
       const dbUser = await meRes.json();
 
-      const [patientsRes, slotsRes] = await Promise.all([
-        apiFetch(`/api/patients`),
-        apiFetch(`/api/appointment-slots`),
-      ]);
-      const patientsData = await patientsRes.json();
-      const slotsData = await slotsRes.json();
-
-      const patient = (patientsData.data || []).find(
-        (p: any) => String(p.user_id) === String(dbUser.id)
-      );
+      // Resolve patient profile ID
+      const profileRes = await apiFetch(`/api/patients/by-user/${dbUser.id}`);
+      if (!profileRes.ok) {
+        throw new Error("Patient profile not found. Please complete your profile before booking.");
+      }
+      const profile = await profileRes.json();
 
       const pad2 = (n: number) => String(n).padStart(2, "0");
       const dateStr = `${selectedDate.getFullYear()}-${pad2(selectedDate.getMonth() + 1)}-${pad2(selectedDate.getDate())}`;
+
+      const slotsRes = await apiFetch(
+        `/api/patient/available-slots?doctor_id=${selectedDoctor}&date=${dateStr}&limit=100`
+      );
+      const slotsData = await slotsRes.json();
+
       const slot = (slotsData.data || []).find((s: any) => {
-        const slotDate = s.slot_date ? new Date(s.slot_date).toLocaleDateString("en-CA") : "";
         const slotTime = new Date(s.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "UTC" });
-        return Number(s.doctor_id) === selectedDoctor && slotDate === dateStr && slotTime === selectedTime && !s.is_booked;
+        return slotTime === selectedTime;
       });
 
       if (!slot) {
@@ -242,7 +241,7 @@ export default function BookAppointment() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          patient_id: patient ? Number(patient.id) : 1,
+          patient_id: Number(profile.id),
           slot_id: Number(slot.id),
           reason: selectedProcedure || serviceType || "Checkup",
         }),

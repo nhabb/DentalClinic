@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { apiFetch } from "@/lib/api/client";
 import { Avatar } from "@/components/ui/Avatar";
 import { PatientPageHeader } from "@/components/ui/PatientPageHeader";
 import { Button } from "@/components/ui/button";
@@ -63,36 +64,52 @@ export default function MedicalRecords() {
   >([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch patient profile
   useEffect(() => {
-    const fetchPatientInfo = async () => {
-      // API call removed
-    };
-    fetchPatientInfo();
-  }, []);
+    const fetchAll = async () => {
+      try {
+        const meRes = await apiFetch(`/api/auth/me`);
+        if (!meRes.ok) return;
+        const me = await meRes.json();
 
-  // Fetch visit history (medical records)
-  useEffect(() => {
-    const fetchVisitHistory = async () => {
-      // API call removed
-    };
-    fetchVisitHistory();
-  }, []);
+        setPatientInfo((prev) => ({
+          ...prev,
+          name: `${me.first_name || ""} ${me.last_name || ""}`.trim(),
+          dateOfBirth: me.date_of_birth || "",
+          allergies: me.allergies ? me.allergies.split(",").map((s: string) => s.trim()).filter(Boolean) : [],
+          medications: me.current_medications ? me.current_medications.split(",").map((s: string) => s.trim()).filter(Boolean) : [],
+        }));
 
-  // Fetch documents
-  useEffect(() => {
-    const fetchDocuments = async () => {
-      // API call removed
-    };
-    fetchDocuments();
-  }, []);
+        const recordsRes = await apiFetch(`/api/patient/patient-records?user_id=${me.id}&limit=50`);
+        if (!recordsRes.ok) return;
+        const recordsData = await recordsRes.json();
 
-  // Fetch dental chart
-  useEffect(() => {
-    const fetchDentalChart = async () => {
-      setLoading(false);
+        const mapped = (recordsData.data || []).map((r: any) => ({
+          id: Number(r.id),
+          date: r.treatment_date || r.created_at,
+          type: r.title || r.record_type,
+          doctor: r.users
+            ? `Dr. ${r.users.first_name} ${r.users.last_name}`
+            : "Doctor",
+          notes: r.description || "",
+          treatments: r.title ? [r.title] : [],
+          cost: "—",
+        }));
+
+        if (mapped.length > 0) {
+          setPatientInfo((prev) => ({
+            ...prev,
+            lastVisit: mapped[0].date,
+          }));
+        }
+
+        setVisitHistory(mapped);
+      } catch (e) {
+        console.error("Failed to fetch medical records", e);
+      } finally {
+        setLoading(false);
+      }
     };
-    fetchDentalChart();
+    fetchAll();
   }, []);
 
   // Download document handler
