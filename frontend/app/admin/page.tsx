@@ -68,6 +68,7 @@ export default function AdminDashboard() {
     }[]
   >([]);
   const [loading, setLoading] = useState(true);
+  const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined);
 
   // Load user info from localStorage and resolve name from API
   useEffect(() => {
@@ -85,6 +86,10 @@ export default function AdminDashboard() {
         const parsed = JSON.parse(storedUser);
         const email = parsed.email;
         if (email) {
+          // Load persisted profile photo
+          const saved = localStorage.getItem(`brightsmile_photo_${email}`);
+          if (saved) setPhotoUrl(saved);
+
           try {
             const res = await fetch(`${API_URL}/api/users/by-email?email=${encodeURIComponent(email)}`);
             if (res.ok) {
@@ -112,6 +117,12 @@ export default function AdminDashboard() {
 
     resolveUser();
   }, []);
+
+  const handlePhotoUpload = (dataUrl: string) => {
+    setPhotoUrl(dataUrl);
+    const email = user?.email;
+    if (email) localStorage.setItem(`brightsmile_photo_${email}`, dataUrl);
+  };
 
   // Fetch admin stats
   useEffect(() => {
@@ -207,7 +218,7 @@ export default function AdminDashboard() {
     safeStorage.removeItem("userRole");
     safeStorage.removeItem("doctorId");
     safeStorage.removeItem("assignedDoctorIds");
-    router.push("/login");
+    router.push("/");
   };
 
   const getStatusBadge = (status: string) => {
@@ -357,7 +368,7 @@ export default function AdminDashboard() {
           <div className="flex items-center gap-4">
             <LanguageSwitcher />
             <div className="flex items-center gap-3 pl-4 rtl:pl-0 rtl:pr-4 border-l rtl:border-l-0 rtl:border-r border-gray-200">
-              <Avatar name={displayName} size="md" />
+              <Avatar name={displayName} size="md" src={photoUrl} onUpload={handlePhotoUpload} />
               <div className="hidden sm:block">
                 <p className="text-sm font-medium text-gray-900">
                   {userRole === "doctor" ? `${t("adminLogin.doctor")}. ` : ""}

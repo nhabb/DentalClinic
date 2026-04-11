@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/i18n";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { apiFetch } from '@/lib/api/client';
-import { supabase } from "@/lib/supabase/client";
+import { Avatar } from "@/components/ui/Avatar";
 import {
   FaTooth,
   FaCalendarAlt,
@@ -25,63 +25,75 @@ export default function PatientDashboard() {
   const { t } = useTranslation();
   const [upcomingAppointments, setUpcomingAppointments] = useState<any[]>([]);
   const [recentVisits, setRecentVisits] = useState<any[]>([]);
+  const [patientName, setPatientName] = useState("");
+  const [patientEmail, setPatientEmail] = useState("");
+  const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    const fetchAppointments = async () => {
+    const fetchData = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        const [appointmentsRes, usersRes] = await Promise.all([
+        // Resolve current user from backend JWT
+        const meRes = await apiFetch(`/api/auth/me`);
+        const dbUser = meRes.ok ? await meRes.json() : null;
+
+        if (dbUser) {
+          const name = `${dbUser.first_name || ""} ${dbUser.last_name || ""}`.trim();
+          setPatientName(name);
+          setPatientEmail(dbUser.email || "");
+          const saved = localStorage.getItem(`brightsmile_photo_${dbUser.email}`);
+          if (saved) setPhotoUrl(saved);
+        }
+
+        const [appointmentsRes, patientsRes] = await Promise.all([
           apiFetch(`/api/appointments`),
-          apiFetch(`/api/users`),
+          apiFetch(`/api/patients`),
         ]);
         const appointmentsData = await appointmentsRes.json();
-        const users: any[] = await usersRes.json();
-
-        const dbUser = users.find((u) => u.email === user?.email);
-        const patientsRes = await apiFetch(`/api/patients`);
         const patientsData = await patientsRes.json();
-        const patient = (patientsData.data || []).find((p: any) => p.user_id === dbUser?.id || p.user_id === String(dbUser?.id));
+
+        const patient = (patientsData.data || []).find(
+          (p: any) => String(p.user_id) === String(dbUser?.id)
+        );
 
         const today = new Date().toISOString().split("T")[0];
-        const all = (appointmentsData.data || []).filter((a: any) =>
-          patient && (a.patient_id === patient.id || a.patient_id === String(patient.id))
+        const all = (appointmentsData.data || []).filter(
+          (a: any) => patient && String(a.patient_id) === String(patient.id)
         );
 
         const upcoming = all
           .filter((a: any) => a.appointment_date >= today && a.status !== "cancelled" && a.status !== "completed")
-          .map((a: any) => {
-            const doctor = users.find((u) => u.id === a.created_by || u.id === String(a.created_by));
-            return {
-              id: a.id,
-              date: new Date(a.appointment_date).toLocaleDateString(),
-              time: a.start_time ? new Date(a.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "",
-              doctor: doctor ? `Dr. ${doctor.first_name} ${doctor.last_name}` : "Doctor",
-              type: a.reason || "Checkup",
-              status: a.status,
-            };
-          });
+          .map((a: any) => ({
+            id: a.id,
+            date: new Date(a.appointment_date).toLocaleDateString(),
+            time: a.start_time ? new Date(a.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "",
+            doctor: a.doctor ? `Dr. ${a.doctor.first_name} ${a.doctor.last_name}` : "Doctor",
+            type: a.reason || "Checkup",
+            status: a.status,
+          }));
 
         const recent = all
           .filter((a: any) => a.status === "completed")
           .slice(0, 3)
-          .map((a: any) => {
-            const doctor = users.find((u) => u.id === a.created_by || u.id === String(a.created_by));
-            return {
-              id: a.id,
-              date: new Date(a.appointment_date).toLocaleDateString(),
-              doctor: doctor ? `Dr. ${doctor.first_name} ${doctor.last_name}` : "Doctor",
-              type: a.reason || "Checkup",
-            };
-          });
+          .map((a: any) => ({
+            id: a.id,
+            date: new Date(a.appointment_date).toLocaleDateString(),
+            doctor: a.doctor ? `Dr. ${a.doctor.first_name} ${a.doctor.last_name}` : "Doctor",
+            type: a.reason || "Checkup",
+          }));
 
         setUpcomingAppointments(upcoming);
         setRecentVisits(recent);
       } catch (e) {
-        console.error("Failed to fetch appointments", e);
+        console.error("Failed to fetch patient data", e);
       }
     };
-    fetchAppointments();
+    fetchData();
   }, []);
+
+  const handlePhotoUpload = (dataUrl: string) => {
+    setPhotoUrl(dataUrl);
+    if (patientEmail) localStorage.setItem(`brightsmile_photo_${patientEmail}`, dataUrl);
+  };
 
   const handleLogout = () => {
     safeStorage.removeItem("patientAuth");
@@ -102,13 +114,7 @@ export default function PatientDashboard() {
       description: t("patientDashboard.viewRecordsDesc"),
       icon: <FaClipboardList className="text-4xl text-dental-blue" />,
       href: "/medical-records",
-    },
-    {
-      title: t("patientDashboard.prescriptions"),
-      description: t("patientDashboard.prescriptionsDesc"),
-      icon: <FaPills className="text-4xl text-dental-blue" />,
-      href: "/prescriptions",
-    },
+    }
   ];
 
   return (
@@ -128,10 +134,12 @@ export default function PatientDashboard() {
             {/* Actions */}
             <div className="flex items-center gap-3">
               <LanguageSwitcher />
-              {/* Avatar */}
-              <div className="w-10 h-10 bg-gradient-to-r from-dental-blue to-dental-teal rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                P
-              </div>
+              <Avatar
+                name={patientName || "Patient"}
+                size="md"
+                src={photoUrl}
+                onUpload={handlePhotoUpload}
+              />
 
               <button
                 onClick={handleLogout}
@@ -155,7 +163,7 @@ export default function PatientDashboard() {
         </div>
 
         {/* Quick Actions Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-8">
           {quickActions.map((action) => (
             <Link key={action.title} href={action.href} className="block group">
               <div className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] border-2 border-transparent hover:border-dental-blue/20">

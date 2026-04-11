@@ -207,7 +207,7 @@ export default function AppointmentsManagement() {
     safeStorage.removeItem("userRole");
     safeStorage.removeItem("doctorId");
     safeStorage.removeItem("assignedDoctorIds");
-    router.push("/admin/login");
+    router.push("/login");
   };
 
   const formatDate = (date: Date) => {
