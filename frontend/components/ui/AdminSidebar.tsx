@@ -9,9 +9,11 @@ import {
   FaBoxes,
   FaUsers,
   FaSignOutAlt,
+  FaMoneyBillWave,
+  FaCreditCard,
 } from "react-icons/fa";
 
-type ActivePage = "dashboard" | "appointments" | "inventory" | "patients" | "notifications";
+type ActivePage = "dashboard" | "appointments" | "inventory" | "patients" | "notifications" | "expenses" | "payments";
 
 type Props = {
   activePage: ActivePage;
@@ -20,10 +22,12 @@ type Props = {
 };
 
 const navItems = [
-  { id: "dashboard",     href: "/admin",                icon: FaChartLine,   labelKey: "nav.dashboard"     },
-  { id: "appointments",  href: "/admin/appointments",   icon: FaCalendarAlt, labelKey: "nav.appointments"  },
-  { id: "inventory",     href: "/admin/inventory",      icon: FaBoxes,       labelKey: "nav.inventory"     },
-  { id: "patients",      href: "/admin/patients",       icon: FaUsers,       labelKey: "nav.patients"      },
+  { id: "dashboard",     href: "/admin",                icon: FaChartLine,      labelKey: "nav.dashboard"     },
+  { id: "appointments",  href: "/admin/appointments",   icon: FaCalendarAlt,    labelKey: "nav.appointments"  },
+  { id: "inventory",     href: "/admin/inventory",      icon: FaBoxes,          labelKey: "nav.inventory"     },
+  { id: "patients",      href: "/admin/patients",       icon: FaUsers,          labelKey: "nav.patients"      },
+  { id: "expenses",      href: "/admin/expenses",       icon: FaMoneyBillWave,  labelKey: "nav.expenses"      },
+  { id: "payments",      href: "/admin/payments",       icon: FaCreditCard,     labelKey: "nav.payments"      },
 ] as const;
 
 export default function AdminSidebar({ activePage, sidebarOpen, onLogout }: Props) {
