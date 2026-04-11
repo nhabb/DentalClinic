@@ -104,8 +104,10 @@ export default function BookAppointment() {
   // API state
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>(fallbackDoctors);
+  const [availableDates, setAvailableDates] = useState<Set<string>>(new Set());
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [loadingDoctors, setLoadingDoctors] = useState(false);
+  const [loadingDates, setLoadingDates] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -124,11 +126,19 @@ export default function BookAppointment() {
     }
   }, [selectedDate, selectedDoctor]);
 
+  // Fetch all available dates for the selected doctor when entering step 3
+  useEffect(() => {
+    if (step === 3 && selectedDoctor) {
+      fetchAvailableDates(selectedDoctor);
+    }
+  }, [step, selectedDoctor]);
+
   const fetchDoctors = async () => {
     setLoadingDoctors(true);
     try {
-      const res = await apiFetch(`/api/users`);
-      const users: any[] = await res.json();
+      const res = await apiFetch(`/api/users/doctors`);
+      const json = await res.json();
+      const users: any[] = Array.isArray(json) ? json : (json.data ?? []);
       const mapped = users
         .filter((u) => u.role === "admin" || u.role === "doctor")
         .map((u) => ({
@@ -143,6 +153,29 @@ export default function BookAppointment() {
       console.error("Failed to fetch doctors", e);
     } finally {
       setLoadingDoctors(false);
+    }
+  };
+
+  const fetchAvailableDates = async (doctorId: number) => {
+    setLoadingDates(true);
+    try {
+      const params = new URLSearchParams({
+        doctor_id: String(doctorId),
+        available_only: "true",
+        limit: "500",
+      });
+      const res = await apiFetch(`/api/appointment-slots?${params}`);
+      const data = await res.json();
+      const dates = new Set<string>(
+        (data.data || []).map((s: any) =>
+          (s.slot_date || s.start_time || "").slice(0, 10)
+        )
+      );
+      setAvailableDates(dates);
+    } catch {
+      setAvailableDates(new Set());
+    } finally {
+      setLoadingDates(false);
     }
   };
 
@@ -177,24 +210,22 @@ export default function BookAppointment() {
     setSubmitting(true);
     setError(null);
     try {
-      const { supabase } = await import("@/lib/supabase/client");
-      const { data: { user } } = await supabase.auth.getUser();
+      // Resolve current user via backend JWT
+      const meRes = await apiFetch(`/api/auth/me`);
+      if (!meRes.ok) throw new Error("Could not resolve your account. Please log in again.");
+      const dbUser = await meRes.json();
 
-      const [patientsRes, usersRes, slotsRes] = await Promise.all([
+      const [patientsRes, slotsRes] = await Promise.all([
         apiFetch(`/api/patients`),
-        apiFetch(`/api/users`),
         apiFetch(`/api/appointment-slots`),
       ]);
       const patientsData = await patientsRes.json();
-      const users: any[] = await usersRes.json();
       const slotsData = await slotsRes.json();
 
-      const dbUser = users.find((u) => u.email === user?.email);
-      const patient = (patientsData.data || []).find((p: any) =>
-        p.user_id === dbUser?.id || p.user_id === String(dbUser?.id)
+      const patient = (patientsData.data || []).find(
+        (p: any) => String(p.user_id) === String(dbUser.id)
       );
 
-      // Find matching slot by doctor + date + time
       const pad2 = (n: number) => String(n).padStart(2, "0");
       const dateStr = `${selectedDate.getFullYear()}-${pad2(selectedDate.getMonth() + 1)}-${pad2(selectedDate.getDate())}`;
       const slot = (slotsData.data || []).find((s: any) => {
@@ -382,55 +413,59 @@ export default function BookAppointment() {
                 </div>
               ) : (
                 <div className="grid md:grid-cols-3 gap-6">
-                  {doctors.map((doctor) => (
-                    <button
-                      key={doctor.id}
-                      onClick={() =>
-                        doctor.available && setSelectedDoctor(doctor.id)
-                      }
-                      disabled={!doctor.available}
-                      className={`relative p-6 rounded-2xl border-2 transition-all text-left ${
-                        !doctor.available
-                          ? "border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed"
-                          : selectedDoctor === doctor.id
-                            ? "border-dental-blue bg-dental-blue/5 shadow-lg"
-                            : "border-gray-200 hover:border-dental-blue/50 hover:shadow-md"
-                      }`}
-                    >
-                      <div className="mb-4 mx-auto w-fit">
-                        <Avatar name={doctor.name} size="xl" />
-                      </div>
-                      <h3 className="text-lg font-bold text-gray-900 text-center">
-                        {doctor.name}
-                      </h3>
-                      <p className="text-dental-blue text-sm text-center font-medium mb-2">
-                        {doctor.specialty}
-                      </p>
-                      {doctor.bio && (
-                        <p className="text-gray-500 text-xs text-center">
-                          {doctor.bio}
-                        </p>
-                      )}
-                      <div className="flex items-center justify-center gap-1 mt-3">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <FaStar
-                            key={star}
-                            className="text-yellow-400 text-sm"
-                          />
-                        ))}
-                      </div>
-                      {!doctor.available && (
-                        <span className="inline-block mt-3 text-xs font-medium text-red-500 bg-red-50 px-2 py-1 rounded-full w-full text-center">
-                          Not Available Today
-                        </span>
-                      )}
-                      {doctor.available && selectedDoctor === doctor.id && (
-                        <div className="absolute top-4 right-4 w-8 h-8 bg-dental-blue rounded-full flex items-center justify-center">
-                          <FaCheckCircle className="text-white" />
+                  {doctors.map((doctor) => {
+                    const isSelected = selectedDoctor === doctor.id;
+                    return (
+                      <button
+                        key={doctor.id}
+                        onClick={() => {
+                          if (!doctor.available) return;
+                          setSelectedDoctor(isSelected ? null : doctor.id);
+                        }}
+                        disabled={!doctor.available}
+                        className={`relative p-6 rounded-2xl border-2 transition-all text-left ${
+                          !doctor.available
+                            ? "border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed"
+                            : isSelected
+                              ? "border-dental-blue bg-dental-blue/5 shadow-lg"
+                              : "border-gray-200 hover:border-dental-blue/50 hover:shadow-md"
+                        }`}
+                      >
+                        <div className="mb-4 mx-auto w-fit">
+                          <Avatar name={doctor.name} size="xl" />
                         </div>
-                      )}
-                    </button>
-                  ))}
+                        <h3 className="text-lg font-bold text-gray-900 text-center">
+                          {doctor.name}
+                        </h3>
+                        <p className="text-dental-blue text-sm text-center font-medium mb-2">
+                          {doctor.specialty}
+                        </p>
+                        {doctor.bio && (
+                          <p className="text-gray-500 text-xs text-center">
+                            {doctor.bio}
+                          </p>
+                        )}
+                        <div className="flex items-center justify-center gap-1 mt-3">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <FaStar key={star} className="text-yellow-400 text-sm" />
+                          ))}
+                        </div>
+                        {!doctor.available && (
+                          <span className="inline-block mt-3 text-xs font-medium text-red-500 bg-red-50 px-2 py-1 rounded-full w-full text-center">
+                            Not Available Today
+                          </span>
+                        )}
+                        {doctor.available && isSelected && (
+                          <div className="absolute top-3 right-3 flex flex-col items-center gap-1">
+                            <div className="w-8 h-8 bg-dental-blue rounded-full flex items-center justify-center">
+                              <FaCheckCircle className="text-white" />
+                            </div>
+                            <span className="text-[10px] text-dental-blue font-medium">tap to deselect</span>
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -573,11 +608,27 @@ export default function BookAppointment() {
               </p>
 
               <div className="flex justify-center">
+                {loadingDates ? (
+                  <div className="flex items-center gap-3 py-16 text-gray-500">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-dental-blue" />
+                    Loading available dates...
+                  </div>
+                ) : (
                 <Calendar
                   mode="single"
                   selected={selectedDate}
                   onSelect={setSelectedDate}
-                  disabled={(date) => date < new Date() || date.getDay() === 0}
+                  disabled={(date) => {
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    if (date < today || date.getDay() === 0) return true;
+                    if (availableDates.size > 0) {
+                      const pad = (n: number) => String(n).padStart(2, "0");
+                      const key = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+                      if (!availableDates.has(key)) return true;
+                    }
+                    return false;
+                  }}
                   className="rounded-2xl border-2 border-gray-200 p-4"
                   classNames={{
                     months: "space-y-4",
@@ -603,6 +654,9 @@ export default function BookAppointment() {
                     day_disabled: "text-gray-300 hover:bg-transparent",
                   }}
                 />
+              // </div>
+
+                )}
               </div>
 
               {selectedDate && (
@@ -649,38 +703,47 @@ export default function BookAppointment() {
                 </div>
               ) : (
                 <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-4">
-                  {timeSlots.map((slot) => (
-                    <button
-                      key={slot.time}
-                      onClick={() =>
-                        slot.available && setSelectedTime(slot.time)
-                      }
-                      disabled={!slot.available}
-                      className={`p-4 rounded-xl border-2 font-medium transition-all ${
-                        !slot.available
-                          ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed line-through"
-                          : selectedTime === slot.time
-                            ? "border-dental-blue bg-dental-blue text-white shadow-lg shadow-dental-blue/30"
-                            : "border-gray-200 hover:border-dental-blue/50 text-gray-700 hover:bg-gray-50"
-                      }`}
-                    >
-                      <FaClock
-                        className={`mx-auto mb-2 ${
+                  {timeSlots.map((slot) => {
+                    const isSelected = selectedTime === slot.time;
+                    return (
+                      <button
+                        key={slot.time}
+                        onClick={() => {
+                          if (!slot.available) return;
+                          setSelectedTime(isSelected ? null : slot.time);
+                        }}
+                        disabled={!slot.available}
+                        className={`p-4 rounded-xl border-2 font-medium transition-all ${
                           !slot.available
-                            ? "text-gray-400"
-                            : selectedTime === slot.time
-                              ? "text-white"
-                              : "text-dental-blue"
+                            ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed line-through"
+                            : isSelected
+                              ? "border-dental-blue bg-dental-blue text-white shadow-lg shadow-dental-blue/30"
+                              : "border-gray-200 hover:border-dental-blue/50 text-gray-700 hover:bg-gray-50"
                         }`}
-                      />
-                      {slot.time}
-                      {!slot.available && (
-                        <span className="block text-xs mt-1 text-gray-400">
-                          Booked
-                        </span>
-                      )}
-                    </button>
-                  ))}
+                      >
+                        <FaClock
+                          className={`mx-auto mb-2 ${
+                            !slot.available
+                              ? "text-gray-400"
+                              : isSelected
+                                ? "text-white"
+                                : "text-dental-blue"
+                          }`}
+                        />
+                        {slot.time}
+                        {isSelected && (
+                          <span className="block text-[10px] mt-1 text-white/80">
+                            tap to deselect
+                          </span>
+                        )}
+                        {!slot.available && (
+                          <span className="block text-xs mt-1 text-gray-400">
+                            Booked
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
 
