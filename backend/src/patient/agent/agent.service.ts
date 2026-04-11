@@ -6,6 +6,8 @@ import { PatientsService } from '../patients/patients.service';
 import { InventoryService } from '../../doctor/inventory/inventory.service';
 import { UsersService } from '../../shared/users/users.service';
 import { NotificationsService } from '../../shared/notifications/notifications.service';
+import { PaymentsService } from '../../doctor/payments/payments.service';
+import { ExpensesService } from '../../doctor/expenses/expenses.service';
 import { AGENT_TOOLS } from './agent.tools';
 
 export interface ChatMessage {
@@ -29,12 +31,13 @@ export class AgentService {
     private readonly inventory: InventoryService,
     private readonly users: UsersService,
     private readonly notifications: NotificationsService,
+    private readonly payments: PaymentsService,
+    private readonly expenses: ExpensesService,
   ) {}
 
   async chat(messages: ChatMessage[], context: { doctorName: string; doctorId?: number }): Promise<string> {
     const today = new Date().toLocaleDateString('en-CA');
 
-    // Resolve real name from DB if we have an ID
     let displayName = context.doctorName;
     if (context.doctorId) {
       try {
@@ -44,7 +47,7 @@ export class AgentService {
     }
 
     const systemPrompt = `You are the AI assistant for BrightSmile Dental Clinic's admin panel.
-You help doctors and staff manage appointments, patients, inventory, and clinic operations.
+You help doctors and staff manage appointments, patients, inventory, and clinic finances.
 Today's date is ${today} (YYYY-MM-DD format). Always use this exact format when passing dates to tools.
 You are speaking with Dr. ${displayName}${context.doctorId ? ` (Doctor ID: ${context.doctorId})` : ''}.
 When the user asks about "my appointments" or "my patients", use doctor_id: ${context.doctorId ?? 'unknown'} in the filter.
@@ -55,7 +58,14 @@ Guidelines:
 - Always confirm before taking irreversible actions (cancel, delete).
 - If a tool call fails, explain the error clearly.
 - Appointment flow: scheduled → confirmed → completed. cancelled and no_show are terminal states.
-- Always pass dates in YYYY-MM-DD format (e.g., ${today}).`;
+- Always pass dates in YYYY-MM-DD format (e.g., ${today}).
+
+Financial guidelines:
+- For money questions use get_financial_kpis first for an overview.
+- Use get_aging_report to identify overdue payments.
+- Use get_patient_financials to see what a specific patient owes.
+- Amounts are in the clinic's local currency.
+- When recording a payment use record_payment with the amount received this time (it accumulates automatically).`;
 
     let openaiMessages: OpenAI.ChatCompletionMessageParam[] = [
       { role: 'system', content: systemPrompt },
@@ -68,7 +78,6 @@ Guidelines:
       messages: openaiMessages,
     });
 
-    // Tool use loop
     while (response.choices[0].finish_reason === 'tool_calls') {
       const assistantMessage = response.choices[0].message;
       openaiMessages.push(assistantMessage);
@@ -78,11 +87,7 @@ Guidelines:
           const fn = (call as any).function;
           const input = JSON.parse(fn.arguments);
           const result = await this.executeTool(fn.name, input);
-          return {
-            role: 'tool' as const,
-            tool_call_id: call.id,
-            content: result,
-          };
+          return { role: 'tool' as const, tool_call_id: call.id, content: result };
         }),
       );
 
@@ -101,7 +106,7 @@ Guidelines:
   private async executeTool(name: string, input: Record<string, any>): Promise<string> {
     try {
       switch (name) {
-        // ── Appointments ──────────────────────────────────────────
+        // ── Appointments ───────────────────────────────────────────
         case 'list_appointments':
           return serialize(await this.appointments.findAll({
             doctor_id: input.doctor_id,
@@ -156,6 +161,72 @@ Guidelines:
         case 'send_notification':
           await this.notifications.create({ user_id: BigInt(input.user_id), title: input.title, message: input.message, type: 'appointment_booked' });
           return serialize({ success: true });
+
+        // ── Payments ───────────────────────────────────────────────
+        case 'get_financial_kpis':
+          return serialize(await this.payments.getKpis());
+
+        case 'get_financial_summary':
+          return serialize(await this.payments.getSummary({ from: input.from, to: input.to }));
+
+        case 'get_payments_analytics':
+          return serialize(await this.payments.getAnalytics(input.months ?? 12));
+
+        case 'get_outstanding_payments':
+          return serialize(await this.payments.getOutstanding());
+
+        case 'get_aging_report':
+          return serialize(await this.payments.getAging());
+
+        case 'get_patient_financials':
+          return serialize(await this.payments.getPatientFinancials(input.patient_id ? BigInt(input.patient_id) : undefined));
+
+        case 'list_payments':
+          return serialize(await this.payments.findAll({
+            patient_id: input.patient_id,
+            status: input.status,
+            from: input.from,
+            to: input.to,
+            page: input.page ?? 1,
+            limit: input.limit ?? 20,
+          }));
+
+        case 'create_payment':
+          return serialize(await this.payments.create({
+            patient_id: input.patient_id,
+            appointment_id: input.appointment_id,
+            amount: input.amount,
+            payment_method: input.payment_method ?? 'cash',
+            description: input.description,
+          }));
+
+        case 'record_payment':
+          return serialize(await this.payments.updateStatus(BigInt(input.id), {
+            amount_paid: input.amount_paid,
+            paid_at: input.paid_at,
+          }));
+
+        // ── Expenses ───────────────────────────────────────────────
+        case 'list_expenses':
+          return serialize(await this.expenses.findAll({
+            category: input.category,
+            from: input.from,
+            to: input.to,
+            page: input.page ?? 1,
+            limit: input.limit ?? 20,
+          }));
+
+        case 'create_expense':
+          return serialize(await this.expenses.create({
+            title: input.title,
+            category: input.category ?? 'other',
+            amount: input.amount,
+            description: input.description,
+            expense_date: input.expense_date,
+          }));
+
+        case 'get_expenses_analytics':
+          return serialize(await this.expenses.getAnalytics(input.months ?? 12));
 
         default:
           return JSON.stringify({ error: `Unknown tool: ${name}` });

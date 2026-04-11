@@ -40,6 +40,38 @@ export class PaymentsController {
     return this.paymentsService.getSummary({ from, to });
   }
 
+  @Get('outstanding')
+  @ApiOperation({ summary: 'All unpaid and partially paid invoices with remaining balance' })
+  getOutstanding() {
+    return this.paymentsService.getOutstanding();
+  }
+
+  @Get('analytics')
+  @ApiOperation({ summary: 'Monthly income/expense trends, payment method breakdown, status counts' })
+  @ApiQuery({ name: 'months', required: false, type: Number, description: 'Number of past months (default 12)' })
+  getAnalytics(@Query('months', new DefaultValuePipe(12), ParseIntPipe) months: number) {
+    return this.paymentsService.getAnalytics(months);
+  }
+
+  @Get('kpis')
+  @ApiOperation({ summary: 'Key financial KPIs: collection rate, net profit, this-month vs last-month growth' })
+  getKpis() {
+    return this.paymentsService.getKpis();
+  }
+
+  @Get('aging')
+  @ApiOperation({ summary: 'Accounts-receivable aging: outstanding debt bucketed by 0-30, 31-60, 61-90, 90+ days' })
+  getAging() {
+    return this.paymentsService.getAging();
+  }
+
+  @Get('patients/report')
+  @ApiOperation({ summary: 'Per-patient financial summary: billed, paid, outstanding, collection rate' })
+  @ApiQuery({ name: 'patient_id', required: false, type: Number, description: 'Filter to one patient' })
+  getPatientFinancials(@Query('patient_id') patientId?: string) {
+    return this.paymentsService.getPatientFinancials(patientId ? BigInt(patientId) : undefined);
+  }
+
   @Get()
   @ApiOperation({ summary: 'List payments with optional filters' })
   @ApiQuery({ name: 'patient_id', required: false, type: Number })

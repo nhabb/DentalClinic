@@ -30,6 +30,13 @@ export class ExpensesController {
     return this.expensesService.create(dto);
   }
 
+  @Get('analytics')
+  @ApiOperation({ summary: 'Monthly expense trends and breakdown by category' })
+  @ApiQuery({ name: 'months', required: false, type: Number, description: 'Number of past months (default 12)' })
+  getAnalytics(@Query('months', new DefaultValuePipe(12), ParseIntPipe) months: number) {
+    return this.expensesService.getAnalytics(months);
+  }
+
   @Get()
   @ApiOperation({ summary: 'List expenses with optional filters' })
   @ApiQuery({

@@ -93,4 +93,48 @@ export class ExpensesService {
     await this.findOne(id);
     return this.prisma.expenses.delete({ where: { id } });
   }
+
+  async getAnalytics(months = 12) {
+    const since = new Date();
+    since.setMonth(since.getMonth() - months + 1);
+    since.setDate(1);
+    since.setHours(0, 0, 0, 0);
+
+    const expenses = await this.prisma.expenses.findMany({
+      where: { expense_date: { gte: since } },
+      select: { amount: true, category: true, expense_date: true },
+    });
+
+    // Monthly totals
+    const monthlyMap: Record<string, number> = {};
+    for (let i = 0; i < months; i++) {
+      const d = new Date(since);
+      d.setMonth(since.getMonth() + i);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      monthlyMap[key] = 0;
+    }
+
+    for (const e of expenses) {
+      const key = `${e.expense_date.getFullYear()}-${String(e.expense_date.getMonth() + 1).padStart(2, '0')}`;
+      if (monthlyMap[key] !== undefined) monthlyMap[key] += Number(e.amount);
+    }
+
+    // By category
+    const byCategory: Record<string, { total: number; count: number }> = {};
+    for (const e of expenses) {
+      if (!byCategory[e.category]) byCategory[e.category] = { total: 0, count: 0 };
+      byCategory[e.category].total += Number(e.amount);
+      byCategory[e.category].count++;
+    }
+
+    const total = expenses.reduce((s, e) => s + Number(e.amount), 0);
+
+    return {
+      period_months: months,
+      total,
+      monthly: Object.entries(monthlyMap).map(([month, amount]) => ({ month, amount })),
+      by_category: Object.entries(byCategory).map(([category, v]) => ({ category, ...v }))
+        .sort((a, b) => b.total - a.total),
+    };
+  }
 }

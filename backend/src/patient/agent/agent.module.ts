@@ -7,6 +7,8 @@ import { PatientsModule } from '../patients/patients.module';
 import { InventoryModule } from '../../doctor/inventory/inventory.module';
 import { UsersModule } from '../../shared/users/users.module';
 import { NotificationsModule } from '../../shared/notifications/notifications.module';
+import { PaymentsModule } from '../../doctor/payments/payments.module';
+import { ExpensesModule } from '../../doctor/expenses/expenses.module';
 
 @Module({
   imports: [
@@ -16,6 +18,8 @@ import { NotificationsModule } from '../../shared/notifications/notifications.mo
     InventoryModule,
     UsersModule,
     NotificationsModule,
+    PaymentsModule,
+    ExpensesModule,
   ],
   controllers: [AgentController],
   providers: [AgentService],
