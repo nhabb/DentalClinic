@@ -9,6 +9,7 @@ import { useTranslation } from "@/lib/i18n";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { apiFetch } from '@/lib/api/client';
 import { supabase } from "@/lib/supabase/client";
+import { Avatar } from "@/components/ui/Avatar";
 import {
   FaTooth,
   FaCalendarAlt,
@@ -25,6 +26,9 @@ export default function PatientDashboard() {
   const { t } = useTranslation();
   const [upcomingAppointments, setUpcomingAppointments] = useState<any[]>([]);
   const [recentVisits, setRecentVisits] = useState<any[]>([]);
+  const [patientName, setPatientName] = useState("");
+  const [patientEmail, setPatientEmail] = useState("");
+  const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     const fetchAppointments = async () => {
@@ -38,6 +42,13 @@ export default function PatientDashboard() {
         const users: any[] = await usersRes.json();
 
         const dbUser = users.find((u) => u.email === user?.email);
+        if (dbUser) {
+          const name = `${dbUser.first_name || ""} ${dbUser.last_name || ""}`.trim();
+          setPatientName(name);
+          setPatientEmail(dbUser.email || user?.email || "");
+          const saved = localStorage.getItem(`brightsmile_photo_${dbUser.email || user?.email}`);
+          if (saved) setPhotoUrl(saved);
+        }
         const patientsRes = await apiFetch(`/api/patients`);
         const patientsData = await patientsRes.json();
         const patient = (patientsData.data || []).find((p: any) => p.user_id === dbUser?.id || p.user_id === String(dbUser?.id));
@@ -83,6 +94,11 @@ export default function PatientDashboard() {
     fetchAppointments();
   }, []);
 
+  const handlePhotoUpload = (dataUrl: string) => {
+    setPhotoUrl(dataUrl);
+    if (patientEmail) localStorage.setItem(`brightsmile_photo_${patientEmail}`, dataUrl);
+  };
+
   const handleLogout = () => {
     safeStorage.removeItem("patientAuth");
     safeStorage.removeItem("authToken");
@@ -122,10 +138,12 @@ export default function PatientDashboard() {
             {/* Actions */}
             <div className="flex items-center gap-3">
               <LanguageSwitcher />
-              {/* Avatar */}
-              <div className="w-10 h-10 bg-gradient-to-r from-dental-blue to-dental-teal rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                P
-              </div>
+              <Avatar
+                name={patientName || "Patient"}
+                size="md"
+                src={photoUrl}
+                onUpload={handlePhotoUpload}
+              />
 
               <button
                 onClick={handleLogout}
