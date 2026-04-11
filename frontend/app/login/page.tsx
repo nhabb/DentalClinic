@@ -7,18 +7,20 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/lib/i18n";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
-import { supabase } from "@/lib/supabase/client";
 
-type UserRole = "patient" | "doctor";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
-const ROLE_REDIRECTS: Record<UserRole, string> = {
+const ROLE_REDIRECTS: Record<string, string> = {
   patient: "/patient-dashboard",
   doctor: "/admin",
+  admin: "/admin",
+  secretary: "/admin",
+  superadmin: "/superadmin",
 };
 
 const DEMO_ACCOUNTS = [
-  { role: "Patient", email: "patient@demo.com", password: "demo123", icon: FaUser,   color: "text-blue-500" },
-  { role: "Doctor",  email: "doctor@demo.com",  password: "demo123", icon: FaUserMd, color: "text-teal-500" },
+  { role: "Patient",   email: "patient@demo.com",   password: "demo123", icon: FaUser,   color: "text-blue-500" },
+  { role: "Doctor",    email: "doctor@demo.com",     password: "demo123", icon: FaUserMd, color: "text-teal-500" },
 ];
 
 export default function LoginPage() {
@@ -27,7 +29,6 @@ export default function LoginPage() {
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [oauthLoading, setOauthLoading] = useState(false);
   const [error, setError]       = useState("");
 
   const fillDemo = (acc: typeof DEMO_ACCOUNTS[0]) => {
@@ -41,44 +42,41 @@ export default function LoginPage() {
     setIsLoading(true);
     setError("");
 
-    const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password });
-
-    if (authError) {
-      setError(authError.message);
-      setIsLoading(false);
-      return;
-    }
-
-    // Check role from app DB, fall back to Supabase user_metadata
-    let role: UserRole = "patient";
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/users/by-email?email=${encodeURIComponent(email)}`);
-      if (res.ok) {
-        const u = await res.json();
-        if (u?.role === "admin" || u?.role === "doctor") role = "doctor";
-      } else {
-        // User not in app DB — check Supabase user_metadata
-        const metaRole = data.user?.user_metadata?.role;
-        if (metaRole === "admin" || metaRole === "doctor") role = "doctor";
+      const res = await fetch(`${API_URL}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || "Invalid email or password");
+        return;
       }
+
+      const { user, token } = data;
+
+      // Persist auth
+      localStorage.setItem("authToken", token);
+      localStorage.setItem("userRole", user.role);
+      localStorage.setItem(
+        "adminUser",
+        JSON.stringify({
+          email: user.email,
+          firstName: user.first_name,
+          lastName: user.last_name,
+          role: user.role,
+        })
+      );
+
+      const redirect = ROLE_REDIRECTS[user.role] ?? "/patient-dashboard";
+      router.push(redirect);
     } catch {
-      const metaRole = data.user?.user_metadata?.role;
-      if (metaRole === "admin" || metaRole === "doctor") role = "doctor";
-    }
-
-    router.push(ROLE_REDIRECTS[role]);
-  };
-
-  const onGoogleLogin = async () => {
-    setOauthLoading(true);
-    setError("");
-    const { error: authError } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
-    });
-    if (authError) {
-      setError(authError.message);
-      setOauthLoading(false);
+      setError("Unable to connect to server. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -98,9 +96,7 @@ export default function LoginPage() {
               <span className="text-2xl font-bold text-gray-900">BrightSmile</span>
             </Link>
             <h2 className="mt-6 text-3xl font-bold text-gray-900">{t("login.welcomeBack")}</h2>
-            <p className="mt-2 text-sm text-gray-600">
-              {t("login.signInSubtitle")}
-            </p>
+            <p className="mt-2 text-sm text-gray-600">{t("login.signInSubtitle")}</p>
           </div>
 
           {/* Error */}
@@ -161,30 +157,6 @@ export default function LoginPage() {
                 t("login.signIn")
               )}
             </Button>
-
-            {/* Divider */}
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">{t("login.orContinueWith")}</span>
-              </div>
-            </div>
-
-            <Button type="button" variant="outline" className="w-full" size="lg" onClick={onGoogleLogin} disabled={oauthLoading}>
-              {oauthLoading ? (
-                <span className="flex items-center gap-2">
-                  <span className="w-4 h-4 border-2 border-gray-400/40 border-t-gray-600 rounded-full animate-spin" />
-                  {t("login.continueWithGoogle")}
-                </span>
-              ) : (
-                <>
-                  <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5 mr-2" />
-                  {t("login.continueWithGoogle")}
-                </>
-              )}
-            </Button>
           </form>
 
           {/* Demo Credentials */}
@@ -208,7 +180,9 @@ export default function LoginPage() {
                 </button>
               ))}
             </div>
-            <p className="text-[10px] text-gray-400 text-center">{t("login.passwordForAll")} <span className="font-mono font-semibold">demo123</span></p>
+            <p className="text-[10px] text-gray-400 text-center">
+              {t("login.passwordForAll")} <span className="font-mono font-semibold">demo123</span>
+            </p>
           </div>
 
           {/* Sign Up */}

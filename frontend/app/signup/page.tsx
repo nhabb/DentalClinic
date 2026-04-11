@@ -21,8 +21,9 @@ import { ChevronDownIcon } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/lib/i18n";
-import { supabase } from "@/lib/supabase/client";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 import { ar, fr, enUS } from "date-fns/locale";
 import { FaTooth } from "react-icons/fa";
 
@@ -71,53 +72,58 @@ export default function SignupPage() {
       setError(t("signup.passwordsDoNotMatch"));
       return;
     }
-    setIsLoading(true);
-
-    const { error: authError } = await supabase.auth.signUp({
-      email: form.email,
-      password: form.password,
-      options: {
-        data: {
-          first_name: form.firstName,
-          last_name: form.lastName,
-          phone: form.phone,
-          date_of_birth: form.dateOfBirth,
-          address: form.address,
-          city: form.city,
-          governate: form.governate,
-          emergency_contact: form.emergencyContact,
-          emergency_phone: form.emergencyPhone,
-          insurance_provider: form.insuranceProvider,
-          insurance_policy: form.insurancePolicy,
-          medical_conditions: form.medicalConditions,
-          allergies: form.allergies,
-          current_medications: form.currentMedications,
-          role: "patient",
-        },
-      },
-    });
-
-    if (authError) {
-      setError(authError.message);
-      setIsLoading(false);
+    if (form.password.length < 8) {
+      setError("Password must be at least 8 characters");
       return;
     }
+    setIsLoading(true);
 
-    // Create user in backend DB
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-    await fetch(`${API_URL}/api/users/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: form.email,
-        first_name: form.firstName,
-        last_name: form.lastName,
-        phone: form.phone || undefined,
-        role: "patient",
-      }),
-    });
+    try {
+      const address = [form.address, form.city, form.governate]
+        .filter(Boolean)
+        .join(", ");
 
-    router.push("/patient-dashboard");
+      const res = await fetch(`${API_URL}/api/auth/signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: form.email,
+          password: form.password,
+          first_name: form.firstName,
+          last_name: form.lastName,
+          phone: form.phone || undefined,
+          date_of_birth: form.dateOfBirth || undefined,
+          address: address || undefined,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || "Signup failed. Please try again.");
+        return;
+      }
+
+      const { user, token } = data;
+
+      localStorage.setItem("authToken", token);
+      localStorage.setItem("userRole", user.role);
+      localStorage.setItem(
+        "adminUser",
+        JSON.stringify({
+          email: user.email,
+          firstName: user.first_name,
+          lastName: user.last_name,
+          role: user.role,
+        })
+      );
+
+      router.push("/patient-dashboard");
+    } catch {
+      setError("Unable to connect to server. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

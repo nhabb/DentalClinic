@@ -1,18 +1,20 @@
-import { supabase } from "@/lib/supabase/client";
-
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
-async function getAuthHeaders(): Promise<HeadersInit> {
-  const { data } = await supabase.auth.getSession();
-  const token = data.session?.access_token;
+function getAuthHeaders(options: RequestInit = {}): HeadersInit {
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("authToken") : null;
+  const isFormData = options.body instanceof FormData;
   return {
-    "Content-Type": "application/json",
+    ...(isFormData ? {} : { "Content-Type": "application/json" }),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 }
 
-export async function apiFetch(path: string, options: RequestInit = {}): Promise<Response> {
-  const headers = await getAuthHeaders();
+export async function apiFetch(
+  path: string,
+  options: RequestInit = {}
+): Promise<Response> {
+  const headers = getAuthHeaders(options);
   return fetch(`${API_URL}${path}`, {
     ...options,
     headers: {
