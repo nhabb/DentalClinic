@@ -2,7 +2,7 @@
 import { apiFetch } from '@/lib/api/client';
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { safeStorage } from "@/lib/browser-compat";
@@ -28,6 +28,11 @@ import {
   FaCheckCircle,
   FaEdit,
   FaIdCard,
+  FaFileAlt,
+  FaUpload,
+  FaDownload,
+  FaTrash,
+  FaClock,
 } from "react-icons/fa";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
@@ -72,7 +77,7 @@ export default function PatientsPage() {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [showPatientModal, setShowPatientModal] = useState(false);
   const [activeTab, setActiveTab] = useState<
-    "info" | "appointments" | "treatments"
+    "info" | "appointments" | "treatments" | "documents"
   >("info");
   const [statusFilter, setStatusFilter] = useState<
     "all" | "active" | "inactive"
@@ -86,10 +91,23 @@ export default function PatientsPage() {
 
   // Data state
   const [patients, setPatients] = useState<Patient[]>([]);
-  const [patientHistory, setPatientHistory] = useState<PatientHistory | null>(
-    null,
-  );
+  const [patientHistory, setPatientHistory] = useState<PatientHistory | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Book appointment state
+  const [showBookModal, setShowBookModal] = useState(false);
+  const [bookDate, setBookDate] = useState(new Date().toISOString().split("T")[0]);
+  const [availableSlots, setAvailableSlots] = useState<any[]>([]);
+  const [selectedSlotId, setSelectedSlotId] = useState<number | null>(null);
+  const [bookReason, setBookReason] = useState("");
+  const [bookLoading, setBookLoading] = useState(false);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+
+  // Documents state
+  const [documents, setDocuments] = useState<any[]>([]);
+  const [docsLoading, setDocsLoading] = useState(false);
+  const [uploadingDoc, setUploadingDoc] = useState(false);
+  const docInputRef = useRef<HTMLInputElement>(null);
 
   // Check auth and load user data (auth disabled)
   useEffect(() => {
@@ -195,6 +213,77 @@ export default function PatientsPage() {
     }
   };
 
+  const fetchSlots = async (date: string) => {
+    setSlotsLoading(true);
+    try {
+      const res = await apiFetch(`/api/appointment-slots?date=${date}&available_only=true&limit=50`);
+      const data = await res.json();
+      setAvailableSlots(data.data || []);
+    } catch {
+      setAvailableSlots([]);
+    } finally {
+      setSlotsLoading(false);
+    }
+  };
+
+  const handleBookAppointment = async () => {
+    if (!selectedPatient || !selectedSlotId) return;
+    setBookLoading(true);
+    try {
+      const res = await apiFetch("/api/appointments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          patient_id: selectedPatient.id,
+          slot_id: selectedSlotId,
+          reason: bookReason || undefined,
+        }),
+      });
+      if (res.ok) {
+        setShowBookModal(false);
+        setSelectedSlotId(null);
+        setBookReason("");
+        fetchPatientHistory(selectedPatient.id);
+      }
+    } finally {
+      setBookLoading(false);
+    }
+  };
+
+  const fetchDocuments = async (patientId: number) => {
+    setDocsLoading(true);
+    try {
+      const res = await apiFetch(`/api/patient-documents?patient_id=${patientId}&limit=50`);
+      const data = await res.json();
+      setDocuments(data.data || []);
+    } catch {
+      setDocuments([]);
+    } finally {
+      setDocsLoading(false);
+    }
+  };
+
+  const handleDocumentUpload = async (file: File) => {
+    if (!selectedPatient) return;
+    setUploadingDoc(true);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      form.append("patient_id", String(selectedPatient.id));
+      form.append("uploaded_by", String(doctorId ?? 1));
+      const res = await apiFetch("/api/patient-documents", { method: "POST", body: form });
+      if (res.ok) await fetchDocuments(selectedPatient.id);
+    } finally {
+      setUploadingDoc(false);
+    }
+  };
+
+  const handleDeleteDocument = async (docId: number) => {
+    if (!selectedPatient) return;
+    const res = await apiFetch(`/api/patient-documents/${docId}`, { method: "DELETE" });
+    if (res.ok) setDocuments((prev) => prev.filter((d) => d.id !== docId));
+  };
+
   const handleLogout = () => {
     safeStorage.removeItem("adminAuth");
     safeStorage.removeItem("authToken");
@@ -233,7 +322,16 @@ export default function PatientsPage() {
     setSelectedPatient(patient);
     setActiveTab("info");
     setShowPatientModal(true);
+    setPatientHistory(null);
+    setDocuments([]);
     fetchPatientHistory(patient.id);
+  };
+
+  const handleTabChange = (tab: "info" | "appointments" | "treatments" | "documents") => {
+    setActiveTab(tab);
+    if (tab === "documents" && selectedPatient && documents.length === 0) {
+      fetchDocuments(selectedPatient.id);
+    }
   };
 
   // Calculate stats
@@ -386,6 +484,7 @@ export default function PatientsPage() {
                 <Button
                   size="sm"
                   className="bg-dental-blue hover:bg-dental-blue/90"
+                  onClick={() => { setBookDate(new Date().toISOString().split("T")[0]); fetchSlots(new Date().toISOString().split("T")[0]); setShowBookModal(true); }}
                 >
                   <FaCalendarPlus className="mr-2 rtl:mr-0 rtl:ml-2" /> {t("patients.bookAppointment")}
                 </Button>
@@ -400,45 +499,21 @@ export default function PatientsPage() {
 
             {/* Tabs */}
             <div className="flex border-b border-gray-100 px-6">
-              <button
-                onClick={() => setActiveTab("info")}
-                className={`px-6 py-4 font-medium transition-colors relative ${
-                  activeTab === "info"
-                    ? "text-dental-blue"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                <FaIdCard className="inline mr-2 rtl:mr-0 rtl:ml-2" /> {t("patients.info")}
-                {activeTab === "info" && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-dental-blue" />
-                )}
-              </button>
-              <button
-                onClick={() => setActiveTab("appointments")}
-                className={`px-6 py-4 font-medium transition-colors relative ${
-                  activeTab === "appointments"
-                    ? "text-dental-blue"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                <FaCalendarAlt className="inline mr-2 rtl:mr-0 rtl:ml-2" /> {t("appointments.appointments")}
-                {activeTab === "appointments" && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-dental-blue" />
-                )}
-              </button>
-              <button
-                onClick={() => setActiveTab("treatments")}
-                className={`px-6 py-4 font-medium transition-colors relative ${
-                  activeTab === "treatments"
-                    ? "text-dental-blue"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                <FaTooth className="inline mr-2 rtl:mr-0 rtl:ml-2" /> {t("patients.treatmentsTab")}
-                {activeTab === "treatments" && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-dental-blue" />
-                )}
-              </button>
+              {(["info", "appointments", "treatments", "documents"] as const).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => handleTabChange(tab)}
+                  className={`px-5 py-4 font-medium transition-colors relative text-sm ${
+                    activeTab === tab ? "text-dental-blue" : "text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  {tab === "info" && <><FaIdCard className="inline mr-2" />{t("patients.info")}</>}
+                  {tab === "appointments" && <><FaCalendarAlt className="inline mr-2" />{t("appointments.appointments")}</>}
+                  {tab === "treatments" && <><FaTooth className="inline mr-2" />{t("patients.treatmentsTab")}</>}
+                  {tab === "documents" && <><FaFileAlt className="inline mr-2" />Documents</>}
+                  {activeTab === tab && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-dental-blue" />}
+                </button>
+              ))}
             </div>
 
             {/* Modal Content */}
@@ -623,13 +698,184 @@ export default function PatientsPage() {
                 </div>
               )}
 
+              {/* Documents Tab */}
+              {activeTab === "documents" && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-semibold text-gray-900">Patient Documents</h3>
+                    <div>
+                      <input
+                        ref={docInputRef}
+                        type="file"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleDocumentUpload(file);
+                          e.target.value = "";
+                        }}
+                      />
+                      <Button
+                        size="sm"
+                        className="bg-dental-blue hover:bg-dental-blue/90"
+                        onClick={() => docInputRef.current?.click()}
+                        disabled={uploadingDoc}
+                      >
+                        <FaUpload className="mr-2" />
+                        {uploadingDoc ? "Uploading..." : "Upload Document"}
+                      </Button>
+                    </div>
+                  </div>
+
+                  {docsLoading ? (
+                    <div className="text-center py-12"><LoadingSpinner /></div>
+                  ) : documents.length > 0 ? (
+                    <div className="space-y-3">
+                      {documents.map((doc) => (
+                        <div key={doc.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                              <FaFileAlt className="text-blue-600" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900 text-sm">{doc.file_name || doc.original_name || "Document"}</p>
+                              <p className="text-xs text-gray-500 flex items-center gap-1">
+                                <FaClock className="text-xs" />
+                                {new Date(doc.created_at).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {doc.file_url && (
+                              <a
+                                href={doc.file_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                title="Download"
+                              >
+                                <FaDownload />
+                              </a>
+                            )}
+                            <button
+                              onClick={() => handleDeleteDocument(doc.id)}
+                              className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                              title="Delete"
+                            >
+                              <FaTrash />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 text-gray-500">
+                      <FaFileAlt className="mx-auto text-3xl mb-3 text-gray-300" />
+                      <p>No documents uploaded yet</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Loading state for history */}
-              {activeTab !== "info" && !patientHistory && (
+              {(activeTab === "appointments" || activeTab === "treatments") && !patientHistory && (
                 <div className="text-center py-12">
                   <LoadingSpinner />
                   <p className="text-gray-500 mt-4">{t("patients.loadingHistory")}</p>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Book Appointment Modal */}
+      {showBookModal && selectedPatient && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+              <h2 className="text-xl font-bold text-gray-900">
+                Book Appointment — {selectedPatient.name}
+              </h2>
+              <button
+                onClick={() => { setShowBookModal(false); setSelectedSlotId(null); setBookReason(""); }}
+                className="p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <FaTimes className="text-gray-500" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-5">
+              {/* Date Picker */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                <input
+                  type="date"
+                  value={bookDate}
+                  min={new Date().toISOString().split("T")[0]}
+                  onChange={(e) => { setBookDate(e.target.value); setSelectedSlotId(null); fetchSlots(e.target.value); }}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                />
+              </div>
+
+              {/* Available Slots */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Available Slots</label>
+                {slotsLoading ? (
+                  <div className="text-center py-6"><LoadingSpinner /></div>
+                ) : availableSlots.length > 0 ? (
+                  <div className="grid grid-cols-2 gap-2 max-h-52 overflow-y-auto pr-1">
+                    {availableSlots.map((slot) => {
+                      const start = slot.start_time?.slice(0, 5) || "";
+                      const end = slot.end_time?.slice(0, 5) || "";
+                      const doctor = slot.users ? `Dr. ${slot.users.first_name} ${slot.users.last_name}` : "";
+                      return (
+                        <button
+                          key={slot.id}
+                          onClick={() => setSelectedSlotId(slot.id)}
+                          className={`p-3 rounded-xl text-left text-sm border transition-colors ${
+                            selectedSlotId === slot.id
+                              ? "border-dental-blue bg-dental-blue/10 text-dental-blue"
+                              : "border-gray-200 hover:border-dental-blue/40 text-gray-700"
+                          }`}
+                        >
+                          <p className="font-medium">{start} – {end}</p>
+                          {doctor && <p className="text-xs text-gray-500 mt-0.5">{doctor}</p>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500 py-4 text-center">No available slots for this date</p>
+                )}
+              </div>
+
+              {/* Reason */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Reason (optional)</label>
+                <input
+                  type="text"
+                  value={bookReason}
+                  onChange={(e) => setBookReason(e.target.value)}
+                  placeholder="e.g. Routine checkup, tooth pain..."
+                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                />
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-gray-100 flex justify-end gap-3">
+              <Button
+                variant="outline"
+                onClick={() => { setShowBookModal(false); setSelectedSlotId(null); setBookReason(""); }}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="bg-dental-blue hover:bg-dental-blue/90"
+                disabled={!selectedSlotId || bookLoading}
+                onClick={handleBookAppointment}
+              >
+                {bookLoading ? "Booking..." : "Book Appointment"}
+              </Button>
             </div>
           </div>
         </div>
