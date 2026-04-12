@@ -50,6 +50,7 @@ export type Inventory_itemsMinAggregateOutputType = {
   minimum_quantity: number | null
   unit: string | null
   cost_price: runtime.Decimal | null
+  image_url: string | null
   created_at: Date | null
   updated_at: Date | null
 }
@@ -64,6 +65,7 @@ export type Inventory_itemsMaxAggregateOutputType = {
   minimum_quantity: number | null
   unit: string | null
   cost_price: runtime.Decimal | null
+  image_url: string | null
   created_at: Date | null
   updated_at: Date | null
 }
@@ -78,6 +80,7 @@ export type Inventory_itemsCountAggregateOutputType = {
   minimum_quantity: number
   unit: number
   cost_price: number
+  image_url: number
   created_at: number
   updated_at: number
   _all: number
@@ -108,6 +111,7 @@ export type Inventory_itemsMinAggregateInputType = {
   minimum_quantity?: true
   unit?: true
   cost_price?: true
+  image_url?: true
   created_at?: true
   updated_at?: true
 }
@@ -122,6 +126,7 @@ export type Inventory_itemsMaxAggregateInputType = {
   minimum_quantity?: true
   unit?: true
   cost_price?: true
+  image_url?: true
   created_at?: true
   updated_at?: true
 }
@@ -136,6 +141,7 @@ export type Inventory_itemsCountAggregateInputType = {
   minimum_quantity?: true
   unit?: true
   cost_price?: true
+  image_url?: true
   created_at?: true
   updated_at?: true
   _all?: true
@@ -237,6 +243,7 @@ export type Inventory_itemsGroupByOutputType = {
   minimum_quantity: number
   unit: string | null
   cost_price: runtime.Decimal | null
+  image_url: string | null
   created_at: Date
   updated_at: Date
   _count: Inventory_itemsCountAggregateOutputType | null
@@ -274,6 +281,7 @@ export type inventory_itemsWhereInput = {
   minimum_quantity?: Prisma.IntFilter<"inventory_items"> | number
   unit?: Prisma.StringNullableFilter<"inventory_items"> | string | null
   cost_price?: Prisma.DecimalNullableFilter<"inventory_items"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  image_url?: Prisma.StringNullableFilter<"inventory_items"> | string | null
   created_at?: Prisma.DateTimeFilter<"inventory_items"> | Date | string
   updated_at?: Prisma.DateTimeFilter<"inventory_items"> | Date | string
   inventory_movements?: Prisma.Inventory_movementsListRelationFilter
@@ -289,6 +297,7 @@ export type inventory_itemsOrderByWithRelationInput = {
   minimum_quantity?: Prisma.SortOrder
   unit?: Prisma.SortOrderInput | Prisma.SortOrder
   cost_price?: Prisma.SortOrderInput | Prisma.SortOrder
+  image_url?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
   inventory_movements?: Prisma.inventory_movementsOrderByRelationAggregateInput
@@ -307,6 +316,7 @@ export type inventory_itemsWhereUniqueInput = Prisma.AtLeast<{
   minimum_quantity?: Prisma.IntFilter<"inventory_items"> | number
   unit?: Prisma.StringNullableFilter<"inventory_items"> | string | null
   cost_price?: Prisma.DecimalNullableFilter<"inventory_items"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  image_url?: Prisma.StringNullableFilter<"inventory_items"> | string | null
   created_at?: Prisma.DateTimeFilter<"inventory_items"> | Date | string
   updated_at?: Prisma.DateTimeFilter<"inventory_items"> | Date | string
   inventory_movements?: Prisma.Inventory_movementsListRelationFilter
@@ -322,6 +332,7 @@ export type inventory_itemsOrderByWithAggregationInput = {
   minimum_quantity?: Prisma.SortOrder
   unit?: Prisma.SortOrderInput | Prisma.SortOrder
   cost_price?: Prisma.SortOrderInput | Prisma.SortOrder
+  image_url?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
   _count?: Prisma.inventory_itemsCountOrderByAggregateInput
@@ -344,6 +355,7 @@ export type inventory_itemsScalarWhereWithAggregatesInput = {
   minimum_quantity?: Prisma.IntWithAggregatesFilter<"inventory_items"> | number
   unit?: Prisma.StringNullableWithAggregatesFilter<"inventory_items"> | string | null
   cost_price?: Prisma.DecimalNullableWithAggregatesFilter<"inventory_items"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  image_url?: Prisma.StringNullableWithAggregatesFilter<"inventory_items"> | string | null
   created_at?: Prisma.DateTimeWithAggregatesFilter<"inventory_items"> | Date | string
   updated_at?: Prisma.DateTimeWithAggregatesFilter<"inventory_items"> | Date | string
 }
@@ -358,6 +370,7 @@ export type inventory_itemsCreateInput = {
   minimum_quantity?: number
   unit?: string | null
   cost_price?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  image_url?: string | null
   created_at?: Date | string
   updated_at?: Date | string
   inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutInventory_itemsInput
@@ -373,6 +386,7 @@ export type inventory_itemsUncheckedCreateInput = {
   minimum_quantity?: number
   unit?: string | null
   cost_price?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  image_url?: string | null
   created_at?: Date | string
   updated_at?: Date | string
   inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutInventory_itemsInput
@@ -388,6 +402,7 @@ export type inventory_itemsUpdateInput = {
   minimum_quantity?: Prisma.IntFieldUpdateOperationsInput | number
   unit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cost_price?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutInventory_itemsNestedInput
@@ -403,6 +418,7 @@ export type inventory_itemsUncheckedUpdateInput = {
   minimum_quantity?: Prisma.IntFieldUpdateOperationsInput | number
   unit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cost_price?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutInventory_itemsNestedInput
@@ -418,6 +434,7 @@ export type inventory_itemsCreateManyInput = {
   minimum_quantity?: number
   unit?: string | null
   cost_price?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  image_url?: string | null
   created_at?: Date | string
   updated_at?: Date | string
 }
@@ -432,6 +449,7 @@ export type inventory_itemsUpdateManyMutationInput = {
   minimum_quantity?: Prisma.IntFieldUpdateOperationsInput | number
   unit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cost_price?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -446,6 +464,7 @@ export type inventory_itemsUncheckedUpdateManyInput = {
   minimum_quantity?: Prisma.IntFieldUpdateOperationsInput | number
   unit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cost_price?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -460,6 +479,7 @@ export type inventory_itemsCountOrderByAggregateInput = {
   minimum_quantity?: Prisma.SortOrder
   unit?: Prisma.SortOrder
   cost_price?: Prisma.SortOrder
+  image_url?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
 }
@@ -481,6 +501,7 @@ export type inventory_itemsMaxOrderByAggregateInput = {
   minimum_quantity?: Prisma.SortOrder
   unit?: Prisma.SortOrder
   cost_price?: Prisma.SortOrder
+  image_url?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
 }
@@ -495,6 +516,7 @@ export type inventory_itemsMinOrderByAggregateInput = {
   minimum_quantity?: Prisma.SortOrder
   unit?: Prisma.SortOrder
   cost_price?: Prisma.SortOrder
+  image_url?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
 }
@@ -551,6 +573,7 @@ export type inventory_itemsCreateWithoutInventory_movementsInput = {
   minimum_quantity?: number
   unit?: string | null
   cost_price?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  image_url?: string | null
   created_at?: Date | string
   updated_at?: Date | string
 }
@@ -565,6 +588,7 @@ export type inventory_itemsUncheckedCreateWithoutInventory_movementsInput = {
   minimum_quantity?: number
   unit?: string | null
   cost_price?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  image_url?: string | null
   created_at?: Date | string
   updated_at?: Date | string
 }
@@ -595,6 +619,7 @@ export type inventory_itemsUpdateWithoutInventory_movementsInput = {
   minimum_quantity?: Prisma.IntFieldUpdateOperationsInput | number
   unit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cost_price?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -609,6 +634,7 @@ export type inventory_itemsUncheckedUpdateWithoutInventory_movementsInput = {
   minimum_quantity?: Prisma.IntFieldUpdateOperationsInput | number
   unit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cost_price?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -654,6 +680,7 @@ export type inventory_itemsSelect<ExtArgs extends runtime.Types.Extensions.Inter
   minimum_quantity?: boolean
   unit?: boolean
   cost_price?: boolean
+  image_url?: boolean
   created_at?: boolean
   updated_at?: boolean
   inventory_movements?: boolean | Prisma.inventory_items$inventory_movementsArgs<ExtArgs>
@@ -670,6 +697,7 @@ export type inventory_itemsSelectCreateManyAndReturn<ExtArgs extends runtime.Typ
   minimum_quantity?: boolean
   unit?: boolean
   cost_price?: boolean
+  image_url?: boolean
   created_at?: boolean
   updated_at?: boolean
 }, ExtArgs["result"]["inventory_items"]>
@@ -684,6 +712,7 @@ export type inventory_itemsSelectUpdateManyAndReturn<ExtArgs extends runtime.Typ
   minimum_quantity?: boolean
   unit?: boolean
   cost_price?: boolean
+  image_url?: boolean
   created_at?: boolean
   updated_at?: boolean
 }, ExtArgs["result"]["inventory_items"]>
@@ -698,11 +727,12 @@ export type inventory_itemsSelectScalar = {
   minimum_quantity?: boolean
   unit?: boolean
   cost_price?: boolean
+  image_url?: boolean
   created_at?: boolean
   updated_at?: boolean
 }
 
-export type inventory_itemsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "category" | "description" | "sku" | "quantity" | "minimum_quantity" | "unit" | "cost_price" | "created_at" | "updated_at", ExtArgs["result"]["inventory_items"]>
+export type inventory_itemsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "category" | "description" | "sku" | "quantity" | "minimum_quantity" | "unit" | "cost_price" | "image_url" | "created_at" | "updated_at", ExtArgs["result"]["inventory_items"]>
 export type inventory_itemsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   inventory_movements?: boolean | Prisma.inventory_items$inventory_movementsArgs<ExtArgs>
   _count?: boolean | Prisma.Inventory_itemsCountOutputTypeDefaultArgs<ExtArgs>
@@ -725,6 +755,7 @@ export type $inventory_itemsPayload<ExtArgs extends runtime.Types.Extensions.Int
     minimum_quantity: number
     unit: string | null
     cost_price: runtime.Decimal | null
+    image_url: string | null
     created_at: Date
     updated_at: Date
   }, ExtArgs["result"]["inventory_items"]>
@@ -1160,6 +1191,7 @@ export interface inventory_itemsFieldRefs {
   readonly minimum_quantity: Prisma.FieldRef<"inventory_items", 'Int'>
   readonly unit: Prisma.FieldRef<"inventory_items", 'String'>
   readonly cost_price: Prisma.FieldRef<"inventory_items", 'Decimal'>
+  readonly image_url: Prisma.FieldRef<"inventory_items", 'String'>
   readonly created_at: Prisma.FieldRef<"inventory_items", 'DateTime'>
   readonly updated_at: Prisma.FieldRef<"inventory_items", 'DateTime'>
 }

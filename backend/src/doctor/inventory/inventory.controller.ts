@@ -9,9 +9,13 @@ import { UseGuards,
   Query,
   ParseIntPipe,
   DefaultValuePipe,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import { JwtAuthGuard } from '../../shared/common/guards/jwt-auth.guard';
-import { ApiBearerAuth, ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags, ApiOperation, ApiQuery, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { InventoryService } from './inventory.service';
 import { CreateInventoryItemDto } from './dto/create-item.dto';
 import { UpdateInventoryItemDto } from './dto/update-item.dto';
@@ -78,6 +82,18 @@ export class InventoryController {
   @ApiOperation({ summary: 'Delete an inventory item' })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.inventoryService.remove(BigInt(id));
+  }
+
+  @Post(':id/image')
+  @ApiOperation({ summary: 'Upload or replace an inventory item photo' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ schema: { type: 'object', properties: { image: { type: 'string', format: 'binary' } } } })
+  @UseInterceptors(FileInterceptor('image', { storage: memoryStorage() }))
+  uploadImage(
+    @Param('id', ParseIntPipe) id: number,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.inventoryService.uploadImage(BigInt(id), file);
   }
 
   @Post(':id/movements')

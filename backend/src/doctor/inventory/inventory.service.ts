@@ -4,13 +4,44 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
+import { SupabaseStorageService } from '../../shared/storage/supabase-storage.service';
 import { CreateInventoryItemDto } from './dto/create-item.dto';
 import { UpdateInventoryItemDto } from './dto/update-item.dto';
 import { CreateMovementDto } from './dto/create-movement.dto';
 
+const INVENTORY_BUCKET = 'inventory-photos';
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const MAX_SIZE = 5 * 1024 * 1024;
+
 @Injectable()
 export class InventoryService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly storage: SupabaseStorageService,
+  ) {}
+
+  async uploadImage(id: bigint, file: Express.Multer.File) {
+    if (!ALLOWED_IMAGE_TYPES.includes(file.mimetype))
+      throw new BadRequestException('Only JPEG, PNG, and WebP images are allowed');
+    if (file.size > MAX_SIZE)
+      throw new BadRequestException('Image must be under 5 MB');
+
+    const item = await this.findOne(id);
+
+    if (item.image_url) {
+      const oldPath = item.image_url.split(`/${INVENTORY_BUCKET}/`)[1];
+      if (oldPath) await this.storage.delete(INVENTORY_BUCKET, oldPath).catch(() => null);
+    }
+
+    const ext = file.mimetype.split('/')[1];
+    const storagePath = `items/${id}/${Date.now()}.${ext}`;
+    const publicUrl = await this.storage.upload(INVENTORY_BUCKET, storagePath, file.buffer, file.mimetype);
+
+    return this.prisma.inventory_items.update({
+      where: { id },
+      data: { image_url: publicUrl, updated_at: new Date() },
+    });
+  }
 
   async create(dto: CreateInventoryItemDto) {
     if (dto.sku) {
