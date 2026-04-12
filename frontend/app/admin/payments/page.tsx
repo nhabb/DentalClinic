@@ -7,20 +7,20 @@
 //   PUT  /api/payments/:id      → updates a payment, body: UpdatePaymentDto
 //   DELETE /api/payments/:id    → deletes a payment record
 //
-// PatientPayment schema:
+// PatientPayment schema (GET response):
 //   id: number
-//   patient_name: string
-//   treatment: string
-//   date: string            (ISO date, e.g. "2026-04-10")
+//   patient_id: number
+//   patient_name: string        (joined from patient_profiles → users)
+//   treatment: string           (from description field)
+//   date: string
 //   amount_due: number
-//   amount_paid: number
+//   amount_paid: number         (maps to backend "amount")
 //   status: "paid" | "pending" | "overdue"
+//   payment_method: "cash" | "card" | "insurance" | "bank_transfer"
 //   created_at: string
 //   updated_at: string
-//
-// Optionally join with appointments/patient_profiles for richer data.
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
@@ -45,8 +45,11 @@ import {
   FaFileInvoiceDollar,
 } from "react-icons/fa";
 
+type PatientOption = { id: number; name: string };
+
 type PatientPayment = {
   id: number;
+  patient_id?: number;
   patient_name: string;
   treatment: string;
   date: string;
@@ -59,12 +62,12 @@ const statusFilterKeys = ["all", "paid", "pending", "overdueFilter"] as const;
 const statusFilterValues = ["All", "Paid", "Pending", "Overdue"];
 
 const emptyForm = {
-  patient_name: "",
   treatment: "",
   date: new Date().toISOString().split("T")[0],
   amount_due: "",
   amount_paid: "",
   status: "pending" as "paid" | "pending" | "overdue",
+  payment_method: "cash" as "cash" | "card" | "insurance" | "bank_transfer",
 };
 
 export default function PatientPaymentsPage() {
@@ -80,20 +83,31 @@ export default function PatientPaymentsPage() {
   const [form, setForm] = useState(emptyForm);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Patient search state
+  const [patientQuery, setPatientQuery] = useState("");
+  const [patientId, setPatientId] = useState<number | null>(null);
+  const [suggestions, setSuggestions] = useState<PatientOption[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [patientError, setPatientError] = useState(false);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+
   const fetchPayments = async () => {
     setIsLoading(true);
     try {
       const res = await apiFetch("/api/payments");
       const data = await res.json();
-      console.log("payments raw:", JSON.stringify(data?.data?.[0] ?? data, null, 2));
       setPayments(
         (data.data || []).map((p: any) => ({
           ...p,
-          patient_name: p.patient_name ?? p.patientName ?? "",
-          treatment: p.treatment ?? "",
-          date: p.date ?? "",
-          amount_due: Number(p.amount_due ?? p.amountDue) || 0,
-          amount_paid: Number(p.amount_paid ?? p.amountPaid) || 0,
+          patient_id: p.patient_id ?? (p.patient?.id ? Number(p.patient.id) : undefined),
+          patient_name:
+            p.patient?.users
+              ? `${p.patient.users.first_name ?? ""} ${p.patient.users.last_name ?? ""}`.trim()
+              : (p.patient_name ?? p.patientName ?? ""),
+          treatment: p.treatment ?? p.description ?? "",
+          date: p.date ?? p.created_at?.split("T")[0] ?? "",
+          amount_due: Number(p.amount_due ?? p.amount) || 0,
+          amount_paid: Number(p.amount_paid) || 0,
           status: (p.status ?? "pending").toLowerCase(),
         }))
       );
@@ -107,6 +121,41 @@ export default function PatientPaymentsPage() {
   useEffect(() => {
     fetchPayments();
   }, []);
+
+  const searchPatients = async (query: string) => {
+    if (query.length < 2) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+    try {
+      const res = await apiFetch(`/api/patients?search=${encodeURIComponent(query)}&limit=10`);
+      const data = await res.json();
+      setSuggestions(
+        (data.data || []).map((p: any) => ({
+          id: Number(p.id),
+          name: `${p.users?.first_name ?? ""} ${p.users?.last_name ?? ""}`.trim(),
+        }))
+      );
+      setShowSuggestions(true);
+    } catch {
+      setSuggestions([]);
+    }
+  };
+
+  const handleSelectPatient = (patient: PatientOption) => {
+    setPatientId(patient.id);
+    setPatientQuery(patient.name);
+    setShowSuggestions(false);
+  };
+
+  const resetPatientSearch = () => {
+    setPatientQuery("");
+    setPatientId(null);
+    setSuggestions([]);
+    setShowSuggestions(false);
+    setPatientError(false);
+  };
 
   const handleLogout = () => {
     safeStorage.removeItem("adminAuth");
@@ -136,26 +185,35 @@ export default function PatientPaymentsPage() {
   const handleOpenEdit = (payment: PatientPayment) => {
     setSelectedPayment(payment);
     setForm({
-      patient_name: payment.patient_name,
       treatment: payment.treatment,
       date: payment.date,
       amount_due: String(payment.amount_due),
       amount_paid: String(payment.amount_paid),
       status: payment.status,
+      payment_method: "cash",
     });
+    setPatientQuery(payment.patient_name);
+    setPatientId(payment.patient_id ?? null);
     setShowEditModal(true);
   };
 
   const handleOpenAdd = () => {
     setForm(emptyForm);
+    resetPatientSearch();
     setShowAddModal(true);
   };
 
   const handleAdd = async () => {
+    if (!patientId) {
+      setPatientError(true);
+      return;
+    }
+    setPatientError(false);
     const payload = {
-      ...form,
-      amount_due: parseFloat(form.amount_due) || 0,
-      amount_paid: parseFloat(form.amount_paid) || 0,
+      patient_id: patientId,
+      amount: parseFloat(form.amount_due) || 0,
+      payment_method: form.payment_method,
+      description: form.treatment || undefined,
     };
     try {
       await apiFetch("/api/payments", {
@@ -165,7 +223,19 @@ export default function PatientPaymentsPage() {
       });
       await fetchPayments();
     } catch {
-      setPayments((prev) => [...prev, { id: Date.now(), ...payload }]);
+      setPayments((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          patient_id: patientId ?? undefined,
+          patient_name: patientQuery,
+          treatment: form.treatment,
+          date: form.date,
+          amount_due: parseFloat(form.amount_due) || 0,
+          amount_paid: parseFloat(form.amount_paid) || 0,
+          status: form.status,
+        },
+      ]);
     }
     setShowAddModal(false);
   };
@@ -173,20 +243,30 @@ export default function PatientPaymentsPage() {
   const handleEditSave = async () => {
     if (!selectedPayment) return;
     const payload = {
-      ...form,
-      amount_due: parseFloat(form.amount_due) || selectedPayment.amount_due,
       amount_paid: parseFloat(form.amount_paid) || selectedPayment.amount_paid,
+      status: form.status === "overdue" ? "pending" : form.status,
     };
     try {
-      await apiFetch(`/api/payments/${selectedPayment.id}`, {
-        method: "PUT",
+      await apiFetch(`/api/payments/${selectedPayment.id}/status`, {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
       await fetchPayments();
     } catch {
       setPayments((prev) =>
-        prev.map((p) => (p.id === selectedPayment.id ? { ...p, ...payload } : p))
+        prev.map((p) =>
+          p.id === selectedPayment.id
+            ? {
+                ...p,
+                patient_name: patientQuery || p.patient_name,
+                treatment: form.treatment,
+                amount_due: parseFloat(form.amount_due) || p.amount_due,
+                amount_paid: parseFloat(form.amount_paid) || p.amount_paid,
+                status: form.status,
+              }
+            : p
+        )
       );
     }
     setShowEditModal(false);
@@ -227,17 +307,51 @@ export default function PatientPaymentsPage() {
     }
   };
 
-  const paymentFormFields = (
-    <div className="space-y-4">
+  const patientSearchField = (
+    <div className="relative">
       <FormField label={t("payments.patientName")}>
         <input
           type="text"
           placeholder={t("payments.patientNamePlaceholder")}
-          className={inputClass}
-          value={form.patient_name}
-          onChange={(e) => setForm((f) => ({ ...f, patient_name: e.target.value }))}
+          className={`${inputClass} ${patientError ? "border-red-500 focus:ring-red-500" : ""}`}
+          value={patientQuery}
+          autoComplete="off"
+          onChange={(e) => {
+            setPatientQuery(e.target.value);
+            setPatientId(null);
+            setPatientError(false);
+            searchPatients(e.target.value);
+          }}
+          onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+          onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
         />
       </FormField>
+      {patientError && (
+        <p className="text-xs text-red-500 mt-1">Please select a patient from the suggestions.</p>
+      )}
+      {showSuggestions && suggestions.length > 0 && (
+        <div
+          ref={suggestionsRef}
+          className="absolute z-50 w-full bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto"
+        >
+          {suggestions.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 text-gray-800"
+              onMouseDown={() => handleSelectPatient(s)}
+            >
+              {s.name}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  const paymentFormFields = (
+    <div className="space-y-4">
+      {patientSearchField}
       <div className="grid grid-cols-2 gap-4">
         <FormField label={t("payments.treatmentType")}>
           <input
@@ -279,17 +393,31 @@ export default function PatientPaymentsPage() {
           />
         </FormField>
       </div>
-      <FormField label={t("common.status")}>
-        <select
-          className={inputClass}
-          value={form.status}
-          onChange={(e) => setForm((f) => ({ ...f, status: e.target.value as PatientPayment["status"] }))}
-        >
-          <option value="pending">{t("payments.pendingBadge")}</option>
-          <option value="paid">{t("payments.paidBadge")}</option>
-          <option value="overdue">{t("payments.overdueBadge")}</option>
-        </select>
-      </FormField>
+      <div className="grid grid-cols-2 gap-4">
+        <FormField label={t("common.status")}>
+          <select
+            className={inputClass}
+            value={form.status}
+            onChange={(e) => setForm((f) => ({ ...f, status: e.target.value as PatientPayment["status"] }))}
+          >
+            <option value="pending">{t("payments.pendingBadge")}</option>
+            <option value="paid">{t("payments.paidBadge")}</option>
+            <option value="overdue">{t("payments.overdueBadge")}</option>
+          </select>
+        </FormField>
+        <FormField label="Payment Method">
+          <select
+            className={inputClass}
+            value={form.payment_method}
+            onChange={(e) => setForm((f) => ({ ...f, payment_method: e.target.value as typeof form.payment_method }))}
+          >
+            <option value="cash">Cash</option>
+            <option value="card">Card</option>
+            <option value="insurance">Insurance</option>
+            <option value="bank_transfer">Bank Transfer</option>
+          </select>
+        </FormField>
+      </div>
     </div>
   );
 
