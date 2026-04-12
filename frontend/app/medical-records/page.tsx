@@ -6,7 +6,6 @@ import { Avatar } from "@/components/ui/Avatar";
 import { PatientPageHeader } from "@/components/ui/PatientPageHeader";
 import { Button } from "@/components/ui/button";
 import {
-  FaTooth,
   FaFileMedical,
   FaCalendarAlt,
   FaUserMd,
@@ -21,6 +20,7 @@ import {
   FaHeartbeat,
   FaSearch,
   FaFilter,
+  FaTimes,
 } from "react-icons/fa";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
@@ -54,12 +54,7 @@ export default function MedicalRecords() {
       date: string;
       type: string;
       size: string;
-    }[]
-  >([]);
-  const [dentalChart, setDentalChart] = useState<
-    {
-      tooth: number;
-      status: string;
+      url?: string;
     }[]
   >([]);
   const [loading, setLoading] = useState(true);
@@ -79,7 +74,11 @@ export default function MedicalRecords() {
           medications: me.current_medications ? me.current_medications.split(",").map((s: string) => s.trim()).filter(Boolean) : [],
         }));
 
-        const recordsRes = await apiFetch(`/api/patient/patient-records?user_id=${me.id}&limit=50`);
+        const [recordsRes, profileRes] = await Promise.all([
+          apiFetch(`/api/patient/patient-records?user_id=${me.id}&limit=50`),
+          apiFetch(`/api/patients/by-user/${me.id}`),
+        ]);
+
         if (!recordsRes.ok) return;
         const recordsData = await recordsRes.json();
 
@@ -103,6 +102,24 @@ export default function MedicalRecords() {
         }
 
         setVisitHistory(mapped);
+
+        if (profileRes.ok) {
+          const profile = await profileRes.json();
+          const docsRes = await apiFetch(`/api/patient-documents?patient_id=${profile.id}&limit=50`);
+          if (docsRes.ok) {
+            const docsData = await docsRes.json();
+            setDocuments(
+              (docsData.data || []).map((d: any) => ({
+                id: Number(d.id),
+                name: d.file_name,
+                date: d.uploaded_at,
+                type: d.document_type,
+                url: d.url,
+                size: "",
+              }))
+            );
+          }
+        }
       } catch (e) {
         console.error("Failed to fetch medical records", e);
       } finally {
@@ -118,25 +135,9 @@ export default function MedicalRecords() {
     console.log("Download document", docId);
   };
   const [expandedVisit, setExpandedVisit] = useState<number | null>(1);
-  const [activeTab, setActiveTab] = useState<"history" | "documents" | "chart">(
-    "history",
-  );
+  const [activeTab, setActiveTab] = useState<"history" | "documents">("history");
+  const [previewDoc, setPreviewDoc] = useState<{ name: string; url: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "healthy":
-        return "bg-green-100 text-green-600";
-      case "filling":
-        return "bg-yellow-100 text-yellow-600";
-      case "crown":
-        return "bg-blue-100 text-blue-600";
-      case "extracted":
-        return "bg-gray-200 text-gray-400";
-      default:
-        return "bg-gray-100 text-gray-600";
-    }
-  };
 
   const filteredVisits = visitHistory.filter(
     (visit) =>
@@ -265,17 +266,6 @@ export default function MedicalRecords() {
           >
             <FaFileMedical className="inline mr-2" />
             Documents
-          </button>
-          <button
-            onClick={() => setActiveTab("chart")}
-            className={`px-6 py-2.5 rounded-lg font-medium transition-all ${
-              activeTab === "chart"
-                ? "bg-white text-dental-blue shadow-sm"
-                : "text-gray-600 hover:text-gray-900"
-            }`}
-          >
-            <FaTooth className="inline mr-2" />
-            Dental Chart
           </button>
         </div>
 
@@ -406,155 +396,107 @@ export default function MedicalRecords() {
         {activeTab === "documents" && (
           <div className="animate-fadeIn">
             <div className="bg-white rounded-2xl shadow-sm p-6">
-              <div className="grid sm:grid-cols-2 gap-4">
-                {documents.map((doc) => (
-                  <div
-                    key={doc.id}
-                    className="flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:border-dental-blue/30 hover:bg-dental-blue/5 transition-all group"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div
-                        className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                          doc.type === "xray" ? "bg-purple-100" : "bg-blue-100"
-                        }`}
-                      >
-                        {doc.type === "xray" ? (
-                          <FaXRay className="text-purple-600 text-xl" />
-                        ) : (
-                          <FaFileMedical className="text-blue-600 text-xl" />
+              {documents.length === 0 ? (
+                <p className="text-center text-gray-500 py-8">No documents found.</p>
+              ) : (
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {documents.map((doc) => (
+                    <div
+                      key={doc.id}
+                      className="flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:border-dental-blue/30 hover:bg-dental-blue/5 transition-all group"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div
+                          className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                            doc.type === "xray" ? "bg-purple-100" : "bg-blue-100"
+                          }`}
+                        >
+                          {doc.type === "xray" ? (
+                            <FaXRay className="text-purple-600 text-xl" />
+                          ) : (
+                            <FaFileMedical className="text-blue-600 text-xl" />
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900">
+                            {doc.name}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {new Date(doc.date).toLocaleDateString()} · {doc.type}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {doc.url && (
+                          <>
+                            <button
+                              onClick={() => setPreviewDoc({ name: doc.name, url: doc.url! })}
+                              className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 hover:text-dental-blue transition-colors"
+                            >
+                              <FaEye />
+                            </button>
+                            <a
+                              href={doc.url}
+                              download={doc.name}
+                              className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 hover:text-dental-blue transition-colors"
+                            >
+                              <FaDownload />
+                            </a>
+                          </>
                         )}
                       </div>
-                      <div>
-                        <p className="font-semibold text-gray-900">
-                          {doc.name}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {new Date(doc.date).toLocaleDateString()} • {doc.size}
-                        </p>
-                      </div>
                     </div>
-                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 hover:text-dental-blue transition-colors">
-                        <FaEye />
-                      </button>
-                      <button className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 hover:text-dental-blue transition-colors">
-                        <FaDownload />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
 
-        {/* Dental Chart Tab */}
-        {activeTab === "chart" && (
-          <div className="animate-fadeIn">
-            <div className="bg-white rounded-2xl shadow-sm p-8">
-              <div className="text-center mb-8">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  Your Dental Chart
-                </h3>
-                <p className="text-gray-600">
-                  Visual overview of your dental health status
-                </p>
-              </div>
-
-              {/* Legend */}
-              <div className="flex justify-center gap-6 mb-8">
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-green-100 border-2 border-green-300"></div>
-                  <span className="text-sm text-gray-600">Healthy</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-yellow-100 border-2 border-yellow-300"></div>
-                  <span className="text-sm text-gray-600">Filling</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-blue-100 border-2 border-blue-300"></div>
-                  <span className="text-sm text-gray-600">Crown</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-gray-200 border-2 border-gray-300"></div>
-                  <span className="text-sm text-gray-600">Extracted</span>
-                </div>
-              </div>
-
-              {/* Upper Teeth */}
-              <div className="mb-4">
-                <p className="text-center text-sm font-medium text-gray-500 mb-3">
-                  Upper Teeth
-                </p>
-                <div className="flex justify-center gap-1">
-                  {dentalChart.slice(0, 16).map((tooth) => (
-                    <div
-                      key={tooth.tooth}
-                      className={`w-8 h-10 sm:w-10 sm:h-12 rounded-b-lg flex items-center justify-center text-xs font-medium cursor-pointer hover:scale-110 transition-transform ${getStatusColor(
-                        tooth.status,
-                      )}`}
-                      title={`Tooth ${tooth.tooth}: ${tooth.status}`}
-                    >
-                      {tooth.tooth}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Divider */}
-              <div className="border-t-2 border-dashed border-gray-200 my-4"></div>
-
-              {/* Lower Teeth */}
-              <div>
-                <div className="flex justify-center gap-1">
-                  {dentalChart.slice(16, 32).map((tooth) => (
-                    <div
-                      key={tooth.tooth}
-                      className={`w-8 h-10 sm:w-10 sm:h-12 rounded-t-lg flex items-center justify-center text-xs font-medium cursor-pointer hover:scale-110 transition-transform ${getStatusColor(
-                        tooth.status,
-                      )}`}
-                      title={`Tooth ${tooth.tooth}: ${tooth.status}`}
-                    >
-                      {tooth.tooth}
-                    </div>
-                  ))}
-                </div>
-                <p className="text-center text-sm font-medium text-gray-500 mt-3">
-                  Lower Teeth
-                </p>
-              </div>
-
-              {/* Summary Stats */}
-              <div className="mt-8 grid grid-cols-4 gap-4">
-                <div className="text-center p-4 bg-green-50 rounded-xl">
-                  <p className="text-2xl font-bold text-green-600">
-                    {dentalChart.filter((t) => t.status === "healthy").length}
-                  </p>
-                  <p className="text-sm text-gray-600">Healthy</p>
-                </div>
-                <div className="text-center p-4 bg-yellow-50 rounded-xl">
-                  <p className="text-2xl font-bold text-yellow-600">
-                    {dentalChart.filter((t) => t.status === "filling").length}
-                  </p>
-                  <p className="text-sm text-gray-600">Fillings</p>
-                </div>
-                <div className="text-center p-4 bg-blue-50 rounded-xl">
-                  <p className="text-2xl font-bold text-blue-600">
-                    {dentalChart.filter((t) => t.status === "crown").length}
-                  </p>
-                  <p className="text-sm text-gray-600">Crowns</p>
-                </div>
-                <div className="text-center p-4 bg-gray-100 rounded-xl">
-                  <p className="text-2xl font-bold text-gray-500">
-                    {dentalChart.filter((t) => t.status === "extracted").length}
-                  </p>
-                  <p className="text-sm text-gray-600">Extracted</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </main>
+
+      {/* Document Preview Modal */}
+      {previewDoc && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[70] p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+              <p className="font-semibold text-gray-900 truncate">{previewDoc.name}</p>
+              <div className="flex items-center gap-2 ml-4 shrink-0">
+                <a
+                  href={previewDoc.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-dental-blue border border-dental-blue/30 rounded-lg hover:bg-blue-50 transition-colors"
+                >
+                  <FaDownload className="text-xs" /> Download
+                </a>
+                <button
+                  onClick={() => setPreviewDoc(null)}
+                  className="p-2 hover:bg-gray-100 rounded-lg"
+                >
+                  <FaTimes className="text-gray-500" />
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-auto p-2 bg-gray-100">
+              {/\.(png|jpe?g|gif|webp|svg)$/i.test(previewDoc.name) ? (
+                <img
+                  src={previewDoc.url}
+                  alt={previewDoc.name}
+                  className="max-w-full max-h-[75vh] mx-auto rounded-lg object-contain"
+                />
+              ) : (
+                <iframe
+                  src={previewDoc.url}
+                  title={previewDoc.name}
+                  className="w-full rounded-lg bg-white"
+                  style={{ height: "75vh" }}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -232,24 +232,6 @@ export default function PatientDashboard() {
           </div>
         </div>
 
-        {/* Health Summary Card */}
-        <div className="mt-8 bg-gradient-to-r from-dental-blue to-dental-teal rounded-xl p-6 text-white shadow-lg">
-          <h2 className="text-2xl font-bold mb-4">{t("patientDashboard.dentalHealthScore")}</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-              <p className="text-sm opacity-90 mb-1">{t("patientDashboard.overallHealth")}</p>
-              <p className="text-3xl font-bold">{t("patientDashboard.excellent")}</p>
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-              <p className="text-sm opacity-90 mb-1">{t("patientDashboard.lastCheckup")}</p>
-              <p className="text-3xl font-bold">{t("patientDashboard.twoMonthsAgo")}</p>
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-              <p className="text-sm opacity-90 mb-1">{t("patientDashboard.nextCleaning")}</p>
-              <p className="text-3xl font-bold">{t("patientDashboard.threeDays")}</p>
-            </div>
-          </div>
-        </div>
       </main>
     </div>
   );
