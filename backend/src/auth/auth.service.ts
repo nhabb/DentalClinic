@@ -20,34 +20,31 @@ export class AuthService {
 
     const password_hash = await bcrypt.hash(dto.password, 10);
 
-    const user = await this.prisma.$transaction(async (tx) => {
-      const newUser = await tx.users.create({
-        data: {
-          email: dto.email,
-          password_hash,
-          first_name: dto.first_name,
-          last_name: dto.last_name,
-          phone: dto.phone,
-          date_of_birth: dto.date_of_birth ? new Date(dto.date_of_birth) : undefined,
-          gender: dto.gender,
-          address: dto.address,
-          role: 'patient',
-        },
-        select: {
-          id: true,
-          email: true,
-          first_name: true,
-          last_name: true,
-          role: true,
-          created_at: true,
-        },
-      });
+    const user = await this.prisma.users.create({
+      data: {
+        email: dto.email,
+        password_hash,
+        first_name: dto.first_name,
+        last_name: dto.last_name,
+        phone: dto.phone,
+        date_of_birth: dto.date_of_birth ? new Date(dto.date_of_birth) : undefined,
+        gender: dto.gender,
+        address: dto.address,
+        role: 'patient',
+      },
+      select: {
+        id: true,
+        email: true,
+        first_name: true,
+        last_name: true,
+        role: true,
+        created_at: true,
+      },
+    });
 
-      await tx.patient_profiles.create({
-        data: { user_id: newUser.id },
-      });
-
-      return newUser;
+    // Create profile separately — avoids interactive-transaction timeout on remote DB
+    await this.prisma.patient_profiles.create({
+      data: { user_id: user.id },
     });
 
     const token = this.jwtService.sign({ sub: user.id.toString(), email: user.email, role: user.role });

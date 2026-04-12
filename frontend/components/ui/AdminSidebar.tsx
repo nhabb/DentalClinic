@@ -39,7 +39,7 @@ export default function AdminSidebar({ activePage, sidebarOpen, onLogout }: Prop
     <aside
       className={`${
         sidebarOpen ? "w-64" : "w-20"
-      } bg-gradient-to-b from-gray-900 to-gray-800 text-white transition-all duration-300 flex flex-col`}
+      } bg-gradient-to-b from-gray-900 to-gray-800 text-white transition-all duration-300 flex flex-col sticky top-0 h-screen`}
     >
       {/* Logo */}
       <div className="p-6 border-b border-gray-700">
@@ -57,7 +57,7 @@ export default function AdminSidebar({ activePage, sidebarOpen, onLogout }: Prop
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
         {navItems.map(({ id, href, icon: Icon, labelKey }) => {
           const isActive = activePage === id;
           return (

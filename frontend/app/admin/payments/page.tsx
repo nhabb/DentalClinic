@@ -43,7 +43,9 @@ import {
   FaEdit,
   FaTrash,
   FaFileInvoiceDollar,
+  FaExternalLinkAlt,
 } from "react-icons/fa";
+import Link from "next/link";
 
 type PatientOption = { id: number; name: string };
 
@@ -55,7 +57,8 @@ type PatientPayment = {
   date: string;
   amount_due: number;
   amount_paid: number;
-  status: "paid" | "pending" | "overdue";
+  status: "paid" | "pending" | "overdue" | "partial";
+  source: "payment" | "invoice";
 };
 
 const statusFilterKeys = ["all", "paid", "pending", "overdueFilter"] as const;
@@ -66,7 +69,7 @@ const emptyForm = {
   date: new Date().toISOString().split("T")[0],
   amount_due: "",
   amount_paid: "",
-  status: "pending" as "paid" | "pending" | "overdue",
+  status: "pending" as "paid" | "pending" | "overdue" | "partial",
   payment_method: "cash" as "cash" | "card" | "insurance" | "bank_transfer",
 };
 
@@ -96,31 +99,62 @@ export default function PatientPaymentsPage() {
     setIsLoading(true);
     setFetchError(null);
     try {
-      const res = await apiFetch("/api/payments?limit=200");
-      if (!res.ok) {
-        const errBody = await res.json().catch(() => ({}));
-        console.error("[fetchPayments] API error", res.status, errBody);
-        setFetchError(`Failed to load payments (${res.status})`);
+      // Fetch both old payments and billing invoices in parallel
+      const [paymentsRes, invoicesRes] = await Promise.all([
+        apiFetch("/api/payments?limit=200"),
+        apiFetch("/api/billing/invoices?limit=200"),
+      ]);
+
+      if (!paymentsRes.ok && !invoicesRes.ok) {
+        setFetchError(`Failed to load data (${paymentsRes.status})`);
         setPayments([]);
         return;
       }
-      const data = await res.json();
-      setPayments(
-        (data.data || []).map((p: any) => ({
-          ...p,
-          id: Number(p.id),
-          patient_id: p.patient_id != null ? Number(p.patient_id) : (p.patient?.id ? Number(p.patient.id) : undefined),
-          patient_name:
-            p.patient?.users
-              ? `${p.patient.users.first_name ?? ""} ${p.patient.users.last_name ?? ""}`.trim()
-              : (p.patient_name ?? p.patientName ?? ""),
-          treatment: p.treatment ?? p.description ?? "",
-          date: p.date ?? p.created_at?.split("T")[0] ?? "",
-          amount_due: Number(p.amount_due ?? p.amount) || 0,
-          amount_paid: Number(p.amount_paid) || 0,
-          status: (p.status ?? "pending").toLowerCase(),
-        }))
+
+      // Map old-style payments
+      const paymentsData = paymentsRes.ok ? await paymentsRes.json() : { data: [] };
+      const oldPayments: PatientPayment[] = (paymentsData.data || []).map((p: any) => ({
+        id: Number(p.id),
+        patient_id: p.patient_id != null ? Number(p.patient_id) : (p.patient?.id ? Number(p.patient.id) : undefined),
+        patient_name:
+          p.patient?.users
+            ? `${p.patient.users.first_name ?? ""} ${p.patient.users.last_name ?? ""}`.trim()
+            : (p.patient_name ?? p.patientName ?? ""),
+        treatment: p.treatment ?? p.description ?? "",
+        date: p.date ?? p.created_at?.split("T")[0] ?? "",
+        amount_due: Number(p.amount_due ?? p.amount) || 0,
+        amount_paid: Number(p.amount_paid) || 0,
+        status: (p.status ?? "pending").toLowerCase() as PatientPayment["status"],
+        source: "payment" as const,
+      }));
+
+      // Map billing invoices — one row per invoice showing cumulative paid/remaining
+      const invoicesData = invoicesRes.ok ? await invoicesRes.json() : { data: [] };
+      const invoiceRows: PatientPayment[] = (invoicesData.data || []).map((inv: any) => {
+        const procedures = (inv.line_items ?? []).map((li: any) => li.procedure_name).join(", ") || "Treatment";
+        const rawStatus = (inv.status ?? "open").toLowerCase();
+        const status: PatientPayment["status"] =
+          rawStatus === "paid" ? "paid" : rawStatus === "partial" ? "partial" : "pending";
+        return {
+          id: Number(inv.id),
+          patient_id: inv.patient?.id ? Number(inv.patient.id) : undefined,
+          patient_name: inv.patient?.users
+            ? `${inv.patient.users.first_name ?? ""} ${inv.patient.users.last_name ?? ""}`.trim()
+            : "",
+          treatment: procedures,
+          date: inv.procedure_date?.split("T")[0] ?? inv.created_at?.split("T")[0] ?? "",
+          amount_due: Number(inv.total_amount) || 0,
+          amount_paid: Number(inv.amount_paid) || 0,
+          status,
+          source: "invoice" as const,
+        };
+      });
+
+      // Merge and sort newest first
+      const merged = [...oldPayments, ...invoiceRows].sort((a, b) =>
+        b.date.localeCompare(a.date)
       );
+      setPayments(merged);
     } catch (err) {
       console.error("[fetchPayments] network error", err);
       setFetchError("Network error — could not reach the server.");
@@ -184,24 +218,27 @@ export default function PatientPaymentsPage() {
     const matchesStatus =
       selectedStatus === "All" ||
       (selectedStatus === "Paid" && p.status === "paid") ||
-      (selectedStatus === "Pending" && p.status === "pending") ||
+      (selectedStatus === "Pending" && (p.status === "pending" || p.status === "partial")) ||
       (selectedStatus === "Overdue" && p.status === "overdue");
     return matchesSearch && matchesStatus;
   });
 
   const totalRevenue = payments.reduce((sum, p) => sum + p.amount_due, 0);
   const totalCollected = payments.reduce((sum, p) => sum + p.amount_paid, 0);
-  const totalPending = payments.filter((p) => p.status === "pending").reduce((sum, p) => sum + (p.amount_due - p.amount_paid), 0);
+  const totalPending = payments
+    .filter((p) => p.status === "pending" || p.status === "partial")
+    .reduce((sum, p) => sum + (p.amount_due - p.amount_paid), 0);
   const totalOverdue = payments.filter((p) => p.status === "overdue").reduce((sum, p) => sum + (p.amount_due - p.amount_paid), 0);
 
   const handleOpenEdit = (payment: PatientPayment) => {
+    if (payment.source === "invoice") return; // managed via billing page
     setSelectedPayment(payment);
     setForm({
       treatment: payment.treatment,
       date: payment.date,
       amount_due: String(payment.amount_due),
       amount_paid: String(payment.amount_paid),
-      status: payment.status,
+      status: payment.status === "partial" ? "pending" : payment.status,
       payment_method: "cash",
     });
     setPatientQuery(payment.patient_name);
@@ -290,7 +327,7 @@ export default function PatientPaymentsPage() {
     } catch {
       // optimistic delete
     }
-    setPayments((prev) => prev.filter((p) => p.id !== id));
+    setPayments((prev) => prev.filter((p) => !(p.id === id && p.source === "payment")));
   };
 
   const formatAmount = (amount: number) =>
@@ -308,6 +345,12 @@ export default function PatientPaymentsPage() {
         return (
           <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">
             <FaExclamationCircle className="text-xs" /> {t("payments.overdueBadge")}
+          </span>
+        );
+      case "partial":
+        return (
+          <span className="inline-flex items-center gap-1 px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-full">
+            <FaClock className="text-xs" /> Partial
           </span>
         );
       default:
@@ -525,11 +568,16 @@ export default function PatientPaymentsPage() {
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {filteredPayments.map((payment) => (
-                      <tr key={payment.id} className="hover:bg-gray-50 transition-colors">
+                      <tr key={`${payment.source}-${payment.id}`} className="hover:bg-gray-50 transition-colors">
                         <td className="py-4 px-6">
                           <div className="flex items-center gap-3">
                             <Avatar name={payment.patient_name ?? "?"} size="sm" />
-                            <span className="font-medium text-gray-900">{payment.patient_name ?? "—"}</span>
+                            <div>
+                              <span className="font-medium text-gray-900">{payment.patient_name ?? "—"}</span>
+                              {payment.source === "invoice" && (
+                                <span className="ml-2 text-xs px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded">Invoice</span>
+                              )}
+                            </div>
                           </div>
                         </td>
                         <td className="py-4 px-6">
@@ -551,18 +599,30 @@ export default function PatientPaymentsPage() {
                         </td>
                         <td className="py-4 px-6">
                           <div className="flex justify-center gap-2">
-                            <button
-                              onClick={() => handleOpenEdit(payment)}
-                              className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-dental-blue transition-colors"
-                            >
-                              <FaEdit />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(payment.id)}
-                              className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-red-500 transition-colors"
-                            >
-                              <FaTrash />
-                            </button>
+                            {payment.source === "invoice" ? (
+                              <Link
+                                href="/admin/billing"
+                                className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-dental-blue transition-colors"
+                                title="Manage in Billing"
+                              >
+                                <FaExternalLinkAlt />
+                              </Link>
+                            ) : (
+                              <>
+                                <button
+                                  onClick={() => handleOpenEdit(payment)}
+                                  className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-dental-blue transition-colors"
+                                >
+                                  <FaEdit />
+                                </button>
+                                <button
+                                  onClick={() => handleDelete(payment.id)}
+                                  className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-red-500 transition-colors"
+                                >
+                                  <FaTrash />
+                                </button>
+                              </>
+                            )}
                           </div>
                         </td>
                       </tr>

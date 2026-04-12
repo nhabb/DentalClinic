@@ -1,6 +1,5 @@
 import {
   Injectable,
-  NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
@@ -28,11 +27,11 @@ export class PatientAppointmentsService {
   ) {}
 
   private async resolvePatientProfile(userId: number) {
-    const profile = await this.prisma.patient_profiles.findUnique({
+    return this.prisma.patient_profiles.upsert({
       where: { user_id: BigInt(userId) },
+      create: { user_id: BigInt(userId) },
+      update: {},
     });
-    if (!profile) throw new NotFoundException('Patient profile not found');
-    return profile;
   }
 
   async getUpcoming(userId: number, page = 1, limit = 20) {

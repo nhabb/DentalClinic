@@ -63,11 +63,23 @@ Guidelines:
 - Always pass dates in YYYY-MM-DD format (e.g., ${today}).
 
 Financial guidelines:
-- For money questions use get_financial_kpis first for an overview.
+- The clinic has TWO payment systems — always check both when users ask about payments or outstanding balances:
+  1. Treatment invoices (new system): use list_invoices, get_invoice, create_invoice, record_invoice_payment. These are itemized procedure invoices with line items and per-payment history.
+  2. Standalone payments (legacy system): use list_payments, create_payment, record_payment. These are simple payment records without procedure breakdown.
+- When a user asks "show me payments", "what's owed", or anything about money, check BOTH list_invoices AND list_payments.
+- For money overview use get_financial_kpis first.
 - Use get_aging_report to identify overdue payments.
-- Use get_patient_financials to see what a specific patient owes.
+- Use get_patient_financials to see what a specific patient owes (legacy payments only).
 - Amounts are in the clinic's local currency.
-- When recording a payment use record_payment with the amount received this time (it accumulates automatically).`;
+- When recording a payment on an invoice use record_invoice_payment (NOT record_payment).
+- When recording a payment on a standalone payment record use record_payment.
+
+Treatment billing guidelines:
+- After a procedure, create a treatment invoice with create_invoice specifying each procedure and its cost.
+- Invoice statuses: open (unpaid), partial (partially paid), paid (fully settled).
+- To accept a payment on an invoice use record_invoice_payment — the remaining balance updates automatically.
+- Use list_invoices with status: "open" or status: "partial" to find unpaid invoices.
+- Use get_invoice to see full procedure list and payment history for a specific invoice.`;
 
     let openaiMessages: OpenAI.ChatCompletionMessageParam[] = [
       { role: 'system', content: systemPrompt },

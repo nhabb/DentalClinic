@@ -96,13 +96,14 @@ export class PatientsService {
   }
 
   async findByUserId(userId: bigint) {
-    const profile = await this.prisma.patient_profiles.findUnique({
+    // Use upsert so users whose profile was never created (e.g. due to transaction
+    // timeout during signup) get a profile auto-created on first access.
+    return this.prisma.patient_profiles.upsert({
       where: { user_id: userId },
+      create: { user_id: userId },
+      update: {},
       select: this.patientSelect,
     });
-
-    if (!profile) throw new NotFoundException('Patient profile not found');
-    return profile;
   }
 
   async findById(id: bigint) {
