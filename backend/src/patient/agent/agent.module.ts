@@ -9,6 +9,7 @@ import { UsersModule } from '../../shared/users/users.module';
 import { NotificationsModule } from '../../shared/notifications/notifications.module';
 import { PaymentsModule } from '../../doctor/payments/payments.module';
 import { ExpensesModule } from '../../doctor/expenses/expenses.module';
+import { BillingModule } from '../../doctor/billing/billing.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { ExpensesModule } from '../../doctor/expenses/expenses.module';
     NotificationsModule,
     PaymentsModule,
     ExpensesModule,
+    BillingModule,
   ],
   controllers: [AgentController],
   providers: [AgentService],

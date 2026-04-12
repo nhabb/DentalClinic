@@ -317,6 +317,86 @@ export const AGENT_TOOLS: OpenAI.ChatCompletionTool[] = [
     },
   },
 
+  // ── Treatment Billing ─────────────────────────────────────────
+  {
+    type: 'function',
+    function: {
+      name: 'list_invoices',
+      description: 'List treatment invoices with optional filters. Each invoice has line items (procedures) and a payment history. Status: open = unpaid, partial = partially paid, paid = fully paid.',
+      parameters: {
+        type: 'object',
+        properties: {
+          patient_id: { type: 'number', description: 'Filter by patient profile ID' },
+          status: { type: 'string', enum: ['open', 'partial', 'paid'], description: 'Filter by invoice status' },
+          from: { type: 'string', description: 'Start date YYYY-MM-DD' },
+          to: { type: 'string', description: 'End date YYYY-MM-DD' },
+          page: { type: 'number' },
+          limit: { type: 'number' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_invoice',
+      description: 'Get full details of a single treatment invoice by ID, including all line items (procedures) and complete payment history.',
+      parameters: {
+        type: 'object',
+        properties: { id: { type: 'number', description: 'Treatment invoice ID' } },
+        required: ['id'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'create_invoice',
+      description: 'Create a new treatment invoice for a patient after a procedure. Specify the procedure date, individual procedures with amounts, and optional notes. The invoice starts as "open".',
+      parameters: {
+        type: 'object',
+        properties: {
+          patient_id: { type: 'number', description: 'Patient profile ID or user ID' },
+          procedure_date: { type: 'string', description: 'Date of procedure (YYYY-MM-DD)' },
+          notes: { type: 'string', description: 'Optional notes about the treatment' },
+          line_items: {
+            type: 'array',
+            description: 'List of procedures performed with their costs',
+            items: {
+              type: 'object',
+              properties: {
+                procedure_name: {
+                  type: 'string',
+                  enum: ['Checkup', 'X-Ray', 'Teeth Cleaning', 'Whitening', 'Tooth Extraction', 'Root Canal', 'Filling', 'Crown', 'Bridge', 'Implant', 'Orthodontic', 'Veneers', 'Gum Treatment', 'Fluoride Treatment'],
+                },
+                amount: { type: 'number', description: 'Cost of this procedure' },
+              },
+              required: ['procedure_name', 'amount'],
+            },
+          },
+        },
+        required: ['patient_id', 'procedure_date', 'line_items'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'record_invoice_payment',
+      description: 'Record a payment (full or partial) against a treatment invoice. The remaining balance updates automatically. Status changes to "partial" or "paid" as appropriate.',
+      parameters: {
+        type: 'object',
+        properties: {
+          invoice_id: { type: 'number', description: 'Treatment invoice ID' },
+          amount: { type: 'number', description: 'Amount being paid now (must not exceed remaining balance)' },
+          payment_method: { type: 'string', enum: ['cash', 'card', 'insurance', 'bank_transfer'], description: 'Default: cash' },
+          notes: { type: 'string', description: 'Optional notes about this payment' },
+        },
+        required: ['invoice_id', 'amount'],
+      },
+    },
+  },
+
   // ── Expenses ──────────────────────────────────────────────────
   {
     type: 'function',

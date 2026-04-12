@@ -40,7 +40,8 @@
     "doctorPanel": "لوحة الطبيب",
     "staffPanel": "لوحة الموظفين",
     "expenses": "المصروفات",
-    "payments": "المدفوعات"
+    "payments": "المدفوعات",
+    "billing": "الفواتير"
   },
   "continueLogin": {
     "title": "أكمل ملفك الشخصي",

@@ -82,6 +82,7 @@ export default function PatientPaymentsPage() {
   const [selectedPayment, setSelectedPayment] = useState<PatientPayment | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   // Patient search state
   const [patientQuery, setPatientQuery] = useState("");
@@ -93,13 +94,22 @@ export default function PatientPaymentsPage() {
 
   const fetchPayments = async () => {
     setIsLoading(true);
+    setFetchError(null);
     try {
-      const res = await apiFetch("/api/payments");
+      const res = await apiFetch("/api/payments?limit=200");
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        console.error("[fetchPayments] API error", res.status, errBody);
+        setFetchError(`Failed to load payments (${res.status})`);
+        setPayments([]);
+        return;
+      }
       const data = await res.json();
       setPayments(
         (data.data || []).map((p: any) => ({
           ...p,
-          patient_id: p.patient_id ?? (p.patient?.id ? Number(p.patient.id) : undefined),
+          id: Number(p.id),
+          patient_id: p.patient_id != null ? Number(p.patient_id) : (p.patient?.id ? Number(p.patient.id) : undefined),
           patient_name:
             p.patient?.users
               ? `${p.patient.users.first_name ?? ""} ${p.patient.users.last_name ?? ""}`.trim()
@@ -111,7 +121,9 @@ export default function PatientPaymentsPage() {
           status: (p.status ?? "pending").toLowerCase(),
         }))
       );
-    } catch {
+    } catch (err) {
+      console.error("[fetchPayments] network error", err);
+      setFetchError("Network error — could not reach the server.");
       setPayments([]);
     } finally {
       setIsLoading(false);
@@ -439,6 +451,11 @@ export default function PatientPaymentsPage() {
         <main className="flex-1 p-8 overflow-auto">
           {isLoading ? (
             <LoadingSpinner />
+          ) : fetchError ? (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+              <p className="text-red-700 font-medium">{fetchError}</p>
+              <button onClick={fetchPayments} className="mt-3 text-sm text-red-600 underline hover:no-underline">Retry</button>
+            </div>
           ) : (<>
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">

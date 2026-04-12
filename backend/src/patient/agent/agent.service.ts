@@ -8,6 +8,7 @@ import { UsersService } from '../../shared/users/users.service';
 import { NotificationsService } from '../../shared/notifications/notifications.service';
 import { PaymentsService } from '../../doctor/payments/payments.service';
 import { ExpensesService } from '../../doctor/expenses/expenses.service';
+import { BillingService } from '../../doctor/billing/billing.service';
 import { AGENT_TOOLS } from './agent.tools';
 
 export interface ChatMessage {
@@ -33,6 +34,7 @@ export class AgentService {
     private readonly notifications: NotificationsService,
     private readonly payments: PaymentsService,
     private readonly expenses: ExpensesService,
+    private readonly billing: BillingService,
   ) {}
 
   async chat(messages: ChatMessage[], context: { doctorName: string; doctorId?: number }): Promise<string> {
@@ -204,6 +206,35 @@ Financial guidelines:
           return serialize(await this.payments.updateStatus(BigInt(input.id), {
             amount_paid: input.amount_paid,
             paid_at: input.paid_at,
+          }));
+
+        // ── Treatment Billing ──────────────────────────────────────
+        case 'list_invoices':
+          return serialize(await this.billing.findAll({
+            patient_id: input.patient_id,
+            status: input.status,
+            from: input.from,
+            to: input.to,
+            page: input.page ?? 1,
+            limit: input.limit ?? 20,
+          }));
+
+        case 'get_invoice':
+          return serialize(await this.billing.findOne(BigInt(input.id)));
+
+        case 'create_invoice':
+          return serialize(await this.billing.create({
+            patient_id: input.patient_id,
+            procedure_date: input.procedure_date,
+            notes: input.notes,
+            line_items: input.line_items,
+          }));
+
+        case 'record_invoice_payment':
+          return serialize(await this.billing.recordPayment(BigInt(input.invoice_id), {
+            amount: input.amount,
+            payment_method: input.payment_method ?? 'cash',
+            notes: input.notes,
           }));
 
         // ── Expenses ───────────────────────────────────────────────

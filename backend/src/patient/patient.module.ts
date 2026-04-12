@@ -8,6 +8,7 @@ import { PatientRecordsViewModule } from './patient-records/patient-records-view
 import { AvailableSlotsModule } from './available-slots/available-slots.module';
 import { ClinicProfileModule } from './clinic-profile/clinic-profile.module';
 import { PatientPaymentsModule } from './payments/patient-payments.module';
+import { PatientBillingModule } from './billing/patient-billing.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { PatientPaymentsModule } from './payments/patient-payments.module';
     AvailableSlotsModule,
     ClinicProfileModule,
     PatientPaymentsModule,
+    PatientBillingModule,
   ],
 })
 export class PatientModule {}

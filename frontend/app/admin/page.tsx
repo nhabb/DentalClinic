@@ -86,181 +86,92 @@ export default function AdminDashboard() {
   const [kpis, setKpis] = useState<any>(null);
   const [analyticsData, setAnalyticsData] = useState<any[]>([]);
 
-  // Load user info from localStorage and resolve name from API
+  // Single effect: fire all requests in parallel, set all state together
   useEffect(() => {
     const storedUser = safeStorage.getItem("adminUser");
     const storedRole = safeStorage.getItem("userRole");
     const storedDoctorId = safeStorage.getItem("doctorId");
-    const storedDbId = safeStorage.getItem("doctorDbId");
 
     if (storedRole) setUserRole(storedRole);
     if (storedDoctorId) setDoctorId(parseInt(storedDoctorId));
 
-    const resolveUser = async () => {
-      // Try resolving name from API using stored email
+    const fetchAll = async () => {
+      // Resolve email for user lookup
+      let email = "";
       if (storedUser) {
-        const parsed = JSON.parse(storedUser);
-        const email = parsed.email;
-        if (email) {
-          // Load persisted profile photo
-          const saved = localStorage.getItem(`brightsmile_photo_${email}`);
-          if (saved) setPhotoUrl(saved);
-
-          try {
-            const res = await fetch(`${API_URL}/api/users/by-email?email=${encodeURIComponent(email)}`);
-            if (res.ok) {
-              const u = await res.json();
-              setUser({
-                id: Number(u.id),
-                firstName: u.first_name || "",
-                lastName: u.last_name || "",
-                email: u.email,
-                role: u.role,
-              });
-              if (u.id) safeStorage.setItem("doctorDbId", String(u.id));
-              return;
-            }
-          } catch {}
-        }
-        // Fallback: use whatever was stored
-        setUser({
-          ...parsed,
-          firstName: parsed.firstName || parsed.first_name || "",
-          lastName: parsed.lastName || parsed.last_name || "",
-        });
+        try { email = JSON.parse(storedUser).email || ""; } catch {}
       }
-    };
+      if (email) {
+        const saved = localStorage.getItem(`brightsmile_photo_${email}`);
+        if (saved) setPhotoUrl(saved);
+      }
 
-    resolveUser();
-  }, []);
-
-  const handlePhotoUpload = (dataUrl: string) => {
-    setPhotoUrl(dataUrl);
-    const email = user?.email;
-    if (email) localStorage.setItem(`brightsmile_photo_${email}`, dataUrl);
-  };
-
-  // Fetch admin stats
-  useEffect(() => {
-    const fetchStats = async () => {
       try {
-        const [patientsRes, appointmentsRes, inventoryRes] = await Promise.all([
-          apiFetch(`/api/patients`),
-          apiFetch(`/api/appointments`),
-          apiFetch(`/api/inventory/low-stock`),
-        ]);
-        const patientsData = await patientsRes.json();
-        const appointmentsData = await appointmentsRes.json();
-        const inventoryData = await inventoryRes.json();
+        // Fire all requests simultaneously — one round-trip wave
+        const [userRes, patientsRes, appointmentsRes, inventoryRes, summaryRes, paymentsRes, expensesRes] =
+          await Promise.all([
+            email ? fetch(`${API_URL}/api/users/by-email?email=${encodeURIComponent(email)}`) : Promise.resolve(null),
+            apiFetch(`/api/patients`),
+            apiFetch(`/api/appointments`),
+            apiFetch(`/api/inventory/low-stock`),
+            apiFetch(`/api/payments/summary`),
+            apiFetch(`/api/payments?limit=500`),
+            apiFetch(`/api/expenses?limit=500`),
+          ]);
 
+        // ── User ──────────────────────────────────────────────────────────────
+        if (userRes?.ok) {
+          const u = await userRes.json();
+          setUser({ id: Number(u.id), firstName: u.first_name || "", lastName: u.last_name || "", email: u.email, role: u.role });
+          if (u.id) safeStorage.setItem("doctorDbId", String(u.id));
+        } else if (storedUser) {
+          const parsed = JSON.parse(storedUser);
+          setUser({ ...parsed, firstName: parsed.firstName || parsed.first_name || "", lastName: parsed.lastName || parsed.last_name || "" });
+        }
+
+        // ── Appointments ──────────────────────────────────────────────────────
+        const appointmentsData = appointmentsRes.ok ? await appointmentsRes.json() : { data: [] };
         const today = new Date().toISOString().split("T")[0];
-        const todayAppts = (appointmentsData.data || []).filter((a: any) =>
-          a.appointment_date?.startsWith(today)
-        );
+        const todayAppts = (appointmentsData.data || []).filter((a: any) => a.appointment_date?.startsWith(today));
         const completedToday = todayAppts.filter((a: any) => a.status === "completed").length;
+        setTodayAppointments(
+          todayAppts.map((a: any) => {
+            const patientUser = a.patient_profile?.users;
+            const time = a.start_time ? new Date(a.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+            return { id: Number(a.id), time, patient: patientUser ? `${patientUser.first_name} ${patientUser.last_name}` : `Patient #${a.patient_id}`, type: a.reason || "Checkup", status: a.status };
+          })
+        );
 
+        // ── Patients + inventory stats ────────────────────────────────────────
+        const patientsData = patientsRes.ok ? await patientsRes.json() : { data: [] };
+        const inventoryData = inventoryRes.ok ? await inventoryRes.json() : { data: [] };
         setClinicStats({
           todayAppointments: todayAppts.length,
           completedToday,
           lowStockItems: (inventoryData.data || []).length,
           totalPatients: (patientsData.data || []).length,
         });
-      } catch (e) {
-        console.error("Failed to fetch stats", e);
-      }
-    };
-    fetchStats();
-  }, []);
+        setLowStockAlerts(
+          (inventoryData.data || []).map((item: any) => ({
+            id: Number(item.id), item: item.name, current: item.quantity, minimum: item.minimum_quantity,
+          }))
+        );
 
-  // Fetch today's appointments
-  useEffect(() => {
-    const fetchTodayAppointments = async () => {
-      try {
-        const [appointmentsRes, usersRes] = await Promise.all([
-          apiFetch(`/api/appointments`),
-          apiFetch(`/api/users`),
-        ]);
-        const appointmentsData = await appointmentsRes.json();
-        const users: any[] = await usersRes.json();
-
-        const today = new Date().toISOString().split("T")[0];
-        const todayAppts = (appointmentsData.data || [])
-          .filter((a: any) => a.appointment_date?.startsWith(today))
-          .map((a: any) => {
-            const patientUser = a.patient_profile?.users;
-            const time = a.start_time ? new Date(a.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
-            return {
-              id: Number(a.id),
-              time,
-              patient: patientUser ? `${patientUser.first_name} ${patientUser.last_name}` : `Patient #${a.patient_id}`,
-              type: a.reason || "Checkup",
-              status: a.status,
-            };
-          });
-        setTodayAppointments(todayAppts);
-      } catch (e) {
-        console.error("Failed to fetch today appointments", e);
-      }
-    };
-    fetchTodayAppointments();
-  }, []);
-
-  // Fetch low stock alerts
-  useEffect(() => {
-    const fetchLowStock = async () => {
-      try {
-        const res = await apiFetch(`/api/inventory/low-stock`);
-        const data = await res.json();
-        const alerts = (data.data || []).map((item: any) => ({
-          id: Number(item.id),
-          item: item.name,
-          current: item.quantity,
-          minimum: item.minimum_quantity,
-        }));
-        setLowStockAlerts(alerts);
-      } catch (e) {
-        console.error("Failed to fetch low stock", e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchLowStock();
-  }, []);
-
-  // Fetch financial KPIs and analytics (built from real endpoints)
-  useEffect(() => {
-    const fetchFinancials = async () => {
-      try {
-        const [summaryRes, paymentsRes, expensesRes] = await Promise.all([
-          apiFetch(`/api/payments/summary`),
-          apiFetch(`/api/payments?limit=500`),
-          apiFetch(`/api/expenses?limit=500`),
-        ]);
-
-        // Summary KPIs
+        // ── Financial KPIs ────────────────────────────────────────────────────
         if (summaryRes.ok) {
           const s = await summaryRes.json();
-          setKpis({
-            total_income: Number(s.total_income ?? 0),
-            total_expenses: Number(s.total_expenses ?? 0),
-            net: Number(s.net ?? 0),
-            payments_count: s.payments_count ?? 0,
-          });
+          setKpis({ total_income: Number(s.total_income ?? 0), total_expenses: Number(s.total_expenses ?? 0), net: Number(s.net ?? 0), payments_count: s.payments_count ?? 0 });
         }
 
-        // Build monthly chart data for last 6 months
+        // ── Chart data ────────────────────────────────────────────────────────
         const payments: any[] = paymentsRes.ok ? ((await paymentsRes.json()).data ?? []) : [];
         const expenses: any[] = expensesRes.ok ? ((await expensesRes.json()).data ?? []) : [];
 
-        // Generate last 6 month keys (YYYY-MM)
         const monthKeys: string[] = [];
         for (let i = 5; i >= 0; i--) {
-          const d = new Date();
-          d.setDate(1);
-          d.setMonth(d.getMonth() - i);
+          const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - i);
           monthKeys.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
         }
-
         const incomeByMonth: Record<string, number> = {};
         const expensesByMonth: Record<string, number> = {};
         monthKeys.forEach((k) => { incomeByMonth[k] = 0; expensesByMonth[k] = 0; });
@@ -287,11 +198,20 @@ export default function AdminDashboard() {
         }));
         setAnalyticsData(formatted);
       } catch (e) {
-        console.error("Failed to fetch financials", e);
+        console.error("Failed to fetch dashboard data", e);
+      } finally {
+        setLoading(false);
       }
     };
-    fetchFinancials();
+
+    fetchAll();
   }, []);
+
+  const handlePhotoUpload = (dataUrl: string) => {
+    setPhotoUrl(dataUrl);
+    const email = user?.email;
+    if (email) localStorage.setItem(`brightsmile_photo_${email}`, dataUrl);
+  };
 
   const handleLogout = () => {
     safeStorage.removeItem("adminAuth");

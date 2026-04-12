@@ -40,7 +40,8 @@
     "doctorPanel": "Doctor Panel",
     "staffPanel": "Staff Panel",
     "expenses": "Expenses",
-    "payments": "Payments"
+    "payments": "Payments",
+    "billing": "Billing"
   },
   "continueLogin": {
     "title": "Complete Your Profile",

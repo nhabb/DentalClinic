@@ -63,7 +63,10 @@ export const ModelName = {
   patient_records: 'patient_records',
   users: 'users',
   payments: 'payments',
-  expenses: 'expenses'
+  expenses: 'expenses',
+  treatment_invoices: 'treatment_invoices',
+  invoice_line_items: 'invoice_line_items',
+  invoice_payments: 'invoice_payments'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -218,7 +221,8 @@ export const Patient_profilesScalarFieldEnum = {
   governate: 'governate',
   insurance_policy: 'insurance_policy',
   insurance_provider: 'insurance_provider',
-  profile_complete: 'profile_complete'
+  profile_complete: 'profile_complete',
+  photo_url: 'photo_url'
 } as const
 
 export type Patient_profilesScalarFieldEnum = (typeof Patient_profilesScalarFieldEnum)[keyof typeof Patient_profilesScalarFieldEnum]
@@ -253,6 +257,7 @@ export const UsersScalarFieldEnum = {
   address: 'address',
   role: 'role',
   is_active: 'is_active',
+  avatar_url: 'avatar_url',
   created_at: 'created_at',
   updated_at: 'updated_at'
 } as const
@@ -291,6 +296,47 @@ export const ExpensesScalarFieldEnum = {
 } as const
 
 export type ExpensesScalarFieldEnum = (typeof ExpensesScalarFieldEnum)[keyof typeof ExpensesScalarFieldEnum]
+
+
+export const Treatment_invoicesScalarFieldEnum = {
+  id: 'id',
+  patient_id: 'patient_id',
+  procedure_date: 'procedure_date',
+  notes: 'notes',
+  total_amount: 'total_amount',
+  amount_paid: 'amount_paid',
+  remaining_amount: 'remaining_amount',
+  status: 'status',
+  created_by: 'created_by',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+} as const
+
+export type Treatment_invoicesScalarFieldEnum = (typeof Treatment_invoicesScalarFieldEnum)[keyof typeof Treatment_invoicesScalarFieldEnum]
+
+
+export const Invoice_line_itemsScalarFieldEnum = {
+  id: 'id',
+  invoice_id: 'invoice_id',
+  procedure_name: 'procedure_name',
+  amount: 'amount',
+  created_at: 'created_at'
+} as const
+
+export type Invoice_line_itemsScalarFieldEnum = (typeof Invoice_line_itemsScalarFieldEnum)[keyof typeof Invoice_line_itemsScalarFieldEnum]
+
+
+export const Invoice_paymentsScalarFieldEnum = {
+  id: 'id',
+  invoice_id: 'invoice_id',
+  amount: 'amount',
+  payment_method: 'payment_method',
+  notes: 'notes',
+  created_by: 'created_by',
+  created_at: 'created_at'
+} as const
+
+export type Invoice_paymentsScalarFieldEnum = (typeof Invoice_paymentsScalarFieldEnum)[keyof typeof Invoice_paymentsScalarFieldEnum]
 
 
 export const SortOrder = {

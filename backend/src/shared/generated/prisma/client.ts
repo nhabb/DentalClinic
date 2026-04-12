@@ -104,3 +104,18 @@ export type payments = Prisma.paymentsModel
  * 
  */
 export type expenses = Prisma.expensesModel
+/**
+ * Model treatment_invoices
+ * 
+ */
+export type treatment_invoices = Prisma.treatment_invoicesModel
+/**
+ * Model invoice_line_items
+ * 
+ */
+export type invoice_line_items = Prisma.invoice_line_itemsModel
+/**
+ * Model invoice_payments
+ * 
+ */
+export type invoice_payments = Prisma.invoice_paymentsModel

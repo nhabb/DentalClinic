@@ -40,7 +40,8 @@
     "doctorPanel": "Panneau médecin",
     "staffPanel": "Panneau du personnel",
     "expenses": "Dépenses",
-    "payments": "Paiements"
+    "payments": "Paiements",
+    "billing": "Facturation"
   },
   "continueLogin": {
     "title": "Complétez votre profil",

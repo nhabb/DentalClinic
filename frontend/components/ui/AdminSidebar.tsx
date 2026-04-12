@@ -11,9 +11,10 @@ import {
   FaSignOutAlt,
   FaMoneyBillWave,
   FaCreditCard,
+  FaFileInvoiceDollar,
 } from "react-icons/fa";
 
-type ActivePage = "dashboard" | "appointments" | "inventory" | "patients" | "notifications" | "expenses" | "payments";
+type ActivePage = "dashboard" | "appointments" | "inventory" | "patients" | "notifications" | "expenses" | "payments" | "billing";
 
 type Props = {
   activePage: ActivePage;
@@ -28,6 +29,7 @@ const navItems = [
   { id: "patients",      href: "/admin/patients",       icon: FaUsers,          labelKey: "nav.patients"      },
   { id: "expenses",      href: "/admin/expenses",       icon: FaMoneyBillWave,  labelKey: "nav.expenses"      },
   { id: "payments",      href: "/admin/payments",       icon: FaCreditCard,     labelKey: "nav.payments"      },
+  { id: "billing",       href: "/admin/billing",        icon: FaFileInvoiceDollar, labelKey: "nav.billing"    },
 ] as const;
 
 export default function AdminSidebar({ activePage, sidebarOpen, onLogout }: Props) {

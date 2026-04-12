@@ -163,11 +163,13 @@ model patient_profiles {
   insurance_policy        String?             @db.VarChar
   insurance_provider      String?             @db.VarChar
   profile_complete        Boolean             @default(false)
+  photo_url               String?
   appointments            appointments[]
   patient_documents       patient_documents[]
   users                   users               @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "patient_profiles_user_fkey")
   patient_records         patient_records[]
   payments                payments[]
+  treatment_invoices      treatment_invoices[]
 
   @@index([user_id], map: "idx_patient_profiles_user_id")
 }
@@ -208,6 +210,7 @@ model users {
   address                                     String?
   role                                        String                @default("patient")
   is_active                                   Boolean               @default(true)
+  avatar_url                                  String?
   created_at                                  DateTime              @default(now()) @db.Timestamptz(6)
   updated_at                                  DateTime              @default(now()) @db.Timestamptz(6)
   appointment_slots                           appointment_slots[]
@@ -221,6 +224,8 @@ model users {
   patient_records                             patient_records[]
   payments                                    payments[]
   expenses                                    expenses[]
+  treatment_invoices_created                  treatment_invoices[] @relation("treatment_invoices_creator")
+  invoice_payments_created                    invoice_payments[]   @relation("invoice_payments_creator")
 
   @@index([role], map: "idx_users_role")
 }
@@ -263,4 +268,54 @@ model expenses {
 
   @@index([expense_date], map: "idx_expenses_date")
   @@index([category], map: "idx_expenses_category")
+}
+
+model treatment_invoices {
+  id               BigInt               @id @default(autoincrement())
+  patient_id       BigInt
+  procedure_date   DateTime             @db.Date
+  notes            String?
+  total_amount     Decimal              @db.Decimal(10, 2)
+  amount_paid      Decimal              @default(0) @db.Decimal(10, 2)
+  remaining_amount Decimal              @db.Decimal(10, 2)
+  status           String               @default("open")
+  created_by       BigInt?
+  created_at       DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime             @default(now()) @db.Timestamptz(6)
+
+  patient          patient_profiles     @relation(fields: [patient_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  creator          users?               @relation("treatment_invoices_creator", fields: [created_by], references: [id], onUpdate: NoAction)
+  line_items       invoice_line_items[]
+  invoice_payments invoice_payments[]
+
+  @@index([patient_id], map: "idx_treatment_invoices_patient_id")
+  @@index([status], map: "idx_treatment_invoices_status")
+  @@index([created_at], map: "idx_treatment_invoices_created_at")
+}
+
+model invoice_line_items {
+  id             BigInt             @id @default(autoincrement())
+  invoice_id     BigInt
+  procedure_name String             @db.VarChar
+  amount         Decimal            @db.Decimal(10, 2)
+  created_at     DateTime           @default(now()) @db.Timestamptz(6)
+
+  invoice        treatment_invoices @relation(fields: [invoice_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([invoice_id], map: "idx_invoice_line_items_invoice_id")
+}
+
+model invoice_payments {
+  id             BigInt             @id @default(autoincrement())
+  invoice_id     BigInt
+  amount         Decimal            @db.Decimal(10, 2)
+  payment_method String             @default("cash")
+  notes          String?
+  created_by     BigInt?
+  created_at     DateTime           @default(now()) @db.Timestamptz(6)
+
+  invoice        treatment_invoices @relation(fields: [invoice_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  creator        users?             @relation("invoice_payments_creator", fields: [created_by], references: [id], onUpdate: NoAction)
+
+  @@index([invoice_id], map: "idx_invoice_payments_invoice_id")
 }

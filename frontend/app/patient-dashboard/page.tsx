@@ -16,6 +16,7 @@ import {
   FaPills,
   FaBell,
   FaSignOutAlt,
+  FaFileInvoiceDollar,
 } from "react-icons/fa";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
@@ -99,7 +100,13 @@ export default function PatientDashboard() {
       description: t("patientDashboard.viewRecordsDesc"),
       icon: <FaClipboardList className="text-4xl text-dental-blue" />,
       href: "/medical-records",
-    }
+    },
+    {
+      title: "My Invoices",
+      description: "View your treatment bills and payment history",
+      icon: <FaFileInvoiceDollar className="text-4xl text-dental-blue" />,
+      href: "/patient-dashboard/billing",
+    },
   ];
 
   return (

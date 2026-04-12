@@ -5,10 +5,11 @@ import { InventoryModule } from './inventory/inventory.module';
 import { PatientRecordsModule } from './patient-records/patient-records.module';
 import { PaymentsModule } from './payments/payments.module';
 import { ExpensesModule } from './expenses/expenses.module';
+import { BillingModule } from './billing/billing.module';
 
 /**
  * Doctor/Admin panel modules.
- * Dev scope: appointments, slots, inventory, patient records, payments, expenses.
+ * Dev scope: appointments, slots, inventory, patient records, payments, expenses, billing.
  */
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { ExpensesModule } from './expenses/expenses.module';
     PatientRecordsModule,
     PaymentsModule,
     ExpensesModule,
+    BillingModule,
   ],
 })
 export class DoctorModule {}
