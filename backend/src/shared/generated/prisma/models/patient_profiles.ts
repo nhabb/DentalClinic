@@ -52,6 +52,7 @@ export type Patient_profilesMinAggregateOutputType = {
   insurance_policy: string | null
   insurance_provider: string | null
   profile_complete: boolean | null
+  photo_url: string | null
 }
 
 export type Patient_profilesMaxAggregateOutputType = {
@@ -70,6 +71,7 @@ export type Patient_profilesMaxAggregateOutputType = {
   insurance_policy: string | null
   insurance_provider: string | null
   profile_complete: boolean | null
+  photo_url: string | null
 }
 
 export type Patient_profilesCountAggregateOutputType = {
@@ -88,6 +90,7 @@ export type Patient_profilesCountAggregateOutputType = {
   insurance_policy: number
   insurance_provider: number
   profile_complete: number
+  photo_url: number
   _all: number
 }
 
@@ -118,6 +121,7 @@ export type Patient_profilesMinAggregateInputType = {
   insurance_policy?: true
   insurance_provider?: true
   profile_complete?: true
+  photo_url?: true
 }
 
 export type Patient_profilesMaxAggregateInputType = {
@@ -136,6 +140,7 @@ export type Patient_profilesMaxAggregateInputType = {
   insurance_policy?: true
   insurance_provider?: true
   profile_complete?: true
+  photo_url?: true
 }
 
 export type Patient_profilesCountAggregateInputType = {
@@ -154,6 +159,7 @@ export type Patient_profilesCountAggregateInputType = {
   insurance_policy?: true
   insurance_provider?: true
   profile_complete?: true
+  photo_url?: true
   _all?: true
 }
 
@@ -259,6 +265,7 @@ export type Patient_profilesGroupByOutputType = {
   insurance_policy: string | null
   insurance_provider: string | null
   profile_complete: boolean
+  photo_url: string | null
   _count: Patient_profilesCountAggregateOutputType | null
   _avg: Patient_profilesAvgAggregateOutputType | null
   _sum: Patient_profilesSumAggregateOutputType | null
@@ -300,6 +307,7 @@ export type patient_profilesWhereInput = {
   insurance_policy?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
   insurance_provider?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
   profile_complete?: Prisma.BoolFilter<"patient_profiles"> | boolean
+  photo_url?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
   appointments?: Prisma.AppointmentsListRelationFilter
   patient_documents?: Prisma.Patient_documentsListRelationFilter
   users?: Prisma.XOR<Prisma.UsersScalarRelationFilter, Prisma.usersWhereInput>
@@ -323,6 +331,7 @@ export type patient_profilesOrderByWithRelationInput = {
   insurance_policy?: Prisma.SortOrderInput | Prisma.SortOrder
   insurance_provider?: Prisma.SortOrderInput | Prisma.SortOrder
   profile_complete?: Prisma.SortOrder
+  photo_url?: Prisma.SortOrderInput | Prisma.SortOrder
   appointments?: Prisma.appointmentsOrderByRelationAggregateInput
   patient_documents?: Prisma.patient_documentsOrderByRelationAggregateInput
   users?: Prisma.usersOrderByWithRelationInput
@@ -349,6 +358,7 @@ export type patient_profilesWhereUniqueInput = Prisma.AtLeast<{
   insurance_policy?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
   insurance_provider?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
   profile_complete?: Prisma.BoolFilter<"patient_profiles"> | boolean
+  photo_url?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
   appointments?: Prisma.AppointmentsListRelationFilter
   patient_documents?: Prisma.Patient_documentsListRelationFilter
   users?: Prisma.XOR<Prisma.UsersScalarRelationFilter, Prisma.usersWhereInput>
@@ -372,6 +382,7 @@ export type patient_profilesOrderByWithAggregationInput = {
   insurance_policy?: Prisma.SortOrderInput | Prisma.SortOrder
   insurance_provider?: Prisma.SortOrderInput | Prisma.SortOrder
   profile_complete?: Prisma.SortOrder
+  photo_url?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.patient_profilesCountOrderByAggregateInput
   _avg?: Prisma.patient_profilesAvgOrderByAggregateInput
   _max?: Prisma.patient_profilesMaxOrderByAggregateInput
@@ -398,6 +409,7 @@ export type patient_profilesScalarWhereWithAggregatesInput = {
   insurance_policy?: Prisma.StringNullableWithAggregatesFilter<"patient_profiles"> | string | null
   insurance_provider?: Prisma.StringNullableWithAggregatesFilter<"patient_profiles"> | string | null
   profile_complete?: Prisma.BoolWithAggregatesFilter<"patient_profiles"> | boolean
+  photo_url?: Prisma.StringNullableWithAggregatesFilter<"patient_profiles"> | string | null
 }
 
 export type patient_profilesCreateInput = {
@@ -415,6 +427,7 @@ export type patient_profilesCreateInput = {
   insurance_policy?: string | null
   insurance_provider?: string | null
   profile_complete?: boolean
+  photo_url?: string | null
   appointments?: Prisma.appointmentsCreateNestedManyWithoutPatient_profilesInput
   patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutPatient_profilesInput
   users: Prisma.usersCreateNestedOneWithoutPatient_profilesInput
@@ -438,6 +451,7 @@ export type patient_profilesUncheckedCreateInput = {
   insurance_policy?: string | null
   insurance_provider?: string | null
   profile_complete?: boolean
+  photo_url?: string | null
   appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutPatient_profilesInput
   patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutPatient_profilesInput
   patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutPatient_profilesInput
@@ -459,6 +473,7 @@ export type patient_profilesUpdateInput = {
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_complete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   appointments?: Prisma.appointmentsUpdateManyWithoutPatient_profilesNestedInput
   patient_documents?: Prisma.patient_documentsUpdateManyWithoutPatient_profilesNestedInput
   users?: Prisma.usersUpdateOneRequiredWithoutPatient_profilesNestedInput
@@ -482,6 +497,7 @@ export type patient_profilesUncheckedUpdateInput = {
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_complete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutPatient_profilesNestedInput
   patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutPatient_profilesNestedInput
   patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutPatient_profilesNestedInput
@@ -504,6 +520,7 @@ export type patient_profilesCreateManyInput = {
   insurance_policy?: string | null
   insurance_provider?: string | null
   profile_complete?: boolean
+  photo_url?: string | null
 }
 
 export type patient_profilesUpdateManyMutationInput = {
@@ -521,6 +538,7 @@ export type patient_profilesUpdateManyMutationInput = {
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_complete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type patient_profilesUncheckedUpdateManyInput = {
@@ -539,6 +557,7 @@ export type patient_profilesUncheckedUpdateManyInput = {
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_complete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type Patient_profilesScalarRelationFilter = {
@@ -562,6 +581,7 @@ export type patient_profilesCountOrderByAggregateInput = {
   insurance_policy?: Prisma.SortOrder
   insurance_provider?: Prisma.SortOrder
   profile_complete?: Prisma.SortOrder
+  photo_url?: Prisma.SortOrder
 }
 
 export type patient_profilesAvgOrderByAggregateInput = {
@@ -585,6 +605,7 @@ export type patient_profilesMaxOrderByAggregateInput = {
   insurance_policy?: Prisma.SortOrder
   insurance_provider?: Prisma.SortOrder
   profile_complete?: Prisma.SortOrder
+  photo_url?: Prisma.SortOrder
 }
 
 export type patient_profilesMinOrderByAggregateInput = {
@@ -603,6 +624,7 @@ export type patient_profilesMinOrderByAggregateInput = {
   insurance_policy?: Prisma.SortOrder
   insurance_provider?: Prisma.SortOrder
   profile_complete?: Prisma.SortOrder
+  photo_url?: Prisma.SortOrder
 }
 
 export type patient_profilesSumOrderByAggregateInput = {
@@ -718,6 +740,7 @@ export type patient_profilesCreateWithoutAppointmentsInput = {
   insurance_policy?: string | null
   insurance_provider?: string | null
   profile_complete?: boolean
+  photo_url?: string | null
   patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutPatient_profilesInput
   users: Prisma.usersCreateNestedOneWithoutPatient_profilesInput
   patient_records?: Prisma.patient_recordsCreateNestedManyWithoutPatient_profilesInput
@@ -740,6 +763,7 @@ export type patient_profilesUncheckedCreateWithoutAppointmentsInput = {
   insurance_policy?: string | null
   insurance_provider?: string | null
   profile_complete?: boolean
+  photo_url?: string | null
   patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutPatient_profilesInput
   patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutPatient_profilesInput
   payments?: Prisma.paymentsUncheckedCreateNestedManyWithoutPatientInput
@@ -776,6 +800,7 @@ export type patient_profilesUpdateWithoutAppointmentsInput = {
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_complete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   patient_documents?: Prisma.patient_documentsUpdateManyWithoutPatient_profilesNestedInput
   users?: Prisma.usersUpdateOneRequiredWithoutPatient_profilesNestedInput
   patient_records?: Prisma.patient_recordsUpdateManyWithoutPatient_profilesNestedInput
@@ -798,6 +823,7 @@ export type patient_profilesUncheckedUpdateWithoutAppointmentsInput = {
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_complete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutPatient_profilesNestedInput
   patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutPatient_profilesNestedInput
   payments?: Prisma.paymentsUncheckedUpdateManyWithoutPatientNestedInput
@@ -818,6 +844,7 @@ export type patient_profilesCreateWithoutPatient_documentsInput = {
   insurance_policy?: string | null
   insurance_provider?: string | null
   profile_complete?: boolean
+  photo_url?: string | null
   appointments?: Prisma.appointmentsCreateNestedManyWithoutPatient_profilesInput
   users: Prisma.usersCreateNestedOneWithoutPatient_profilesInput
   patient_records?: Prisma.patient_recordsCreateNestedManyWithoutPatient_profilesInput
@@ -840,6 +867,7 @@ export type patient_profilesUncheckedCreateWithoutPatient_documentsInput = {
   insurance_policy?: string | null
   insurance_provider?: string | null
   profile_complete?: boolean
+  photo_url?: string | null
   appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutPatient_profilesInput
   patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutPatient_profilesInput
   payments?: Prisma.paymentsUncheckedCreateNestedManyWithoutPatientInput
@@ -876,6 +904,7 @@ export type patient_profilesUpdateWithoutPatient_documentsInput = {
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_complete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   appointments?: Prisma.appointmentsUpdateManyWithoutPatient_profilesNestedInput
   users?: Prisma.usersUpdateOneRequiredWithoutPatient_profilesNestedInput
   patient_records?: Prisma.patient_recordsUpdateManyWithoutPatient_profilesNestedInput
@@ -898,6 +927,7 @@ export type patient_profilesUncheckedUpdateWithoutPatient_documentsInput = {
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_complete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutPatient_profilesNestedInput
   patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutPatient_profilesNestedInput
   payments?: Prisma.paymentsUncheckedUpdateManyWithoutPatientNestedInput
@@ -918,6 +948,7 @@ export type patient_profilesCreateWithoutPatient_recordsInput = {
   insurance_policy?: string | null
   insurance_provider?: string | null
   profile_complete?: boolean
+  photo_url?: string | null
   appointments?: Prisma.appointmentsCreateNestedManyWithoutPatient_profilesInput
   patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutPatient_profilesInput
   users: Prisma.usersCreateNestedOneWithoutPatient_profilesInput
@@ -940,6 +971,7 @@ export type patient_profilesUncheckedCreateWithoutPatient_recordsInput = {
   insurance_policy?: string | null
   insurance_provider?: string | null
   profile_complete?: boolean
+  photo_url?: string | null
   appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutPatient_profilesInput
   patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutPatient_profilesInput
   payments?: Prisma.paymentsUncheckedCreateNestedManyWithoutPatientInput
@@ -976,6 +1008,7 @@ export type patient_profilesUpdateWithoutPatient_recordsInput = {
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_complete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   appointments?: Prisma.appointmentsUpdateManyWithoutPatient_profilesNestedInput
   patient_documents?: Prisma.patient_documentsUpdateManyWithoutPatient_profilesNestedInput
   users?: Prisma.usersUpdateOneRequiredWithoutPatient_profilesNestedInput
@@ -998,6 +1031,7 @@ export type patient_profilesUncheckedUpdateWithoutPatient_recordsInput = {
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_complete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutPatient_profilesNestedInput
   patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutPatient_profilesNestedInput
   payments?: Prisma.paymentsUncheckedUpdateManyWithoutPatientNestedInput
@@ -1018,6 +1052,7 @@ export type patient_profilesCreateWithoutUsersInput = {
   insurance_policy?: string | null
   insurance_provider?: string | null
   profile_complete?: boolean
+  photo_url?: string | null
   appointments?: Prisma.appointmentsCreateNestedManyWithoutPatient_profilesInput
   patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutPatient_profilesInput
   patient_records?: Prisma.patient_recordsCreateNestedManyWithoutPatient_profilesInput
@@ -1039,6 +1074,7 @@ export type patient_profilesUncheckedCreateWithoutUsersInput = {
   insurance_policy?: string | null
   insurance_provider?: string | null
   profile_complete?: boolean
+  photo_url?: string | null
   appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutPatient_profilesInput
   patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutPatient_profilesInput
   patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutPatient_profilesInput
@@ -1076,6 +1112,7 @@ export type patient_profilesUpdateWithoutUsersInput = {
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_complete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   appointments?: Prisma.appointmentsUpdateManyWithoutPatient_profilesNestedInput
   patient_documents?: Prisma.patient_documentsUpdateManyWithoutPatient_profilesNestedInput
   patient_records?: Prisma.patient_recordsUpdateManyWithoutPatient_profilesNestedInput
@@ -1097,6 +1134,7 @@ export type patient_profilesUncheckedUpdateWithoutUsersInput = {
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_complete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutPatient_profilesNestedInput
   patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutPatient_profilesNestedInput
   patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutPatient_profilesNestedInput
@@ -1118,6 +1156,7 @@ export type patient_profilesCreateWithoutPaymentsInput = {
   insurance_policy?: string | null
   insurance_provider?: string | null
   profile_complete?: boolean
+  photo_url?: string | null
   appointments?: Prisma.appointmentsCreateNestedManyWithoutPatient_profilesInput
   patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutPatient_profilesInput
   users: Prisma.usersCreateNestedOneWithoutPatient_profilesInput
@@ -1140,6 +1179,7 @@ export type patient_profilesUncheckedCreateWithoutPaymentsInput = {
   insurance_policy?: string | null
   insurance_provider?: string | null
   profile_complete?: boolean
+  photo_url?: string | null
   appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutPatient_profilesInput
   patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutPatient_profilesInput
   patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutPatient_profilesInput
@@ -1176,6 +1216,7 @@ export type patient_profilesUpdateWithoutPaymentsInput = {
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_complete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   appointments?: Prisma.appointmentsUpdateManyWithoutPatient_profilesNestedInput
   patient_documents?: Prisma.patient_documentsUpdateManyWithoutPatient_profilesNestedInput
   users?: Prisma.usersUpdateOneRequiredWithoutPatient_profilesNestedInput
@@ -1198,6 +1239,7 @@ export type patient_profilesUncheckedUpdateWithoutPaymentsInput = {
   insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   insurance_provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_complete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutPatient_profilesNestedInput
   patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutPatient_profilesNestedInput
   patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutPatient_profilesNestedInput
@@ -1277,6 +1319,7 @@ export type patient_profilesSelect<ExtArgs extends runtime.Types.Extensions.Inte
   insurance_policy?: boolean
   insurance_provider?: boolean
   profile_complete?: boolean
+  photo_url?: boolean
   appointments?: boolean | Prisma.patient_profiles$appointmentsArgs<ExtArgs>
   patient_documents?: boolean | Prisma.patient_profiles$patient_documentsArgs<ExtArgs>
   users?: boolean | Prisma.usersDefaultArgs<ExtArgs>
@@ -1301,6 +1344,7 @@ export type patient_profilesSelectCreateManyAndReturn<ExtArgs extends runtime.Ty
   insurance_policy?: boolean
   insurance_provider?: boolean
   profile_complete?: boolean
+  photo_url?: boolean
   users?: boolean | Prisma.usersDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["patient_profiles"]>
 
@@ -1320,6 +1364,7 @@ export type patient_profilesSelectUpdateManyAndReturn<ExtArgs extends runtime.Ty
   insurance_policy?: boolean
   insurance_provider?: boolean
   profile_complete?: boolean
+  photo_url?: boolean
   users?: boolean | Prisma.usersDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["patient_profiles"]>
 
@@ -1339,9 +1384,10 @@ export type patient_profilesSelectScalar = {
   insurance_policy?: boolean
   insurance_provider?: boolean
   profile_complete?: boolean
+  photo_url?: boolean
 }
 
-export type patient_profilesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "user_id" | "emergency_contact_name" | "emergency_contact_phone" | "blood_type" | "allergies" | "medical_notes" | "created_at" | "updated_at" | "city" | "current_medications" | "governate" | "insurance_policy" | "insurance_provider" | "profile_complete", ExtArgs["result"]["patient_profiles"]>
+export type patient_profilesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "user_id" | "emergency_contact_name" | "emergency_contact_phone" | "blood_type" | "allergies" | "medical_notes" | "created_at" | "updated_at" | "city" | "current_medications" | "governate" | "insurance_policy" | "insurance_provider" | "profile_complete" | "photo_url", ExtArgs["result"]["patient_profiles"]>
 export type patient_profilesInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   appointments?: boolean | Prisma.patient_profiles$appointmentsArgs<ExtArgs>
   patient_documents?: boolean | Prisma.patient_profiles$patient_documentsArgs<ExtArgs>
@@ -1382,6 +1428,7 @@ export type $patient_profilesPayload<ExtArgs extends runtime.Types.Extensions.In
     insurance_policy: string | null
     insurance_provider: string | null
     profile_complete: boolean
+    photo_url: string | null
   }, ExtArgs["result"]["patient_profiles"]>
   composites: {}
 }
@@ -1825,6 +1872,7 @@ export interface patient_profilesFieldRefs {
   readonly insurance_policy: Prisma.FieldRef<"patient_profiles", 'String'>
   readonly insurance_provider: Prisma.FieldRef<"patient_profiles", 'String'>
   readonly profile_complete: Prisma.FieldRef<"patient_profiles", 'Boolean'>
+  readonly photo_url: Prisma.FieldRef<"patient_profiles", 'String'>
 }
     
 

@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
   Param,
   Body,
   Query,
@@ -123,5 +124,11 @@ export class PaymentsController {
     @Body() dto: UpdatePaymentStatusDto,
   ) {
     return this.paymentsService.updateStatus(BigInt(id), dto);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete a payment record permanently' })
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.paymentsService.remove(BigInt(id));
   }
 }

@@ -5,11 +5,19 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
+import { SupabaseStorageService } from '../storage/supabase-storage.service';
 import { UpdateUserDto, ChangePasswordDto } from './dto/update-user.dto';
+
+const PROFILE_BUCKET = 'profile-photos';
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const MAX_SIZE = 5 * 1024 * 1024;
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly storage: SupabaseStorageService,
+  ) {}
 
   async create(data: {
     email: string;
@@ -57,6 +65,7 @@ export class UsersService {
         gender: true,
         address: true,
         role: true,
+        avatar_url: true,
         is_active: true,
         created_at: true,
         updated_at: true,
@@ -120,6 +129,42 @@ export class UsersService {
     });
   }
 
+  async updateAvatar(id: bigint, file: Express.Multer.File) {
+    if (!ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
+      throw new BadRequestException('Only JPEG, PNG, and WebP images are allowed');
+    }
+    if (file.size > MAX_SIZE) {
+      throw new BadRequestException('Image must be under 5 MB');
+    }
+
+    const user = await this.prisma.users.findUnique({ where: { id } });
+    if (!user) throw new NotFoundException('User not found');
+
+    // Delete old avatar if one exists
+    if (user.avatar_url) {
+      const oldPath = this.extractPath(user.avatar_url);
+      if (oldPath) await this.storage.delete(PROFILE_BUCKET, oldPath).catch(() => null);
+    }
+
+    const ext = file.mimetype.split('/')[1];
+    const storagePath = `users/${id}/${Date.now()}.${ext}`;
+    const publicUrl = await this.storage.upload(PROFILE_BUCKET, storagePath, file.buffer, file.mimetype);
+
+    return this.prisma.users.update({
+      where: { id },
+      data: { avatar_url: publicUrl, updated_at: new Date() },
+      select: {
+        id: true,
+        email: true,
+        first_name: true,
+        last_name: true,
+        role: true,
+        avatar_url: true,
+        updated_at: true,
+      },
+    });
+  }
+
   async changePassword(id: bigint, dto: ChangePasswordDto) {
     const user = await this.prisma.users.findUnique({ where: { id } });
     if (!user) throw new NotFoundException('User not found');
@@ -135,5 +180,18 @@ export class UsersService {
     });
 
     return { message: 'Password updated successfully' };
+  }
+
+  private extractPath(publicUrl: string): string | null {
+    try {
+      const url = new URL(publicUrl);
+      const parts = url.pathname.split('/object/public/');
+      if (parts.length < 2) return null;
+      const withBucket = parts[1];
+      const slashIdx = withBucket.indexOf('/');
+      return slashIdx === -1 ? null : withBucket.slice(slashIdx + 1);
+    } catch {
+      return null;
+    }
   }
 }

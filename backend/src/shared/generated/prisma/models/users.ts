@@ -46,6 +46,7 @@ export type UsersMinAggregateOutputType = {
   address: string | null
   role: string | null
   is_active: boolean | null
+  avatar_url: string | null
   created_at: Date | null
   updated_at: Date | null
 }
@@ -62,6 +63,7 @@ export type UsersMaxAggregateOutputType = {
   address: string | null
   role: string | null
   is_active: boolean | null
+  avatar_url: string | null
   created_at: Date | null
   updated_at: Date | null
 }
@@ -78,6 +80,7 @@ export type UsersCountAggregateOutputType = {
   address: number
   role: number
   is_active: number
+  avatar_url: number
   created_at: number
   updated_at: number
   _all: number
@@ -104,6 +107,7 @@ export type UsersMinAggregateInputType = {
   address?: true
   role?: true
   is_active?: true
+  avatar_url?: true
   created_at?: true
   updated_at?: true
 }
@@ -120,6 +124,7 @@ export type UsersMaxAggregateInputType = {
   address?: true
   role?: true
   is_active?: true
+  avatar_url?: true
   created_at?: true
   updated_at?: true
 }
@@ -136,6 +141,7 @@ export type UsersCountAggregateInputType = {
   address?: true
   role?: true
   is_active?: true
+  avatar_url?: true
   created_at?: true
   updated_at?: true
   _all?: true
@@ -239,6 +245,7 @@ export type UsersGroupByOutputType = {
   address: string | null
   role: string
   is_active: boolean
+  avatar_url: string | null
   created_at: Date
   updated_at: Date
   _count: UsersCountAggregateOutputType | null
@@ -278,6 +285,7 @@ export type usersWhereInput = {
   address?: Prisma.StringNullableFilter<"users"> | string | null
   role?: Prisma.StringFilter<"users"> | string
   is_active?: Prisma.BoolFilter<"users"> | boolean
+  avatar_url?: Prisma.StringNullableFilter<"users"> | string | null
   created_at?: Prisma.DateTimeFilter<"users"> | Date | string
   updated_at?: Prisma.DateTimeFilter<"users"> | Date | string
   appointment_slots?: Prisma.Appointment_slotsListRelationFilter
@@ -305,6 +313,7 @@ export type usersOrderByWithRelationInput = {
   address?: Prisma.SortOrderInput | Prisma.SortOrder
   role?: Prisma.SortOrder
   is_active?: Prisma.SortOrder
+  avatar_url?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
   appointment_slots?: Prisma.appointment_slotsOrderByRelationAggregateInput
@@ -335,6 +344,7 @@ export type usersWhereUniqueInput = Prisma.AtLeast<{
   address?: Prisma.StringNullableFilter<"users"> | string | null
   role?: Prisma.StringFilter<"users"> | string
   is_active?: Prisma.BoolFilter<"users"> | boolean
+  avatar_url?: Prisma.StringNullableFilter<"users"> | string | null
   created_at?: Prisma.DateTimeFilter<"users"> | Date | string
   updated_at?: Prisma.DateTimeFilter<"users"> | Date | string
   appointment_slots?: Prisma.Appointment_slotsListRelationFilter
@@ -362,6 +372,7 @@ export type usersOrderByWithAggregationInput = {
   address?: Prisma.SortOrderInput | Prisma.SortOrder
   role?: Prisma.SortOrder
   is_active?: Prisma.SortOrder
+  avatar_url?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
   _count?: Prisma.usersCountOrderByAggregateInput
@@ -386,6 +397,7 @@ export type usersScalarWhereWithAggregatesInput = {
   address?: Prisma.StringNullableWithAggregatesFilter<"users"> | string | null
   role?: Prisma.StringWithAggregatesFilter<"users"> | string
   is_active?: Prisma.BoolWithAggregatesFilter<"users"> | boolean
+  avatar_url?: Prisma.StringNullableWithAggregatesFilter<"users"> | string | null
   created_at?: Prisma.DateTimeWithAggregatesFilter<"users"> | Date | string
   updated_at?: Prisma.DateTimeWithAggregatesFilter<"users"> | Date | string
 }
@@ -402,6 +414,7 @@ export type usersCreateInput = {
   address?: string | null
   role?: string
   is_active?: boolean
+  avatar_url?: string | null
   created_at?: Date | string
   updated_at?: Date | string
   appointment_slots?: Prisma.appointment_slotsCreateNestedManyWithoutUsersInput
@@ -429,6 +442,7 @@ export type usersUncheckedCreateInput = {
   address?: string | null
   role?: string
   is_active?: boolean
+  avatar_url?: string | null
   created_at?: Date | string
   updated_at?: Date | string
   appointment_slots?: Prisma.appointment_slotsUncheckedCreateNestedManyWithoutUsersInput
@@ -456,6 +470,7 @@ export type usersUpdateInput = {
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   appointment_slots?: Prisma.appointment_slotsUpdateManyWithoutUsersNestedInput
@@ -483,6 +498,7 @@ export type usersUncheckedUpdateInput = {
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   appointment_slots?: Prisma.appointment_slotsUncheckedUpdateManyWithoutUsersNestedInput
@@ -510,6 +526,7 @@ export type usersCreateManyInput = {
   address?: string | null
   role?: string
   is_active?: boolean
+  avatar_url?: string | null
   created_at?: Date | string
   updated_at?: Date | string
 }
@@ -526,6 +543,7 @@ export type usersUpdateManyMutationInput = {
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -542,6 +560,7 @@ export type usersUncheckedUpdateManyInput = {
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -568,6 +587,7 @@ export type usersCountOrderByAggregateInput = {
   address?: Prisma.SortOrder
   role?: Prisma.SortOrder
   is_active?: Prisma.SortOrder
+  avatar_url?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
 }
@@ -588,6 +608,7 @@ export type usersMaxOrderByAggregateInput = {
   address?: Prisma.SortOrder
   role?: Prisma.SortOrder
   is_active?: Prisma.SortOrder
+  avatar_url?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
 }
@@ -604,6 +625,7 @@ export type usersMinOrderByAggregateInput = {
   address?: Prisma.SortOrder
   role?: Prisma.SortOrder
   is_active?: Prisma.SortOrder
+  avatar_url?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
 }
@@ -792,6 +814,7 @@ export type usersCreateWithoutAppointment_slotsInput = {
   address?: string | null
   role?: string
   is_active?: boolean
+  avatar_url?: string | null
   created_at?: Date | string
   updated_at?: Date | string
   appointments_appointments_created_byTousers?: Prisma.appointmentsCreateNestedManyWithoutUsers_appointments_created_byTousersInput
@@ -818,6 +841,7 @@ export type usersUncheckedCreateWithoutAppointment_slotsInput = {
   address?: string | null
   role?: string
   is_active?: boolean
+  avatar_url?: string | null
   created_at?: Date | string
   updated_at?: Date | string
   appointments_appointments_created_byTousers?: Prisma.appointmentsUncheckedCreateNestedManyWithoutUsers_appointments_created_byTousersInput
@@ -860,6 +884,7 @@ export type usersUpdateWithoutAppointment_slotsInput = {
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   appointments_appointments_created_byTousers?: Prisma.appointmentsUpdateManyWithoutUsers_appointments_created_byTousersNestedInput
@@ -886,6 +911,7 @@ export type usersUncheckedUpdateWithoutAppointment_slotsInput = {
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   appointments_appointments_created_byTousers?: Prisma.appointmentsUncheckedUpdateManyWithoutUsers_appointments_created_byTousersNestedInput
@@ -912,6 +938,7 @@ export type usersCreateWithoutAppointments_appointments_created_byTousersInput =
   address?: string | null
   role?: string
   is_active?: boolean
+  avatar_url?: string | null
   created_at?: Date | string
   updated_at?: Date | string
   appointment_slots?: Prisma.appointment_slotsCreateNestedManyWithoutUsersInput
@@ -938,6 +965,7 @@ export type usersUncheckedCreateWithoutAppointments_appointments_created_byTouse
   address?: string | null
   role?: string
   is_active?: boolean
+  avatar_url?: string | null
   created_at?: Date | string
   updated_at?: Date | string
   appointment_slots?: Prisma.appointment_slotsUncheckedCreateNestedManyWithoutUsersInput
@@ -969,6 +997,7 @@ export type usersCreateWithoutAppointments_appointments_doctor_idTousersInput = 
   address?: string | null
   role?: string
   is_active?: boolean
+  avatar_url?: string | null
   created_at?: Date | string
   updated_at?: Date | string
   appointment_slots?: Prisma.appointment_slotsCreateNestedManyWithoutUsersInput
@@ -995,6 +1024,7 @@ export type usersUncheckedCreateWithoutAppointments_appointments_doctor_idTouser
   address?: string | null
   role?: string
   is_active?: boolean
+  avatar_url?: string | null
   created_at?: Date | string
   updated_at?: Date | string
   appointment_slots?: Prisma.appointment_slotsUncheckedCreateNestedManyWithoutUsersInput
@@ -1037,6 +1067,7 @@ export type usersUpdateWithoutAppointments_appointments_created_byTousersInput =
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   appointment_slots?: Prisma.appointment_slotsUpdateManyWithoutUsersNestedInput
@@ -1063,6 +1094,7 @@ export type usersUncheckedUpdateWithoutAppointments_appointments_created_byTouse
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   appointment_slots?: Prisma.appointment_slotsUncheckedUpdateManyWithoutUsersNestedInput
@@ -1100,6 +1132,7 @@ export type usersUpdateWithoutAppointments_appointments_doctor_idTousersInput = 
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   appointment_slots?: Prisma.appointment_slotsUpdateManyWithoutUsersNestedInput
@@ -1126,6 +1159,7 @@ export type usersUncheckedUpdateWithoutAppointments_appointments_doctor_idTouser
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   appointment_slots?: Prisma.appointment_slotsUncheckedUpdateManyWithoutUsersNestedInput
@@ -1152,6 +1186,7 @@ export type usersCreateWithoutAudit_logsInput = {
   address?: string | null
   role?: string
   is_active?: boolean
+  avatar_url?: string | null
   created_at?: Date | string
   updated_at?: Date | string
   appointment_slots?: Prisma.appointment_slotsCreateNestedManyWithoutUsersInput
@@ -1178,6 +1213,7 @@ export type usersUncheckedCreateWithoutAudit_logsInput = {
   address?: string | null
   role?: string
   is_active?: boolean
+  avatar_url?: string | null
   created_at?: Date | string
   updated_at?: Date | string
   appointment_slots?: Prisma.appointment_slotsUncheckedCreateNestedManyWithoutUsersInput
@@ -1220,6 +1256,7 @@ export type usersUpdateWithoutAudit_logsInput = {
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   appointment_slots?: Prisma.appointment_slotsUpdateManyWithoutUsersNestedInput
@@ -1246,6 +1283,7 @@ export type usersUncheckedUpdateWithoutAudit_logsInput = {
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   appointment_slots?: Prisma.appointment_slotsUncheckedUpdateManyWithoutUsersNestedInput
@@ -1272,6 +1310,7 @@ export type usersCreateWithoutInventory_movementsInput = {
   address?: string | null
   role?: string
   is_active?: boolean
+  avatar_url?: string | null
   created_at?: Date | string
   updated_at?: Date | string
   appointment_slots?: Prisma.appointment_slotsCreateNestedManyWithoutUsersInput
@@ -1298,6 +1337,7 @@ export type usersUncheckedCreateWithoutInventory_movementsInput = {
   address?: string | null
   role?: string
   is_active?: boolean
+  avatar_url?: string | null
   created_at?: Date | string
   updated_at?: Date | string
   appointment_slots?: Prisma.appointment_slotsUncheckedCreateNestedManyWithoutUsersInput
@@ -1340,6 +1380,7 @@ export type usersUpdateWithoutInventory_movementsInput = {
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   appointment_slots?: Prisma.appointment_slotsUpdateManyWithoutUsersNestedInput
@@ -1366,6 +1407,7 @@ export type usersUncheckedUpdateWithoutInventory_movementsInput = {
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   appointment_slots?: Prisma.appointment_slotsUncheckedUpdateManyWithoutUsersNestedInput
@@ -1392,6 +1434,7 @@ export type usersCreateWithoutNotificationsInput = {
   address?: string | null
   role?: string
   is_active?: boolean
+  avatar_url?: string | null
   created_at?: Date | string
   updated_at?: Date | string
   appointment_slots?: Prisma.appointment_slotsCreateNestedManyWithoutUsersInput
@@ -1418,6 +1461,7 @@ export type usersUncheckedCreateWithoutNotificationsInput = {
   address?: string | null
   role?: string
   is_active?: boolean
+  avatar_url?: string | null
   created_at?: Date | string
   updated_at?: Date | string
   appointment_slots?: Prisma.appointment_slotsUncheckedCreateNestedManyWithoutUsersInput
@@ -1460,6 +1504,7 @@ export type usersUpdateWithoutNotificationsInput = {
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   appointment_slots?: Prisma.appointment_slotsUpdateManyWithoutUsersNestedInput
@@ -1486,6 +1531,7 @@ export type usersUncheckedUpdateWithoutNotificationsInput = {
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   appointment_slots?: Prisma.appointment_slotsUncheckedUpdateManyWithoutUsersNestedInput
@@ -1512,6 +1558,7 @@ export type usersCreateWithoutPatient_documentsInput = {
   address?: string | null
   role?: string
   is_active?: boolean
+  avatar_url?: string | null
   created_at?: Date | string
   updated_at?: Date | string
   appointment_slots?: Prisma.appointment_slotsCreateNestedManyWithoutUsersInput
@@ -1538,6 +1585,7 @@ export type usersUncheckedCreateWithoutPatient_documentsInput = {
   address?: string | null
   role?: string
   is_active?: boolean
+  avatar_url?: string | null
   created_at?: Date | string
   updated_at?: Date | string
   appointment_slots?: Prisma.appointment_slotsUncheckedCreateNestedManyWithoutUsersInput
@@ -1580,6 +1628,7 @@ export type usersUpdateWithoutPatient_documentsInput = {
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   appointment_slots?: Prisma.appointment_slotsUpdateManyWithoutUsersNestedInput
@@ -1606,6 +1655,7 @@ export type usersUncheckedUpdateWithoutPatient_documentsInput = {
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   appointment_slots?: Prisma.appointment_slotsUncheckedUpdateManyWithoutUsersNestedInput
@@ -1632,6 +1682,7 @@ export type usersCreateWithoutPatient_profilesInput = {
   address?: string | null
   role?: string
   is_active?: boolean
+  avatar_url?: string | null
   created_at?: Date | string
   updated_at?: Date | string
   appointment_slots?: Prisma.appointment_slotsCreateNestedManyWithoutUsersInput
@@ -1658,6 +1709,7 @@ export type usersUncheckedCreateWithoutPatient_profilesInput = {
   address?: string | null
   role?: string
   is_active?: boolean
+  avatar_url?: string | null
   created_at?: Date | string
   updated_at?: Date | string
   appointment_slots?: Prisma.appointment_slotsUncheckedCreateNestedManyWithoutUsersInput
@@ -1700,6 +1752,7 @@ export type usersUpdateWithoutPatient_profilesInput = {
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   appointment_slots?: Prisma.appointment_slotsUpdateManyWithoutUsersNestedInput
@@ -1726,6 +1779,7 @@ export type usersUncheckedUpdateWithoutPatient_profilesInput = {
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   appointment_slots?: Prisma.appointment_slotsUncheckedUpdateManyWithoutUsersNestedInput
@@ -1752,6 +1806,7 @@ export type usersCreateWithoutPatient_recordsInput = {
   address?: string | null
   role?: string
   is_active?: boolean
+  avatar_url?: string | null
   created_at?: Date | string
   updated_at?: Date | string
   appointment_slots?: Prisma.appointment_slotsCreateNestedManyWithoutUsersInput
@@ -1778,6 +1833,7 @@ export type usersUncheckedCreateWithoutPatient_recordsInput = {
   address?: string | null
   role?: string
   is_active?: boolean
+  avatar_url?: string | null
   created_at?: Date | string
   updated_at?: Date | string
   appointment_slots?: Prisma.appointment_slotsUncheckedCreateNestedManyWithoutUsersInput
@@ -1820,6 +1876,7 @@ export type usersUpdateWithoutPatient_recordsInput = {
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   appointment_slots?: Prisma.appointment_slotsUpdateManyWithoutUsersNestedInput
@@ -1846,6 +1903,7 @@ export type usersUncheckedUpdateWithoutPatient_recordsInput = {
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   appointment_slots?: Prisma.appointment_slotsUncheckedUpdateManyWithoutUsersNestedInput
@@ -1872,6 +1930,7 @@ export type usersCreateWithoutPaymentsInput = {
   address?: string | null
   role?: string
   is_active?: boolean
+  avatar_url?: string | null
   created_at?: Date | string
   updated_at?: Date | string
   appointment_slots?: Prisma.appointment_slotsCreateNestedManyWithoutUsersInput
@@ -1898,6 +1957,7 @@ export type usersUncheckedCreateWithoutPaymentsInput = {
   address?: string | null
   role?: string
   is_active?: boolean
+  avatar_url?: string | null
   created_at?: Date | string
   updated_at?: Date | string
   appointment_slots?: Prisma.appointment_slotsUncheckedCreateNestedManyWithoutUsersInput
@@ -1940,6 +2000,7 @@ export type usersUpdateWithoutPaymentsInput = {
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   appointment_slots?: Prisma.appointment_slotsUpdateManyWithoutUsersNestedInput
@@ -1966,6 +2027,7 @@ export type usersUncheckedUpdateWithoutPaymentsInput = {
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   appointment_slots?: Prisma.appointment_slotsUncheckedUpdateManyWithoutUsersNestedInput
@@ -1992,6 +2054,7 @@ export type usersCreateWithoutExpensesInput = {
   address?: string | null
   role?: string
   is_active?: boolean
+  avatar_url?: string | null
   created_at?: Date | string
   updated_at?: Date | string
   appointment_slots?: Prisma.appointment_slotsCreateNestedManyWithoutUsersInput
@@ -2018,6 +2081,7 @@ export type usersUncheckedCreateWithoutExpensesInput = {
   address?: string | null
   role?: string
   is_active?: boolean
+  avatar_url?: string | null
   created_at?: Date | string
   updated_at?: Date | string
   appointment_slots?: Prisma.appointment_slotsUncheckedCreateNestedManyWithoutUsersInput
@@ -2060,6 +2124,7 @@ export type usersUpdateWithoutExpensesInput = {
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   appointment_slots?: Prisma.appointment_slotsUpdateManyWithoutUsersNestedInput
@@ -2086,6 +2151,7 @@ export type usersUncheckedUpdateWithoutExpensesInput = {
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   appointment_slots?: Prisma.appointment_slotsUncheckedUpdateManyWithoutUsersNestedInput
@@ -2224,6 +2290,7 @@ export type usersSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   address?: boolean
   role?: boolean
   is_active?: boolean
+  avatar_url?: boolean
   created_at?: boolean
   updated_at?: boolean
   appointment_slots?: boolean | Prisma.users$appointment_slotsArgs<ExtArgs>
@@ -2252,6 +2319,7 @@ export type usersSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   address?: boolean
   role?: boolean
   is_active?: boolean
+  avatar_url?: boolean
   created_at?: boolean
   updated_at?: boolean
 }, ExtArgs["result"]["users"]>
@@ -2268,6 +2336,7 @@ export type usersSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   address?: boolean
   role?: boolean
   is_active?: boolean
+  avatar_url?: boolean
   created_at?: boolean
   updated_at?: boolean
 }, ExtArgs["result"]["users"]>
@@ -2284,11 +2353,12 @@ export type usersSelectScalar = {
   address?: boolean
   role?: boolean
   is_active?: boolean
+  avatar_url?: boolean
   created_at?: boolean
   updated_at?: boolean
 }
 
-export type usersOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "password_hash" | "first_name" | "last_name" | "phone" | "date_of_birth" | "gender" | "address" | "role" | "is_active" | "created_at" | "updated_at", ExtArgs["result"]["users"]>
+export type usersOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "password_hash" | "first_name" | "last_name" | "phone" | "date_of_birth" | "gender" | "address" | "role" | "is_active" | "avatar_url" | "created_at" | "updated_at", ExtArgs["result"]["users"]>
 export type usersInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   appointment_slots?: boolean | Prisma.users$appointment_slotsArgs<ExtArgs>
   appointments_appointments_created_byTousers?: boolean | Prisma.users$appointments_appointments_created_byTousersArgs<ExtArgs>
@@ -2333,6 +2403,7 @@ export type $usersPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     address: string | null
     role: string
     is_active: boolean
+    avatar_url: string | null
     created_at: Date
     updated_at: Date
   }, ExtArgs["result"]["users"]>
@@ -2780,6 +2851,7 @@ export interface usersFieldRefs {
   readonly address: Prisma.FieldRef<"users", 'String'>
   readonly role: Prisma.FieldRef<"users", 'String'>
   readonly is_active: Prisma.FieldRef<"users", 'Boolean'>
+  readonly avatar_url: Prisma.FieldRef<"users", 'String'>
   readonly created_at: Prisma.FieldRef<"users", 'DateTime'>
   readonly updated_at: Prisma.FieldRef<"users", 'DateTime'>
 }

@@ -97,6 +97,11 @@ export class PaymentsService {
     return { ...payment, remaining_balance: Number(payment.amount) - Number(payment.amount_paid) };
   }
 
+  async remove(id: bigint) {
+    await this.findOne(id);
+    return this.prisma.payments.delete({ where: { id } });
+  }
+
   async update(id: bigint, dto: UpdatePaymentDto) {
     const payment = await this.findOne(id);
 

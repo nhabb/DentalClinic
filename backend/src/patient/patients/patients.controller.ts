@@ -7,9 +7,13 @@ import { UseGuards,
   Query,
   ParseIntPipe,
   DefaultValuePipe,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import { JwtAuthGuard } from '../../shared/common/guards/jwt-auth.guard';
-import { ApiBearerAuth, ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags, ApiOperation, ApiQuery, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { PatientsService } from './patients.service';
 import { UpdatePatientProfileDto } from './dto/update-patient-profile.dto';
 
@@ -52,6 +56,18 @@ export class PatientsController {
     @Body() dto: UpdatePatientProfileDto,
   ) {
     return this.patientsService.update(BigInt(id), dto);
+  }
+
+  @Patch(':id/photo')
+  @ApiOperation({ summary: 'Upload or replace a patient profile photo' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' } } } })
+  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
+  updatePhoto(
+    @Param('id', ParseIntPipe) id: number,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.patientsService.updatePhoto(BigInt(id), file);
   }
 
   @Patch('by-user/:userId')

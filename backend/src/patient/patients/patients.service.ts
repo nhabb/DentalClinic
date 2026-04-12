@@ -1,17 +1,27 @@
 import {
   Injectable,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
+import { SupabaseStorageService } from '../../shared/storage/supabase-storage.service';
 import { UpdatePatientProfileDto } from './dto/update-patient-profile.dto';
+
+const PROFILE_BUCKET = 'profile-photos';
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
 
 @Injectable()
 export class PatientsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly storage: SupabaseStorageService,
+  ) {}
 
   private patientSelect = {
     id: true,
     user_id: true,
+    photo_url: true,
     city: true,
     governate: true,
     emergency_contact_name: true,
@@ -125,6 +135,34 @@ export class PatientsService {
     });
   }
 
+  async updatePhoto(id: bigint, file: Express.Multer.File) {
+    if (!ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
+      throw new BadRequestException('Only JPEG, PNG, and WebP images are allowed');
+    }
+    if (file.size > MAX_SIZE) {
+      throw new BadRequestException('Image must be under 5 MB');
+    }
+
+    const profile = await this.prisma.patient_profiles.findUnique({ where: { id } });
+    if (!profile) throw new NotFoundException('Patient profile not found');
+
+    // Delete old photo if one exists
+    if (profile.photo_url) {
+      const oldPath = this.extractPath(profile.photo_url);
+      if (oldPath) await this.storage.delete(PROFILE_BUCKET, oldPath).catch(() => null);
+    }
+
+    const ext = file.mimetype.split('/')[1];
+    const storagePath = `patients/${id}/${Date.now()}.${ext}`;
+    const publicUrl = await this.storage.upload(PROFILE_BUCKET, storagePath, file.buffer, file.mimetype);
+
+    return this.prisma.patient_profiles.update({
+      where: { id },
+      data: { photo_url: publicUrl, updated_at: new Date() },
+      select: this.patientSelect,
+    });
+  }
+
   async updateByUserId(userId: bigint, dto: UpdatePatientProfileDto) {
     const profile = await this.prisma.patient_profiles.findUnique({
       where: { user_id: userId },
@@ -137,5 +175,20 @@ export class PatientsService {
       data: { ...dto, updated_at: new Date() },
       select: this.patientSelect,
     });
+  }
+
+  /** Extract the storage path from a full Supabase public URL */
+  private extractPath(publicUrl: string): string | null {
+    try {
+      const url = new URL(publicUrl);
+      // URL format: .../storage/v1/object/public/<bucket>/<path>
+      const parts = url.pathname.split('/object/public/');
+      if (parts.length < 2) return null;
+      const withBucket = parts[1];
+      const slashIdx = withBucket.indexOf('/');
+      return slashIdx === -1 ? null : withBucket.slice(slashIdx + 1);
+    } catch {
+      return null;
+    }
   }
 }

@@ -1553,7 +1553,8 @@ export const Patient_profilesScalarFieldEnum = {
   governate: 'governate',
   insurance_policy: 'insurance_policy',
   insurance_provider: 'insurance_provider',
-  profile_complete: 'profile_complete'
+  profile_complete: 'profile_complete',
+  photo_url: 'photo_url'
 } as const
 
 export type Patient_profilesScalarFieldEnum = (typeof Patient_profilesScalarFieldEnum)[keyof typeof Patient_profilesScalarFieldEnum]
@@ -1588,6 +1589,7 @@ export const UsersScalarFieldEnum = {
   address: 'address',
   role: 'role',
   is_active: 'is_active',
+  avatar_url: 'avatar_url',
   created_at: 'created_at',
   updated_at: 'updated_at'
 } as const
