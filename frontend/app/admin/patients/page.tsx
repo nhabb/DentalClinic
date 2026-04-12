@@ -97,17 +97,17 @@ export default function PatientsPage() {
   // Book appointment state
   const [showBookModal, setShowBookModal] = useState(false);
   const [bookDate, setBookDate] = useState(new Date().toISOString().split("T")[0]);
-  const [availableSlots, setAvailableSlots] = useState<any[]>([]);
-  const [selectedSlotId, setSelectedSlotId] = useState<number | null>(null);
+  const [bookTime, setBookTime] = useState("09:00");
   const [bookReason, setBookReason] = useState("");
   const [bookLoading, setBookLoading] = useState(false);
-  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [bookError, setBookError] = useState("");
 
   // Documents state
   const [documents, setDocuments] = useState<any[]>([]);
   const [docsLoading, setDocsLoading] = useState(false);
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const docInputRef = useRef<HTMLInputElement>(null);
+  const [previewDoc, setPreviewDoc] = useState<any | null>(null);
 
   // Check auth and load user data (auth disabled)
   useEffect(() => {
@@ -213,38 +213,47 @@ export default function PatientsPage() {
     }
   };
 
-  const fetchSlots = async (date: string) => {
-    setSlotsLoading(true);
-    try {
-      const res = await apiFetch(`/api/appointment-slots?date=${date}&available_only=true&limit=50`);
-      const data = await res.json();
-      setAvailableSlots(data.data || []);
-    } catch {
-      setAvailableSlots([]);
-    } finally {
-      setSlotsLoading(false);
-    }
-  };
-
   const handleBookAppointment = async () => {
-    if (!selectedPatient || !selectedSlotId) return;
+    if (!selectedPatient) return;
     setBookLoading(true);
+    setBookError("");
     try {
+      // Fetch available slots for the chosen date and find one matching the chosen time
+      const slotsRes = await apiFetch(`/api/appointment-slots?date=${bookDate}&available_only=true&limit=100`);
+      const slotsData = await slotsRes.json();
+      const slots: any[] = slotsData.data || [];
+
+      // Find an exact or nearest-after match on start_time
+      const target = bookTime; // "HH:MM"
+      let matched = slots.find((s) => s.start_time?.slice(0, 5) === target);
+      if (!matched) matched = slots.find((s) => (s.start_time?.slice(0, 5) ?? "00:00") >= target);
+      if (!matched) matched = slots[0]; // fallback to first available
+
+      if (!matched) {
+        setBookError("No available slots on this date. Please try a different date.");
+        return;
+      }
+
       const res = await apiFetch("/api/appointments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           patient_id: selectedPatient.id,
-          slot_id: selectedSlotId,
+          slot_id: matched.id,
           reason: bookReason || undefined,
         }),
       });
       if (res.ok) {
         setShowBookModal(false);
-        setSelectedSlotId(null);
         setBookReason("");
+        setBookError("");
         fetchPatientHistory(selectedPatient.id);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        setBookError(err.message || "Failed to book appointment.");
       }
+    } catch {
+      setBookError("An error occurred. Please try again.");
     } finally {
       setBookLoading(false);
     }
@@ -484,7 +493,7 @@ export default function PatientsPage() {
                 <Button
                   size="sm"
                   className="bg-dental-blue hover:bg-dental-blue/90"
-                  onClick={() => { setBookDate(new Date().toISOString().split("T")[0]); fetchSlots(new Date().toISOString().split("T")[0]); setShowBookModal(true); }}
+                  onClick={() => { setBookDate(new Date().toISOString().split("T")[0]); setBookTime("09:00"); setBookError(""); setShowBookModal(true); }}
                 >
                   <FaCalendarPlus className="mr-2 rtl:mr-0 rtl:ml-2" /> {t("patients.bookAppointment")}
                 </Button>
@@ -745,9 +754,18 @@ export default function PatientsPage() {
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            {doc.file_url && (
+                            {doc.url && (
+                              <button
+                                onClick={() => setPreviewDoc(doc)}
+                                className="p-2 text-dental-blue hover:bg-blue-50 rounded-lg transition-colors"
+                                title="View"
+                              >
+                                <FaFileAlt />
+                              </button>
+                            )}
+                            {doc.url && (
                               <a
-                                href={doc.file_url}
+                                href={doc.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -791,65 +809,42 @@ export default function PatientsPage() {
       {/* Book Appointment Modal */}
       {showBookModal && selectedPatient && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
             <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-900">
-                Book Appointment — {selectedPatient.name}
-              </h2>
+              <h2 className="text-xl font-bold text-gray-900">Book Appointment</h2>
               <button
-                onClick={() => { setShowBookModal(false); setSelectedSlotId(null); setBookReason(""); }}
+                onClick={() => { setShowBookModal(false); setBookReason(""); setBookError(""); }}
                 className="p-2 hover:bg-gray-100 rounded-lg"
               >
                 <FaTimes className="text-gray-500" />
               </button>
             </div>
 
-            <div className="p-6 space-y-5">
-              {/* Date Picker */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                <input
-                  type="date"
-                  value={bookDate}
-                  min={new Date().toISOString().split("T")[0]}
-                  onChange={(e) => { setBookDate(e.target.value); setSelectedSlotId(null); fetchSlots(e.target.value); }}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
-                />
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-gray-500">Patient: <span className="font-medium text-gray-900">{selectedPatient.name}</span></p>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                  <input
+                    type="date"
+                    value={bookDate}
+                    min={new Date().toISOString().split("T")[0]}
+                    onChange={(e) => { setBookDate(e.target.value); setBookError(""); }}
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Preferred Time</label>
+                  <input
+                    type="time"
+                    value={bookTime}
+                    onChange={(e) => { setBookTime(e.target.value); setBookError(""); }}
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                  />
+                </div>
               </div>
 
-              {/* Available Slots */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Available Slots</label>
-                {slotsLoading ? (
-                  <div className="text-center py-6"><LoadingSpinner /></div>
-                ) : availableSlots.length > 0 ? (
-                  <div className="grid grid-cols-2 gap-2 max-h-52 overflow-y-auto pr-1">
-                    {availableSlots.map((slot) => {
-                      const start = slot.start_time?.slice(0, 5) || "";
-                      const end = slot.end_time?.slice(0, 5) || "";
-                      const doctor = slot.users ? `Dr. ${slot.users.first_name} ${slot.users.last_name}` : "";
-                      return (
-                        <button
-                          key={slot.id}
-                          onClick={() => setSelectedSlotId(slot.id)}
-                          className={`p-3 rounded-xl text-left text-sm border transition-colors ${
-                            selectedSlotId === slot.id
-                              ? "border-dental-blue bg-dental-blue/10 text-dental-blue"
-                              : "border-gray-200 hover:border-dental-blue/40 text-gray-700"
-                          }`}
-                        >
-                          <p className="font-medium">{start} – {end}</p>
-                          {doctor && <p className="text-xs text-gray-500 mt-0.5">{doctor}</p>}
-                        </button>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500 py-4 text-center">No available slots for this date</p>
-                )}
-              </div>
-
-              {/* Reason */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Reason (optional)</label>
                 <input
@@ -857,25 +852,72 @@ export default function PatientsPage() {
                   value={bookReason}
                   onChange={(e) => setBookReason(e.target.value)}
                   placeholder="e.g. Routine checkup, tooth pain..."
-                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
                 />
               </div>
+
+              {bookError && (
+                <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{bookError}</p>
+              )}
             </div>
 
             <div className="p-6 border-t border-gray-100 flex justify-end gap-3">
               <Button
                 variant="outline"
-                onClick={() => { setShowBookModal(false); setSelectedSlotId(null); setBookReason(""); }}
+                onClick={() => { setShowBookModal(false); setBookReason(""); setBookError(""); }}
               >
                 Cancel
               </Button>
               <Button
                 className="bg-dental-blue hover:bg-dental-blue/90"
-                disabled={!selectedSlotId || bookLoading}
+                disabled={bookLoading}
                 onClick={handleBookAppointment}
               >
                 {bookLoading ? "Booking..." : "Book Appointment"}
               </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Document Preview Modal */}
+      {previewDoc && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[70] p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+              <p className="font-semibold text-gray-900 truncate">{previewDoc.file_name || "Document"}</p>
+              <div className="flex items-center gap-2 ml-4 shrink-0">
+                <a
+                  href={previewDoc.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-dental-blue border border-dental-blue/30 rounded-lg hover:bg-blue-50 transition-colors"
+                >
+                  <FaDownload className="text-xs" /> Download
+                </a>
+                <button
+                  onClick={() => setPreviewDoc(null)}
+                  className="p-2 hover:bg-gray-100 rounded-lg"
+                >
+                  <FaTimes className="text-gray-500" />
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-auto p-2 bg-gray-100">
+              {/\.(png|jpe?g|gif|webp|svg)$/i.test(previewDoc.file_name || "") ? (
+                <img
+                  src={previewDoc.url}
+                  alt={previewDoc.file_name || "document"}
+                  className="max-w-full max-h-[75vh] mx-auto rounded-lg object-contain"
+                />
+              ) : (
+                <iframe
+                  src={previewDoc.url}
+                  title={previewDoc.file_name || "document"}
+                  className="w-full rounded-lg bg-white"
+                  style={{ height: "75vh" }}
+                />
+              )}
             </div>
           </div>
         </div>

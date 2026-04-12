@@ -121,6 +121,17 @@ export default function InventoryManagement() {
   const [editImageFile, setEditImageFile] = useState<File | null>(null);
   const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
 
+  // Add form state
+  const [addForm, setAddForm] = useState({
+    name: "", category: "Disposables", unit: "piece",
+    quantity: 0, minimum_quantity: 0, description: "",
+  });
+  const [addSaving, setAddSaving] = useState(false);
+
+  // Edit form state
+  const [editForm, setEditForm] = useState({ name: "", minimum_quantity: 0 });
+  const [editSaving, setEditSaving] = useState(false);
+
   const fetchInventory = async () => {
     try {
       const res = await apiFetch(`/api/inventory`);
@@ -183,6 +194,7 @@ export default function InventoryManagement() {
     setSelectedItem(item);
     setEditImageFile(null);
     setEditImagePreview(item.image_url ?? null);
+    setEditForm({ name: item.name, minimum_quantity: item.minimumStock });
     setShowEditModal(true);
   };
 
@@ -190,27 +202,46 @@ export default function InventoryManagement() {
     setShowAddModal(false);
     setAddImageFile(null);
     setAddImagePreview(null);
+    setAddForm({ name: "", category: "Disposables", unit: "piece", quantity: 0, minimum_quantity: 0, description: "" });
   };
 
-  // Called after the backend creates the item and returns its id
-  const handleAfterAdd = async (newItemId: number) => {
-    if (addImageFile) await uploadItemImage(newItemId, addImageFile);
-    await fetchInventory();
-    handleAddClose();
+  const handleAddSave = async () => {
+    if (!addForm.name.trim()) return;
+    setAddSaving(true);
+    try {
+      const res = await apiFetch("/api/inventory", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(addForm),
+      });
+      if (!res.ok) return;
+      const newItem = await res.json();
+      const newId = Number(newItem.id);
+      if (addImageFile) await uploadItemImage(newId, addImageFile);
+      await fetchInventory();
+      handleAddClose();
+    } finally {
+      setAddSaving(false);
+    }
   };
 
   const handleEditSave = async () => {
-    if (selectedItem && editImageFile) {
-      const url = await uploadItemImage(selectedItem.id, editImageFile);
-      if (url) {
-        setInventoryItems((prev) =>
-          prev.map((it) => it.id === selectedItem.id ? { ...it, image_url: url } : it)
-        );
-      }
+    if (!selectedItem) return;
+    setEditSaving(true);
+    try {
+      await apiFetch(`/api/inventory/${selectedItem.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editForm),
+      });
+      if (editImageFile) await uploadItemImage(selectedItem.id, editImageFile);
+      await fetchInventory();
+    } finally {
+      setEditSaving(false);
+      setShowEditModal(false);
+      setEditImageFile(null);
+      setEditImagePreview(null);
     }
-    setShowEditModal(false);
-    setEditImageFile(null);
-    setEditImagePreview(null);
   };
 
   return (
@@ -344,40 +375,78 @@ export default function InventoryManagement() {
             />
           </FormField>
           <FormField label={t("inventory.itemName")}>
-            <input type="text" placeholder={t("inventory.itemNamePlaceholder")} className={inputClass} />
+            <input
+              type="text"
+              placeholder={t("inventory.itemNamePlaceholder")}
+              className={inputClass}
+              value={addForm.name}
+              onChange={(e) => setAddForm((f) => ({ ...f, name: e.target.value }))}
+            />
           </FormField>
           <div className="grid grid-cols-2 gap-4">
             <FormField label={t("inventory.category")}>
-              <select className={inputClass}>
-                <option>{t("inventory.disposables")}</option>
-                <option>{t("inventory.materials")}</option>
-                <option>{t("inventory.medications")}</option>
-                <option>{t("inventory.instruments")}</option>
+              <select
+                className={inputClass}
+                value={addForm.category}
+                onChange={(e) => setAddForm((f) => ({ ...f, category: e.target.value }))}
+              >
+                <option value="Disposables">{t("inventory.disposables")}</option>
+                <option value="Materials">{t("inventory.materials")}</option>
+                <option value="Medications">{t("inventory.medications")}</option>
+                <option value="Instruments">{t("inventory.instruments")}</option>
               </select>
             </FormField>
             <FormField label={t("inventory.unit")}>
-              <input type="text" placeholder={t("inventory.unitPlaceholder")} className={inputClass} />
+              <input
+                type="text"
+                placeholder={t("inventory.unitPlaceholder")}
+                className={inputClass}
+                value={addForm.unit}
+                onChange={(e) => setAddForm((f) => ({ ...f, unit: e.target.value }))}
+              />
             </FormField>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <FormField label={t("inventory.currentStock")}>
-              <input type="number" placeholder="0" className={inputClass} />
+              <input
+                type="number"
+                placeholder="0"
+                className={inputClass}
+                value={addForm.quantity}
+                onChange={(e) => setAddForm((f) => ({ ...f, quantity: Number(e.target.value) }))}
+              />
             </FormField>
             <FormField label={t("inventory.minimumStock")}>
-              <input type="number" placeholder="0" className={inputClass} />
+              <input
+                type="number"
+                placeholder="0"
+                className={inputClass}
+                value={addForm.minimum_quantity}
+                onChange={(e) => setAddForm((f) => ({ ...f, minimum_quantity: Number(e.target.value) }))}
+              />
             </FormField>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <FormField label={t("inventory.supplier")}>
-              <input type="text" placeholder={t("inventory.supplierName")} className={inputClass} />
-            </FormField>
-          </div>
+          <FormField label={t("inventory.supplier")}>
+            <input
+              type="text"
+              placeholder={t("inventory.supplierName")}
+              className={inputClass}
+              value={addForm.description}
+              onChange={(e) => setAddForm((f) => ({ ...f, description: e.target.value }))}
+            />
+          </FormField>
         </div>
         <div className="flex gap-3 mt-6">
           <Button variant="outline" className="flex-1" onClick={handleAddClose}>
             {t("common.cancel")}
           </Button>
-          <Button className="flex-1 bg-dental-blue hover:bg-dental-blue/90">{t("inventory.addItem")}</Button>
+          <Button
+            className="flex-1 bg-dental-blue hover:bg-dental-blue/90"
+            disabled={!addForm.name.trim() || addSaving}
+            onClick={handleAddSave}
+          >
+            {addSaving ? "Adding..." : t("inventory.addItem")}
+          </Button>
         </div>
       </Modal>
 
@@ -396,23 +465,28 @@ export default function InventoryManagement() {
                 />
               </FormField>
               <FormField label={t("inventory.itemName")}>
-                <input type="text" defaultValue={selectedItem.name} className={inputClass} />
+                <input
+                  type="text"
+                  className={inputClass}
+                  value={editForm.name}
+                  onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
+                />
               </FormField>
-              <div className="grid grid-cols-2 gap-4">
-                <FormField label={t("inventory.currentStock")}>
-                  <input type="number" defaultValue={selectedItem.currentStock} className={inputClass} />
-                </FormField>
-                <FormField label={t("inventory.minimumStock")}>
-                  <input type="number" defaultValue={selectedItem.minimumStock} className={inputClass} />
-                </FormField>
-              </div>
+              <FormField label={t("inventory.minimumStock")}>
+                <input
+                  type="number"
+                  className={inputClass}
+                  value={editForm.minimum_quantity}
+                  onChange={(e) => setEditForm((f) => ({ ...f, minimum_quantity: Number(e.target.value) }))}
+                />
+              </FormField>
             </div>
             <div className="flex gap-3 mt-6">
               <Button variant="outline" className="flex-1" onClick={() => setShowEditModal(false)}>
                 {t("common.cancel")}
               </Button>
-              <Button className="flex-1 bg-dental-blue hover:bg-dental-blue/90" onClick={handleEditSave}>
-                {t("inventory.saveChanges")}
+              <Button className="flex-1 bg-dental-blue hover:bg-dental-blue/90" onClick={handleEditSave} disabled={editSaving}>
+                {editSaving ? "Saving..." : t("inventory.saveChanges")}
               </Button>
             </div>
           </>
