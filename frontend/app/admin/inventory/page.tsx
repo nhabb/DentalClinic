@@ -121,6 +121,12 @@ export default function InventoryManagement() {
   const [editImageFile, setEditImageFile] = useState<File | null>(null);
   const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
 
+  // Direct photo upload (table row camera button)
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const [photoTargetId, setPhotoTargetId] = useState<number | null>(null);
+  const [uploadingPhotoId, setUploadingPhotoId] = useState<number | null>(null);
+  const [photoError, setPhotoError] = useState("");
+
   // Add form state
   const [addForm, setAddForm] = useState({
     name: "", category: "Disposables", unit: "piece",
@@ -196,6 +202,31 @@ export default function InventoryManagement() {
     setEditImagePreview(item.image_url ?? null);
     setEditForm({ name: item.name, minimum_quantity: item.minimumStock });
     setShowEditModal(true);
+  };
+
+  const handleDirectPhotoUpload = async (file: File) => {
+    if (!photoTargetId) return;
+    setUploadingPhotoId(photoTargetId);
+    setPhotoError("");
+    try {
+      const form = new FormData();
+      form.append("image", file);
+      const res = await apiFetch(`/api/inventory/${photoTargetId}/image`, {
+        method: "POST",
+        body: form,
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        setPhotoError(err.message || `Upload failed (${res.status})`);
+        return;
+      }
+      await fetchInventory();
+    } catch (e: any) {
+      setPhotoError(e.message || "Upload failed");
+    } finally {
+      setUploadingPhotoId(null);
+      setPhotoTargetId(null);
+    }
   };
 
   const handleAddClose = () => {
@@ -342,6 +373,18 @@ export default function InventoryManagement() {
                       </td>
                       <td className="py-4 px-6">
                         <div className="flex justify-center gap-2">
+                          <button
+                            title="Upload photo"
+                            disabled={uploadingPhotoId === item.id}
+                            onClick={() => { setPhotoTargetId(item.id); setPhotoError(""); setTimeout(() => photoInputRef.current?.click(), 0); }}
+                            className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-green-600 transition-colors disabled:opacity-40"
+                          >
+                            {uploadingPhotoId === item.id ? (
+                              <span className="block w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <FaCamera />
+                            )}
+                          </button>
                           <button
                             onClick={() => handleOpenEdit(item)}
                             className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-dental-blue transition-colors"
@@ -492,6 +535,27 @@ export default function InventoryManagement() {
           </>
         )}
       </Modal>
+
+      {/* Hidden file input for direct photo upload */}
+      <input
+        ref={photoInputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/webp"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleDirectPhotoUpload(file);
+          e.target.value = "";
+        }}
+      />
+
+      {/* Upload error toast */}
+      {photoError && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-red-600 text-white text-sm px-5 py-3 rounded-xl shadow-lg z-50 flex items-center gap-3">
+          {photoError}
+          <button onClick={() => setPhotoError("")} className="font-bold text-white/80 hover:text-white">✕</button>
+        </div>
+      )}
     </div>
   );
 }
