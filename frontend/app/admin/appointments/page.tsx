@@ -30,7 +30,15 @@ import {
   FaCalendarCheck,
   FaCalendarTimes,
   FaUserMd,
+  FaCalendarPlus,
+  FaBan,
 } from "react-icons/fa";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
@@ -46,6 +54,7 @@ interface Appointment {
   notes: string;
   doctor: string;
   doctorId: number;
+  patientId: number;
 }
 
 interface Doctor {
@@ -99,6 +108,12 @@ export default function AppointmentsManagement() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Postpone state
+  const [postponeApptId, setPostponeApptId] = useState<number | null>(null);
+  const [postponeDate, setPostponeDate] = useState("");
+  const [postponeTime, setPostponeTime] = useState("");
+  const [postponeLoading, setPostponeLoading] = useState(false);
 
   // Check auth and load user data (auth disabled)
   useEffect(() => {
@@ -188,6 +203,7 @@ export default function AppointmentsManagement() {
             notes: a.notes || "",
             doctor: doctor ? `Dr. ${doctor.first_name} ${doctor.last_name}` : "",
             doctorId: Number(doctorId),
+            patientId: Number(a.patient_id || 0),
           };
         });
         setAppointments(mapped);
@@ -483,6 +499,7 @@ export default function AppointmentsManagement() {
           phone: patientUser?.phone || "", type: a.reason || "Checkup", duration: 30,
           status: a.status, notes: a.notes || "",
           doctor: doctor ? `Dr. ${doctor.first_name} ${doctor.last_name}` : "", doctorId: Number(doctorId),
+          patientId: Number(a.patient_id || 0),
         };
       });
       setAppointments(mapped);
@@ -514,13 +531,76 @@ export default function AppointmentsManagement() {
   };
 
   const handleCancelAppointment = async (appointmentId: number) => {
-    // API call removed
-    setAppointments((prev) =>
-      prev.map((apt) =>
-        apt.id === appointmentId ? { ...apt, status: "cancelled" } : apt,
-      ),
-    );
-    toast.success("Appointment cancelled.");
+    try {
+      const res = await apiFetch(`/api/appointments/${appointmentId}/cancel`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      if (!res.ok) { toast.error("Failed to cancel appointment."); return; }
+      toast.success("Appointment cancelled.");
+      setAppointments((prev) =>
+        prev.map((apt) => apt.id === appointmentId ? { ...apt, status: "cancelled" } : apt),
+      );
+    } catch {
+      toast.error("Failed to cancel appointment.");
+    }
+  };
+
+  const handlePostponeSubmit = async () => {
+    const appt = appointments.find((a) => a.id === postponeApptId);
+    if (!appt || !postponeDate || !postponeTime) return;
+    setPostponeLoading(true);
+    try {
+      const slotsRes = await apiFetch(`/api/appointment-slots?doctor_id=${appt.doctorId}&date=${postponeDate}&limit=100`);
+      const slotsData = slotsRes.ok ? await slotsRes.json() : { data: [] };
+      let slot = (slotsData.data || []).find((s: any) => {
+        const t = new Date(s.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "UTC" });
+        return t === postponeTime && !s.is_booked;
+      });
+
+      if (!slot) {
+        const [h, m] = postponeTime.split(":").map(Number);
+        const toH = h + Math.floor((m + 30) / 60);
+        const toM = (m + 30) % 60;
+        const toTime = `${String(toH).padStart(2, "0")}:${String(toM).padStart(2, "0")}`;
+        const createRes = await apiFetch(`/api/appointment-slots/bulk`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ doctor_id: appt.doctorId, slot_date: postponeDate, from_time: postponeTime, to_time: toTime, duration_minutes: 30 }),
+        });
+        if (!createRes.ok) { toast.error("Failed to create slot for new date."); return; }
+        const refetchRes = await apiFetch(`/api/appointment-slots?doctor_id=${appt.doctorId}&date=${postponeDate}&limit=100`);
+        const refetchData = refetchRes.ok ? await refetchRes.json() : { data: [] };
+        slot = (refetchData.data || []).find((s: any) => {
+          const t = new Date(s.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "UTC" });
+          return t === postponeTime && !s.is_booked;
+        });
+        if (!slot) { toast.error("Could not find the new slot after creation."); return; }
+      }
+
+      const cancelRes = await apiFetch(`/api/appointments/${appt.id}/cancel`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: "Postponed" }),
+      });
+      if (!cancelRes.ok) { toast.error("Failed to cancel original appointment."); return; }
+
+      const bookRes = await apiFetch(`/api/appointments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ patient_id: appt.patientId, slot_id: Number(slot.id), reason: appt.type }),
+      });
+      if (!bookRes.ok) { toast.error("Failed to book new appointment."); return; }
+
+      toast.success(`Appointment postponed to ${postponeDate} at ${postponeTime}.`);
+      setAppointments((prev) => prev.map((a) => a.id === appt.id ? { ...a, status: "cancelled" } : a));
+      setPostponeApptId(null);
+    } catch {
+      toast.error("Something went wrong.");
+    } finally {
+      setPostponeLoading(false);
+    }
   };
 
   // Filter doctors list based on role
@@ -785,9 +865,32 @@ export default function AppointmentsManagement() {
                                 {t("appointments.complete")}
                               </Button>
                             )}
-                            <button className="p-2 hover:bg-gray-100 rounded-lg text-gray-500">
-                              <FaEllipsisV />
-                            </button>
+                            {apt.status !== "completed" && apt.status !== "cancelled" && (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-gray-700">
+                                    <FaEllipsisV className="text-sm" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-44">
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      setPostponeApptId(apt.id);
+                                      setPostponeDate("");
+                                      setPostponeTime(apt.time);
+                                    }}
+                                  >
+                                    <FaCalendarPlus className="text-dental-blue" /> Postpone
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => handleCancelAppointment(apt.id)}
+                                    className="text-red-600 focus:text-red-600"
+                                  >
+                                    <FaBan className="text-red-500" /> Cancel
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -1138,6 +1241,52 @@ export default function AppointmentsManagement() {
           <Button className="flex-1" variant="outline" onClick={() => setShowSlotCalendar(false)}>Close</Button>
         </div>
       </Modal>
+
+      {/* Postpone Modal */}
+      {postponeApptId !== null && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Postpone Appointment</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">New Date</label>
+                <input
+                  type="date"
+                  value={postponeDate}
+                  min={new Date().toISOString().split("T")[0]}
+                  onChange={(e) => setPostponeDate(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">New Time</label>
+                <input
+                  type="time"
+                  value={postponeTime}
+                  onChange={(e) => setPostponeTime(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
+                />
+              </div>
+              <p className="text-xs text-gray-500">If no slot exists for this time, one will be created automatically.</p>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setPostponeApptId(null)}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handlePostponeSubmit}
+                disabled={!postponeDate || !postponeTime || postponeLoading}
+                className="flex-1 px-4 py-2 bg-dental-blue text-white rounded-lg text-sm font-medium hover:bg-dental-blue/90 disabled:opacity-50 transition-colors"
+              >
+                {postponeLoading ? "Saving..." : "Confirm"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
