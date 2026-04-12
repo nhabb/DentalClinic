@@ -49,12 +49,12 @@ type Expense = {
   date: string;
 };
 
-const categoryKeys = ["all", "supplies", "salaries", "equipment", "utilities", "other"] as const;
-const categoryValues = ["All", "Supplies", "Salaries", "Equipment", "Utilities", "Other"];
+const categoryKeys = ["all", "supplies", "rent", "equipment", "utilities", "maintenance", "other"] as const;
+const categoryValues = ["All", "Supplies", "Rent", "Equipment", "Utilities", "Maintenance", "Other"];
 
 const emptyForm = {
   description: "",
-  category: "Supplies",
+  category: "supplies",
   amount: "",
   status: "pending" as "paid" | "pending",
   date: new Date().toISOString().split("T")[0],
@@ -121,7 +121,7 @@ export default function ExpensesPage() {
     setSelectedExpense(expense);
     setForm({
       description: expense.description,
-      category: expense.category,
+      category: expense.category.toLowerCase(),
       amount: String(expense.amount),
       status: expense.status,
       date: expense.date,
@@ -139,7 +139,12 @@ export default function ExpensesPage() {
       await apiFetch("/api/expenses", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, amount: parseFloat(form.amount) }),
+        body: JSON.stringify({
+          title: form.description,
+          expense_date: form.date,
+          category: form.category.toLowerCase(),
+          amount: parseFloat(form.amount),
+        }),
       });
       await fetchExpenses();
     } catch {
@@ -156,9 +161,14 @@ export default function ExpensesPage() {
     if (!selectedExpense) return;
     try {
       await apiFetch(`/api/expenses/${selectedExpense.id}`, {
-        method: "PUT",
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, amount: parseFloat(form.amount) }),
+        body: JSON.stringify({
+          title: form.description,
+          expense_date: form.date,
+          category: form.category.toLowerCase(),
+          amount: parseFloat(form.amount),
+        }),
       });
       await fetchExpenses();
     } catch {
@@ -337,8 +347,8 @@ export default function ExpensesPage() {
                 value={form.category}
                 onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
               >
-                {categoryValues.slice(1).map((cat) => (
-                  <option key={cat} value={cat}>{cat}</option>
+                {categoryKeys.slice(1).map((key, idx) => (
+                  <option key={key} value={key}>{categoryValues[idx + 1]}</option>
                 ))}
               </select>
             </FormField>
