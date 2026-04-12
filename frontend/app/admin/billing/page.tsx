@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from 'sonner';
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api/client";
@@ -150,8 +151,6 @@ export default function BillingPage() {
   };
 
   useEffect(() => {
-    const token = safeStorage.getItem("authToken");
-    if (!token) { router.push("/admin/login"); return; }
     Promise.all([fetchInvoices(), fetchPatients()]).finally(() => setIsLoading(false));
   }, []);
 
@@ -215,10 +214,12 @@ export default function BillingPage() {
         throw new Error(err.message ?? "Failed to create invoice");
       }
       await fetchInvoices();
+      toast.success("Invoice created.");
       setShowCreateModal(false);
       resetCreateModal();
     } catch (e: any) {
       setCreateError(e.message ?? "Something went wrong.");
+      toast.error(e.message ?? "Failed to create invoice.");
     } finally {
       setCreating(false);
     }
@@ -250,10 +251,12 @@ export default function BillingPage() {
       const updated = await res.json();
       const normalized = normalizeInvoice(updated);
       await fetchInvoices();
+      toast.success("Payment recorded.");
       setSelectedInvoice(normalized);
       resetPaymentForm();
     } catch (e: any) {
       setPaymentError(e.message ?? "Something went wrong.");
+      toast.error(e.message ?? "Failed to record payment.");
     } finally {
       setRecordingPayment(false);
     }
@@ -266,6 +269,7 @@ export default function BillingPage() {
   };
 
   const handleLogout = () => {
+    toast.success("Logged out.");
     safeStorage.removeItem("adminAuth");
     safeStorage.removeItem("adminUser");
     safeStorage.removeItem("authToken");

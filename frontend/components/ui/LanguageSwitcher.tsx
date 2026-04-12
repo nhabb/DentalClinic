@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Languages } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
@@ -25,8 +26,18 @@ type Props = {
 
 export default function LanguageSwitcher({ variant = "outline" }: Props) {
   const { language, setLanguage } = useTranslation();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const current = LANGUAGES.find((l) => l.value === language);
+
+  if (!mounted) {
+    return (
+      <Button variant={variant} disabled>
+        <Languages className="h-4 w-4" />
+      </Button>
+    );
+  }
 
   return (
     <DropdownMenu>

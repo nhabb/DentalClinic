@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { toast } from 'sonner';
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -63,6 +64,7 @@ export default function AdminLogin() {
       }
     } catch {}
 
+    toast.success("Logged in successfully.");
     safeStorage.setItem("adminAuth", "true");
     if (!safeStorage.getItem("adminUser")) {
       safeStorage.setItem("adminUser", JSON.stringify({ email: credentials.email }));

@@ -20,6 +20,7 @@
 //   created_at: string
 //   updated_at: string
 
+import { toast } from 'sonner';
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api/client";
@@ -204,6 +205,7 @@ export default function PatientPaymentsPage() {
   };
 
   const handleLogout = () => {
+    toast.success("Logged out.");
     safeStorage.removeItem("adminAuth");
     safeStorage.removeItem("adminUser");
     safeStorage.removeItem("authToken");
@@ -271,6 +273,7 @@ export default function PatientPaymentsPage() {
         body: JSON.stringify(payload),
       });
       await fetchPayments();
+      toast.success("Payment record created.");
     } catch {
       setPayments((prev) => [
         ...prev,
@@ -285,6 +288,7 @@ export default function PatientPaymentsPage() {
           status: form.status,
         },
       ]);
+      toast.success("Payment record created.");
     }
     setShowAddModal(false);
   };
@@ -302,6 +306,7 @@ export default function PatientPaymentsPage() {
         body: JSON.stringify(payload),
       });
       await fetchPayments();
+      toast.success("Payment updated.");
     } catch {
       setPayments((prev) =>
         prev.map((p) =>
@@ -317,6 +322,7 @@ export default function PatientPaymentsPage() {
             : p
         )
       );
+      toast.success("Payment updated.");
     }
     setShowEditModal(false);
   };
@@ -324,7 +330,10 @@ export default function PatientPaymentsPage() {
   const handleDelete = async (id: number) => {
     const res = await apiFetch(`/api/payments/${id}`, { method: "DELETE" });
     if (res.ok) {
+      toast.success("Payment deleted.");
       setPayments((prev) => prev.filter((p) => !(p.id === id && p.source === "payment")));
+    } else {
+      toast.error("Failed to delete payment.");
     }
   };
 

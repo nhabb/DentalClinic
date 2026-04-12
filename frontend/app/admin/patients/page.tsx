@@ -1,5 +1,6 @@
 "use client";
 import { apiFetch } from '@/lib/api/client';
+import { toast } from 'sonner';
 
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
@@ -244,13 +245,16 @@ export default function PatientsPage() {
         }),
       });
       if (res.ok) {
+        toast.success("Appointment booked.");
         setShowBookModal(false);
         setBookReason("");
         setBookError("");
         fetchPatientHistory(selectedPatient.id);
       } else {
         const err = await res.json().catch(() => ({}));
-        setBookError(err.message || "Failed to book appointment.");
+        const msg = err.message || "Failed to book appointment.";
+        setBookError(msg);
+        toast.error(msg);
       }
     } catch {
       setBookError("An error occurred. Please try again.");
@@ -281,7 +285,8 @@ export default function PatientsPage() {
       form.append("patient_id", String(selectedPatient.id));
       form.append("uploaded_by", String(doctorId ?? 1));
       const res = await apiFetch("/api/patient-documents", { method: "POST", body: form });
-      if (res.ok) await fetchDocuments(selectedPatient.id);
+      if (res.ok) { toast.success("Document uploaded."); await fetchDocuments(selectedPatient.id); }
+      else toast.error("Failed to upload document.");
     } finally {
       setUploadingDoc(false);
     }
@@ -290,10 +295,12 @@ export default function PatientsPage() {
   const handleDeleteDocument = async (docId: number) => {
     if (!selectedPatient) return;
     const res = await apiFetch(`/api/patient-documents/${docId}`, { method: "DELETE" });
-    if (res.ok) setDocuments((prev) => prev.filter((d) => d.id !== docId));
+    if (res.ok) { toast.success("Document deleted."); setDocuments((prev) => prev.filter((d) => d.id !== docId)); }
+    else toast.error("Failed to delete document.");
   };
 
   const handleLogout = () => {
+    toast.success("Logged out.");
     safeStorage.removeItem("adminAuth");
     safeStorage.removeItem("authToken");
     safeStorage.removeItem("adminUser");

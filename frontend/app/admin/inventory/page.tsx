@@ -1,5 +1,6 @@
 "use client";
 import { apiFetch } from '@/lib/api/client';
+import { toast } from 'sonner';
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
@@ -138,6 +139,13 @@ export default function InventoryManagement() {
   const [editForm, setEditForm] = useState({ name: "", minimum_quantity: 0 });
   const [editSaving, setEditSaving] = useState(false);
 
+  // Stock adjustment state
+  const [stockQty, setStockQty] = useState(1);
+  const [stockType, setStockType] = useState<"in" | "out">("in");
+  const [stockNote, setStockNote] = useState("");
+  const [stockSaving, setStockSaving] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<number>(1);
+
   const fetchInventory = async () => {
     try {
       const res = await apiFetch(`/api/inventory`);
@@ -160,9 +168,13 @@ export default function InventoryManagement() {
     }
   };
 
-  useEffect(() => { fetchInventory(); }, []);
+  useEffect(() => {
+    fetchInventory();
+    apiFetch("/api/auth/me").then((r) => r.ok ? r.json() : null).then((u) => { if (u?.id) setCurrentUserId(Number(u.id)); });
+  }, []);
 
   const handleLogout = () => {
+    toast.success("Logged out.");
     safeStorage.removeItem("adminAuth");
     safeStorage.removeItem("adminUser");
     safeStorage.removeItem("authToken");
@@ -201,7 +213,35 @@ export default function InventoryManagement() {
     setEditImageFile(null);
     setEditImagePreview(item.image_url ?? null);
     setEditForm({ name: item.name, minimum_quantity: item.minimumStock });
+    setStockQty(1);
+    setStockType("in");
+    setStockNote("");
     setShowEditModal(true);
+  };
+
+  const handleStockAdjustment = async () => {
+    if (!selectedItem || stockQty <= 0) return;
+    setStockSaving(true);
+    try {
+      const res = await apiFetch(`/api/inventory/${selectedItem.id}/movements`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ movement_type: stockType, quantity: stockQty, note: stockNote || undefined, performed_by: currentUserId }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        toast.error(err.message || "Failed to adjust stock.");
+        return;
+      }
+      toast.success(stockType === "in" ? `Added ${stockQty} to stock.` : `Removed ${stockQty} from stock.`);
+      setStockQty(1);
+      setStockNote("");
+      await fetchInventory();
+      // Update selectedItem's current stock to reflect change
+      setSelectedItem((prev) => prev ? { ...prev, currentStock: prev.currentStock + (stockType === "in" ? stockQty : -stockQty) } : prev);
+    } finally {
+      setStockSaving(false);
+    }
   };
 
   const handleDirectPhotoUpload = async (file: File) => {
@@ -217,9 +257,12 @@ export default function InventoryManagement() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        setPhotoError(err.message || `Upload failed (${res.status})`);
+        const msg = err.message || `Upload failed (${res.status})`;
+        setPhotoError(msg);
+        toast.error(msg);
         return;
       }
+      toast.success("Photo updated.");
       await fetchInventory();
     } catch (e: any) {
       setPhotoError(e.message || "Upload failed");
@@ -245,14 +288,25 @@ export default function InventoryManagement() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(addForm),
       });
-      if (!res.ok) return;
+      if (!res.ok) { toast.error("Failed to add item."); return; }
       const newItem = await res.json();
       const newId = Number(newItem.id);
       if (addImageFile) await uploadItemImage(newId, addImageFile);
       await fetchInventory();
+      toast.success("Item added.");
       handleAddClose();
     } finally {
       setAddSaving(false);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    const res = await apiFetch(`/api/inventory/${id}`, { method: "DELETE" });
+    if (res.ok) {
+      toast.success("Item deleted.");
+      setInventoryItems((prev) => prev.filter((item) => item.id !== id));
+    } else {
+      toast.error("Failed to delete item.");
     }
   };
 
@@ -267,6 +321,7 @@ export default function InventoryManagement() {
       });
       if (editImageFile) await uploadItemImage(selectedItem.id, editImageFile);
       await fetchInventory();
+      toast.success("Item updated.");
     } finally {
       setEditSaving(false);
       setShowEditModal(false);
@@ -391,7 +446,10 @@ export default function InventoryManagement() {
                           >
                             <FaEdit />
                           </button>
-                          <button className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-red-500 transition-colors">
+                          <button
+                            onClick={() => handleDelete(item.id)}
+                            className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-red-500 transition-colors"
+                          >
                             <FaTrash />
                           </button>
                         </div>
@@ -524,6 +582,57 @@ export default function InventoryManagement() {
                 />
               </FormField>
             </div>
+
+            {/* Stock Adjustment */}
+            <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+              <p className="text-sm font-semibold text-gray-700 mb-3">
+                Adjust Stock
+                <span className="ml-2 text-xs font-normal text-gray-500">
+                  Current: <span className="font-semibold text-gray-800">{selectedItem.currentStock} {selectedItem.unit}</span>
+                </span>
+              </p>
+              <div className="flex gap-2 mb-3">
+                <button
+                  type="button"
+                  onClick={() => setStockType("in")}
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${stockType === "in" ? "bg-green-500 text-white" : "bg-white border border-gray-300 text-gray-600 hover:bg-gray-50"}`}
+                >
+                  + Add Stock
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStockType("out")}
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${stockType === "out" ? "bg-red-500 text-white" : "bg-white border border-gray-300 text-gray-600 hover:bg-gray-50"}`}
+                >
+                  − Decrease Stock
+                </button>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  min={1}
+                  value={stockQty}
+                  onChange={(e) => setStockQty(Math.max(1, Number(e.target.value)))}
+                  className={`${inputClass} w-24`}
+                  placeholder="Qty"
+                />
+                <input
+                  type="text"
+                  value={stockNote}
+                  onChange={(e) => setStockNote(e.target.value)}
+                  className={`${inputClass} flex-1`}
+                  placeholder="Note (optional)"
+                />
+                <Button
+                  onClick={handleStockAdjustment}
+                  disabled={stockSaving || stockQty <= 0}
+                  className={`shrink-0 ${stockType === "in" ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"}`}
+                >
+                  {stockSaving ? "..." : "Apply"}
+                </Button>
+              </div>
+            </div>
+
             <div className="flex gap-3 mt-6">
               <Button variant="outline" className="flex-1" onClick={() => setShowEditModal(false)}>
                 {t("common.cancel")}

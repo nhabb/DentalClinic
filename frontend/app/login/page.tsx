@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { FaTooth, FaUser, FaUserMd } from "react-icons/fa";
+import { toast } from 'sonner';
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/lib/i18n";
@@ -71,6 +72,7 @@ export default function LoginPage() {
         })
       );
 
+      toast.success("Logged in successfully.");
       const redirect = ROLE_REDIRECTS[user.role] ?? "/patient-dashboard";
       router.push(redirect);
     } catch {

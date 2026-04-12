@@ -1,5 +1,6 @@
 "use client";
 import { apiFetch } from '@/lib/api/client';
+import { toast } from 'sonner';
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -201,6 +202,7 @@ export default function AppointmentsManagement() {
   }, [selectedDate]);
 
   const handleLogout = () => {
+    toast.success("Logged out.");
     safeStorage.removeItem("adminAuth");
     safeStorage.removeItem("authToken");
     safeStorage.removeItem("adminUser");
@@ -321,7 +323,8 @@ export default function AppointmentsManagement() {
   const handleCalendarDeleteSlot = async (slotId: number, date: string) => {
     try {
       const res = await apiFetch(`/api/appointment-slots/${slotId}`, { method: "DELETE" });
-      if (!res.ok) return;
+      if (!res.ok) { toast.error("Failed to delete slot."); return; }
+      toast.success("Slot deleted.");
       setMonthSlots((prev) => {
         const updated = { ...prev };
         updated[date] = (updated[date] || []).filter((s) => s.id !== slotId);
@@ -359,12 +362,13 @@ export default function AppointmentsManagement() {
       const res = await apiFetch(`/api/appointment-slots/${slotId}`, { method: "DELETE" });
       if (!res.ok) {
         const err = await res.json();
-        setAvailabilityMsg(err.message || "Failed to delete slot.");
+        toast.error(err.message || "Failed to delete slot.");
         return;
       }
+      toast.success("Slot deleted.");
       setExistingSlots((prev) => prev.filter((s) => s.id !== slotId));
     } catch {
-      setAvailabilityMsg("Failed to delete slot.");
+      toast.error("Failed to delete slot.");
     }
   };
 
@@ -397,9 +401,11 @@ export default function AppointmentsManagement() {
         totalSkipped += data.skipped;
       }
       setAvailabilityMsg(`Created ${totalCreated} slot(s)${totalSkipped > 0 ? `, skipped ${totalSkipped} duplicate(s)` : ""}.`);
+      toast.success(`Created ${totalCreated} slot(s)${totalSkipped > 0 ? `, skipped ${totalSkipped} duplicate(s)` : ""}.`);
       fetchExistingSlots(doctorId, availabilityDate);
     } catch (e: any) {
       setAvailabilityMsg(e.message || "Failed to create slots.");
+      toast.error(e.message || "Failed to create slots.");
     } finally {
       setAvailabilityLoading(false);
     }
@@ -457,6 +463,7 @@ export default function AppointmentsManagement() {
         const err = await res.json();
         throw new Error(Array.isArray(err.message) ? err.message.join(", ") : err.message);
       }
+      toast.success("Appointment created.");
       setShowAddModal(false);
       // Refresh appointments
       const [appointmentsRes, usersRes] = await Promise.all([
@@ -493,6 +500,7 @@ export default function AppointmentsManagement() {
         apt.id === appointmentId ? { ...apt, status: "in_progress" } : apt,
       ),
     );
+    toast.success("Appointment started.");
   };
 
   const handleCompleteAppointment = async (appointmentId: number) => {
@@ -502,6 +510,7 @@ export default function AppointmentsManagement() {
         apt.id === appointmentId ? { ...apt, status: "completed" } : apt,
       ),
     );
+    toast.success("Appointment completed.");
   };
 
   const handleCancelAppointment = async (appointmentId: number) => {
@@ -511,6 +520,7 @@ export default function AppointmentsManagement() {
         apt.id === appointmentId ? { ...apt, status: "cancelled" } : apt,
       ),
     );
+    toast.success("Appointment cancelled.");
   };
 
   // Filter doctors list based on role

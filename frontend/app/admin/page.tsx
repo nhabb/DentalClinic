@@ -1,6 +1,7 @@
 "use client";
 import { apiFetch } from '@/lib/api/client';
 
+import { toast } from 'sonner';
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Avatar } from "@/components/ui/Avatar";
@@ -37,6 +38,7 @@ import {
   FaWallet,
   FaMoneyBillWave,
   FaCreditCard,
+  FaFileInvoiceDollar,
 } from "react-icons/fa";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
@@ -216,6 +218,7 @@ export default function AdminDashboard() {
   };
 
   const handleLogout = () => {
+    toast.success("Logged out.");
     safeStorage.removeItem("adminAuth");
     safeStorage.removeItem("adminUser");
     safeStorage.removeItem("authToken");
@@ -347,6 +350,15 @@ export default function AdminDashboard() {
             <FaCreditCard className="text-lg" />
             {sidebarOpen && (
               <span className="font-medium">{t("nav.payments")}</span>
+            )}
+          </Link>
+          <Link
+            href="/admin/billing"
+            className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
+          >
+            <FaFileInvoiceDollar className="text-lg" />
+            {sidebarOpen && (
+              <span className="font-medium">{t("nav.billing")}</span>
             )}
           </Link>
         </nav>

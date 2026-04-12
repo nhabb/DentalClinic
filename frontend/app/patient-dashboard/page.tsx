@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from 'sonner';
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -82,6 +83,7 @@ export default function PatientDashboard() {
   };
 
   const handleLogout = () => {
+    toast.success("Logged out.");
     safeStorage.removeItem("patientAuth");
     safeStorage.removeItem("authToken");
     safeStorage.removeItem("userRole");

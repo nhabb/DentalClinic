@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import { toast } from 'sonner';
 import * as XLSX from "xlsx";
 import { Download, Upload, FileJson, FileSpreadsheet, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,7 @@ export default function ImportExportMenu({ data, filename, onImport }: ImportExp
   function exportJson() {
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     triggerDownload(blob, `${filename}.json`);
+    toast.success(`Exported ${filename}.json`);
   }
 
   function exportExcel() {
@@ -41,6 +43,7 @@ export default function ImportExportMenu({ data, filename, onImport }: ImportExp
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, filename);
     XLSX.writeFile(wb, `${filename}.xlsx`);
+    toast.success(`Exported ${filename}.xlsx`);
   }
 
   // ── Import ────────────────────────────────────────────────────────────────
@@ -54,8 +57,9 @@ export default function ImportExportMenu({ data, filename, onImport }: ImportExp
         const parsed = JSON.parse(ev.target?.result as string);
         const rows: Row[] = Array.isArray(parsed) ? parsed : [parsed];
         onImport(rows);
+        toast.success(`Imported ${rows.length} record(s) from JSON.`);
       } catch {
-        alert("Invalid JSON file.");
+        toast.error("Invalid JSON file.");
       }
     };
     reader.readAsText(file);
@@ -72,8 +76,9 @@ export default function ImportExportMenu({ data, filename, onImport }: ImportExp
         const ws = wb.Sheets[wb.SheetNames[0]];
         const rows: Row[] = XLSX.utils.sheet_to_json(ws);
         onImport(rows);
+        toast.success(`Imported ${rows.length} record(s) from Excel.`);
       } catch {
-        alert("Invalid Excel file.");
+        toast.error("Invalid Excel file.");
       }
     };
     reader.readAsBinaryString(file);

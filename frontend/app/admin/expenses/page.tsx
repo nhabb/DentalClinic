@@ -17,6 +17,7 @@
 //   created_at: string
 //   updated_at: string
 
+import { toast } from 'sonner';
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api/client";
@@ -100,6 +101,7 @@ export default function ExpensesPage() {
   }, []);
 
   const handleLogout = () => {
+    toast.success("Logged out.");
     safeStorage.removeItem("adminAuth");
     safeStorage.removeItem("adminUser");
     safeStorage.removeItem("authToken");
@@ -147,12 +149,14 @@ export default function ExpensesPage() {
         }),
       });
       await fetchExpenses();
+      toast.success("Expense added.");
     } catch {
       // optimistic add
       setExpenses((prev) => [
         ...prev,
         { id: Date.now(), ...form, amount: parseFloat(form.amount) || 0 },
       ]);
+      toast.success("Expense added.");
     }
     setShowAddModal(false);
   };
@@ -171,6 +175,7 @@ export default function ExpensesPage() {
         }),
       });
       await fetchExpenses();
+      toast.success("Expense updated.");
     } catch {
       setExpenses((prev) =>
         prev.map((e) =>
@@ -179,6 +184,7 @@ export default function ExpensesPage() {
             : e
         )
       );
+      toast.success("Expense updated.");
     }
     setShowEditModal(false);
   };
@@ -190,6 +196,7 @@ export default function ExpensesPage() {
       // optimistic delete
     }
     setExpenses((prev) => prev.filter((e) => e.id !== id));
+    toast.success("Expense deleted.");
   };
 
   const formatAmount = (amount: number) =>

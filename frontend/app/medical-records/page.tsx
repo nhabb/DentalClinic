@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { apiFetch } from "@/lib/api/client";
+import { toast } from 'sonner';
 import { Avatar } from "@/components/ui/Avatar";
 import { PatientPageHeader } from "@/components/ui/PatientPageHeader";
 import { Button } from "@/components/ui/button";

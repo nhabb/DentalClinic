@@ -1,6 +1,7 @@
 "use client";
 
 import { apiFetch } from "@/lib/api/client";
+import { toast } from 'sonner';
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Avatar } from "@/components/ui/Avatar";
@@ -251,9 +252,11 @@ export default function BookAppointment() {
         const err = await res.json();
         throw new Error(Array.isArray(err.message) ? err.message.join(", ") : err.message || "Booking failed");
       }
+      toast.success("Appointment booked successfully!");
       setBookingSuccess(true);
     } catch (e: any) {
       setError(e.message || "Failed to book appointment. Please try again.");
+      toast.error(e.message || "Failed to book appointment.");
     } finally {
       setSubmitting(false);
     }
