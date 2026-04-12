@@ -159,6 +159,7 @@ export const Inventory_itemsScalarFieldEnum = {
   minimum_quantity: 'minimum_quantity',
   unit: 'unit',
   cost_price: 'cost_price',
+  image_url: 'image_url',
   created_at: 'created_at',
   updated_at: 'updated_at'
 } as const

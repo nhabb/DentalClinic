@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
   Param,
   Body,
   Query,
@@ -14,7 +15,7 @@ import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger'
 import { JwtAuthGuard } from '../../shared/common/guards/jwt-auth.guard';
 import { PaymentsService } from './payments.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
-import { UpdatePaymentStatusDto } from './dto/update-payment.dto';
+import { UpdatePaymentDto, UpdatePaymentStatusDto } from './dto/update-payment.dto';
 
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
@@ -107,6 +108,15 @@ export class PaymentsController {
     return this.paymentsService.findOne(BigInt(id));
   }
 
+  @Patch(':id')
+  @ApiOperation({ summary: 'Edit invoice fields: amount, payment_method, description, appointment_id' })
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdatePaymentDto,
+  ) {
+    return this.paymentsService.update(BigInt(id), dto);
+  }
+
   @Patch(':id/status')
   @ApiOperation({ summary: 'Update payment status (pending → paid / refunded / cancelled)' })
   updateStatus(
@@ -114,5 +124,11 @@ export class PaymentsController {
     @Body() dto: UpdatePaymentStatusDto,
   ) {
     return this.paymentsService.updateStatus(BigInt(id), dto);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete a payment record permanently' })
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.paymentsService.remove(BigInt(id));
   }
 }

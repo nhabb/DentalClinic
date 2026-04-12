@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
 import { PatientDocumentsService } from './patient-documents.service';
 import { PatientDocumentsController } from './patient-documents.controller';
-import { SupabaseStorageService } from './supabase-storage.service';
 import { PrismaModule } from '../../shared/prisma/prisma.module';
+import { StorageModule } from '../../shared/storage/storage.module';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, StorageModule],
   controllers: [PatientDocumentsController],
-  providers: [PatientDocumentsService, SupabaseStorageService],
+  providers: [PatientDocumentsService],
   exports: [PatientDocumentsService],
 })
 export class PatientDocumentsModule {}

@@ -322,12 +322,10 @@ export default function PatientPaymentsPage() {
   };
 
   const handleDelete = async (id: number) => {
-    try {
-      await apiFetch(`/api/payments/${id}`, { method: "DELETE" });
-    } catch {
-      // optimistic delete
+    const res = await apiFetch(`/api/payments/${id}`, { method: "DELETE" });
+    if (res.ok) {
+      setPayments((prev) => prev.filter((p) => !(p.id === id && p.source === "payment")));
     }
-    setPayments((prev) => prev.filter((p) => !(p.id === id && p.source === "payment")));
   };
 
   const formatAmount = (amount: number) =>

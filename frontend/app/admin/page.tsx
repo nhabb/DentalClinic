@@ -35,6 +35,8 @@ import {
   FaBars,
   FaDollarSign,
   FaWallet,
+  FaMoneyBillWave,
+  FaCreditCard,
 } from "react-icons/fa";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
@@ -327,6 +329,24 @@ export default function AdminDashboard() {
             <FaUsers className="text-lg" />
             {sidebarOpen && (
               <span className="font-medium">{t("nav.patients")}</span>
+            )}
+          </Link>
+          <Link
+            href="/admin/expenses"
+            className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
+          >
+            <FaMoneyBillWave className="text-lg" />
+            {sidebarOpen && (
+              <span className="font-medium">{t("nav.expenses")}</span>
+            )}
+          </Link>
+          <Link
+            href="/admin/payments"
+            className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
+          >
+            <FaCreditCard className="text-lg" />
+            {sidebarOpen && (
+              <span className="font-medium">{t("nav.payments")}</span>
             )}
           </Link>
         </nav>

@@ -4,7 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
-import { SupabaseStorageService } from './supabase-storage.service';
+import { SupabaseStorageService } from '../../shared/storage/supabase-storage.service';
 
 const ALLOWED_MIME_TYPES = [
   'image/jpeg',
@@ -13,6 +13,7 @@ const ALLOWED_MIME_TYPES = [
   'application/pdf',
 ];
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+const BUCKET = process.env.SUPABASE_STORAGE_BUCKET ?? 'patient-documents';
 
 const DOCUMENT_TYPES = ['xray', 'scan', 'report', 'prescription', 'other'];
 
@@ -32,7 +33,6 @@ export class PatientDocumentsService {
   }) {
     const { patient_id, record_id, uploaded_by, document_type, file } = params;
 
-    // Validate file
     if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
       throw new BadRequestException(
         `File type not allowed. Allowed types: JPEG, PNG, WebP, PDF`,
@@ -45,21 +45,15 @@ export class PatientDocumentsService {
       throw new BadRequestException(`Invalid document_type`);
     }
 
-    // Validate patient exists
     const patient = await this.prisma.patient_profiles.findUnique({
       where: { id: BigInt(patient_id) },
     });
     if (!patient) throw new NotFoundException('Patient profile not found');
 
-    // Build a unique storage path
     const ext = file.originalname.split('.').pop();
     const storagePath = `patients/${patient_id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
-    const publicUrl = await this.storage.upload(
-      storagePath,
-      file.buffer,
-      file.mimetype,
-    );
+    const publicUrl = await this.storage.upload(BUCKET, storagePath, file.buffer, file.mimetype);
 
     const doc = await this.prisma.patient_documents.create({
       data: {
@@ -100,7 +94,7 @@ export class PatientDocumentsService {
 
     const dataWithUrls = data.map((doc) => ({
       ...doc,
-      url: this.storage.getPublicUrl(doc.file_path),
+      url: this.storage.getPublicUrl(BUCKET, doc.file_path),
     }));
 
     return {
@@ -110,16 +104,14 @@ export class PatientDocumentsService {
   }
 
   async findOne(id: bigint) {
-    const doc = await this.prisma.patient_documents.findUnique({
-      where: { id },
-    });
+    const doc = await this.prisma.patient_documents.findUnique({ where: { id } });
     if (!doc) throw new NotFoundException('Document not found');
-    return { ...doc, url: this.storage.getPublicUrl(doc.file_path) };
+    return { ...doc, url: this.storage.getPublicUrl(BUCKET, doc.file_path) };
   }
 
   async remove(id: bigint) {
     const doc = await this.findOne(id);
-    await this.storage.delete(doc.file_path);
+    await this.storage.delete(BUCKET, doc.file_path);
     await this.prisma.patient_documents.delete({ where: { id } });
     return { message: 'Document deleted successfully' };
   }
