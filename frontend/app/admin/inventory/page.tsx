@@ -182,9 +182,7 @@ export default function InventoryManagement() {
   const handleOpenEdit = (item: InventoryItem) => {
     setSelectedItem(item);
     setEditImageFile(null);
-    setEditImagePreview(item.image_url
-      ? `${API_URL}${item.image_url}`
-      : null);
+    setEditImagePreview(item.image_url ?? null);
     setShowEditModal(true);
   };
 
@@ -270,7 +268,7 @@ export default function InventoryManagement() {
                           <div className="w-10 h-10 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center flex-shrink-0">
                             {item.image_url ? (
                               <img
-                                src={`${API_URL}${item.image_url}`}
+                                src={item.image_url}
                                 alt={item.name}
                                 className="w-full h-full object-cover"
                               />
