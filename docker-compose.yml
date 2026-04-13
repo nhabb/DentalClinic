@@ -1,0 +1,52 @@
+services:
+
+  # ── Next.js frontend ──────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      # No build args needed — .env.local is copied into the build context and
+      # Next.js reads NEXT_PUBLIC_* from it directly during npm run build.
+    env_file:
+      - ./frontend/.env.local
+    restart: unless-stopped
+    networks:
+      - app-network
+    depends_on:
+      - backend
+
+  # ── NestJS backend ────────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    env_file:
+      - ./backend/.env
+    environment:
+      NODE_ENV: production
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  # ── Nginx reverse proxy (HTTP → HTTPS, SSL termination) ───────────────────────
+  nginx:
+    build:
+      context: ./docker/nginx
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      # Certs are auto-generated on first start by entrypoint.sh and persisted here.
+      # To use real certs, drop cert.pem + key.pem into docker/ssl/ before starting.
+      - ./docker/ssl:/etc/nginx/ssl
+    depends_on:
+      - frontend
+      - backend
+    restart: unless-stopped
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

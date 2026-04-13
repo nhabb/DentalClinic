@@ -40,7 +40,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
 
 const PROCEDURE_DURATIONS: Record<string, number> = {
   "Regular Checkup": 30,
@@ -174,7 +174,7 @@ export default function AppointmentsManagement() {
       if (!email) return;
 
       try {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+        const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
         const res = await fetch(`${API_URL}/api/users/by-email?email=${encodeURIComponent(email)}`);
         if (!res.ok) return;
         const user = await res.json();
@@ -188,7 +188,7 @@ export default function AppointmentsManagement() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+        const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
         const [appointmentsRes, usersRes, doctorsRes] = await Promise.all([
           apiFetch(`/api/appointments?limit=1000`),
           apiFetch(`/api/users`),

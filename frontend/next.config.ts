@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Browser compatibility settings
+  output: "standalone",
   compiler: {
     // Remove console logs in production for better performance
     removeConsole: process.env.NODE_ENV === "production",

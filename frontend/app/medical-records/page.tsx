@@ -27,7 +27,7 @@ import {
   FaTimes,
 } from "react-icons/fa";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
 
 export default function MedicalRecords() {
   const router = useRouter();

@@ -55,25 +55,11 @@ export {
   inventoryApi,
   transactionsApi,
   settingsApi,
-  // Types
+  // Types only exported from ./api (not already in ./types)
   type LoginCredentials,
   type RegisterData,
-  type PatientProfile,
-  type TimeSlot,
-  type Doctor,
-  type Procedure,
   type AppointmentData,
-  type Appointment,
-  type MedicalRecord,
   type Document,
-  type Prescription,
-  type Invoice,
-  type Payment,
-  type InsuranceClaim,
-  type Notification,
-  type InventoryItem,
-  type Transaction,
-  type AdminStats,
 } from "./api";
 
 // API instance removed (axios removed)

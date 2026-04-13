@@ -291,6 +291,7 @@ export default function PatientPaymentsPage() {
           amount_due: parseFloat(form.amount_due) || 0,
           amount_paid: parseFloat(form.amount_paid) || 0,
           status: form.status,
+          source: "payment" as const,
         },
       ]);
       toast.success("Payment record created.");

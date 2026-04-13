@@ -1,0 +1,12 @@
+node_modules
+.next
+.env.production
+*.md
+.git
+.gitignore
+Dockerfile
+.dockerignore
+testcredentails.txt
+tailwind.config.ts.backup
+# .env.local is intentionally NOT excluded — Next.js reads NEXT_PUBLIC_* from it
+# during the build stage. These are public keys (safe to bake into the JS bundle).

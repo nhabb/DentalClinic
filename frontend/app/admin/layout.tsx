@@ -40,7 +40,7 @@ export default function AdminLayout({
   }, []);
 
   useEffect(() => {
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+    const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
 
     const resolveByEmail = async (email: string) => {
       const res = await fetch(`${API_URL}/api/users/by-email?email=${encodeURIComponent(email)}`);

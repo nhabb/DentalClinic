@@ -1,4 +1,6 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+// Empty string → relative paths (/api/...) so nginx can proxy correctly in Docker.
+// Set NEXT_PUBLIC_API_URL=http://localhost:5000 in .env.local for local dev.
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 function getAuthHeaders(options: RequestInit = {}): HeadersInit {
   const token =

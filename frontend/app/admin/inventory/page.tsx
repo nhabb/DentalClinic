@@ -48,7 +48,7 @@ type InventoryItem = {
 const categoryKeys = ["all", "disposables", "materials", "medications", "instruments"] as const;
 const categoryValues = ["All", "Disposables", "Materials", "Medications", "Instruments"];
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
 
 // Clickable image upload box with preview
 function ImageUploadBox({
