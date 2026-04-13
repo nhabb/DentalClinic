@@ -49,6 +49,7 @@ import {
   FaEllipsisV,
   FaBan,
   FaCalendarPlus,
+  FaTimes,
 } from "react-icons/fa";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
@@ -265,6 +266,12 @@ export default function AdminDashboard() {
         return (
           <span className="flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">
             <FaClock className="text-xs" /> {t("appointments.upcoming")}
+          </span>
+        );
+      case "cancelled":
+        return (
+          <span className="flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">
+            <FaTimes className="text-xs" /> Cancelled
           </span>
         );
       default:
@@ -586,9 +593,11 @@ export default function AdminDashboard() {
                       className={`flex items-center justify-between p-4 rounded-xl border ${
                         apt.status === "in_progress"
                           ? "border-blue-200 bg-blue-50"
-                          : apt.status === "completed" || apt.status === "cancelled"
-                            ? "border-gray-100 bg-gray-50 opacity-60"
-                            : "border-gray-200"
+                          : apt.status === "cancelled"
+                            ? "border-red-200 bg-red-50"
+                            : apt.status === "completed"
+                              ? "border-gray-100 bg-gray-50 opacity-60"
+                              : "border-gray-200"
                       }`}
                     >
                       <div className="flex items-center gap-4">

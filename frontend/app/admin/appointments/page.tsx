@@ -826,8 +826,10 @@ export default function AppointmentsManagement() {
                     {filteredAppointments.map((apt) => (
                       <div
                         key={apt.id}
-                        className={`p-6 hover:bg-gray-50 transition-colors ${
-                          apt.status === "cancelled" && !apt.notes.includes("Postponed") ? "opacity-60" : ""
+                        className={`p-6 transition-colors ${
+                          apt.status === "cancelled" && !apt.notes.includes("Postponed")
+                            ? "bg-red-50 border-l-4 border-red-400"
+                            : "hover:bg-gray-50"
                         }`}
                       >
                         <div className="flex items-center justify-between">
@@ -850,7 +852,7 @@ export default function AppointmentsManagement() {
                             {/* Patient Info */}
                             <div>
                               <div className="flex items-center gap-3 mb-1">
-                                <p className="font-bold text-gray-900 text-lg">
+                                <p className={`font-bold text-lg ${apt.status === "cancelled" && !apt.notes.includes("Postponed") ? "line-through text-red-400" : "text-gray-900"}`}>
                                   {apt.patient}
                                 </p>
                                 {apt.status === "cancelled" && apt.notes.includes("Postponed")
