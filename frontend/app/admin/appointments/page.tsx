@@ -42,6 +42,25 @@ import {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
+const PROCEDURE_DURATIONS: Record<string, number> = {
+  "Regular Checkup": 30,
+  "Teeth Cleaning": 60,
+  "Cavity Filling": 60,
+  "Root Canal": 90,
+  "Teeth Whitening": 60,
+  "Crown Fitting": 90,
+  "Extraction": 45,
+};
+
+const getProcedureDuration = (reason: string) =>
+  PROCEDURE_DURATIONS[reason.replace(/^Rescheduled: /, "")] ?? 30;
+
+const addMinutesToTime = (hhmm: string, minutes: number) => {
+  const [h, m] = hhmm.split(":").map(Number);
+  const total = h * 60 + m + minutes;
+  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+};
+
 interface Appointment {
   id: number;
   date: string;
@@ -171,7 +190,7 @@ export default function AppointmentsManagement() {
       try {
         const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
         const [appointmentsRes, usersRes, doctorsRes] = await Promise.all([
-          apiFetch(`/api/appointments`),
+          apiFetch(`/api/appointments?limit=1000`),
           apiFetch(`/api/users`),
           fetch(`${API_URL}/api/users/doctors`),
         ]);
@@ -188,23 +207,26 @@ export default function AppointmentsManagement() {
         setDoctors(doctors);
 
         const mapped = (appointmentsData.data || []).map((a: any) => {
-          const patientUser = a.patient_profile?.users;
+          const patientUser = a.patient_profiles?.users;
           const doctorId = a.doctor_id || a.created_by;
           const doctor = users.find((u) => u.id === doctorId || u.id === String(doctorId));
           const time = a.start_time ? new Date(a.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "UTC" }) : "";
           return {
             id: Number(a.id),
-            date: a.appointment_date ? new Date(a.appointment_date).toLocaleDateString("en-CA") : "",
+            date: a.appointment_date ? String(a.appointment_date).slice(0, 10) : "",
             time,
             patient: patientUser ? `${patientUser.first_name} ${patientUser.last_name}` : `Patient #${a.patient_id}`,
             phone: patientUser?.phone || "",
-            type: a.reason || "Checkup",
-            duration: 30,
+            type: (a.reason || "Checkup").replace(/^Rescheduled: /, ""),
+            duration: a.end_time && a.start_time
+              ? Math.round((new Date(a.end_time).getTime() - new Date(a.start_time).getTime()) / 60000)
+              : getProcedureDuration(a.reason || ""),
             status: a.status,
             notes: a.notes || "",
             doctor: doctor ? `Dr. ${doctor.first_name} ${doctor.last_name}` : "",
             doctorId: Number(doctorId),
             patientId: Number(a.patient_id || 0),
+            isRescheduled: (a.reason || "").startsWith("Rescheduled:"),
           };
         });
         setAppointments(mapped);
@@ -457,27 +479,34 @@ export default function AppointmentsManagement() {
       const slotsRes = await apiFetch(`/api/appointment-slots?doctor_id=${newAppt.doctorId}&date=${newAppt.date}&limit=100`);
       const slotsData = slotsRes.ok ? await slotsRes.json() : { data: [] };
 
-      const toHHMM = (start_time: string) => {
-        const d = new Date(start_time);
+      const toHHMM = (t: string) => {
+        const d = new Date(t);
         return `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
       };
+      const toMins = (hhmm: string) => {
+        const [h, m] = hhmm.split(":").map(Number);
+        return h * 60 + m;
+      };
 
-      // If the time is already booked for this doctor, reject early
-      const bookedConflict = (slotsData.data || []).find((s: any) =>
-        toHHMM(s.start_time) === newAppt.time && s.is_booked
-      );
-      if (bookedConflict) throw new Error("This time is already booked for this doctor.");
+      const requestedStart = toMins(newAppt.time);
+      const requestedEnd = requestedStart + getProcedureDuration(newAppt.reason);
+
+      // Reject if any booked slot overlaps with the requested time range
+      const bookedConflict = (slotsData.data || []).find((s: any) => {
+        if (!s.is_booked) return false;
+        const slotStart = toMins(toHHMM(s.start_time));
+        const slotEnd = s.end_time ? toMins(toHHMM(s.end_time)) : slotStart + 30;
+        return requestedStart < slotEnd && requestedEnd > slotStart;
+      });
+      if (bookedConflict) throw new Error("This time overlaps with an existing appointment.");
 
       let slot = (slotsData.data || []).find((s: any) =>
         toHHMM(s.start_time) === newAppt.time && !s.is_booked
       );
 
       if (!slot) {
-        // Auto-create a 30-min slot for this doctor/date/time
-        const [h, m] = newAppt.time.split(":").map(Number);
-        const toH = h + Math.floor((m + 30) / 60);
-        const toM = (m + 30) % 60;
-        const toTime = `${String(toH).padStart(2, "0")}:${String(toM).padStart(2, "0")}`;
+        const duration = getProcedureDuration(newAppt.reason);
+        const toTime = addMinutesToTime(newAppt.time, duration);
         const createRes = await apiFetch(`/api/appointment-slots/bulk`, {
           method: "POST",
           body: JSON.stringify({
@@ -485,7 +514,7 @@ export default function AppointmentsManagement() {
             slot_date: newAppt.date,
             from_time: newAppt.time,
             to_time: toTime,
-            duration_minutes: 30,
+            duration_minutes: duration,
           }),
         });
         if (!createRes.ok) {
@@ -514,31 +543,9 @@ export default function AppointmentsManagement() {
       }
       toast.success("Appointment created.");
       setShowAddModal(false);
-      // Refresh appointments
-      const [appointmentsRes, usersRes] = await Promise.all([
-        apiFetch(`/api/appointments`),
-        apiFetch(`/api/users`),
-      ]);
-      const appointmentsData = await appointmentsRes.json();
-      const users: any[] = await usersRes.json();
-      const mapped = (appointmentsData.data || []).map((a: any) => {
-        const patientUser = a.patient_profile?.users;
-        const doctorId = a.doctor_id || a.created_by;
-        const doctor = users.find((u: any) => u.id === doctorId || u.id === String(doctorId));
-        const time = a.start_time ? new Date(a.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "UTC" }) : "";
-        return {
-          id: Number(a.id), date: a.appointment_date ? new Date(a.appointment_date).toLocaleDateString("en-CA") : "",
-          time, patient: patientUser ? `${patientUser.first_name} ${patientUser.last_name}` : `Patient #${a.patient_id}`,
-          phone: patientUser?.phone || "",
-          type: (a.reason || "Checkup").replace(/^Rescheduled: /, ""),
-          duration: 30,
-          status: a.status, notes: a.notes || "",
-          doctor: doctor ? `Dr. ${doctor.first_name} ${doctor.last_name}` : "", doctorId: Number(doctorId),
-          patientId: Number(a.patient_id || 0),
-          isRescheduled: (a.reason || "").startsWith("Rescheduled:"),
-        };
-      });
-      setAppointments(mapped);
+      // Navigate to the appointment's date — this triggers fetchData via useEffect
+      const [y, mo, d] = newAppt.date.split("-").map(Number);
+      setSelectedDate(new Date(y, mo - 1, d));
     } catch (e: any) {
       setAddError(e.message || "Failed to create appointment.");
     } finally {
@@ -600,14 +607,12 @@ export default function AppointmentsManagement() {
       );
 
       if (!slot) {
-        const [h, m] = postponeTime.split(":").map(Number);
-        const toH = h + Math.floor((m + 30) / 60);
-        const toM = (m + 30) % 60;
-        const toTime = `${String(toH).padStart(2, "0")}:${String(toM).padStart(2, "0")}`;
+        const duration = getProcedureDuration(appt.type);
+        const toTime = addMinutesToTime(postponeTime, duration);
         const createRes = await apiFetch(`/api/appointment-slots/bulk`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ doctor_id: appt.doctorId, slot_date: postponeDate, from_time: postponeTime, to_time: toTime, duration_minutes: 30 }),
+          body: JSON.stringify({ doctor_id: appt.doctorId, slot_date: postponeDate, from_time: postponeTime, to_time: toTime, duration_minutes: duration }),
         });
         if (!createRes.ok) { toast.error("Failed to create slot for new date."); return; }
         const refetchRes = await apiFetch(`/api/appointment-slots?doctor_id=${appt.doctorId}&date=${postponeDate}&limit=100`);
@@ -634,32 +639,9 @@ export default function AppointmentsManagement() {
 
       toast.success(`Appointment postponed to ${postponeDate} at ${postponeTime}.`);
       setPostponeApptId(null);
-
-      // Full refresh so the new rescheduled appointment appears in the list
-      const [appointmentsRes, usersRes] = await Promise.all([
-        apiFetch(`/api/appointments`),
-        apiFetch(`/api/users`),
-      ]);
-      const appointmentsData = await appointmentsRes.json();
-      const users: any[] = usersRes.ok ? await usersRes.json() : [];
-      const mapped = (appointmentsData.data || []).map((a: any) => {
-        const patientUser = a.patient_profiles?.users;
-        const doctorId = a.doctor_id || a.created_by;
-        const doctor = users.find((u: any) => u.id === doctorId || u.id === String(doctorId));
-        const time = a.start_time ? new Date(a.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "UTC" }) : "";
-        return {
-          id: Number(a.id), date: a.appointment_date ? new Date(a.appointment_date).toLocaleDateString("en-CA") : "",
-          time, patient: patientUser ? `${patientUser.first_name} ${patientUser.last_name}` : `Patient #${a.patient_id}`,
-          phone: patientUser?.phone || "",
-          type: (a.reason || "Checkup").replace(/^Rescheduled: /, ""),
-          duration: 30,
-          status: a.status, notes: a.notes || "",
-          doctor: doctor ? `Dr. ${doctor.first_name} ${doctor.last_name}` : "", doctorId: Number(doctorId),
-          patientId: Number(a.patient_id || 0),
-          isRescheduled: (a.reason || "").startsWith("Rescheduled:"),
-        };
-      });
-      setAppointments(mapped);
+      // Navigate to the new appointment's date — triggers fetchData via useEffect
+      const [y, mo, d] = postponeDate.split("-").map(Number);
+      setSelectedDate(new Date(y, mo - 1, d));
     } catch {
       toast.error("Something went wrong.");
     } finally {

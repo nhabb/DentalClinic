@@ -84,12 +84,12 @@ const fallbackDoctors: Doctor[] = [
 ];
 
 const procedures: Procedure[] = [
-  { id: "cleaning", name: "Teeth Cleaning", duration: "30 min" },
+  { id: "cleaning", name: "Teeth Cleaning", duration: "60 min" },
   { id: "whitening", name: "Teeth Whitening", duration: "60 min" },
-  { id: "filling", name: "Cavity Filling", duration: "45 min" },
-  { id: "extraction", name: "Tooth Extraction", duration: "30 min" },
+  { id: "filling", name: "Cavity Filling", duration: "60 min" },
+  { id: "extraction", name: "Extraction", duration: "45 min" },
   { id: "rootcanal", name: "Root Canal", duration: "90 min" },
-  { id: "crown", name: "Crown Fitting", duration: "60 min" },
+  { id: "crown", name: "Crown Fitting", duration: "90 min" },
 ];
 
 export default function BookAppointment() {
@@ -244,7 +244,7 @@ export default function BookAppointment() {
         body: JSON.stringify({
           patient_id: Number(profile.id),
           slot_id: Number(slot.id),
-          reason: selectedProcedure || serviceType || "Checkup",
+          reason: getSelectedProcedureInfo()?.name ?? (serviceType === "checkup" ? "Regular Checkup" : "Checkup"),
         }),
       });
 
