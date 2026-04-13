@@ -114,20 +114,25 @@ export default function PatientPaymentsPage() {
 
       // Map old-style payments
       const paymentsData = paymentsRes.ok ? await paymentsRes.json() : { data: [] };
-      const oldPayments: PatientPayment[] = (paymentsData.data || []).map((p: any) => ({
-        id: Number(p.id),
-        patient_id: p.patient_id != null ? Number(p.patient_id) : (p.patient?.id ? Number(p.patient.id) : undefined),
-        patient_name:
-          p.patient?.users
-            ? `${p.patient.users.first_name ?? ""} ${p.patient.users.last_name ?? ""}`.trim()
-            : (p.patient_name ?? p.patientName ?? ""),
-        treatment: p.treatment ?? p.description ?? "",
-        date: p.date ?? p.created_at?.split("T")[0] ?? "",
-        amount_due: Number(p.amount_due ?? p.amount) || 0,
-        amount_paid: Number(p.amount_paid) || 0,
-        status: (p.status ?? "pending").toLowerCase() as PatientPayment["status"],
-        source: "payment" as const,
-      }));
+      const oldPayments: PatientPayment[] = (paymentsData.data || []).map((p: any) => {
+        const amountDue = Number(p.amount_due ?? p.amount) || 0;
+        const amountPaidRaw = Number(p.amount_paid) || 0;
+        const isPaid = (p.status ?? "").toLowerCase() === "paid";
+        return {
+          id: Number(p.id),
+          patient_id: p.patient_id != null ? Number(p.patient_id) : (p.patient?.id ? Number(p.patient.id) : undefined),
+          patient_name:
+            p.patient?.users
+              ? `${p.patient.users.first_name ?? ""} ${p.patient.users.last_name ?? ""}`.trim()
+              : (p.patient_name ?? p.patientName ?? ""),
+          treatment: p.treatment ?? p.description ?? "",
+          date: p.date ?? p.created_at?.split("T")[0] ?? "",
+          amount_due: amountDue,
+          amount_paid: amountPaidRaw > 0 ? amountPaidRaw : (isPaid ? amountDue : 0),
+          status: (p.status ?? "pending").toLowerCase() as PatientPayment["status"],
+          source: "payment" as const,
+        };
+      });
 
       // Map billing invoices — one row per invoice showing cumulative paid/remaining
       const invoicesData = invoicesRes.ok ? await invoicesRes.json() : { data: [] };

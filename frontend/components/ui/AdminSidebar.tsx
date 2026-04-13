@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useTranslation } from "@/lib/i18n";
 import {
@@ -13,6 +14,9 @@ import {
   FaCreditCard,
   FaFileInvoiceDollar,
 } from "react-icons/fa";
+import { Avatar } from "@/components/ui/Avatar";
+import { getStoredPhoto } from "@/lib/profilePhoto";
+import { supabase } from "@/lib/supabase/client";
 
 type ActivePage = "dashboard" | "appointments" | "inventory" | "patients" | "notifications" | "expenses" | "payments" | "billing";
 
@@ -34,6 +38,33 @@ const navItems = [
 
 export default function AdminSidebar({ activePage, sidebarOpen, onLogout }: Props) {
   const { t } = useTranslation();
+  const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined);
+  const [userName, setUserName] = useState("");
+
+  useEffect(() => {
+    const load = async () => {
+      let email: string | null = null;
+      let name = "";
+
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.email) email = session.user.email;
+      } catch {}
+
+      const stored = localStorage.getItem("adminUser");
+      if (stored) {
+        try {
+          const u = JSON.parse(stored);
+          if (!email) email = u.email ?? null;
+          name = `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim();
+        } catch {}
+      }
+
+      if (name) setUserName(name);
+      if (email) setPhotoUrl(getStoredPhoto(email));
+    };
+    load();
+  }, []);
 
   return (
     <aside
@@ -76,6 +107,16 @@ export default function AdminSidebar({ activePage, sidebarOpen, onLogout }: Prop
           );
         })}
       </nav>
+
+      {/* User profile */}
+      {(photoUrl || userName) && (
+        <div className="px-4 py-3 border-t border-gray-700 flex items-center gap-3">
+          <Avatar name={userName || "User"} size="sm" src={photoUrl} />
+          {sidebarOpen && (
+            <span className="text-sm text-gray-300 truncate">{userName}</span>
+          )}
+        </div>
+      )}
 
       {/* Logout */}
       <div className="p-4 border-t border-gray-700">

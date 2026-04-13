@@ -5,6 +5,8 @@ import { toast } from 'sonner';
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Avatar } from "@/components/ui/Avatar";
+import { getStoredPhoto } from "@/lib/profilePhoto";
+import { supabase } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -112,8 +114,33 @@ export default function BookAppointment() {
   const [submitting, setSubmitting] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined);
+  const [patientName, setPatientName] = useState("");
 
   const totalSteps = 4;
+
+  // Load patient photo
+  useEffect(() => {
+    const loadPhoto = async () => {
+      let email: string | null = null;
+      let name = "";
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.email) email = session.user.email;
+      } catch {}
+      const stored = localStorage.getItem("adminUser");
+      if (stored) {
+        try {
+          const u = JSON.parse(stored);
+          if (!email) email = u.email ?? null;
+          name = `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim();
+        } catch {}
+      }
+      if (name) setPatientName(name);
+      if (email) setPhotoUrl(getStoredPhoto(email));
+    };
+    loadPhoto();
+  }, []);
 
   // Fetch doctors on mount
   useEffect(() => {
@@ -314,13 +341,18 @@ export default function BookAppointment() {
                 BrightSmile
               </span>
             </Link>
-            <Link
-              href="/patient-dashboard"
-              className="text-gray-600 hover:text-dental-blue transition-colors flex items-center gap-2"
-            >
-              <FaArrowLeft className="text-sm" />
-              Back to Dashboard
-            </Link>
+            <div className="flex items-center gap-4">
+              {(photoUrl || patientName) && (
+                <Avatar name={patientName || "User"} size="sm" src={photoUrl} />
+              )}
+              <Link
+                href="/patient-dashboard"
+                className="text-gray-600 hover:text-dental-blue transition-colors flex items-center gap-2"
+              >
+                <FaArrowLeft className="text-sm" />
+                Back to Dashboard
+              </Link>
+            </div>
           </div>
         </div>
       </header>

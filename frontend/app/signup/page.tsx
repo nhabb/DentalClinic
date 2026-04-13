@@ -57,6 +57,7 @@ export default function SignupPage() {
     insuranceProvider: "",
     insurancePolicy: "",
     // Medical
+    bloodType: "",
     medicalConditions: "",
     allergies: "",
     currentMedications: "",
@@ -117,6 +118,28 @@ export default function SignupPage() {
           role: user.role,
         })
       );
+
+      // Update patient profile with medical info
+      if (form.bloodType || form.medicalConditions || form.allergies || form.currentMedications) {
+        try {
+          const profileRes = await fetch(`${API_URL}/api/patients/by-user/${user.id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (profileRes.ok) {
+            const profile = await profileRes.json();
+            await fetch(`${API_URL}/api/patients/${profile.id}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+              body: JSON.stringify({
+                blood_type: form.bloodType || undefined,
+                medical_notes: form.medicalConditions || undefined,
+                allergies: form.allergies || undefined,
+                current_medications: form.currentMedications || undefined,
+              }),
+            });
+          }
+        } catch {}
+      }
 
       router.push("/patient-dashboard");
     } catch {
@@ -452,6 +475,26 @@ export default function SignupPage() {
               {t("continueLogin.medicalHistoryDesc")}
             </FieldDescription>
             <FieldGroup className="space-y-4">
+              <Field>
+                <FieldLabel
+                  htmlFor="bloodType"
+                  className="text-gray-900 font-semibold text-sm tracking-wide"
+                >
+                  Blood Type
+                </FieldLabel>
+                <select
+                  id="bloodType"
+                  name="bloodType"
+                  value={form.bloodType}
+                  onChange={(e) => setForm({ ...form, bloodType: e.target.value })}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-dental-blue focus:border-dental-blue"
+                >
+                  <option value="">Select blood type</option>
+                  {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((bt) => (
+                    <option key={bt} value={bt}>{bt}</option>
+                  ))}
+                </select>
+              </Field>
               <Field>
                 <FieldLabel
                   htmlFor="medicalConditions"

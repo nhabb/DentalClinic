@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { apiFetch } from "@/lib/api/client";
+import { getStoredPhoto } from "@/lib/profilePhoto";
 import { toast } from 'sonner';
 import { Avatar } from "@/components/ui/Avatar";
 import { PatientPageHeader } from "@/components/ui/PatientPageHeader";
@@ -46,6 +47,7 @@ export default function MedicalRecords() {
       notes: string;
       treatments: string[];
       cost: string;
+      _source?: string;
     }[]
   >([]);
   const [documents, setDocuments] = useState<
@@ -59,6 +61,7 @@ export default function MedicalRecords() {
     }[]
   >([]);
   const [loading, setLoading] = useState(true);
+  const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -66,6 +69,8 @@ export default function MedicalRecords() {
         const meRes = await apiFetch(`/api/auth/me`);
         if (!meRes.ok) return;
         const me = await meRes.json();
+
+        setPhotoUrl(getStoredPhoto(me.email));
 
         setPatientInfo((prev) => ({
           ...prev,
@@ -75,25 +80,43 @@ export default function MedicalRecords() {
           medications: me.current_medications ? me.current_medications.split(",").map((s: string) => s.trim()).filter(Boolean) : [],
         }));
 
-        const [recordsRes, profileRes] = await Promise.all([
+        const [recordsRes, profileRes, historyRes] = await Promise.all([
           apiFetch(`/api/patient/patient-records?user_id=${me.id}&limit=50`),
           apiFetch(`/api/patients/by-user/${me.id}`),
+          apiFetch(`/api/patient/appointments/history?user_id=${me.id}&limit=50`),
         ]);
 
-        if (!recordsRes.ok) return;
-        const recordsData = await recordsRes.json();
-
-        const mapped = (recordsData.data || []).map((r: any) => ({
+        // Build visit history from patient records first
+        const recordsData = recordsRes.ok ? await recordsRes.json() : { data: [] };
+        const fromRecords = (recordsData.data || []).map((r: any) => ({
           id: Number(r.id),
           date: r.treatment_date || r.created_at,
-          type: r.title || r.record_type,
+          type: r.title || r.record_type || "Visit",
           doctor: r.users
             ? `Dr. ${r.users.first_name} ${r.users.last_name}`
             : "Doctor",
           notes: r.description || "",
           treatments: r.title ? [r.title] : [],
           cost: "—",
+          _source: "record",
         }));
+
+        // Supplement with completed appointments if no records exist
+        const historyData = historyRes.ok ? await historyRes.json() : { data: [] };
+        const fromAppointments = (historyData.data || []).map((a: any) => ({
+          id: Number(a.id) + 1000000, // avoid id collision with records
+          date: a.appointment_date || a.created_at,
+          type: a.reason || "Checkup",
+          doctor: a.users_appointments_doctor_idTousers
+            ? `Dr. ${a.users_appointments_doctor_idTousers.first_name} ${a.users_appointments_doctor_idTousers.last_name}`
+            : "Doctor",
+          notes: a.notes || "",
+          treatments: a.reason ? [a.reason] : [],
+          cost: "—",
+          _source: "appointment",
+        }));
+
+        const mapped = fromRecords.length > 0 ? fromRecords : fromAppointments;
 
         if (mapped.length > 0) {
           setPatientInfo((prev) => ({
@@ -106,6 +129,19 @@ export default function MedicalRecords() {
 
         if (profileRes.ok) {
           const profile = await profileRes.json();
+          setPatientInfo((prev) => ({
+            ...prev,
+            bloodType: profile.blood_type || prev.bloodType,
+            conditions: profile.medical_notes
+              ? profile.medical_notes.split(",").map((s: string) => s.trim()).filter(Boolean)
+              : prev.conditions,
+            allergies: profile.allergies
+              ? profile.allergies.split(",").map((s: string) => s.trim()).filter(Boolean)
+              : prev.allergies,
+            medications: profile.current_medications
+              ? profile.current_medications.split(",").map((s: string) => s.trim()).filter(Boolean)
+              : prev.medications,
+          }));
           const docsRes = await apiFetch(`/api/patient-documents?patient_id=${profile.id}&limit=50`);
           if (docsRes.ok) {
             const docsData = await docsRes.json();
@@ -167,7 +203,7 @@ export default function MedicalRecords() {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             {/* Patient Info */}
             <div className="flex items-center gap-4">
-              <Avatar name={patientInfo.name} size="xl" />
+              <Avatar name={patientInfo.name} size="xl" src={photoUrl} />
               <div>
                 <h2 className="text-xl font-bold text-gray-900">
                   {patientInfo.name}

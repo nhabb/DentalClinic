@@ -8,6 +8,9 @@ import { safeStorage } from "@/lib/browser-compat";
 import { useTranslation } from "@/lib/i18n";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { Avatar } from "@/components/ui/Avatar";
+import { getStoredPhoto } from "@/lib/profilePhoto";
+import { supabase } from "@/lib/supabase/client";
 import {
   FaTooth,
   FaSignOutAlt,
@@ -66,6 +69,30 @@ export default function PatientBillingPage() {
   const [invoices, setInvoices] = useState<TreatmentInvoice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined);
+  const [patientName, setPatientName] = useState("");
+
+  useEffect(() => {
+    const loadPhoto = async () => {
+      let email: string | null = null;
+      let name = "";
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.email) email = session.user.email;
+      } catch {}
+      const stored = localStorage.getItem("adminUser");
+      if (stored) {
+        try {
+          const u = JSON.parse(stored);
+          if (!email) email = u.email ?? null;
+          name = `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim();
+        } catch {}
+      }
+      if (name) setPatientName(name);
+      if (email) setPhotoUrl(getStoredPhoto(email));
+    };
+    loadPhoto();
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -121,6 +148,9 @@ export default function PatientBillingPage() {
               <span className="text-xl font-bold text-gray-900">BrightSmile</span>
             </Link>
             <div className="flex items-center gap-3">
+              {(photoUrl || patientName) && (
+                <Avatar name={patientName || "User"} size="sm" src={photoUrl} />
+              )}
               <LanguageSwitcher />
               <button
                 onClick={handleLogout}
