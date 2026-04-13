@@ -15,9 +15,24 @@ export default function AdminLayout({
   const pathname = usePathname();
   const [doctorName, setDoctorName] = useState("Doctor");
   const [doctorId, setDoctorId] = useState<number | undefined>();
+  const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
-    // Auth disabled - allow access to all pages
+    if (pathname.includes("/login")) {
+      setAuthChecked(true);
+      return;
+    }
+    const token = safeStorage.getItem("authToken");
+    const role = safeStorage.getItem("userRole");
+    const adminAuth = safeStorage.getItem("adminAuth");
+    const adminRoles = ["doctor", "admin", "secretary", "superadmin"];
+    const isAuth =
+      adminAuth === "true" || (!!token && adminRoles.includes(role ?? ""));
+    if (!isAuth) {
+      router.push("/login");
+    } else {
+      setAuthChecked(true);
+    }
   }, [pathname, router]);
 
   useEffect(() => {
@@ -65,6 +80,8 @@ export default function AdminLayout({
 
   // Hide chat on login page
   const showChat = !pathname.includes("/login");
+
+  if (!authChecked) return null;
 
   return (
     <>

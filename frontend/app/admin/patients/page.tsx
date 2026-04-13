@@ -12,6 +12,7 @@ import AdminSidebar from "@/components/ui/AdminSidebar";
 import { StatsCard } from "@/components/ui/StatsCard";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Avatar } from "@/components/ui/Avatar";
+import { getStoredPhoto } from "@/lib/profilePhoto";
 import { FilterBar } from "@/components/ui/FilterBar";
 import { AdminPageHeader } from "@/components/ui/AdminPageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -53,6 +54,7 @@ interface Patient {
   totalVisits: number;
   status: string;
   notes: string;
+  photoUrl?: string;
 }
 
 interface PatientHistory {
@@ -158,6 +160,7 @@ export default function PatientsPage() {
             totalVisits: 0,
             status: user?.is_active ? "active" : "inactive",
             notes: p.medical_notes || "",
+            photoUrl: getStoredPhoto(user?.email || ""),
           };
         });
         setPatients(mapped);
@@ -406,7 +409,7 @@ export default function PatientsPage() {
                     >
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex items-center gap-4">
-                          <Avatar name={patient.name} size="lg" />
+                          <Avatar name={patient.name} size="lg" src={patient.photoUrl} />
                           <div>
                             <h3 className="font-bold text-gray-900">
                               {patient.name}
@@ -480,7 +483,7 @@ export default function PatientsPage() {
             {/* Modal Header */}
             <div className="p-6 border-b border-gray-100 flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <Avatar name={selectedPatient.name} size="xl" />
+                <Avatar name={selectedPatient.name} size="xl" src={selectedPatient.photoUrl} />
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900">
                     {selectedPatient.name}

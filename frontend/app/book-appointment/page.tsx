@@ -4,6 +4,8 @@ import { apiFetch } from "@/lib/api/client";
 import { toast } from 'sonner';
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { safeStorage } from "@/lib/browser-compat";
 import { Avatar } from "@/components/ui/Avatar";
 import { getStoredPhoto } from "@/lib/profilePhoto";
 import { supabase } from "@/lib/supabase/client";
@@ -95,6 +97,7 @@ const procedures: Procedure[] = [
 ];
 
 export default function BookAppointment() {
+  const router = useRouter();
   const [step, setStep] = useState(1);
   const [selectedDoctor, setSelectedDoctor] = useState<number | null>(null);
   const [serviceType, setServiceType] = useState<ServiceType>(null);
@@ -118,6 +121,14 @@ export default function BookAppointment() {
   const [patientName, setPatientName] = useState("");
 
   const totalSteps = 4;
+
+  // Auth guard
+  useEffect(() => {
+    const token = safeStorage.getItem("authToken");
+    if (!token) {
+      router.push("/login");
+    }
+  }, [router]);
 
   // Load patient photo
   useEffect(() => {

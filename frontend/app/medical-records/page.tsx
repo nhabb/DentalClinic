@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { safeStorage } from "@/lib/browser-compat";
 import { apiFetch } from "@/lib/api/client";
 import { getStoredPhoto } from "@/lib/profilePhoto";
 import { toast } from 'sonner';
@@ -28,6 +30,7 @@ import {
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 export default function MedicalRecords() {
+  const router = useRouter();
   const [patientInfo, setPatientInfo] = useState({
     name: "",
     dateOfBirth: "",
@@ -64,10 +67,16 @@ export default function MedicalRecords() {
   const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined);
 
   useEffect(() => {
+    const token = safeStorage.getItem("authToken");
+    const role = safeStorage.getItem("userRole");
+    if (!token || role !== "patient") {
+      router.push("/login");
+      return;
+    }
     const fetchAll = async () => {
       try {
         const meRes = await apiFetch(`/api/auth/me`);
-        if (!meRes.ok) return;
+        if (!meRes.ok) { router.push("/login"); return; }
         const me = await meRes.json();
 
         setPhotoUrl(getStoredPhoto(me.email));
@@ -80,11 +89,25 @@ export default function MedicalRecords() {
           medications: me.current_medications ? me.current_medications.split(",").map((s: string) => s.trim()).filter(Boolean) : [],
         }));
 
-        const [recordsRes, profileRes, historyRes] = await Promise.all([
+        const [recordsRes, profileRes, historyRes, invoicesRes] = await Promise.all([
           apiFetch(`/api/patient/patient-records?user_id=${me.id}&limit=50`),
           apiFetch(`/api/patients/by-user/${me.id}`),
           apiFetch(`/api/patient/appointments/history?user_id=${me.id}&limit=50`),
+          apiFetch(`/api/patient/billing/invoices?user_id=${me.id}&limit=100`),
         ]);
+
+        // Build a date → cost map from billing invoices
+        const invoicesData = invoicesRes.ok ? await invoicesRes.json() : { data: [] };
+        const costByDate = new Map<string, number>();
+        for (const inv of (invoicesData.data || [])) {
+          const d = (inv.procedure_date || "").split("T")[0];
+          if (d) costByDate.set(d, (costByDate.get(d) || 0) + Number(inv.total_amount));
+        }
+        const costFor = (dateStr: string) => {
+          const d = (dateStr || "").split("T")[0];
+          const amt = costByDate.get(d);
+          return amt != null ? `$${amt.toFixed(2)}` : "—";
+        };
 
         // Build visit history from patient records first
         const recordsData = recordsRes.ok ? await recordsRes.json() : { data: [] };
@@ -97,7 +120,7 @@ export default function MedicalRecords() {
             : "Doctor",
           notes: r.description || "",
           treatments: r.title ? [r.title] : [],
-          cost: "—",
+          cost: costFor(r.treatment_date || r.created_at),
           _source: "record",
         }));
 
@@ -112,7 +135,7 @@ export default function MedicalRecords() {
             : "Doctor",
           notes: a.notes || "",
           treatments: a.reason ? [a.reason] : [],
-          cost: "—",
+          cost: costFor(a.appointment_date || a.created_at),
           _source: "appointment",
         }));
 
