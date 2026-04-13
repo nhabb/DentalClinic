@@ -15,9 +15,12 @@ export default function AdminLayout({
   const pathname = usePathname();
   const [doctorName, setDoctorName] = useState("Doctor");
   const [doctorId, setDoctorId] = useState<number | undefined>();
-  const [authChecked, setAuthChecked] = useState(false);
+  // Start as true for login page so it renders immediately without a flash
+  const [authChecked, setAuthChecked] = useState(pathname.includes("/login"));
 
   useEffect(() => {
+    // Run once on mount only — re-running on tab focus / router refresh
+    // would reset authChecked and cause spurious sign-outs.
     if (pathname.includes("/login")) {
       setAuthChecked(true);
       return;
@@ -33,7 +36,8 @@ export default function AdminLayout({
     } else {
       setAuthChecked(true);
     }
-  }, [pathname, router]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";

@@ -122,13 +122,14 @@ export default function BookAppointment() {
 
   const totalSteps = 4;
 
-  // Auth guard
+  // Auth guard — empty deps so it only runs on mount, not on tab refocus.
   useEffect(() => {
     const token = safeStorage.getItem("authToken");
     if (!token) {
       router.push("/login");
     }
-  }, [router]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Load patient photo
   useEffect(() => {

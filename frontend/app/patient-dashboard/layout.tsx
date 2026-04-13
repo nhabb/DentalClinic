@@ -13,6 +13,7 @@ export default function PatientDashboardLayout({
   const [checked, setChecked] = useState(false);
 
   useEffect(() => {
+    // Run once on mount only — avoids spurious sign-outs on tab refocus.
     const token = safeStorage.getItem("authToken");
     const role = safeStorage.getItem("userRole");
     if (!token || role !== "patient") {
@@ -20,7 +21,8 @@ export default function PatientDashboardLayout({
     } else {
       setChecked(true);
     }
-  }, [router]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (!checked) return null;
   return <>{children}</>;

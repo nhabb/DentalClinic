@@ -96,17 +96,24 @@ export default function MedicalRecords() {
           apiFetch(`/api/patient/billing/invoices?user_id=${me.id}&limit=100`),
         ]);
 
-        // Build a date → cost map from billing invoices
+        // Match invoice to a visit only when date + procedure name + patient
+        // all match exactly. Since invoices are already scoped to this patient
+        // (fetched by user_id), patient is implicitly matched.
         const invoicesData = invoicesRes.ok ? await invoicesRes.json() : { data: [] };
-        const costByDate = new Map<string, number>();
-        for (const inv of (invoicesData.data || [])) {
-          const d = (inv.procedure_date || "").split("T")[0];
-          if (d) costByDate.set(d, (costByDate.get(d) || 0) + Number(inv.total_amount));
-        }
-        const costFor = (dateStr: string) => {
+        const allInvoices: any[] = invoicesData.data || [];
+
+        const costFor = (dateStr: string, visitType: string) => {
           const d = (dateStr || "").split("T")[0];
-          const amt = costByDate.get(d);
-          return amt != null ? `$${amt.toFixed(2)}` : "—";
+          const type = visitType.toLowerCase().trim();
+          const matched = allInvoices.filter((inv) => {
+            const sameDate = (inv.procedure_date || "").split("T")[0] === d;
+            const sameProc = (inv.line_items || []).some(
+              (li: any) => li.procedure_name.toLowerCase().trim() === type
+            );
+            return sameDate && sameProc;
+          });
+          if (matched.length === 1) return `$${Number(matched[0].total_amount).toFixed(2)}`;
+          return "—";
         };
 
         // Build visit history from patient records first
@@ -120,7 +127,7 @@ export default function MedicalRecords() {
             : "Doctor",
           notes: r.description || "",
           treatments: r.title ? [r.title] : [],
-          cost: costFor(r.treatment_date || r.created_at),
+          cost: costFor(r.treatment_date || r.created_at, r.title || r.record_type || ""),
           _source: "record",
         }));
 
@@ -135,7 +142,7 @@ export default function MedicalRecords() {
             : "Doctor",
           notes: a.notes || "",
           treatments: a.reason ? [a.reason] : [],
-          cost: costFor(a.appointment_date || a.created_at),
+          cost: costFor(a.appointment_date || a.created_at, a.reason || ""),
           _source: "appointment",
         }));
 
@@ -189,22 +196,60 @@ export default function MedicalRecords() {
     fetchAll();
   }, []);
 
-  // Download document handler
-  const handleDownloadDocument = async (docId: number) => {
-    // API call removed
-    console.log("Download document", docId);
-  };
   const [expandedVisit, setExpandedVisit] = useState<number | null>(1);
   const [activeTab, setActiveTab] = useState<"history" | "documents">("history");
   const [previewDoc, setPreviewDoc] = useState<{ name: string; url: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [filterType, setFilterType] = useState("all");
+  const [showFilter, setShowFilter] = useState(false);
 
-  const filteredVisits = visitHistory.filter(
-    (visit) =>
+  const uniqueTypes = ["all", ...Array.from(new Set(visitHistory.map((v) => v.type)))];
+
+  const filteredVisits = visitHistory.filter((visit) => {
+    const matchesSearch =
       visit.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
       visit.doctor.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      visit.notes.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+      visit.notes.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesType = filterType === "all" || visit.type === filterType;
+    return matchesSearch && matchesType;
+  });
+
+  const handleDownloadReport = (visit: typeof visitHistory[0]) => {
+    const lines = [
+      "BrightSmile Dental Clinic — Visit Report",
+      "==========================================",
+      "",
+      `Patient:     ${patientInfo.name}`,
+      `Blood Type:  ${patientInfo.bloodType || "—"}`,
+      `Allergies:   ${patientInfo.allergies.join(", ") || "None"}`,
+      `Medications: ${patientInfo.medications.join(", ") || "None"}`,
+      "",
+      "--- VISIT DETAILS ---",
+      "",
+      `Date:    ${new Date(visit.date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}`,
+      `Type:    ${visit.type}`,
+      `Doctor:  ${visit.doctor}`,
+      `Cost:    ${visit.cost}`,
+      "",
+      "Notes:",
+      visit.notes || "(none)",
+      "",
+      "Treatments Performed:",
+      ...(visit.treatments.length ? visit.treatments.map((t) => `  - ${t}`) : ["  (none)"]),
+      "",
+      "==========================================",
+      `Generated: ${new Date().toLocaleString()}`,
+    ];
+    const blob = new Blob([lines.join("\n")], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `visit-report-${(visit.date || "").split("T")[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-primary-50">
@@ -345,10 +390,36 @@ export default function MedicalRecords() {
                     className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
                   />
                 </div>
-                <Button variant="outline" className="px-4">
-                  <FaFilter className="mr-2" />
-                  Filter
-                </Button>
+                <div className="relative">
+                  <Button
+                    variant="outline"
+                    className="px-4"
+                    onClick={() => setShowFilter((v) => !v)}
+                  >
+                    <FaFilter className="mr-2" />
+                    Filter
+                    {filterType !== "all" && (
+                      <span className="ml-2 w-2 h-2 rounded-full bg-dental-blue inline-block" />
+                    )}
+                  </Button>
+                  {showFilter && (
+                    <div className="absolute right-0 top-full mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-10 min-w-[180px] p-2">
+                      {uniqueTypes.map((type) => (
+                        <button
+                          key={type}
+                          onClick={() => { setFilterType(type); setShowFilter(false); }}
+                          className={`w-full text-left px-3 py-2 rounded-lg text-sm capitalize transition-colors ${
+                            filterType === type
+                              ? "bg-dental-blue text-white"
+                              : "hover:bg-gray-50 text-gray-700"
+                          }`}
+                        >
+                          {type === "all" ? "All Types" : type}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -439,7 +510,7 @@ export default function MedicalRecords() {
                             {visit.cost}
                           </span>
                         </span>
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" onClick={() => handleDownloadReport(visit)}>
                           <FaDownload className="mr-2" />
                           Download Report
                         </Button>
