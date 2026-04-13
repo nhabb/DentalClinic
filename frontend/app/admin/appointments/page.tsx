@@ -55,6 +55,7 @@ interface Appointment {
   doctor: string;
   doctorId: number;
   patientId: number;
+  isRescheduled: boolean;
 }
 
 interface Doctor {
@@ -73,7 +74,7 @@ export default function AppointmentsManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDoctor, setSelectedDoctor] = useState<string>("all");
   const [showAddModal, setShowAddModal] = useState(false);
-  const [newAppt, setNewAppt] = useState({ patientId: "", slotId: "", reason: "Regular Checkup" });
+  const [newAppt, setNewAppt] = useState({ patientId: "", doctorId: "", date: "", time: "", reason: "Regular Checkup" });
   const [addError, setAddError] = useState("");
   const [addLoading, setAddLoading] = useState(false);
   const [availableSlots, setAvailableSlots] = useState<{ id: number; label: string }[]>([]);
@@ -190,7 +191,7 @@ export default function AppointmentsManagement() {
           const patientUser = a.patient_profile?.users;
           const doctorId = a.doctor_id || a.created_by;
           const doctor = users.find((u) => u.id === doctorId || u.id === String(doctorId));
-          const time = a.start_time ? new Date(a.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+          const time = a.start_time ? new Date(a.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "UTC" }) : "";
           return {
             id: Number(a.id),
             date: a.appointment_date ? new Date(a.appointment_date).toLocaleDateString("en-CA") : "",
@@ -429,49 +430,81 @@ export default function AppointmentsManagement() {
 
   const openAddModal = async () => {
     setAddError("");
-    setNewAppt({ patientId: "", slotId: "", reason: "Regular Checkup" });
+    setNewAppt({ patientId: "", doctorId: "", date: "", time: "", reason: "Regular Checkup" });
     setShowAddModal(true);
     try {
-      const [patientsRes, usersRes, slotsRes] = await Promise.all([
-        apiFetch(`/api/patients`),
-        apiFetch(`/api/users`),
-        apiFetch(`/api/appointment-slots`),
-      ]);
+      const patientsRes = await apiFetch(`/api/patients`);
       const patientsData = await patientsRes.json();
-      const users: any[] = await usersRes.json();
-      const slotsData = await slotsRes.json();
-
-      const mappedPatients = (patientsData.data || []).map((p: any) => {
-        return { id: Number(p.id), name: p.users ? `${p.users.first_name} ${p.users.last_name}` : `Patient #${p.id}` };
-      });
-
-      const mappedSlots = (slotsData.data || [])
-        .filter((s: any) => !s.is_booked)
-        .map((s: any) => ({
-          id: Number(s.id),
-          label: `${s.slot_date?.split("T")[0]} at ${new Date(s.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
-        }));
-
+      const mappedPatients = (patientsData.data || []).map((p: any) => ({
+        id: Number(p.id),
+        name: p.users ? `${p.users.first_name} ${p.users.last_name}` : `Patient #${p.id}`,
+      }));
       setPatients(mappedPatients);
-      setAvailableSlots(mappedSlots);
     } catch (e) {
-      setAddError("Failed to load patients or slots.");
+      setAddError("Failed to load patients.");
     }
   };
 
   const handleAddAppointment = async () => {
-    if (!newAppt.patientId || !newAppt.slotId) {
-      setAddError("Please select a patient and a slot.");
+    if (!newAppt.patientId || !newAppt.doctorId || !newAppt.date || !newAppt.time) {
+      setAddError("Please fill in all required fields.");
       return;
     }
     setAddLoading(true);
     setAddError("");
     try {
+      // Look for an existing unbooked slot for this doctor/date/time
+      const slotsRes = await apiFetch(`/api/appointment-slots?doctor_id=${newAppt.doctorId}&date=${newAppt.date}&limit=100`);
+      const slotsData = slotsRes.ok ? await slotsRes.json() : { data: [] };
+
+      const toHHMM = (start_time: string) => {
+        const d = new Date(start_time);
+        return `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
+      };
+
+      // If the time is already booked for this doctor, reject early
+      const bookedConflict = (slotsData.data || []).find((s: any) =>
+        toHHMM(s.start_time) === newAppt.time && s.is_booked
+      );
+      if (bookedConflict) throw new Error("This time is already booked for this doctor.");
+
+      let slot = (slotsData.data || []).find((s: any) =>
+        toHHMM(s.start_time) === newAppt.time && !s.is_booked
+      );
+
+      if (!slot) {
+        // Auto-create a 30-min slot for this doctor/date/time
+        const [h, m] = newAppt.time.split(":").map(Number);
+        const toH = h + Math.floor((m + 30) / 60);
+        const toM = (m + 30) % 60;
+        const toTime = `${String(toH).padStart(2, "0")}:${String(toM).padStart(2, "0")}`;
+        const createRes = await apiFetch(`/api/appointment-slots/bulk`, {
+          method: "POST",
+          body: JSON.stringify({
+            doctor_id: Number(newAppt.doctorId),
+            slot_date: newAppt.date,
+            from_time: newAppt.time,
+            to_time: toTime,
+            duration_minutes: 30,
+          }),
+        });
+        if (!createRes.ok) {
+          const err = await createRes.json();
+          throw new Error(err.message || "Failed to create time slot.");
+        }
+        const refetchRes = await apiFetch(`/api/appointment-slots?doctor_id=${newAppt.doctorId}&date=${newAppt.date}&limit=100`);
+        const refetchData = refetchRes.ok ? await refetchRes.json() : { data: [] };
+        slot = (refetchData.data || []).find((s: any) =>
+          toHHMM(s.start_time) === newAppt.time && !s.is_booked
+        );
+        if (!slot) throw new Error("Could not find the created slot.");
+      }
+
       const res = await apiFetch(`/api/appointments`, {
         method: "POST",
         body: JSON.stringify({
           patient_id: Number(newAppt.patientId),
-          slot_id: Number(newAppt.slotId),
+          slot_id: Number(slot.id),
           reason: newAppt.reason,
         }),
       });
@@ -492,14 +525,17 @@ export default function AppointmentsManagement() {
         const patientUser = a.patient_profile?.users;
         const doctorId = a.doctor_id || a.created_by;
         const doctor = users.find((u: any) => u.id === doctorId || u.id === String(doctorId));
-        const time = a.start_time ? new Date(a.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+        const time = a.start_time ? new Date(a.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "UTC" }) : "";
         return {
           id: Number(a.id), date: a.appointment_date ? new Date(a.appointment_date).toLocaleDateString("en-CA") : "",
           time, patient: patientUser ? `${patientUser.first_name} ${patientUser.last_name}` : `Patient #${a.patient_id}`,
-          phone: patientUser?.phone || "", type: a.reason || "Checkup", duration: 30,
+          phone: patientUser?.phone || "",
+          type: (a.reason || "Checkup").replace(/^Rescheduled: /, ""),
+          duration: 30,
           status: a.status, notes: a.notes || "",
           doctor: doctor ? `Dr. ${doctor.first_name} ${doctor.last_name}` : "", doctorId: Number(doctorId),
           patientId: Number(a.patient_id || 0),
+          isRescheduled: (a.reason || "").startsWith("Rescheduled:"),
         };
       });
       setAppointments(mapped);
@@ -554,10 +590,14 @@ export default function AppointmentsManagement() {
     try {
       const slotsRes = await apiFetch(`/api/appointment-slots?doctor_id=${appt.doctorId}&date=${postponeDate}&limit=100`);
       const slotsData = slotsRes.ok ? await slotsRes.json() : { data: [] };
-      let slot = (slotsData.data || []).find((s: any) => {
-        const t = new Date(s.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "UTC" });
-        return t === postponeTime && !s.is_booked;
-      });
+      const slotHHMM = (start_time: string) => {
+        const d = new Date(start_time);
+        return `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
+      };
+
+      let slot = (slotsData.data || []).find((s: any) =>
+        slotHHMM(s.start_time) === postponeTime && !s.is_booked
+      );
 
       if (!slot) {
         const [h, m] = postponeTime.split(":").map(Number);
@@ -572,10 +612,9 @@ export default function AppointmentsManagement() {
         if (!createRes.ok) { toast.error("Failed to create slot for new date."); return; }
         const refetchRes = await apiFetch(`/api/appointment-slots?doctor_id=${appt.doctorId}&date=${postponeDate}&limit=100`);
         const refetchData = refetchRes.ok ? await refetchRes.json() : { data: [] };
-        slot = (refetchData.data || []).find((s: any) => {
-          const t = new Date(s.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "UTC" });
-          return t === postponeTime && !s.is_booked;
-        });
+        slot = (refetchData.data || []).find((s: any) =>
+          slotHHMM(s.start_time) === postponeTime && !s.is_booked
+        );
         if (!slot) { toast.error("Could not find the new slot after creation."); return; }
       }
 
@@ -589,13 +628,38 @@ export default function AppointmentsManagement() {
       const bookRes = await apiFetch(`/api/appointments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ patient_id: appt.patientId, slot_id: Number(slot.id), reason: appt.type }),
+        body: JSON.stringify({ patient_id: appt.patientId, slot_id: Number(slot.id), reason: `Rescheduled: ${appt.type}` }),
       });
       if (!bookRes.ok) { toast.error("Failed to book new appointment."); return; }
 
       toast.success(`Appointment postponed to ${postponeDate} at ${postponeTime}.`);
-      setAppointments((prev) => prev.map((a) => a.id === appt.id ? { ...a, status: "cancelled" } : a));
       setPostponeApptId(null);
+
+      // Full refresh so the new rescheduled appointment appears in the list
+      const [appointmentsRes, usersRes] = await Promise.all([
+        apiFetch(`/api/appointments`),
+        apiFetch(`/api/users`),
+      ]);
+      const appointmentsData = await appointmentsRes.json();
+      const users: any[] = usersRes.ok ? await usersRes.json() : [];
+      const mapped = (appointmentsData.data || []).map((a: any) => {
+        const patientUser = a.patient_profiles?.users;
+        const doctorId = a.doctor_id || a.created_by;
+        const doctor = users.find((u: any) => u.id === doctorId || u.id === String(doctorId));
+        const time = a.start_time ? new Date(a.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "UTC" }) : "";
+        return {
+          id: Number(a.id), date: a.appointment_date ? new Date(a.appointment_date).toLocaleDateString("en-CA") : "",
+          time, patient: patientUser ? `${patientUser.first_name} ${patientUser.last_name}` : `Patient #${a.patient_id}`,
+          phone: patientUser?.phone || "",
+          type: (a.reason || "Checkup").replace(/^Rescheduled: /, ""),
+          duration: 30,
+          status: a.status, notes: a.notes || "",
+          doctor: doctor ? `Dr. ${doctor.first_name} ${doctor.last_name}` : "", doctorId: Number(doctorId),
+          patientId: Number(a.patient_id || 0),
+          isRescheduled: (a.reason || "").startsWith("Rescheduled:"),
+        };
+      });
+      setAppointments(mapped);
     } catch {
       toast.error("Something went wrong.");
     } finally {
@@ -781,7 +845,7 @@ export default function AppointmentsManagement() {
                       <div
                         key={apt.id}
                         className={`p-6 hover:bg-gray-50 transition-colors ${
-                          apt.status === "cancelled" ? "opacity-60" : ""
+                          apt.status === "cancelled" && !apt.notes.includes("Postponed") ? "opacity-60" : ""
                         }`}
                       >
                         <div className="flex items-center justify-between">
@@ -807,7 +871,12 @@ export default function AppointmentsManagement() {
                                 <p className="font-bold text-gray-900 text-lg">
                                   {apt.patient}
                                 </p>
-                                {getStatusBadge(apt.status)}
+                                {apt.status === "cancelled" && apt.notes.includes("Postponed")
+                                  ? <Badge icon={FaCalendarPlus} bgClass="bg-orange-100" textClass="text-orange-700">Postponed</Badge>
+                                  : apt.isRescheduled
+                                  ? <Badge icon={FaCalendarCheck} bgClass="bg-teal-100" textClass="text-teal-700">Rescheduled</Badge>
+                                  : getStatusBadge(apt.status)
+                                }
                               </div>
                               <p className="text-gray-600">{apt.type}</p>
                               <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
@@ -822,7 +891,7 @@ export default function AppointmentsManagement() {
                               </div>
                               {apt.notes && (
                                 <p className="text-sm text-gray-400 mt-2 italic">
-                                  {t("appointments.notePrefix")} {apt.notes}
+                                  {t("appointments.notePrefix")} {apt.notes.replace(/^Cancelled: /, "")}
                                 </p>
                               )}
                             </div>
@@ -925,12 +994,32 @@ export default function AppointmentsManagement() {
             </select>
           </FormField>
 
-          <FormField label="Available Slot">
-            <select className={inputClass} value={newAppt.slotId} onChange={(e) => setNewAppt({ ...newAppt, slotId: e.target.value })}>
-              <option value="">Select a slot...</option>
-              {availableSlots.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
+          <FormField label="Doctor">
+            <select className={inputClass} value={newAppt.doctorId} onChange={(e) => setNewAppt({ ...newAppt, doctorId: e.target.value })}>
+              <option value="">Select a doctor...</option>
+              {doctors.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
             </select>
           </FormField>
+
+          <div className="grid grid-cols-2 gap-4">
+            <FormField label="Date">
+              <input
+                type="date"
+                className={inputClass}
+                value={newAppt.date}
+                min={new Date().toISOString().split("T")[0]}
+                onChange={(e) => setNewAppt({ ...newAppt, date: e.target.value })}
+              />
+            </FormField>
+            <FormField label="Time">
+              <input
+                type="time"
+                className={inputClass}
+                value={newAppt.time}
+                onChange={(e) => setNewAppt({ ...newAppt, time: e.target.value })}
+              />
+            </FormField>
+          </div>
 
           <FormField label="Reason">
             <select className={inputClass} value={newAppt.reason} onChange={(e) => setNewAppt({ ...newAppt, reason: e.target.value })}>
