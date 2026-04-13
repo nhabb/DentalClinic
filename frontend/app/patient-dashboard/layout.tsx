@@ -1,8 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { safeStorage } from "@/lib/browser-compat";
+
+// Runs before paint on the client; falls back to useEffect during SSR.
+const useIsomorphicLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 export default function PatientDashboardLayout({
   children,
@@ -12,8 +16,7 @@ export default function PatientDashboardLayout({
   const router = useRouter();
   const [checked, setChecked] = useState(false);
 
-  useEffect(() => {
-    // Run once on mount only — avoids spurious sign-outs on tab refocus.
+  useIsomorphicLayoutEffect(() => {
     const token = safeStorage.getItem("authToken");
     const role = safeStorage.getItem("userRole");
     if (!token || role !== "patient") {

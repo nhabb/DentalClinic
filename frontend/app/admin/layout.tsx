@@ -1,6 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
+
+// Runs before paint on the client; falls back to useEffect during SSR.
+const useIsomorphicLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
 import { useRouter, usePathname } from "next/navigation";
 import { safeStorage } from "@/lib/browser-compat";
 import { supabase } from "@/lib/supabase/client";
@@ -18,7 +22,7 @@ export default function AdminLayout({
   // Start as true for login page so it renders immediately without a flash
   const [authChecked, setAuthChecked] = useState(pathname.includes("/login"));
 
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     // Run once on mount only — re-running on tab focus / router refresh
     // would reset authChecked and cause spurious sign-outs.
     if (pathname.includes("/login")) {
