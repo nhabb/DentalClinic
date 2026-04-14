@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { FaTooth, FaUser, FaUserMd } from "react-icons/fa";
+import { FcGoogle } from "react-icons/fc";
 import { toast } from 'sonner';
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/lib/i18n";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
+import { supabase } from "@/lib/supabase/client";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
 
@@ -30,12 +32,31 @@ export default function LoginPage() {
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [oauthLoading, setOauthLoading] = useState(false);
   const [error, setError]       = useState("");
 
   const fillDemo = (acc: typeof DEMO_ACCOUNTS[0]) => {
     setEmail(acc.email);
     setPassword(acc.password);
     setError("");
+  };
+
+  const handleGoogleLogin = async () => {
+    setOauthLoading(true);
+    setError("");
+    try {
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      if (oauthError) setError(oauthError.message);
+    } catch {
+      setError("Failed to initiate Google sign-in.");
+    } finally {
+      setOauthLoading(false);
+    }
   };
 
   const onLogin = async (e: React.FormEvent) => {
@@ -71,6 +92,11 @@ export default function LoginPage() {
           role: user.role,
         })
       );
+      // Mark admin-role users as authenticated for the admin layout guard
+      const adminRoles = ["doctor", "admin", "secretary", "superadmin"];
+      if (adminRoles.includes(user.role)) {
+        localStorage.setItem("adminAuth", "true");
+      }
 
       toast.success("Logged in successfully.");
       const redirect = ROLE_REDIRECTS[user.role] ?? "/patient-dashboard";
@@ -160,6 +186,27 @@ export default function LoginPage() {
               )}
             </Button>
           </form>
+
+          {/* OAuth */}
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-200" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="bg-white px-3 text-gray-500">or</span>
+            </div>
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full py-6 flex items-center gap-3 justify-center"
+            onClick={handleGoogleLogin}
+            disabled={oauthLoading || isLoading}
+          >
+            <FcGoogle className="text-xl" />
+            {oauthLoading ? "Redirecting…" : "Continue with Google"}
+          </Button>
 
           {/* Demo Credentials */}
           <div className="border border-gray-200 rounded-xl p-4 bg-gray-50 space-y-3">

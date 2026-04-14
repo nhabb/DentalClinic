@@ -128,6 +128,9 @@ export default function InventoryManagement() {
   const [uploadingPhotoId, setUploadingPhotoId] = useState<number | null>(null);
   const [photoError, setPhotoError] = useState("");
 
+  // Delete loading state
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+
   // Add form state
   const [addForm, setAddForm] = useState({
     name: "", category: "Disposables", unit: "piece",
@@ -150,10 +153,18 @@ export default function InventoryManagement() {
     try {
       const res = await apiFetch(`/api/inventory`);
       const data = await res.json();
+      const normalizeCategory = (cat: string) => {
+        const c = (cat || "").toLowerCase();
+        if (c === "disposables") return "Disposables";
+        if (c === "materials") return "Materials";
+        if (c === "medications") return "Medications";
+        if (c === "instruments") return "Instruments";
+        return cat || "General";
+      };
       const mapped = (data.data || []).map((item: any) => ({
         id: Number(item.id),
         name: item.name,
-        category: item.category || "General",
+        category: normalizeCategory(item.category),
         currentStock: item.quantity,
         minimumStock: item.minimum_quantity,
         unit: item.unit,
@@ -301,12 +312,17 @@ export default function InventoryManagement() {
   };
 
   const handleDelete = async (id: number) => {
-    const res = await apiFetch(`/api/inventory/${id}`, { method: "DELETE" });
-    if (res.ok) {
-      toast.success("Item deleted.");
-      setInventoryItems((prev) => prev.filter((item) => item.id !== id));
-    } else {
-      toast.error("Failed to delete item.");
+    setDeletingId(id);
+    try {
+      const res = await apiFetch(`/api/inventory/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        toast.success("Item deleted.");
+        setInventoryItems((prev) => prev.filter((item) => item.id !== id));
+      } else {
+        toast.error("Failed to delete item.");
+      }
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -372,7 +388,7 @@ export default function InventoryManagement() {
                     <th className="text-left rtl:text-right py-4 px-6 text-sm font-semibold text-gray-600">{t("inventory.item")}</th>
                     <th className="text-left rtl:text-right py-4 px-6 text-sm font-semibold text-gray-600">{t("inventory.category")}</th>
                     <th className="text-center py-4 px-6 text-sm font-semibold text-gray-600">{t("inventory.stock")}</th>
-                    {/* <th className="text-left rtl:text-right py-4 px-6 text-sm font-semibold text-gray-600">{t("inventory.supplier")}</th> */}
+                    <th className="text-left rtl:text-right py-4 px-6 text-sm font-semibold text-gray-600">{t("inventory.supplier")}</th>
                     <th className="text-center py-4 px-6 text-sm font-semibold text-gray-600">{t("common.status")}</th>
                     <th className="text-center py-4 px-6 text-sm font-semibold text-gray-600">{t("common.actions")}</th>
                   </tr>
@@ -448,9 +464,14 @@ export default function InventoryManagement() {
                           </button>
                           <button
                             onClick={() => handleDelete(item.id)}
-                            className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-red-500 transition-colors"
+                            disabled={deletingId === item.id}
+                            className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-red-500 transition-colors disabled:opacity-40"
                           >
-                            <FaTrash />
+                            {deletingId === item.id ? (
+                              <span className="block w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <FaTrash />
+                            )}
                           </button>
                         </div>
                       </td>

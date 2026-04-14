@@ -27,14 +27,12 @@ const I18nContext = createContext<I18nContextType>({
 });
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguageState] = useState<Language>("en");
-
-  useEffect(() => {
+  const [language, setLanguageState] = useState<Language>(() => {
+    // Read saved language synchronously on first client render to avoid flash
+    if (typeof window === "undefined") return "en";
     const saved = safeStorage.getItem("language") as Language;
-    if (saved && ["en", "fr", "ar"].includes(saved)) {
-      setLanguageState(saved);
-    }
-  }, []);
+    return saved && ["en", "fr", "ar"].includes(saved) ? saved : "en";
+  });
 
   useEffect(() => {
     document.documentElement.lang = language;

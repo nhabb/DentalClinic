@@ -26,3 +26,20 @@ pnpm-lock.yaml
 *.zip
 *.tar
 *.gz
+
+# Secrets — never read real credentials
+.env
+.env.local
+.env.*.local
+backend/.env
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Generated / cache
+*.tsbuildinfo
+.DS_Store
+.vercel
+backend/dist
+backend/generated

@@ -41,6 +41,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
 
 interface Patient {
   id: number;
+  userId: number;
   name: string;
   email: string;
   phone: string;
@@ -109,8 +110,24 @@ export default function PatientsPage() {
   const [documents, setDocuments] = useState<any[]>([]);
   const [docsLoading, setDocsLoading] = useState(false);
   const [uploadingDoc, setUploadingDoc] = useState(false);
+  const [deletingDocId, setDeletingDocId] = useState<number | null>(null);
   const docInputRef = useRef<HTMLInputElement>(null);
   const [previewDoc, setPreviewDoc] = useState<any | null>(null);
+
+  // Toggle active/inactive state
+  const [togglingStatusId, setTogglingStatusId] = useState<number | null>(null);
+
+  // Edit patient state
+  const [showEditPatientModal, setShowEditPatientModal] = useState(false);
+  const [editPatientForm, setEditPatientForm] = useState({
+    phone: "",
+    dateOfBirth: "",
+    bloodType: "",
+    allergies: "",
+    insurance: "",
+    notes: "",
+  });
+  const [editPatientSaving, setEditPatientSaving] = useState(false);
 
   // Check auth and load user data (auth disabled)
   useEffect(() => {
@@ -136,29 +153,41 @@ export default function PatientsPage() {
   useEffect(() => {
     const fetchPatients = async () => {
       try {
-        const [patientsRes, usersRes] = await Promise.all([
+        const [patientsRes, usersRes, apptRes] = await Promise.all([
           apiFetch(`/api/patients`),
           apiFetch(`/api/users`),
+          apiFetch(`/api/appointments?limit=2000`),
         ]);
         const patientsData = await patientsRes.json();
-        const users: any[] = await usersRes.json();
+        const users: any[] = usersRes.ok ? await usersRes.json() : [];
+        const apptData = apptRes.ok ? await apptRes.json() : { data: [] };
+
+        // Count completed appointments per patient profile id
+        const visitsByPatient: Record<number, number> = {};
+        for (const a of (apptData.data || [])) {
+          if (a.status === "completed") {
+            const pid = Number(a.patient_id);
+            visitsByPatient[pid] = (visitsByPatient[pid] || 0) + 1;
+          }
+        }
 
         const mapped = (patientsData.data || []).map((p: any) => {
           const user = users.find((u) => u.id === p.user_id || u.id === String(p.user_id));
           return {
             id: Number(p.id),
+            userId: user ? Number(user.id) : 0,
             name: user ? `${user.first_name} ${user.last_name}` : `Patient #${p.id}`,
             email: user?.email || "",
             phone: user?.phone || "",
-            dateOfBirth: "",
+            dateOfBirth: p.date_of_birth || "",
             address: `${p.city || ""}, ${p.governate || ""}`.trim().replace(/^,\s*|,\s*$/, ""),
             bloodType: p.blood_type || "",
             allergies: p.allergies ? p.allergies.split(",").map((a: string) => a.trim()) : [],
             insurance: p.insurance_provider || "",
             registeredDate: user?.created_at?.split("T")[0] || "",
             lastVisit: "",
-            totalVisits: 0,
-            status: user?.is_active ? "active" : "inactive",
+            totalVisits: visitsByPatient[Number(p.id)] || 0,
+            status: user?.is_active !== false ? "active" : "inactive",
             notes: p.medical_notes || "",
             photoUrl: getStoredPhoto(user?.email || ""),
           };
@@ -297,9 +326,102 @@ export default function PatientsPage() {
 
   const handleDeleteDocument = async (docId: number) => {
     if (!selectedPatient) return;
-    const res = await apiFetch(`/api/patient-documents/${docId}`, { method: "DELETE" });
-    if (res.ok) { toast.success("Document deleted."); setDocuments((prev) => prev.filter((d) => d.id !== docId)); }
-    else toast.error("Failed to delete document.");
+    setDeletingDocId(docId);
+    try {
+      const res = await apiFetch(`/api/patient-documents/${docId}`, { method: "DELETE" });
+      if (res.ok) { toast.success("Document deleted."); setDocuments((prev) => prev.filter((d) => d.id !== docId)); }
+      else toast.error("Failed to delete document.");
+    } finally {
+      setDeletingDocId(null);
+    }
+  };
+
+  const handleToggleStatus = async (patient: Patient) => {
+    setTogglingStatusId(patient.id);
+    const newStatus = patient.status !== "active";
+    try {
+      // BACKEND NOTE: needs PATCH /api/patients/:id accepting { is_active: boolean }
+      // (or PATCH /api/users/:userId with { is_active: boolean })
+      const res = await apiFetch(`/api/patients/${patient.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_active: newStatus }),
+      });
+      if (res.ok) {
+        const newStatusStr = newStatus ? "active" : "inactive";
+        setPatients((prev) =>
+          prev.map((p) => p.id === patient.id ? { ...p, status: newStatusStr } : p)
+        );
+        if (selectedPatient?.id === patient.id) {
+          setSelectedPatient((prev) => prev ? { ...prev, status: newStatusStr } : prev);
+        }
+        toast.success(`Patient marked as ${newStatusStr}.`);
+      } else {
+        toast.error("Failed to update patient status.");
+      }
+    } catch {
+      toast.error("Failed to update patient status.");
+    } finally {
+      setTogglingStatusId(null);
+    }
+  };
+
+  const handleOpenEditPatient = (patient: Patient) => {
+    setEditPatientForm({
+      phone: patient.phone,
+      dateOfBirth: patient.dateOfBirth,
+      bloodType: patient.bloodType,
+      allergies: patient.allergies.join(", "),
+      insurance: patient.insurance,
+      notes: patient.notes,
+    });
+    setShowEditPatientModal(true);
+  };
+
+  const handleEditPatientSave = async () => {
+    if (!selectedPatient) return;
+    setEditPatientSaving(true);
+    try {
+      // NOTE FOR BACKEND TEAM:
+      // PATCH /api/patients/:id should accept:
+      //   blood_type, allergies (string), insurance_provider, medical_notes, date_of_birth
+      // PATCH /api/users/:userId should accept: phone
+      await apiFetch(`/api/patients/${selectedPatient.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          blood_type: editPatientForm.bloodType || undefined,
+          allergies: editPatientForm.allergies || undefined,
+          insurance_provider: editPatientForm.insurance || undefined,
+          medical_notes: editPatientForm.notes || undefined,
+          date_of_birth: editPatientForm.dateOfBirth || undefined,
+        }),
+      });
+      if (selectedPatient.userId) {
+        await apiFetch(`/api/users/${selectedPatient.userId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone: editPatientForm.phone }),
+        });
+      }
+      const updatedPatient: Patient = {
+        ...selectedPatient,
+        phone: editPatientForm.phone,
+        dateOfBirth: editPatientForm.dateOfBirth,
+        bloodType: editPatientForm.bloodType,
+        allergies: editPatientForm.allergies.split(",").map((a) => a.trim()).filter(Boolean),
+        insurance: editPatientForm.insurance,
+        notes: editPatientForm.notes,
+      };
+      setSelectedPatient(updatedPatient);
+      setPatients((prev) => prev.map((p) => p.id === selectedPatient.id ? updatedPatient : p));
+      toast.success("Patient updated.");
+      setShowEditPatientModal(false);
+    } catch {
+      toast.error("Failed to update patient.");
+    } finally {
+      setEditPatientSaving(false);
+    }
   };
 
   const handleLogout = () => {
@@ -497,7 +619,19 @@ export default function PatientsPage() {
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <Button variant="outline" size="sm">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={togglingStatusId === selectedPatient.id}
+                  onClick={() => handleToggleStatus(selectedPatient)}
+                  className={selectedPatient.status === "active" ? "text-gray-600 border-gray-300" : "text-green-700 border-green-300"}
+                >
+                  {togglingStatusId === selectedPatient.id ? (
+                    <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+                  ) : null}
+                  {selectedPatient.status === "active" ? "Set Inactive" : "Set Active"}
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => handleOpenEditPatient(selectedPatient)}>
                   <FaEdit className="mr-2 rtl:mr-0 rtl:ml-2" /> {t("common.edit")}
                 </Button>
                 <Button
@@ -786,10 +920,15 @@ export default function PatientsPage() {
                             )}
                             <button
                               onClick={() => handleDeleteDocument(doc.id)}
-                              className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                              disabled={deletingDocId === doc.id}
+                              className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-40"
                               title="Delete"
                             >
-                              <FaTrash />
+                              {deletingDocId === doc.id ? (
+                                <span className="block w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+                              ) : (
+                                <FaTrash />
+                              )}
                             </button>
                           </div>
                         </div>
@@ -884,6 +1023,103 @@ export default function PatientsPage() {
                 onClick={handleBookAppointment}
               >
                 {bookLoading ? "Booking..." : "Book Appointment"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Patient Modal */}
+      {showEditPatientModal && selectedPatient && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+              <h2 className="text-xl font-bold text-gray-900">Edit Patient</h2>
+              <button
+                onClick={() => setShowEditPatientModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <FaTimes className="text-gray-500" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4 overflow-y-auto max-h-[65vh]">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                  <input
+                    type="tel"
+                    value={editPatientForm.phone}
+                    onChange={(e) => setEditPatientForm((f) => ({ ...f, phone: e.target.value }))}
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t("patients.dateOfBirth")}</label>
+                  <input
+                    type="date"
+                    value={editPatientForm.dateOfBirth}
+                    onChange={(e) => setEditPatientForm((f) => ({ ...f, dateOfBirth: e.target.value }))}
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t("patients.bloodType")}</label>
+                  <select
+                    value={editPatientForm.bloodType}
+                    onChange={(e) => setEditPatientForm((f) => ({ ...f, bloodType: e.target.value }))}
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                  >
+                    <option value="">Unknown</option>
+                    {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((bt) => (
+                      <option key={bt} value={bt}>{bt}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t("patients.insurance")}</label>
+                  <input
+                    type="text"
+                    value={editPatientForm.insurance}
+                    onChange={(e) => setEditPatientForm((f) => ({ ...f, insurance: e.target.value }))}
+                    placeholder="e.g. AXA, BUPA, Self-pay"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t("patients.allergies")}</label>
+                <input
+                  type="text"
+                  value={editPatientForm.allergies}
+                  onChange={(e) => setEditPatientForm((f) => ({ ...f, allergies: e.target.value }))}
+                  placeholder="Comma-separated, e.g. Penicillin, Latex"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t("patients.notesSection")}</label>
+                <textarea
+                  value={editPatientForm.notes}
+                  onChange={(e) => setEditPatientForm((f) => ({ ...f, notes: e.target.value }))}
+                  rows={3}
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30 resize-none"
+                />
+              </div>
+            </div>
+            <div className="p-6 border-t border-gray-100 flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setShowEditPatientModal(false)}>
+                {t("common.cancel")}
+              </Button>
+              <Button
+                className="bg-dental-blue hover:bg-dental-blue/90"
+                disabled={editPatientSaving}
+                onClick={handleEditPatientSave}
+              >
+                {editPatientSaving ? (
+                  <><span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />Saving...</>
+                ) : t("common.save")}
               </Button>
             </div>
           </div>

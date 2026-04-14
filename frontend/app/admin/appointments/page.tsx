@@ -100,8 +100,8 @@ export default function AppointmentsManagement() {
   const [patients, setPatients] = useState<{ id: number; name: string }[]>([]);
   const [showAvailabilityModal, setShowAvailabilityModal] = useState(false);
   const [availabilityDate, setAvailabilityDate] = useState("");
-  const [timeRanges, setTimeRanges] = useState<{ fromTime: string; toTime: string }[]>([
-    { fromTime: "09:00", toTime: "17:00" },
+  const [timeRanges, setTimeRanges] = useState<{ fromTime: string; toTime: string; slotDuration: number }[]>([
+    { fromTime: "09:00", toTime: "17:00", slotDuration: 30 },
   ]);
   const [existingSlots, setExistingSlots] = useState<{ id: number; time: string; isBooked: boolean }[]>([]);
   const [loadingExistingSlots, setLoadingExistingSlots] = useState(false);
@@ -422,8 +422,9 @@ export default function AppointmentsManagement() {
       for (const range of timeRanges) {
         const [fh, fm] = range.fromTime.split(":").map(Number);
         const [th, tm] = range.toTime.split(":").map(Number);
-        const duration_minutes = (th * 60 + tm) - (fh * 60 + fm);
-        if (duration_minutes <= 0) continue;
+        const totalMinutes = (th * 60 + tm) - (fh * 60 + fm);
+        if (totalMinutes <= 0) continue;
+        const duration_minutes = range.slotDuration > 0 ? range.slotDuration : 30;
         const res = await apiFetch(`/api/appointment-slots/bulk`, {
           method: "POST",
           body: JSON.stringify({
@@ -680,7 +681,7 @@ export default function AppointmentsManagement() {
           extraActions={
             <div className="flex gap-2">
               <button
-                onClick={() => { setAvailabilityMsg(""); setExistingSlots([]); setAvailabilityDate(""); setTimeRanges([{ fromTime: "09:00", toTime: "17:00" }]); setShowAvailabilityModal(true); }}
+                onClick={() => { setAvailabilityMsg(""); setExistingSlots([]); setAvailabilityDate(""); setTimeRanges([{ fromTime: "09:00", toTime: "17:00", slotDuration: 30 }]); setShowAvailabilityModal(true); }}
                 className="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-sm font-medium transition-colors"
               >
                 Open Availability
@@ -715,7 +716,7 @@ export default function AppointmentsManagement() {
                   iconBgClass="bg-blue-100"
                   iconColorClass="text-blue-600"
                   value={todayStats.total}
-                  label={t("appointments.todaysTotal")}
+                  label={selectedDateStr === new Date().toISOString().split("T")[0] ? t("appointments.todaysTotal") : "Total"}
                 />
                 <StatsCard
                   icon={FaCalendarCheck}
@@ -1098,7 +1099,7 @@ export default function AppointmentsManagement() {
             <div className="flex items-center justify-between mb-2">
               <p className="text-sm font-medium text-gray-700">Time Ranges</p>
               <button
-                onClick={() => setTimeRanges((prev) => [...prev, { fromTime: "09:00", toTime: "17:00", duration: 30 }])}
+                onClick={() => setTimeRanges((prev) => [...prev, { fromTime: "09:00", toTime: "17:00", slotDuration: 30 }])}
                 className="text-xs text-teal-600 hover:text-teal-800 font-medium"
               >
                 + Add Range
@@ -1110,12 +1111,14 @@ export default function AppointmentsManagement() {
                 const [fh, fm] = range.fromTime.split(":").map(Number);
                 const [th, tm] = range.toTime.split(":").map(Number);
                 const totalMin = (th * 60 + tm) - (fh * 60 + fm);
-                const preview = totalMin > 0
-                  ? `→ 1 slot (${Math.floor(totalMin / 60)}h${totalMin % 60 > 0 ? ` ${totalMin % 60}m` : ""})`
-                  : "Invalid range";
+                const slotDur = range.slotDuration > 0 ? range.slotDuration : 30;
+                const slotCount = totalMin > 0 ? Math.floor(totalMin / slotDur) : 0;
+                const preview = totalMin > 0 && slotCount > 0
+                  ? `→ ${slotCount} slot${slotCount !== 1 ? "s" : ""} × ${slotDur} min`
+                  : totalMin <= 0 ? "Invalid range" : "Slot duration too large";
                 return (
                   <div key={i} className="border border-gray-200 rounded-lg p-3 space-y-2 bg-gray-50">
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-3 gap-2">
                       <div>
                         <label className="text-xs text-gray-500 mb-1 block">From</label>
                         <input type="time" className={inputClass} value={range.fromTime}
@@ -1126,9 +1129,21 @@ export default function AppointmentsManagement() {
                         <input type="time" className={inputClass} value={range.toTime}
                           onChange={(e) => setTimeRanges((prev) => prev.map((r, j) => j === i ? { ...r, toTime: e.target.value } : r))} />
                       </div>
+                      <div>
+                        <label className="text-xs text-gray-500 mb-1 block">Slot (min)</label>
+                        <select className={inputClass} value={range.slotDuration}
+                          onChange={(e) => setTimeRanges((prev) => prev.map((r, j) => j === i ? { ...r, slotDuration: Number(e.target.value) } : r))}>
+                          <option value={15}>15 min</option>
+                          <option value={20}>20 min</option>
+                          <option value={30}>30 min</option>
+                          <option value={45}>45 min</option>
+                          <option value={60}>60 min</option>
+                          <option value={90}>90 min</option>
+                        </select>
+                      </div>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-400">{preview}</span>
+                      <span className={`text-xs ${slotCount > 0 ? "text-teal-600 font-medium" : "text-red-500"}`}>{preview}</span>
                       {timeRanges.length > 1 && (
                         <button onClick={() => setTimeRanges((prev) => prev.filter((_, j) => j !== i))}
                           className="text-xs text-red-400 hover:text-red-600">

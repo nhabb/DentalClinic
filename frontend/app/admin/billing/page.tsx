@@ -3,6 +3,7 @@
 import { toast } from 'sonner';
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { apiFetch } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import { safeStorage } from "@/lib/browser-compat";
@@ -24,6 +25,7 @@ import {
   FaEye,
   FaPlus,
   FaTrash,
+  FaChartLine,
 } from "react-icons/fa";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -289,6 +291,14 @@ export default function BillingPage() {
           subtitle="Create treatment invoices and record patient payments"
           onAdd={() => { resetCreateModal(); setShowCreateModal(true); }}
           addLabel="New Invoice"
+          extraActions={
+            <Link
+              href="/admin"
+              className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors"
+            >
+              <FaChartLine className="text-xs" /> Go to Dashboard
+            </Link>
+          }
         />
 
         <main className="flex-1 p-8 overflow-auto">

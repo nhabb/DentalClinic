@@ -73,6 +73,7 @@ export default function ExpensesPage() {
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [isLoading, setIsLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const fetchExpenses = async () => {
     setIsLoading(true);
@@ -190,10 +191,13 @@ export default function ExpensesPage() {
   };
 
   const handleDelete = async (id: number) => {
+    setDeletingId(id);
     try {
       await apiFetch(`/api/expenses/${id}`, { method: "DELETE" });
     } catch {
       // optimistic delete
+    } finally {
+      setDeletingId(null);
     }
     setExpenses((prev) => prev.filter((e) => e.id !== id));
     toast.success("Expense deleted.");
@@ -318,9 +322,14 @@ export default function ExpensesPage() {
                             </button>
                             <button
                               onClick={() => handleDelete(expense.id)}
-                              className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-red-500 transition-colors"
+                              disabled={deletingId === expense.id}
+                              className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-red-500 transition-colors disabled:opacity-40"
                             >
-                              <FaTrash />
+                              {deletingId === expense.id ? (
+                                <span className="block w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                              ) : (
+                                <FaTrash />
+                              )}
                             </button>
                           </div>
                         </td>

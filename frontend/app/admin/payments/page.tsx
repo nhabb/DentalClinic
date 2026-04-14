@@ -63,7 +63,7 @@ type PatientPayment = {
 };
 
 const statusFilterKeys = ["all", "paid", "pending", "overdueFilter"] as const;
-const statusFilterValues = ["All", "Paid", "Pending", "Overdue"];
+const statusFilterValues = ["All", "Paid", "Pending", "Unpaid"];
 
 const emptyForm = {
   treatment: "",
@@ -87,6 +87,7 @@ export default function PatientPaymentsPage() {
   const [form, setForm] = useState(emptyForm);
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   // Patient search state
   const [patientQuery, setPatientQuery] = useState("");
@@ -226,7 +227,7 @@ export default function PatientPaymentsPage() {
       selectedStatus === "All" ||
       (selectedStatus === "Paid" && p.status === "paid") ||
       (selectedStatus === "Pending" && (p.status === "pending" || p.status === "partial")) ||
-      (selectedStatus === "Overdue" && p.status === "overdue");
+      (selectedStatus === "Unpaid" && p.status === "overdue");
     return matchesSearch && matchesStatus;
   });
 
@@ -334,12 +335,17 @@ export default function PatientPaymentsPage() {
   };
 
   const handleDelete = async (id: number) => {
-    const res = await apiFetch(`/api/payments/${id}`, { method: "DELETE" });
-    if (res.ok) {
-      toast.success("Payment deleted.");
-      setPayments((prev) => prev.filter((p) => !(p.id === id && p.source === "payment")));
-    } else {
-      toast.error("Failed to delete payment.");
+    setDeletingId(id);
+    try {
+      const res = await apiFetch(`/api/payments/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        toast.success("Payment deleted.");
+        setPayments((prev) => prev.filter((p) => !(p.id === id && p.source === "payment")));
+      } else {
+        toast.error("Failed to delete payment.");
+      }
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -357,7 +363,7 @@ export default function PatientPaymentsPage() {
       case "overdue":
         return (
           <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">
-            <FaExclamationCircle className="text-xs" /> {t("payments.overdueBadge")}
+            <FaExclamationCircle className="text-xs" /> Unpaid
           </span>
         );
       case "partial":
@@ -541,7 +547,7 @@ export default function PatientPaymentsPage() {
               iconBgClass="bg-red-100"
               iconColorClass="text-red-600"
               value={formatAmount(totalOverdue)}
-              label={t("payments.overdue")}
+              label="Unpaid"
             />
           </div>
 
@@ -552,7 +558,7 @@ export default function PatientPaymentsPage() {
             searchPlaceholder={t("payments.searchPlaceholder")}
             filters={statusFilterValues.map((val, idx) => ({
               value: val,
-              label: t(`payments.${statusFilterKeys[idx]}`),
+              label: val === "Unpaid" ? "Unpaid" : t(`payments.${statusFilterKeys[idx]}`),
             }))}
             activeFilter={selectedStatus}
             onFilterChange={setSelectedStatus}
@@ -630,9 +636,14 @@ export default function PatientPaymentsPage() {
                                 </button>
                                 <button
                                   onClick={() => handleDelete(payment.id)}
-                                  className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-red-500 transition-colors"
+                                  disabled={deletingId === payment.id}
+                                  className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-red-500 transition-colors disabled:opacity-40"
                                 >
-                                  <FaTrash />
+                                  {deletingId === payment.id ? (
+                                    <span className="block w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                                  ) : (
+                                    <FaTrash />
+                                  )}
                                 </button>
                               </>
                             )}

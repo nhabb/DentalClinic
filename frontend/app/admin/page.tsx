@@ -160,7 +160,7 @@ export default function AdminDashboard() {
         const completedToday = todayAppts.filter((a: any) => a.status === "completed").length;
         setTodayAppointments(
           todayAppts.map((a: any) => {
-            const patientUser = a.patient_profile?.users;
+            const patientUser = (a.patient_profiles ?? a.patient_profile)?.users;
             const time = a.start_time ? new Date(a.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
             return { id: Number(a.id), time, patient: patientUser ? `${patientUser.first_name} ${patientUser.last_name}` : `Patient #${a.patient_id}`, type: a.reason || "Checkup", status: a.status, doctorId: Number(a.doctor_id || 0), patientId: Number(a.patient_id || 0), date: a.appointment_date?.split("T")[0] || today };
           })

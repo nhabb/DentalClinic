@@ -1,12 +1,9 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { safeStorage } from "@/lib/browser-compat";
-
-// Runs before paint on the client; falls back to useEffect during SSR.
-const useIsomorphicLayoutEffect =
-  typeof window !== "undefined" ? useLayoutEffect : useEffect;
+import { supabase } from "@/lib/supabase/client";
 
 export default function PatientDashboardLayout({
   children,
@@ -16,14 +13,29 @@ export default function PatientDashboardLayout({
   const router = useRouter();
   const [checked, setChecked] = useState(false);
 
-  useIsomorphicLayoutEffect(() => {
-    const token = safeStorage.getItem("authToken");
-    const role = safeStorage.getItem("userRole");
-    if (!token || role !== "patient") {
+  useEffect(() => {
+    const check = async () => {
+      const token = safeStorage.getItem("authToken");
+      const role = safeStorage.getItem("userRole");
+
+      // Accept patients who logged in via the backend auth endpoint
+      if (token && role === "patient") {
+        setChecked(true);
+        return;
+      }
+
+      // Also accept users who authenticated via Supabase OAuth
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          setChecked(true);
+          return;
+        }
+      } catch {}
+
       router.push("/login");
-    } else {
-      setChecked(true);
-    }
+    };
+    check();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
