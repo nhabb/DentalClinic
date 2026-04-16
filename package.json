@@ -3,7 +3,9 @@
   "private": true,
   "scripts": {
     "dev": "concurrently -n frontend,backend -c cyan,magenta \"cd frontend && npm run dev\" \"cd backend && npm run start:dev\"",
-    "install:all": "cd frontend && npm install && cd ../backend && npm install"
+    "install:all": "cd frontend && npm install && cd ../backend && npm install",
+    "docker:up": "docker compose up --build",
+    "docker:down": "docker compose down"
   },
   "devDependencies": {
     "concurrently": "^9.2.1"
