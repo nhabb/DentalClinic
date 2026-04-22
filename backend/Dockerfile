@@ -3,14 +3,26 @@ FROM node:22-alpine AS deps
 RUN apk add --no-cache python3 make g++ openssl libc6-compat
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci --only=production
+RUN npm config set fetch-retry-maxtimeout 600000 \
+ && npm config set fetch-timeout 600000 \
+ && npm config set fetch-retry-mintimeout 20000 \
+ && npm config set fetch-retries 5 \
+ && npm config set maxsockets 32 \
+ && npm cache clean --force \
+ && npm ci --only=production
 
 # ── Stage 2: build ─────────────────────────────────────────────────────────────
 FROM node:22-alpine AS builder
 RUN apk add --no-cache python3 make g++ openssl libc6-compat
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm config set fetch-retry-maxtimeout 600000 \
+ && npm config set fetch-timeout 600000 \
+ && npm config set fetch-retry-mintimeout 20000 \
+ && npm config set fetch-retries 5 \
+ && npm config set maxsockets 32 \
+ && npm cache clean --force \
+ && npm ci
 COPY . .
 # prisma.config.ts uses Prisma's own env() resolver which reads from a .env file,
 # not just process.env. Write a dummy .env so prisma generate can run without a

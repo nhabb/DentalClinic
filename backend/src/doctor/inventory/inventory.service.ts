@@ -76,7 +76,7 @@ export class InventoryService {
     const skip = (page - 1) * limit;
 
     const where: any = {};
-    if (category) where.category = category;
+    if (category) where.category = { equals: category, mode: 'insensitive' };
     if (search) {
       where.OR = [
         { name: { contains: search, mode: 'insensitive' } },

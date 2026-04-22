@@ -1,6 +1,36 @@
 import OpenAI from 'openai';
 
 export const AGENT_TOOLS: OpenAI.ChatCompletionTool[] = [
+  // ── Raw Database Query (primary fallback) ─────────────────────
+  {
+    type: 'function',
+    function: {
+      name: 'query_database',
+      description:
+        'PRIMARY data access tool. Run any PostgreSQL SELECT against the clinic database. ' +
+        'Use this FIRST whenever: (1) a dedicated tool returns empty or incomplete results, ' +
+        '(2) the user asks about data not covered by other tools, ' +
+        '(3) you need to discover what values exist in a column (e.g. SELECT DISTINCT category FROM inventory_items), ' +
+        '(4) any aggregation, join, count, or custom filter is needed. ' +
+        'Never tell the user data does not exist without running this tool first. ' +
+        'Only SELECT statements are allowed — no mutations. ' +
+        'Table names: appointments, appointment_slots, patient_profiles, patient_records, ' +
+        'patient_documents, users, payments, treatment_invoices, invoice_line_items, ' +
+        'invoice_payments, expenses, inventory_items, inventory_movements, notifications, ' +
+        'clinic_profile, audit_logs.',
+      parameters: {
+        type: 'object',
+        properties: {
+          sql: {
+            type: 'string',
+            description: 'A valid PostgreSQL SELECT statement without a trailing semicolon.',
+          },
+        },
+        required: ['sql'],
+      },
+    },
+  },
+
   // ── Appointments ──────────────────────────────────────────────
   {
     type: 'function',

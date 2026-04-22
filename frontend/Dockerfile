@@ -3,7 +3,13 @@ FROM node:22-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 COPY package.json ./
-RUN npm install
+RUN npm config set fetch-retry-maxtimeout 600000 \
+ && npm config set fetch-timeout 600000 \
+ && npm config set fetch-retry-mintimeout 20000 \
+ && npm config set fetch-retries 5 \
+ && npm config set maxsockets 32 \
+ && npm cache clean --force \
+ && npm install
 
 # ── Stage 2: build ─────────────────────────────────────────────────────────────
 FROM node:22-alpine AS builder
