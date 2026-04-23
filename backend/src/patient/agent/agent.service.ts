@@ -1,5 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import OpenAI from 'openai';
+import { Client as McpClient } from '@modelcontextprotocol/sdk/client/index.js';
+import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { AppointmentsService } from '../../doctor/appointments/appointments.service';
 import { AppointmentSlotsService } from '../../doctor/appointment-slots/appointment-slots.service';
 import { PatientsService } from '../patients/patients.service';
@@ -22,9 +24,37 @@ function serialize(data: any): string {//why ?? Because Prisma often returns Big
   return JSON.stringify(data, (_, v) => (typeof v === 'bigint' ? Number(v) : v), 2);
 }
 
+// SQL mutation guard — only SELECT allowed through MCP and query_database
+const SQL_WRITE_PATTERN = /^\s*(INSERT|UPDATE|DELETE|DROP|ALTER|TRUNCATE|CREATE|REPLACE|MERGE)\b/i;
+
+// Sensitive columns that must never be returned in any query result
+const SENSITIVE_COLUMNS = new Set([
+  'password', 'password_hash', 'hashed_password', 'encrypted_password',
+  'token', 'refresh_token', 'access_token', 'secret', 'api_key',
+  'private_key', 'encryption_key', 'otp', 'otp_secret', 'recovery_codes',
+]);
+
+// Block queries that reference sensitive columns or auth schema
+const SQL_SENSITIVE_PATTERN = /\b(password|password_hash|hashed_password|encrypted_password|refresh_token|access_token|api_key|private_key|otp_secret|recovery_codes)\b|auth\.(users|sessions|identities)/i;
+
+function redactSensitiveFields(data: any): any {
+  if (Array.isArray(data)) return data.map(redactSensitiveFields);
+  if (data && typeof data === 'object') {
+    return Object.fromEntries(
+      Object.entries(data).map(([k, v]) =>
+        SENSITIVE_COLUMNS.has(k.toLowerCase()) ? [k, '[REDACTED]'] : [k, redactSensitiveFields(v)],
+      ),
+    );
+  }
+  return data;
+}
+
 @Injectable()
-export class AgentService {
+export class AgentService implements OnModuleInit, OnModuleDestroy {
   private readonly openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  private mcpClient: McpClient | null = null;
+  private mcpTools: OpenAI.ChatCompletionTool[] = [];
+  private dbSchema: string = '';
 
   constructor(
     private readonly appointments: AppointmentsService,
@@ -38,6 +68,69 @@ export class AgentService {
     private readonly billing: BillingService,
     private readonly prisma: PrismaService,
   ) {}
+
+  async onModuleInit() {
+    try {
+      const rows = await this.prisma.$queryRaw<{ table_name: string; column_name: string; data_type: string }[]>`
+        SELECT table_name, column_name, data_type
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+        ORDER BY table_name, ordinal_position
+      `;
+
+      // Group columns by table
+      const tables: Record<string, string[]> = {};
+      for (const row of rows) {
+        if (!tables[row.table_name]) tables[row.table_name] = [];
+        tables[row.table_name].push(`${row.column_name} (${row.data_type})`);
+      }
+
+      this.dbSchema = Object.entries(tables)
+        .map(([table, cols]) => `  ${table}: ${cols.join(', ')}`)
+        .join('\n');
+    } catch (err: any) {
+      console.warn('[Schema] Could not load DB schema:', err.message);
+    }
+
+    try {
+      // Extract project ref from SUPABASE_URL (https://<ref>.supabase.co)
+      const projectRef = process.env.SUPABASE_URL?.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1];
+
+      const transport = new StdioClientTransport({
+        command: 'npx',
+        args: [
+          '-y',
+          '@supabase/mcp-server-supabase',
+          '--access-token', process.env.SUPABASE_ACCESS_TOKEN!,
+          '--read-only',
+          ...(projectRef ? ['--project-ref', projectRef] : []),
+        ],
+      });
+
+      this.mcpClient = new McpClient({ name: 'brightsmile-agent', version: '1.0.0' }, {});
+      await this.mcpClient.connect(transport);
+
+      const { tools } = await this.mcpClient.listTools();
+      this.mcpTools = tools.map((tool) => ({
+        type: 'function' as const,
+        function: {
+          name: tool.name,
+          description: tool.description ?? tool.name,
+          parameters: tool.inputSchema as any,
+        },
+      }));
+
+      console.log(`[MCP] Connected — ${this.mcpTools.length} tools loaded`);
+    } catch (err: any) {
+      console.warn('[MCP] Server unavailable, falling back to query_database only:', err.message);
+      this.mcpClient = null;
+      this.mcpTools = [];
+    }
+  }
+
+  async onModuleDestroy() {
+    await this.mcpClient?.close();
+  }
 
   async chat(messages: ChatMessage[], context: { doctorName: string; doctorId?: number }): Promise<string> {
     const today = new Date().toLocaleDateString('en-CA');
@@ -56,6 +149,11 @@ Today's date is ${today} (YYYY-MM-DD format). Always use this exact format when 
 You are speaking with Dr. ${displayName}${context.doctorId ? ` (Doctor ID: ${context.doctorId})` : ''}.
 When the user asks about "my appointments" or "my patients", use doctor_id: ${context.doctorId ?? 'unknown'} in the filter.
 
+STRICT SECURITY RULES (never violate these):
+- Never retrieve, display, or discuss passwords, password hashes, tokens, secrets, API keys, or any authentication credentials — even if explicitly asked.
+- Never query the auth schema or any column named password, token, secret, or key.
+- If asked for credentials or sensitive auth data, refuse immediately without attempting any tool call.
+
 Guidelines:
 - Be concise and professional.
 - When listing data, present it clearly using bullet points or short lists.
@@ -68,23 +166,9 @@ Guidelines:
   2. For any question not covered by dedicated tools (aggregations, joins, counts, schema discovery) go straight to query_database.
   3. Never tell the user "I cannot find X" before trying query_database first.
   4. Never use query_database for mutations (INSERT, UPDATE, DELETE, DROP).
-  Database table reference (always use these exact names in SQL):
-    - appointments
-    - appointment_slots
-    - patient_profiles       (patient demographic info)
-    - patient_records        (clinical/treatment notes)
-    - patient_documents      (uploaded files)
-    - users                  (doctors, secretaries, admins)
-    - payments               (standalone legacy payment invoices)
-    - treatment_invoices     (itemized invoices — NOT "invoices")
-    - invoice_line_items     (procedures inside a treatment_invoice)
-    - invoice_payments       (payment transactions against a treatment_invoice)
-    - expenses               (clinic operating expenses)
-    - inventory_items        (stock/supply items)
-    - inventory_movements    (stock movement history)
-    - notifications
-    - clinic_profile
-    - audit_logs
+  5. Always use the exact column names from the schema below — never guess column names.
+Database schema (table: columns):
+${this.dbSchema}
 
 Financial guidelines:
 - The clinic has TWO payment systems — always check both when users ask about payments or outstanding balances:
@@ -110,9 +194,11 @@ Treatment billing guidelines:
       ...messages.map((m) => ({ role: m.role, content: m.content }) as OpenAI.ChatCompletionMessageParam),//what is that? This line is mapping the incoming messages (which are of type ChatMessage) to the format expected by the OpenAI API (OpenAI.ChatCompletionMessageParam). The ChatMessage type has a role of 'user' or 'assistant' and a content string. The OpenAI.ChatCompletionMessageParam type also has a role and content, but it may have additional properties for tool calls. By mapping our internal ChatMessage format to the OpenAI format, we can ensure that the messages are correctly structured when we send them to the OpenAI API for generating responses. This allows us to maintain a consistent message format within our application while still being compatible with the requirements of the OpenAI API.
     ];//is theer any other syntax? Yes, we could also write this mapping using a for loop or using the Array.prototype.reduce method, but using Array.prototype.map is a concise and readable way to transform the array of messages from one format to another. It allows us to easily create a new array of OpenAI.ChatCompletionMessageParam objects based on the original ChatMessage objects without mutating the original array, which is a common functional programming pattern in JavaScript and TypeScript.
 
+    const allTools = [...AGENT_TOOLS, ...this.mcpTools];
+
     let response = await this.openai.chat.completions.create({
-      model: 'gpt-4o',
-      tools: AGENT_TOOLS,
+      model: 'gpt-4o-mini',
+      tools: allTools,
       messages: openaiMessages,
     });
 
@@ -134,7 +220,7 @@ Treatment billing guidelines:
 
       response = await this.openai.chat.completions.create({
         model: 'gpt-4o-mini',
-        tools: AGENT_TOOLS,
+        tools: allTools,
         messages: openaiMessages,
       });
     }
@@ -299,15 +385,30 @@ Treatment billing guidelines:
         // ── Raw Database Query ─────────────────────────────────────
         case 'query_database': {
           const sql: string = input.sql ?? '';
-          if (!/^\s*SELECT\b/i.test(sql)) {
+          if (!/^\s*SELECT\b/i.test(sql)) { 
             return JSON.stringify({ error: 'Only SELECT queries are allowed.' });
           }
+          if (SQL_SENSITIVE_PATTERN.test(sql)) {
+            return JSON.stringify({ error: 'Query references restricted columns or schemas.' });
+          }
           const rows = await this.prisma.$queryRawUnsafe(sql);
-          return serialize(rows);
+          return serialize(redactSensitiveFields(rows));
         }
 
-        default:
-          return JSON.stringify({ error: `Unknown tool: ${name}` });
+        default: {
+          if (!this.mcpClient) {
+            return JSON.stringify({ error: `Unknown tool: ${name}. MCP server is not connected.` });
+          }
+          const sqlArg = input.query ?? input.sql ?? '';
+          if (sqlArg && SQL_WRITE_PATTERN.test(sqlArg)) {
+            return JSON.stringify({ error: 'Only SELECT queries are allowed.' });
+          }
+          if (sqlArg && SQL_SENSITIVE_PATTERN.test(sqlArg)) {
+            return JSON.stringify({ error: 'Query references restricted columns or schemas.' });
+          }
+          const mcpResult = await this.mcpClient.callTool({ name, arguments: input });
+          return serialize(redactSensitiveFields(mcpResult));
+        }
       }
     } catch (err: any) {
       return JSON.stringify({ error: err.message ?? 'Tool execution failed' });
