@@ -6,16 +6,34 @@
  */
 
 // ---------------------------------------------------------------------------
-// Safe localStorage
+// Safe storage
 // ---------------------------------------------------------------------------
 // Safari in Private Browsing mode (and some locked-down iOS WebViews) throws
 // a SecurityError when any localStorage method is called, even just getItem.
 // All three wrappers below silence that error so the app keeps working.
+//
+// Auth-related keys are intentionally routed to sessionStorage so that each
+// browser tab maintains its own independent session (e.g. a doctor tab and a
+// patient tab open simultaneously will not clobber each other's credentials).
+// Non-auth keys (e.g. "language") continue to use localStorage so they persist
+// across tabs and sessions as before.
+
+const AUTH_KEYS = new Set([
+  "authToken",
+  "userRole",
+  "adminUser",
+  "adminAuth",
+  "patientAuth",
+]);
+
+function pickStore(key: string): Storage {
+  return AUTH_KEYS.has(key) ? sessionStorage : localStorage;
+}
 
 export const safeStorage = {
   getItem(key: string): string | null {
     try {
-      return localStorage.getItem(key);
+      return pickStore(key).getItem(key);
     } catch {
       return null;
     }
@@ -23,7 +41,7 @@ export const safeStorage = {
 
   setItem(key: string, value: string): void {
     try {
-      localStorage.setItem(key, value);
+      pickStore(key).setItem(key, value);
     } catch {
       // Private-browsing / quota-exceeded – silently ignore
     }
@@ -31,7 +49,7 @@ export const safeStorage = {
 
   removeItem(key: string): void {
     try {
-      localStorage.removeItem(key);
+      pickStore(key).removeItem(key);
     } catch {
       // Silently ignore
     }

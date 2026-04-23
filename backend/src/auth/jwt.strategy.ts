@@ -14,18 +14,21 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: { sub: string; email: string; role: string }) {
-    const user = await this.prisma.users.findUnique({
-      where: { id: parseInt(payload.sub) },
-      select: {
-        id: true,
-        email: true,
-        first_name: true,
-        last_name: true,
-        phone: true,
-        role: true,
-        is_active: true,
-      },
-    });
+    const select = {
+      id: true,
+      email: true,
+      first_name: true,
+      last_name: true,
+      phone: true,
+      role: true,
+      is_active: true,
+    };
+
+    // Backend-issued JWTs have an integer sub; Supabase OAuth JWTs have a UUID sub.
+    const numericId = parseInt(payload.sub, 10);
+    const user = !isNaN(numericId)
+      ? await this.prisma.users.findUnique({ where: { id: numericId }, select })
+      : await this.prisma.users.findUnique({ where: { email: payload.email }, select });
 
     if (!user || !user.is_active) {
       throw new UnauthorizedException();

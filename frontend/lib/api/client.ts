@@ -4,7 +4,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 function getAuthHeaders(options: RequestInit = {}): HeadersInit {
   const token =
-    typeof window !== "undefined" ? localStorage.getItem("authToken") : null;
+    typeof window !== "undefined" ? sessionStorage.getItem("authToken") : null;
   const isFormData = options.body instanceof FormData;
   return {
     ...(isFormData ? {} : { "Content-Type": "application/json" }),

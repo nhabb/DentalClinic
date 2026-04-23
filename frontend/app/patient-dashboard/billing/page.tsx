@@ -80,7 +80,7 @@ export default function PatientBillingPage() {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user?.email) email = session.user.email;
       } catch {}
-      const stored = localStorage.getItem("adminUser");
+      const stored = sessionStorage.getItem("adminUser");
       if (stored) {
         try {
           const u = JSON.parse(stored);

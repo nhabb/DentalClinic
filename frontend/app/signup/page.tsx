@@ -107,9 +107,9 @@ export default function SignupPage() {
 
       const { user, token } = data;
 
-      localStorage.setItem("authToken", token);
-      localStorage.setItem("userRole", user.role);
-      localStorage.setItem(
+      sessionStorage.setItem("authToken", token);
+      sessionStorage.setItem("userRole", user.role);
+      sessionStorage.setItem(
         "adminUser",
         JSON.stringify({
           email: user.email,
