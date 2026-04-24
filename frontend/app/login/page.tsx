@@ -80,10 +80,10 @@ export default function LoginPage() {
 
       const { user, token } = data;
 
-      // Persist auth
-      localStorage.setItem("authToken", token);
-      localStorage.setItem("userRole", user.role);
-      localStorage.setItem(
+      // Persist auth (sessionStorage keeps each tab's session independent)
+      sessionStorage.setItem("authToken", token);
+      sessionStorage.setItem("userRole", user.role);
+      sessionStorage.setItem(
         "adminUser",
         JSON.stringify({
           email: user.email,
@@ -95,7 +95,7 @@ export default function LoginPage() {
       // Mark admin-role users as authenticated for the admin layout guard
       const adminRoles = ["doctor", "admin", "secretary", "superadmin"];
       if (adminRoles.includes(user.role)) {
-        localStorage.setItem("adminAuth", "true");
+        sessionStorage.setItem("adminAuth", "true");
       }
 
       toast.success("Logged in successfully.");
