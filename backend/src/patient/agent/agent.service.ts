@@ -98,10 +98,8 @@ export class AgentService implements OnModuleInit, OnModuleDestroy {
       console.log('[MCP] Using project ref:', projectRef ?? '(none — no --project-ref flag will be passed)');
 
       const transport = new StdioClientTransport({ //what is stdio transport? The StdioClientTransport is a communication mechanism that allows the AgentService to interact with an external MCP (Model Context Protocol) server process using standard input and output streams. When the AgentService starts, it spawns a child process that runs the MCP server (in this case, the @supabase/mcp-server-supabase) and communicates with it through these streams. The transport handles sending requests to the MCP server and receiving responses, allowing the AgentService to call tools defined in the MCP server as if they were local functions. This setup enables the AgentService to leverage additional tools and capabilities provided by the MCP server while keeping the communication efficient and straightforward through standard I/O.
-        command: 'npx',
+        command: 'mcp-server-supabase',
         args: [
-          '-y',
-          '@supabase/mcp-server-supabase',
           '--access-token', process.env.SUPABASE_ACCESS_TOKEN!,
           '--read-only',
           ...(projectRef ? ['--project-ref', projectRef] : []),

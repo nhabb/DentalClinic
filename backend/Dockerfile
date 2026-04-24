@@ -41,6 +41,9 @@ ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nodejs \
  && adduser  --system --uid 1001 nestjs
 
+# Install Supabase MCP server globally so the mcp-server-supabase binary is available at runtime
+RUN npm install -g @supabase/mcp-server-supabase
+
 # Production node_modules (native binaries compiled for Alpine)
 COPY --from=deps    /app/node_modules          ./node_modules
 # Prisma generated client (prisma generate writes into @prisma/client; Prisma 7 uses Wasm, no .prisma dir)
