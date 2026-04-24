@@ -83,7 +83,7 @@ export class AgentService implements OnModuleInit, OnModuleDestroy {
       for (const row of rows) {
         if (!tables[row.table_name]) tables[row.table_name] = [];
         tables[row.table_name].push(`${row.column_name} (${row.data_type})`);
-      }
+      } //this is for what? This code is querying the database schema to get a list of all tables and their columns along with the data types. It then groups the columns by their respective tables and formats this information into a string that can be included in the system prompt for the AI assistant. By providing the AI with the database schema, it can make informed decisions about how to construct SQL queries when using the query_database tool, ensuring that it uses the correct table and column names as defined in the database. This helps to improve the accuracy of the AI's responses and reduces the likelihood of errors when executing database queries.
 
       this.dbSchema = Object.entries(tables)
         .map(([table, cols]) => `  ${table}: ${cols.join(', ')}`)
@@ -95,8 +95,9 @@ export class AgentService implements OnModuleInit, OnModuleDestroy {
     try {
       // Extract project ref from SUPABASE_URL (https://<ref>.supabase.co)
       const projectRef = process.env.SUPABASE_URL?.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1];
+      console.log('[MCP] Using project ref:', projectRef ?? '(none — no --project-ref flag will be passed)');
 
-      const transport = new StdioClientTransport({
+      const transport = new StdioClientTransport({ //what is stdio transport? The StdioClientTransport is a communication mechanism that allows the AgentService to interact with an external MCP (Model Context Protocol) server process using standard input and output streams. When the AgentService starts, it spawns a child process that runs the MCP server (in this case, the @supabase/mcp-server-supabase) and communicates with it through these streams. The transport handles sending requests to the MCP server and receiving responses, allowing the AgentService to call tools defined in the MCP server as if they were local functions. This setup enables the AgentService to leverage additional tools and capabilities provided by the MCP server while keeping the communication efficient and straightforward through standard I/O.
         command: 'npx',
         args: [
           '-y',
@@ -118,7 +119,7 @@ export class AgentService implements OnModuleInit, OnModuleDestroy {
           description: tool.description ?? tool.name,
           parameters: tool.inputSchema as any,
         },
-      }));
+      })); //collecting the tools from the MCP server and converting them into the format expected by the OpenAI API so that they can be included in the list of available tools when making chat completion requests. This allows the AI assistant to call these MCP tools as part of its responses, enabling it to perform a wider range of actions and access more data when assisting users with their queries related to managing the dental clinic.
 
       console.log(`[MCP] Connected — ${this.mcpTools.length} tools loaded`);
     } catch (err: any) {
@@ -207,28 +208,48 @@ Treatment billing guidelines:
       const assistantMessage = response.choices[0].message;
       openaiMessages.push(assistantMessage);//here i am adding the response from the assistant to the conversation history before processing the tool calls, so that the context of the conversation is maintained when we execute the tools and send the updated messages back to OpenAI for further processing. This way, the model can see its previous response and the results of the tool calls in the context of the conversation, allowing it to generate a more informed and relevant response in subsequent iterations.
 
-      const toolResults: OpenAI.ChatCompletionToolMessageParam[] = await Promise.all(
-        (assistantMessage.tool_calls ?? []).map(async (call) => {
-          const fn = (call as any).function;
-          const input = JSON.parse(fn.arguments);
-          const result = await this.executeTool(fn.name, input);
-          return { role: 'tool' as const, tool_call_id: call.id, content: result };
-        }),
-      );
+      const toolResults = await Promise.all(
+  (assistantMessage.tool_calls ?? []).map(async (call) => {
+    const fn = (call as any).function;
+    const input = JSON.parse(fn.arguments);
+
+    // 👇 add this
+    console.log(`[TOOL PICKED] ${fn.name}`);
+    console.log(`[TOOL INPUT] ${JSON.stringify(input, null, 2)}`);
+
+    const result = await this.executeTool(fn.name, input);
+
+    console.log(`[TOOL RESULT] ${result}`); // 👈 optional: see the result too
+
+    return { role: 'tool' as const, tool_call_id: call.id, content: result };
+  }),
+);
+      /*
+          (assistantMessage.tool_calls ?? []).map(async (call) => {
+        const fn = (call as any).function;       // { name: 'list_slots', arguments: '{"doctor_id":3,...}' }
+        const input = JSON.parse(fn.arguments);  // { doctor_id: 3, date: '2026-04-24' }
+        const result = await this.executeTool(fn.name, input);
+        return { role: 'tool', tool_call_id: call.id, content: result };
+      })
+      */
 
       openaiMessages = [...openaiMessages, ...toolResults];
 
-      response = await this.openai.chat.completions.create({
+      response = await this.openai.chat.completions.create({ //why above we are creating a new chat completion request to OpenAI with the updated messages that now include the results of the tool calls. This allows the model to see the output from the tools it requested and use that information to generate a more informed response in the next iteration. The loop will continue until the model's response does not include any more tool calls, at which point we can return the final response to the user.
         model: 'gpt-4o-mini',
         tools: allTools,
         messages: openaiMessages,
       });
     }
 
-    return response.choices[0].message.content ?? 'No response generated.';
+    return response.choices[0].message.content ?? 'No response generated.';//after processing all tool calls and getting a final response from the model, we return the content of the assistant's message as the final reply to the user. If for some reason there is no content in the message, we return a default string indicating that no response was generated.
   }
 
   private async executeTool(name: string, input: Record<string, any>): Promise<string> {
+    const isMcp = this.mcpTools.some((t) => (t as any).function?.name === name);
+    const source = isMcp ? '[MCP]' : name === 'query_database' ? '[SQL]' : '[API]';
+    console.log(`${source} tool called: ${name}`, Object.keys(input).length ? input : '');
+
     try {
       switch (name) {
         // ── Appointments ───────────────────────────────────────────
@@ -243,7 +264,7 @@ Treatment billing guidelines:
           }));
 
         case 'get_appointment':
-          return serialize(await this.appointments.findOne(BigInt(input.id)));
+          return serialize(await this.appointments.findOne(BigInt(input.id))); // here we pass the id from the input that have the exracted id from the ai response and we convert it to bigint because our database uses bigint for ids and then we serialize the result to a string that can be sent back to the ai as a tool response.
 
         case 'confirm_appointment':
           return serialize({ success: true, appointment: await this.appointments.confirm(BigInt(input.id)) });
@@ -407,6 +428,7 @@ Treatment billing guidelines:
             return JSON.stringify({ error: 'Query references restricted columns or schemas.' });
           }
           const mcpResult = await this.mcpClient.callTool({ name, arguments: input });
+          console.log(`[MCP] raw result for ${name}:`, JSON.stringify(mcpResult).slice(0, 500));
           return serialize(redactSensitiveFields(mcpResult));
         }
       }
