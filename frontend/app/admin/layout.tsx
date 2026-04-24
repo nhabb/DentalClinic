@@ -57,7 +57,15 @@ export default function AdminLayout({
     };
 
     const loadUser = async () => {
-      // 1. Try Supabase session
+      // 1. Prefer the userId written at login (covers both email/password and OAuth flows)
+      const storedUserId = safeStorage.getItem("userId");
+      if (storedUserId) {
+        setDoctorId(Number(storedUserId));
+        // Name will be resolved by the agent service from the DB using this ID
+        return;
+      }
+
+      // 2. Fall back: resolve by Supabase session email (OAuth users on first load)
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user?.email) {
@@ -66,19 +74,12 @@ export default function AdminLayout({
         }
       } catch {}
 
-      // 2. Fall back to email stored at admin login
+      // 3. Last resort: use the name stored in adminUser (no ID lookup possible)
       try {
         const stored = safeStorage.getItem("adminUser");
         if (stored) {
           const u = JSON.parse(stored);
-          // Use stored name directly if available, otherwise resolve by email
-          if (u?.first_name) {
-            setDoctorName(`${u.first_name} ${u.last_name}`.trim());
-            const storedId = safeStorage.getItem("doctorDbId");
-            if (storedId) setDoctorId(Number(storedId));
-          } else if (u?.email) {
-            await resolveByEmail(u.email);
-          }
+          if (u?.first_name) setDoctorName(`${u.first_name} ${u.last_name}`.trim());
         }
       } catch {}
     };

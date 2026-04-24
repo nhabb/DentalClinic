@@ -356,7 +356,31 @@ export default function InventoryManagement() {
           subtitle={t("inventory.manageSupplies")}
           data={inventoryItems}
           filename="inventory"
-          onImport={(rows) => setInventoryItems((prev) => [...prev, ...(rows as InventoryItem[])])}
+          onImport={async (rows) => {
+            let ok = 0; let fail = 0;
+            for (const row of rows as Record<string, unknown>[]) {
+              try {
+                const payload = {
+                  name: String(row.name ?? ""),
+                  category: String(row.category ?? ""),
+                  unit: String(row.unit ?? "piece"),
+                  quantity: Number(row.currentStock ?? row.quantity ?? 0),
+                  minimum_quantity: Number(row.minimumStock ?? row.minimum_quantity ?? 0),
+                  description: row.description ? String(row.description) : undefined,
+                };
+                if (!payload.name) { fail++; continue; }
+                const res = await apiFetch("/api/inventory", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+                if (res.ok) { ok++; } else {
+                  const err = await res.text().catch(() => res.status.toString());
+                  console.error("Inventory import row failed:", res.status, err, payload);
+                  fail++;
+                }
+              } catch (e) { console.error("Inventory import exception:", e); fail++; }
+            }
+            await fetchInventory();
+            if (ok > 0) toast.success(`${ok} item${ok > 1 ? "s" : ""} imported.`);
+            if (fail > 0) toast.error(`${fail} row${fail > 1 ? "s" : ""} failed — check browser console.`);
+          }}
           onAdd={() => setShowAddModal(true)}
           addLabel={t("inventory.addItem")}
         />

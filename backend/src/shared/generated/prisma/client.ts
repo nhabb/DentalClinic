@@ -95,11 +95,6 @@ export type patient_records = Prisma.patient_recordsModel
  */
 export type users = Prisma.usersModel
 /**
- * Model payments
- * 
- */
-export type payments = Prisma.paymentsModel
-/**
  * Model expenses
  * 
  */

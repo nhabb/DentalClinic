@@ -23,7 +23,7 @@ interface ImportExportMenuProps {
   /** Base filename (without extension) */
   filename: string;
   /** Called with parsed rows after a successful import */
-  onImport: (rows: Row[]) => void;
+  onImport: (rows: Row[]) => void | Promise<void>;
 }
 
 export default function ImportExportMenu({ data, filename, onImport }: ImportExportMenuProps) {
@@ -52,12 +52,11 @@ export default function ImportExportMenu({ data, filename, onImport }: ImportExp
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => {
+    reader.onload = async (ev) => {
       try {
         const parsed = JSON.parse(ev.target?.result as string);
         const rows: Row[] = Array.isArray(parsed) ? parsed : [parsed];
-        onImport(rows);
-        toast.success(`Imported ${rows.length} record(s) from JSON.`);
+        await onImport(rows);
       } catch {
         toast.error("Invalid JSON file.");
       }
@@ -70,13 +69,12 @@ export default function ImportExportMenu({ data, filename, onImport }: ImportExp
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => {
+    reader.onload = async (ev) => {
       try {
         const wb = XLSX.read(ev.target?.result, { type: "binary" });
         const ws = wb.Sheets[wb.SheetNames[0]];
         const rows: Row[] = XLSX.utils.sheet_to_json(ws);
-        onImport(rows);
-        toast.success(`Imported ${rows.length} record(s) from Excel.`);
+        await onImport(rows);
       } catch {
         toast.error("Invalid Excel file.");
       }

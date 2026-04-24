@@ -8,7 +8,6 @@ import { PatientsService } from '../patients/patients.service';
 import { InventoryService } from '../../doctor/inventory/inventory.service';
 import { UsersService } from '../../shared/users/users.service';
 import { NotificationsService } from '../../shared/notifications/notifications.service';
-import { PaymentsService } from '../../doctor/payments/payments.service';
 import { ExpensesService } from '../../doctor/expenses/expenses.service';
 import { BillingService } from '../../doctor/billing/billing.service';
 import { PrismaService } from '../../shared/prisma/prisma.service';
@@ -63,7 +62,6 @@ export class AgentService implements OnModuleInit, OnModuleDestroy {
     private readonly inventory: InventoryService,
     private readonly users: UsersService,
     private readonly notifications: NotificationsService,
-    private readonly payments: PaymentsService,
     private readonly expenses: ExpensesService,
     private readonly billing: BillingService,
     private readonly prisma: PrismaService,
@@ -131,22 +129,30 @@ export class AgentService implements OnModuleInit, OnModuleDestroy {
     await this.mcpClient?.close();
   }
 
-  async chat(messages: ChatMessage[], context: { doctorName: string; doctorId?: number }): Promise<string> {
+  async chat(messages: ChatMessage[], context: { userId: number }): Promise<string> {
     const today = new Date().toLocaleDateString('en-CA');
 
-    let displayName = context.doctorName;
-    if (context.doctorId) {
-      try {
-        const user = await this.users.findById(BigInt(context.doctorId));
-        if (user?.first_name) displayName = `${user.first_name} ${user.last_name}`;
-      } catch {}
-    }
+    let resolvedName: string | null = null;
+    let resolvedRole: string | null = null;
+    try {
+      const user = await this.users.findById(BigInt(context.userId));
+      if (user?.first_name) resolvedName = `${user.first_name} ${user.last_name}`.trim();
+      if (user?.role) resolvedRole = user.role;
+    } catch {}
+
+    const identityLine = resolvedName
+      ? `Name: ${resolvedName} | Role: ${resolvedRole} | ID: ${context.userId}`
+      : `Name: unknown | ID: unknown`;
 
     const systemPrompt = `You are the AI assistant for BrightSmile Dental Clinic's admin panel.
 You help doctors and staff manage appointments, patients, inventory, and clinic finances.
 Today's date is ${today} (YYYY-MM-DD format). Always use this exact format when passing dates to tools.
-You are speaking with Dr. ${displayName}${context.doctorId ? ` (Doctor ID: ${context.doctorId})` : ''}.
-When the user asks about "my appointments" or "my patients", use doctor_id: ${context.doctorId ?? 'unknown'} in the filter.
+
+CURRENT USER: ${identityLine}
+When asked "who am I?" or any identity question, answer only from the CURRENT USER line above.
+If the name is "unknown", say exactly: "I couldn't retrieve your name from the database — please check your profile." Do NOT guess, hallucinate, or reference any previous exchange.
+Never call a tool to answer an identity question.
+When the user asks about "my appointments" or "my patients", use doctor_id: ${context.userId} in the filter.
 
 STRICT SECURITY RULES (never violate these):
 - Never retrieve, display, or discuss passwords, password hashes, tokens, secrets, API keys, or any authentication credentials — even if explicitly asked.
@@ -170,23 +176,15 @@ Database schema (table: columns):
 ${this.dbSchema}
 
 Financial guidelines:
-- The clinic has TWO payment systems — always check both when users ask about payments or outstanding balances:
-  1. Treatment invoices (new system): use list_invoices, get_invoice, create_invoice, record_invoice_payment. These are itemized procedure invoices with line items and per-payment history.
-  2. Standalone payments (legacy system): use list_payments, create_payment, record_payment. These are simple payment records without procedure breakdown.
-- When a user asks "show me payments", "what's owed", or anything about money, check BOTH list_invoices AND list_payments.
-- For money overview use get_financial_kpis first.
-- Use get_aging_report to identify overdue payments.
-- Use get_patient_financials to see what a specific patient owes (legacy payments only).
-- Amounts are in the clinic's local currency.
-- When recording a payment on an invoice use record_invoice_payment (NOT record_payment).
-- When recording a payment on a standalone payment record use record_payment.
-
-Treatment billing guidelines:
-- After a procedure, create a treatment invoice with create_invoice specifying each procedure and its cost.
+- All payments go through treatment invoices. Use list_invoices, get_invoice, create_invoice, record_invoice_payment.
+- When a user asks "show me payments", "what's owed", or anything about money, use list_invoices or get_financial_kpis.
+- For a money overview use get_financial_kpis first.
 - Invoice statuses: open (unpaid), partial (partially paid), paid (fully settled).
+- After a procedure, create a treatment invoice with create_invoice specifying each procedure and its cost.
 - To accept a payment on an invoice use record_invoice_payment — the remaining balance updates automatically.
 - Use list_invoices with status: "open" or status: "partial" to find unpaid invoices.
-- Use get_invoice to see full procedure list and payment history for a specific invoice.`;
+- Use get_invoice to see full procedure list and payment history for a specific invoice.
+- Amounts are in the clinic's local currency.`;
 
     let openaiMessages: OpenAI.ChatCompletionMessageParam[] = [
       { role: 'system', content: systemPrompt },
@@ -306,49 +304,12 @@ Treatment billing guidelines:
           await this.notifications.create({ user_id: BigInt(input.user_id), title: input.title, message: input.message, type: 'appointment_booked' });
           return serialize({ success: true });
 
-        // ── Payments ───────────────────────────────────────────────
+        // ── Financial KPIs / summary (billing-based) ───────────────
         case 'get_financial_kpis':
-          return serialize(await this.payments.getKpis());
+          return serialize(await this.billing.getKpis());
 
         case 'get_financial_summary':
-          return serialize(await this.payments.getSummary({ from: input.from, to: input.to }));
-
-        case 'get_payments_analytics':
-          return serialize(await this.payments.getAnalytics(input.months ?? 12));
-
-        case 'get_outstanding_payments':
-          return serialize(await this.payments.getOutstanding());
-
-        case 'get_aging_report':
-          return serialize(await this.payments.getAging());
-
-        case 'get_patient_financials':
-          return serialize(await this.payments.getPatientFinancials(input.patient_id ? BigInt(input.patient_id) : undefined));
-
-        case 'list_payments':
-          return serialize(await this.payments.findAll({
-            patient_id: input.patient_id,
-            status: input.status,
-            from: input.from,
-            to: input.to,
-            page: input.page ?? 1,
-            limit: input.limit ?? 20,
-          }));
-
-        case 'create_payment':
-          return serialize(await this.payments.create({
-            patient_id: input.patient_id,
-            appointment_id: input.appointment_id,
-            amount: input.amount,
-            payment_method: input.payment_method ?? 'cash',
-            description: input.description,
-          }));
-
-        case 'record_payment':
-          return serialize(await this.payments.updateStatus(BigInt(input.id), {
-            amount_paid: input.amount_paid,
-            paid_at: input.paid_at,
-          }));
+          return serialize(await this.billing.getSummary({ from: input.from, to: input.to }));
 
         // ── Treatment Billing ──────────────────────────────────────
         case 'list_invoices':

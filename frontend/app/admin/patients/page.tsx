@@ -150,58 +150,65 @@ export default function PatientsPage() {
   }, [router]);
 
   // Fetch patients
-  useEffect(() => {
-    const fetchPatients = async () => {
-      try {
-        const [patientsRes, usersRes, apptRes] = await Promise.all([
-          apiFetch(`/api/patients`),
-          apiFetch(`/api/users`),
-          apiFetch(`/api/appointments?limit=2000`),
-        ]);
-        const patientsData = await patientsRes.json();
-        const users: any[] = usersRes.ok ? await usersRes.json() : [];
-        const apptData = apptRes.ok ? await apptRes.json() : { data: [] };
+  const fetchPatients = async () => {
+    try {
+      const [patientsRes, usersRes, apptRes] = await Promise.all([
+        apiFetch(`/api/patients`),
+        apiFetch(`/api/users`),
+        apiFetch(`/api/appointments?limit=2000`),
+      ]);
+      const patientsData = await patientsRes.json();
+      const users: any[] = usersRes.ok ? await usersRes.json() : [];
+      const apptData = apptRes.ok ? await apptRes.json() : { data: [] };
 
-        // Count completed appointments per patient profile id
-        const visitsByPatient: Record<number, number> = {};
-        for (const a of (apptData.data || [])) {
-          if (a.status === "completed") {
-            const pid = Number(a.patient_id);
-            visitsByPatient[pid] = (visitsByPatient[pid] || 0) + 1;
+      const visitsByPatient: Record<number, number> = {};
+      const lastVisitByPatient: Record<number, string> = {};
+      for (const a of (apptData.data || [])) {
+        if (a.status === "completed") {
+          const pid = Number(a.patient_id);
+          visitsByPatient[pid] = (visitsByPatient[pid] || 0) + 1;
+          const date = a.appointment_date?.split("T")[0] || "";
+          if (date && (!lastVisitByPatient[pid] || date > lastVisitByPatient[pid])) {
+            lastVisitByPatient[pid] = date;
           }
         }
-
-        const mapped = (patientsData.data || []).map((p: any) => {
-          const user = users.find((u) => u.id === p.user_id || u.id === String(p.user_id));
-          return {
-            id: Number(p.id),
-            userId: user ? Number(user.id) : 0,
-            name: user ? `${user.first_name} ${user.last_name}` : `Patient #${p.id}`,
-            email: user?.email || "",
-            phone: user?.phone || "",
-            dateOfBirth: p.date_of_birth || "",
-            address: `${p.city || ""}, ${p.governate || ""}`.trim().replace(/^,\s*|,\s*$/, ""),
-            bloodType: p.blood_type || "",
-            allergies: p.allergies ? p.allergies.split(",").map((a: string) => a.trim()) : [],
-            insurance: p.insurance_provider || "",
-            registeredDate: user?.created_at?.split("T")[0] || "",
-            lastVisit: "",
-            totalVisits: visitsByPatient[Number(p.id)] || 0,
-            status: user?.is_active !== false ? "active" : "inactive",
-            notes: p.medical_notes || "",
-            photoUrl: getStoredPhoto(user?.email || ""),
-          };
-        });
-        setPatients(mapped);
-      } catch (e) {
-        console.error("Failed to fetch patients", e);
-      } finally {
-        setIsLoading(false);
       }
-    };
 
-    fetchPatients();
-  }, []);
+      const mapped = (patientsData.data || []).map((p: any) => {
+        // date_of_birth lives on users, returned as p.users.date_of_birth
+        const userEmbed = p.users;
+        const user = users.find((u) => u.id === p.user_id || u.id === String(p.user_id));
+        const dob = userEmbed?.date_of_birth || user?.date_of_birth || "";
+        const dobStr = dob ? (typeof dob === "string" ? dob.split("T")[0] : new Date(dob).toISOString().split("T")[0]) : "";
+        const isActive = userEmbed ? userEmbed.is_active !== false : (user?.is_active !== false);
+        return {
+          id: Number(p.id),
+          userId: userEmbed ? Number(userEmbed.id) : (user ? Number(user.id) : 0),
+          name: userEmbed ? `${userEmbed.first_name} ${userEmbed.last_name}` : (user ? `${user.first_name} ${user.last_name}` : `Patient #${p.id}`),
+          email: userEmbed?.email || user?.email || "",
+          phone: userEmbed?.phone || user?.phone || "",
+          dateOfBirth: dobStr,
+          address: `${p.city || ""}, ${p.governate || ""}`.trim().replace(/^,\s*|,\s*$/, ""),
+          bloodType: p.blood_type || "",
+          allergies: p.allergies ? p.allergies.split(",").map((a: string) => a.trim()).filter(Boolean) : [],
+          insurance: p.insurance_provider || "",
+          registeredDate: (userEmbed?.created_at || user?.created_at || "").split("T")[0],
+          lastVisit: lastVisitByPatient[Number(p.id)] || "",
+          totalVisits: visitsByPatient[Number(p.id)] || 0,
+          status: isActive ? "active" : "inactive",
+          notes: p.medical_notes || "",
+          photoUrl: getStoredPhoto(userEmbed?.email || user?.email || ""),
+        };
+      });
+      setPatients(mapped);
+    } catch (e) {
+      console.error("Failed to fetch patients", e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchPatients(); }, []);
 
   // Fetch patient history when patient is selected
   const fetchPatientHistory = async (patientId: number) => {
@@ -338,17 +345,15 @@ export default function PatientsPage() {
 
   const handleToggleStatus = async (patient: Patient) => {
     setTogglingStatusId(patient.id);
-    const newStatus = patient.status !== "active";
+    const newIsActive = patient.status !== "active";
     try {
-      // BACKEND NOTE: needs PATCH /api/patients/:id accepting { is_active: boolean }
-      // (or PATCH /api/users/:userId with { is_active: boolean })
-      const res = await apiFetch(`/api/patients/${patient.id}`, {
+      const res = await apiFetch(`/api/patients/${patient.id}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ is_active: newStatus }),
+        body: JSON.stringify({ is_active: newIsActive }),
       });
       if (res.ok) {
-        const newStatusStr = newStatus ? "active" : "inactive";
+        const newStatusStr = newIsActive ? "active" : "inactive";
         setPatients((prev) =>
           prev.map((p) => p.id === patient.id ? { ...p, status: newStatusStr } : p)
         );
@@ -363,6 +368,22 @@ export default function PatientsPage() {
       toast.error("Failed to update patient status.");
     } finally {
       setTogglingStatusId(null);
+    }
+  };
+
+  const handleDeletePatient = async (patient: Patient) => {
+    if (!window.confirm(`Delete ${patient.name}? This will permanently remove their account and all records.`)) return;
+    try {
+      const res = await apiFetch(`/api/patients/${patient.id}`, { method: "DELETE" });
+      if (res.ok) {
+        setPatients((prev) => prev.filter((p) => p.id !== patient.id));
+        setShowPatientModal(false);
+        toast.success("Patient deleted.");
+      } else {
+        toast.error("Failed to delete patient.");
+      }
+    } catch {
+      toast.error("Failed to delete patient.");
     }
   };
 
@@ -401,7 +422,10 @@ export default function PatientsPage() {
         await apiFetch(`/api/users/${selectedPatient.userId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phone: editPatientForm.phone }),
+          body: JSON.stringify({
+            phone: editPatientForm.phone || undefined,
+            date_of_birth: editPatientForm.dateOfBirth || undefined,
+          }),
         });
       }
       const updatedPatient: Patient = {
@@ -435,18 +459,21 @@ export default function PatientsPage() {
     router.push("/login");
   };
 
-  const calculateAge = (dateOfBirth: string) => {
-    const today = new Date();
+  const calculateAge = (dateOfBirth: string): number | null => {
+    if (!dateOfBirth) return null;
     const birthDate = new Date(dateOfBirth);
+    if (isNaN(birthDate.getTime())) return null;
+    const today = new Date();
     let age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (
-      monthDiff < 0 ||
-      (monthDiff === 0 && today.getDate() < birthDate.getDate())
-    ) {
-      age--;
-    }
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) age--;
     return age;
+  };
+
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return "—";
+    const d = new Date(dateStr);
+    return isNaN(d.getTime()) ? "—" : d.toLocaleDateString();
   };
 
   const filteredPatients = patients.filter((patient) => {
@@ -491,7 +518,28 @@ export default function PatientsPage() {
           subtitle={`${currentUser ? `${currentUser.firstName} ${currentUser.lastName}'s` : t("common.manage")} ${t("patients.patientRecords")}`}
           data={patients}
           filename="patients"
-          onImport={(rows) => setPatients((prev) => [...prev, ...(rows as Patient[])])}
+          onImport={async (rows) => {
+            let ok = 0; let fail = 0;
+            for (const row of rows as Record<string, unknown>[]) {
+              try {
+                const fullName = String(row.name ?? "");
+                const parts = fullName.trim().split(/\s+/);
+                const first_name = parts[0] || "Imported";
+                const last_name = parts.slice(1).join(" ") || "Patient";
+                const email = String(row.email ?? "");
+                if (!email) { fail++; continue; }
+                const res = await apiFetch("/api/users/register", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ email, first_name, last_name, phone: String(row.phone ?? ""), role: "patient" }),
+                });
+                if (res.ok) ok++; else fail++;
+              } catch { fail++; }
+            }
+            await fetchPatients();
+            if (ok > 0) toast.success(`${ok} patient${ok > 1 ? "s" : ""} imported.`);
+            if (fail > 0) toast.error(`${fail} row${fail > 1 ? "s" : ""} failed (missing email or duplicate).`);
+          }}
           addLabel={t("patients.addPatient")}
         />
 
@@ -537,7 +585,7 @@ export default function PatientsPage() {
                               {patient.name}
                             </h3>
                             <p className="text-sm text-gray-500">
-                              {calculateAge(patient.dateOfBirth)} {t("patients.yearsOld")}
+                              {calculateAge(patient.dateOfBirth) !== null ? `${calculateAge(patient.dateOfBirth)} ${t("patients.yearsOld")}` : "—"}
                             </p>
                           </div>
                         </div>
@@ -571,7 +619,7 @@ export default function PatientsPage() {
                         <div>
                           <p className="text-gray-500">{t("patients.lastVisit")}</p>
                           <p className="font-semibold text-gray-900">
-                            {new Date(patient.lastVisit).toLocaleDateString()}
+                            {formatDate(patient.lastVisit)}
                           </p>
                         </div>
                         <div className="text-right rtl:text-left">
@@ -612,9 +660,7 @@ export default function PatientsPage() {
                   </h2>
                   <p className="text-gray-500">
                     {t("patients.patientSince")}{" "}
-                    {new Date(
-                      selectedPatient.registeredDate,
-                    ).toLocaleDateString()}
+                    {formatDate(selectedPatient.registeredDate)}
                   </p>
                 </div>
               </div>
@@ -640,6 +686,14 @@ export default function PatientsPage() {
                   onClick={() => { setBookDate(new Date().toISOString().split("T")[0]); setBookTime("09:00"); setBookError(""); setShowBookModal(true); }}
                 >
                   <FaCalendarPlus className="mr-2 rtl:mr-0 rtl:ml-2" /> {t("patients.bookAppointment")}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-red-600 border-red-300 hover:bg-red-50"
+                  onClick={() => handleDeletePatient(selectedPatient)}
+                >
+                  <FaTrash className="mr-2 rtl:mr-0 rtl:ml-2" /> Delete
                 </Button>
                 <button
                   onClick={() => setShowPatientModal(false)}
@@ -709,10 +763,8 @@ export default function PatientsPage() {
                         <div className="flex justify-between">
                           <span className="text-gray-500">{t("patients.dateOfBirth")}</span>
                           <span className="font-medium text-gray-900">
-                            {new Date(
-                              selectedPatient.dateOfBirth,
-                            ).toLocaleDateString()}{" "}
-                            ({calculateAge(selectedPatient.dateOfBirth)} years)
+                            {formatDate(selectedPatient.dateOfBirth)}
+                            {calculateAge(selectedPatient.dateOfBirth) !== null && ` (${calculateAge(selectedPatient.dateOfBirth)} years)`}
                           </span>
                         </div>
                         <div className="flex justify-between">

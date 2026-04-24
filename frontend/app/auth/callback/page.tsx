@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
+import type { OAuthPendingProfile } from "@/app/complete-profile/page";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
@@ -16,7 +17,7 @@ const ROLE_REDIRECTS: Record<string, string> = {
 
 const ADMIN_ROLES = new Set(["doctor", "admin", "secretary", "superadmin"]);
 
-async function provisionAndPersist(supabaseToken: string): Promise<string> {
+async function provisionAndPersist(supabaseToken: string): Promise<{ redirect: string; userId: string; isNew: boolean }> {
   const res = await fetch(`${API_URL}/api/auth/provision`, {
     method: "POST",
     headers: { Authorization: `Bearer ${supabaseToken}` },
@@ -24,26 +25,61 @@ async function provisionAndPersist(supabaseToken: string): Promise<string> {
 
   if (!res.ok) throw new Error("Provision failed");
 
-  const { user, token } = await res.json();
+  const { user, token, is_new_user } = await res.json();
   const role: string = user.role ?? "patient";
 
-  // Store the backend JWT so all API calls use integer-based auth
   sessionStorage.setItem("authToken", token);
   sessionStorage.setItem("userRole", role);
+  sessionStorage.setItem("userId", user.id.toString());
   sessionStorage.setItem(
     "adminUser",
-    JSON.stringify({
-      email: user.email,
-      firstName: user.first_name,
-      lastName: user.last_name,
-      role,
-    })
+    JSON.stringify({ email: user.email, firstName: user.first_name, lastName: user.last_name, role })
   );
   if (ADMIN_ROLES.has(role)) {
     sessionStorage.setItem("adminAuth", "true");
   }
 
-  return ROLE_REDIRECTS[role] ?? "/patient-dashboard";
+  return {
+    redirect: ROLE_REDIRECTS[role] ?? "/patient-dashboard",
+    userId: user.id.toString(),
+    isNew: !!is_new_user,
+  };
+}
+
+async function savePendingProfile(userId: string, token: string, profile: OAuthPendingProfile) {
+  const {
+    city, governate, emergency_contact_name, emergency_contact_phone,
+    blood_type, allergies, current_medications, medical_notes,
+    insurance_provider, insurance_policy,
+    ...userFields
+  } = profile;
+
+  const headers = { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
+
+  await Promise.all([
+    fetch(`${API_URL}/api/users/${userId}`, {
+      method: "PATCH",
+      headers,
+      body: JSON.stringify(userFields),
+    }),
+    fetch(`${API_URL}/api/patients/by-user/${userId}`, {
+      method: "PATCH",
+      headers,
+      body: JSON.stringify({
+        city,
+        governate,
+        emergency_contact_name,
+        emergency_contact_phone,
+        blood_type: blood_type || undefined,
+        allergies,
+        current_medications,
+        medical_notes,
+        insurance_provider,
+        insurance_policy,
+        profile_complete: true,
+      }),
+    }),
+  ]);
 }
 
 export default function AuthCallbackPage() {
@@ -53,12 +89,10 @@ export default function AuthCallbackPage() {
     const handle = async () => {
       let accessToken: string | null = null;
 
-      // Try existing session first
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         accessToken = session.access_token;
       } else {
-        // Exchange PKCE code for session
         const code = new URLSearchParams(window.location.search).get("code");
         if (code) {
           const { data } = await supabase.auth.exchangeCodeForSession(code);
@@ -72,12 +106,29 @@ export default function AuthCallbackPage() {
       }
 
       try {
-        const redirect = await provisionAndPersist(accessToken);
+        const { redirect, userId, isNew } = await provisionAndPersist(accessToken);
+
+        // If this was a new account and the user pre-filled a profile form, save it now
+        if (isNew) {
+          const raw = localStorage.getItem("oauthPendingProfile");
+          if (raw) {
+            try {
+              const profile: OAuthPendingProfile = JSON.parse(raw);
+              const token = sessionStorage.getItem("authToken")!;
+              await savePendingProfile(userId, token, profile);
+            } catch {
+              // Non-fatal — user can update profile later
+            } finally {
+              localStorage.removeItem("oauthPendingProfile");
+            }
+          }
+        }
+
         router.replace(redirect);
       } catch {
-        // Provision failed — backend may be down; fall back gracefully
         sessionStorage.setItem("authToken", accessToken);
         sessionStorage.setItem("userRole", "patient");
+        localStorage.removeItem("oauthPendingProfile");
         router.replace("/patient-dashboard");
       }
     };

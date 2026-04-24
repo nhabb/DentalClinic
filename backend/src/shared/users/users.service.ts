@@ -102,6 +102,29 @@ export class UsersService {
     });
   }
 
+  async findStaff() {
+    return this.prisma.users.findMany({
+      where: { role: { in: ['doctor', 'secretary', 'admin', 'superadmin'] } },
+      select: {
+        id: true,
+        email: true,
+        first_name: true,
+        last_name: true,
+        phone: true,
+        role: true,
+        is_active: true,
+        created_at: true,
+      },
+      orderBy: { created_at: 'desc' },
+    });
+  }
+
+  async remove(id: bigint) {
+    await this.findById(id);
+    await this.prisma.users.delete({ where: { id } });
+    return { message: 'User deleted successfully' };
+  }
+
   async update(id: bigint, dto: UpdateUserDto) {
     await this.findById(id);
 

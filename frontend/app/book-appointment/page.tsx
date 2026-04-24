@@ -109,7 +109,7 @@ export default function BookAppointment() {
 
   // API state
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
-  const [doctors, setDoctors] = useState<Doctor[]>(fallbackDoctors);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [availableDates, setAvailableDates] = useState<Set<string>>(new Set());
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [loadingDoctors, setLoadingDoctors] = useState(false);
@@ -188,7 +188,7 @@ export default function BookAppointment() {
           available: u.is_active,
           bio: `Available for appointments`,
         }));
-      if (mapped.length > 0) setDoctors(mapped);
+      setDoctors(mapped);
     } catch (e) {
       console.error("Failed to fetch doctors", e);
     } finally {
@@ -456,6 +456,11 @@ export default function BookAppointment() {
                 <div className="flex justify-center items-center py-12">
                   <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-dental-blue"></div>
                   <span className="ml-3 text-gray-600">Loading doctors...</span>
+                </div>
+              ) : doctors.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  <p className="text-lg font-medium">No doctors available at this time.</p>
+                  <p className="text-sm mt-1">Please contact the clinic to schedule an appointment.</p>
                 </div>
               ) : (
                 <div className="grid md:grid-cols-3 gap-6">

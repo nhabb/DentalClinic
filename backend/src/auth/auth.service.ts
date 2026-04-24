@@ -103,6 +103,7 @@ export class AuthService {
 
     // Find or create the user
     let user = await this.prisma.users.findUnique({ where: { email }, select });
+    let is_new_user = false;
 
     if (!user) {
       // New OAuth user — create as patient with a placeholder password hash
@@ -122,6 +123,7 @@ export class AuthService {
       });
 
       user = created;
+      is_new_user = true;
     }
 
     if (!user.is_active) {
@@ -134,7 +136,7 @@ export class AuthService {
       role: user.role,
     });
 
-    return { user, token };
+    return { user, token, is_new_user };
   }
 
   async getMe(userId: number) {

@@ -3,6 +3,7 @@ import { UseGuards,
   Get,
   Post,
   Patch,
+  Delete,
   Param,
   Body,
   Query,
@@ -38,7 +39,29 @@ export class UsersController {
   @Get('doctors')
   @ApiOperation({ summary: 'List all doctor/admin users (public)' })
   findDoctors() {
-    return this.usersService.findAll('admin');
+    return this.usersService.findStaff();
+  }
+
+  @Post('staff')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Create a staff member (doctor, secretary, admin)' })
+  createStaff(
+    @Body() body: { email: string; first_name: string; last_name: string; phone?: string; role: string },
+  ) {
+    const allowed = ['doctor', 'secretary', 'admin', 'superadmin'];
+    if (!allowed.includes(body.role)) {
+      throw new Error('Invalid role');
+    }
+    return this.usersService.create(body);
+  }
+
+  @Delete(':id')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Delete a user' })
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.usersService.remove(BigInt(id));
   }
 
   @Get()

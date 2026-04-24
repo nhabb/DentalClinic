@@ -44,7 +44,6 @@ import {
   FaDollarSign,
   FaWallet,
   FaMoneyBillWave,
-  FaCreditCard,
   FaFileInvoiceDollar,
   FaEllipsisV,
   FaBan,
@@ -138,8 +137,8 @@ export default function AdminDashboard() {
             apiFetch(`/api/patients`),
             apiFetch(`/api/appointments`),
             apiFetch(`/api/inventory/low-stock`),
-            apiFetch(`/api/payments/summary`),
-            apiFetch(`/api/payments?limit=500`),
+            apiFetch(`/api/billing/summary`),
+            apiFetch(`/api/billing/invoice-payments?limit=500`),
             apiFetch(`/api/expenses?limit=500`),
           ]);
 
@@ -184,11 +183,11 @@ export default function AdminDashboard() {
         // ── Financial KPIs ────────────────────────────────────────────────────
         if (summaryRes.ok) {
           const s = await summaryRes.json();
-          setKpis({ total_income: Number(s.total_income ?? 0), total_expenses: Number(s.total_expenses ?? 0), net: Number(s.net ?? 0), payments_count: s.payments_count ?? 0 });
+          setKpis({ total_income: Number(s.total_income ?? 0), total_expenses: Number(s.total_expenses ?? 0), net: Number(s.net ?? 0), total_outstanding: Number(s.total_outstanding ?? 0), payments_count: s.payments_count ?? 0 });
         }
 
         // ── Chart data ────────────────────────────────────────────────────────
-        const payments: any[] = paymentsRes.ok ? ((await paymentsRes.json()).data ?? []) : [];
+        const invoicePayments: any[] = paymentsRes.ok ? ((await paymentsRes.json()) ?? []) : [];
         const expenses: any[] = expensesRes.ok ? ((await expensesRes.json()).data ?? []) : [];
 
         const monthKeys: string[] = [];
@@ -200,10 +199,12 @@ export default function AdminDashboard() {
         const expensesByMonth: Record<string, number> = {};
         monthKeys.forEach((k) => { incomeByMonth[k] = 0; expensesByMonth[k] = 0; });
 
-        payments.forEach((p: any) => {
+        invoicePayments.forEach((p: any) => {
+          const amount = Number(p.amount ?? 0);
+          if (amount <= 0) return;
           const key = (p.created_at || "").slice(0, 7);
           if (incomeByMonth[key] !== undefined) {
-            incomeByMonth[key] += Number(p.amount_paid ?? 0);
+            incomeByMonth[key] += amount;
           }
         });
 
@@ -433,15 +434,6 @@ export default function AdminDashboard() {
             )}
           </Link>
           <Link
-            href="/admin/payments"
-            className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
-          >
-            <FaCreditCard className="text-lg" />
-            {sidebarOpen && (
-              <span className="font-medium">{t("nav.payments")}</span>
-            )}
-          </Link>
-          <Link
             href="/admin/billing"
             className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
           >
@@ -551,6 +543,17 @@ export default function AdminDashboard() {
                 {kpis ? `$${kpis.net.toLocaleString()}` : "—"}
               </p>
               <p className="text-sm text-gray-500 mt-1">Net Profit</p>
+            </div>
+
+            {/* Outstanding */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center mb-4">
+                <FaWallet className="text-yellow-600 text-xl" />
+              </div>
+              <p className="text-2xl font-bold text-yellow-700">
+                {kpis ? `$${kpis.total_outstanding.toLocaleString()}` : "—"}
+              </p>
+              <p className="text-sm text-gray-500 mt-1">Outstanding</p>
             </div>
 
             {/* Total Patients - secretary only */}

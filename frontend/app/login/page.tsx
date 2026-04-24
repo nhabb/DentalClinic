@@ -9,8 +9,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/lib/i18n";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
-import { supabase } from "@/lib/supabase/client";
-
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
 
 const ROLE_REDIRECTS: Record<string, string> = {
@@ -32,7 +30,6 @@ export default function LoginPage() {
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [oauthLoading, setOauthLoading] = useState(false);
   const [error, setError]       = useState("");
 
   const fillDemo = (acc: typeof DEMO_ACCOUNTS[0]) => {
@@ -41,22 +38,8 @@ export default function LoginPage() {
     setError("");
   };
 
-  const handleGoogleLogin = async () => {
-    setOauthLoading(true);
-    setError("");
-    try {
-      const { error: oauthError } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-      if (oauthError) setError(oauthError.message);
-    } catch {
-      setError("Failed to initiate Google sign-in.");
-    } finally {
-      setOauthLoading(false);
-    }
+  const handleGoogleLogin = () => {
+    router.push("/complete-profile");
   };
 
   const onLogin = async (e: React.FormEvent) => {
@@ -83,6 +66,7 @@ export default function LoginPage() {
       // Persist auth (sessionStorage keeps each tab's session independent)
       sessionStorage.setItem("authToken", token);
       sessionStorage.setItem("userRole", user.role);
+      sessionStorage.setItem("userId", user.id.toString());
       sessionStorage.setItem(
         "adminUser",
         JSON.stringify({
@@ -202,10 +186,10 @@ export default function LoginPage() {
             variant="outline"
             className="w-full py-6 flex items-center gap-3 justify-center"
             onClick={handleGoogleLogin}
-            disabled={oauthLoading || isLoading}
+            disabled={isLoading}
           >
             <FcGoogle className="text-xl" />
-            {oauthLoading ? "Redirecting…" : "Continue with Google"}
+            Continue with Google
           </Button>
 
           {/* Demo Credentials */}

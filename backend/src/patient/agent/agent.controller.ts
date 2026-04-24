@@ -1,8 +1,9 @@
-import { Controller, Post, Body } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { IsArray, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { Controller, Post, Body, UseGuards, Req } from '@nestjs/common';
+import { ApiOperation, ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { IsArray, IsString, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { AgentService, ChatMessage } from './agent.service';
+import { JwtAuthGuard } from '../../shared/common/guards/jwt-auth.guard';
 
 class ChatMessageDto {
   @IsString() role: 'user' | 'assistant';
@@ -14,23 +15,20 @@ class ChatRequestDto {
   @ValidateNested({ each: true })
   @Type(() => ChatMessageDto)
   messages: ChatMessage[];
-
-  @IsOptional() @IsString() doctorName?: string;
-  @IsOptional() @IsNumber() doctorId?: number;
 }
 
 @ApiTags('Agent')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('agent')
 export class AgentController {
   constructor(private readonly agentService: AgentService) {}
 
   @Post('chat')
   @ApiOperation({ summary: 'Send a message to the clinic AI assistant' })
-  async chat(@Body() dto: ChatRequestDto): Promise<{ reply: string }> {
-    const reply = await this.agentService.chat(dto.messages, {
-      doctorName: dto.doctorName ?? 'Doctor',
-      doctorId: dto.doctorId,
-    });
+  async chat(@Body() dto: ChatRequestDto, @Req() req: any): Promise<{ reply: string }> {
+    const userId = parseInt(req.user.id, 10);
+    const reply = await this.agentService.chat(dto.messages, { userId });
     return { reply };
   }
 }

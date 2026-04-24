@@ -2,6 +2,7 @@ import { UseGuards,
   Controller,
   Get,
   Patch,
+  Delete,
   Param,
   Body,
   Query,
@@ -16,6 +17,7 @@ import { JwtAuthGuard } from '../../shared/common/guards/jwt-auth.guard';
 import { ApiBearerAuth, ApiTags, ApiOperation, ApiQuery, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { PatientsService } from './patients.service';
 import { UpdatePatientProfileDto } from './dto/update-patient-profile.dto';
+import { SetPatientStatusDto } from './dto/set-patient-status.dto';
 
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
@@ -77,5 +79,20 @@ export class PatientsController {
     @Body() dto: UpdatePatientProfileDto,
   ) {
     return this.patientsService.updateByUserId(BigInt(userId), dto);
+  }
+
+  @Patch(':id/status')
+  @ApiOperation({ summary: 'Set patient active/inactive status' })
+  setStatus(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: SetPatientStatusDto,
+  ) {
+    return this.patientsService.setStatus(BigInt(id), dto.is_active);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete a patient (removes user account and all associated data)' })
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.patientsService.remove(BigInt(id));
   }
 }

@@ -6,27 +6,26 @@ import {
   ParseIntPipe,
   DefaultValuePipe,
   UseGuards,
-  ForbiddenException,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../shared/common/guards/jwt-auth.guard';
-import { PaymentsService } from '../../doctor/payments/payments.service';
+import { BillingService } from '../../doctor/billing/billing.service';
 import { PatientsService } from '../patients/patients.service';
 
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
-@ApiTags('Patient — Payments')
+@ApiTags('Patient — Billing')
 @Controller('patient/payments')
 export class PatientPaymentsController {
   constructor(
-    private readonly paymentsService: PaymentsService,
+    private readonly billingService: BillingService,
     private readonly patientsService: PatientsService,
   ) {}
 
   @Get()
-  @ApiOperation({ summary: 'Get all payments for a patient' })
+  @ApiOperation({ summary: 'Get all treatment invoices for a patient' })
   @ApiQuery({ name: 'user_id', required: true, type: Number })
-  @ApiQuery({ name: 'status', required: false, enum: ['pending', 'partial', 'paid'] })
+  @ApiQuery({ name: 'status', required: false, enum: ['open', 'partial', 'paid'] })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   async findAll(
@@ -36,7 +35,7 @@ export class PatientPaymentsController {
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit?: number,
   ) {
     const profile = await this.patientsService.findByUserId(BigInt(userId));
-    return this.paymentsService.findAll({
+    return this.billingService.findAll({
       patient_id: Number(profile.id),
       status,
       page,
@@ -45,19 +44,8 @@ export class PatientPaymentsController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get a single payment (must belong to the patient)' })
-  @ApiQuery({ name: 'user_id', required: true, type: Number })
-  async findOne(
-    @Param('id', ParseIntPipe) id: number,
-    @Query('user_id', ParseIntPipe) userId: number,
-  ) {
-    const profile = await this.patientsService.findByUserId(BigInt(userId));
-    const payment = await this.paymentsService.findOne(BigInt(id));
-
-    if (payment.patient.id.toString() !== profile.id.toString()) {
-      throw new ForbiddenException('This payment does not belong to you');
-    }
-
-    return payment;
+  @ApiOperation({ summary: 'Get a single treatment invoice by ID' })
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.billingService.findOne(BigInt(id));
   }
 }

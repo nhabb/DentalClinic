@@ -62,7 +62,6 @@ export const ModelName = {
   patient_profiles: 'patient_profiles',
   patient_records: 'patient_records',
   users: 'users',
-  payments: 'payments',
   expenses: 'expenses',
   treatment_invoices: 'treatment_invoices',
   invoice_line_items: 'invoice_line_items',
@@ -264,24 +263,6 @@ export const UsersScalarFieldEnum = {
 } as const
 
 export type UsersScalarFieldEnum = (typeof UsersScalarFieldEnum)[keyof typeof UsersScalarFieldEnum]
-
-
-export const PaymentsScalarFieldEnum = {
-  id: 'id',
-  patient_id: 'patient_id',
-  appointment_id: 'appointment_id',
-  amount: 'amount',
-  amount_paid: 'amount_paid',
-  payment_method: 'payment_method',
-  status: 'status',
-  description: 'description',
-  paid_at: 'paid_at',
-  created_by: 'created_by',
-  created_at: 'created_at',
-  updated_at: 'updated_at'
-} as const
-
-export type PaymentsScalarFieldEnum = (typeof PaymentsScalarFieldEnum)[keyof typeof PaymentsScalarFieldEnum]
 
 
 export const ExpensesScalarFieldEnum = {

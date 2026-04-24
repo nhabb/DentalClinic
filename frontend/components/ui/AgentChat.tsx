@@ -9,8 +9,8 @@ interface Message {
 }
 
 interface Props {
-  doctorName?: string;
-  doctorId?: number;
+  doctorName?: string; // kept for display only
+  doctorId?: number;   // no longer sent to backend
 }
 
 function MarkdownText({ text }: { text: string }) {
@@ -66,11 +66,7 @@ export default function AgentChat({ doctorName = "Doctor", doctorId }: Props) {
     try {
       const res = await apiFetch("/api/agent/chat", {
         method: "POST",
-        body: JSON.stringify({
-          messages: newMessages,
-          doctorName,
-          doctorId,
-        }),
+        body: JSON.stringify({ messages: newMessages }),
       });
       const data = await res.json();
       setMessages((prev) => [...prev, { role: "assistant", content: data.reply ?? "No response." }]);

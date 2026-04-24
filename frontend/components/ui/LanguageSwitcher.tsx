@@ -17,7 +17,7 @@ import {
 const LANGUAGES = [
   { value: "en", label: "English", flag: "🇺🇸" },
   { value: "fr", label: "Français", flag: "🇫🇷" },
-  { value: "ar", label: "العربية", flag: "🇸🇦" },
+  { value: "ar", label: "العربية", flag: "🇱🇧" },
 ] as const;
 
 type Props = {

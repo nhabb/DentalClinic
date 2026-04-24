@@ -2,6 +2,8 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
+  Delete,
   Param,
   Body,
   Query,
@@ -21,6 +23,29 @@ import { RecordPaymentDto } from './dto/record-payment.dto';
 @Controller('billing')
 export class BillingController {
   constructor(private readonly billingService: BillingService) {}
+
+  @Get('summary')
+  @ApiOperation({ summary: 'Financial summary: total income (invoice payments), expenses, outstanding' })
+  @ApiQuery({ name: 'from', required: false })
+  @ApiQuery({ name: 'to',   required: false })
+  getSummary(@Query('from') from?: string, @Query('to') to?: string) {
+    return this.billingService.getSummary({ from, to });
+  }
+
+  @Get('kpis')
+  @ApiOperation({ summary: 'Key financial KPIs based on treatment invoices and invoice payments' })
+  getKpis() {
+    return this.billingService.getKpis();
+  }
+
+  @Get('invoice-payments')
+  @ApiOperation({ summary: 'List raw invoice payment records (for charts)' })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  listInvoicePayments(
+    @Query('limit', new DefaultValuePipe(500), ParseIntPipe) limit: number,
+  ) {
+    return this.billingService.listInvoicePayments(limit);
+  }
 
   @Post('invoices')
   @ApiOperation({ summary: 'Create a treatment invoice with procedure line items' })

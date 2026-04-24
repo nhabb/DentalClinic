@@ -178,6 +178,39 @@ export class PatientsService {
     });
   }
 
+  async setStatus(id: bigint, isActive: boolean) {
+    const profile = await this.prisma.patient_profiles.findUnique({ where: { id } });
+    if (!profile) throw new NotFoundException('Patient profile not found');
+    await this.prisma.users.update({
+      where: { id: profile.user_id },
+      data: { is_active: isActive, updated_at: new Date() },
+    });
+    return { id: Number(id), is_active: isActive };
+  }
+
+  async remove(id: bigint) {
+    const profile = await this.prisma.patient_profiles.findUnique({ where: { id } });
+    if (!profile) throw new NotFoundException('Patient profile not found');
+    const userId = profile.user_id;
+
+    // Nullify all nullable FKs that reference this user but have no onDelete cascade,
+    // so the subsequent user deletion doesn't hit FK constraint violations.
+    await this.prisma.$transaction([
+      this.prisma.audit_logs.updateMany({ where: { user_id: userId }, data: { user_id: null } }),
+      this.prisma.inventory_movements.updateMany({ where: { performed_by: userId }, data: { performed_by: null } }),
+      this.prisma.appointments.updateMany({ where: { created_by: userId }, data: { created_by: null } }),
+      this.prisma.patient_documents.updateMany({ where: { uploaded_by: userId }, data: { uploaded_by: null } }),
+      this.prisma.patient_records.updateMany({ where: { created_by: userId }, data: { created_by: null } }),
+      this.prisma.expenses.updateMany({ where: { created_by: userId }, data: { created_by: null } }),
+      this.prisma.treatment_invoices.updateMany({ where: { created_by: userId }, data: { created_by: null } }),
+      this.prisma.invoice_payments.updateMany({ where: { created_by: userId }, data: { created_by: null } }),
+      // Delete the user — cascades to: patient_profiles → appointments, records, docs, invoices, payments
+      this.prisma.users.delete({ where: { id: userId } }),
+    ]);
+
+    return { message: 'Patient deleted successfully' };
+  }
+
   /** Extract the storage path from a full Supabase public URL */
   private extractPath(publicUrl: string): string | null {
     try {

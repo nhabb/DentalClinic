@@ -301,7 +301,6 @@ export type appointmentsWhereInput = {
   patient_profiles?: Prisma.XOR<Prisma.Patient_profilesScalarRelationFilter, Prisma.patient_profilesWhereInput>
   appointment_slots?: Prisma.XOR<Prisma.Appointment_slotsNullableScalarRelationFilter, Prisma.appointment_slotsWhereInput> | null
   patient_records?: Prisma.Patient_recordsListRelationFilter
-  payments?: Prisma.PaymentsListRelationFilter
 }
 
 export type appointmentsOrderByWithRelationInput = {
@@ -323,7 +322,6 @@ export type appointmentsOrderByWithRelationInput = {
   patient_profiles?: Prisma.patient_profilesOrderByWithRelationInput
   appointment_slots?: Prisma.appointment_slotsOrderByWithRelationInput
   patient_records?: Prisma.patient_recordsOrderByRelationAggregateInput
-  payments?: Prisma.paymentsOrderByRelationAggregateInput
 }
 
 export type appointmentsWhereUniqueInput = Prisma.AtLeast<{
@@ -348,7 +346,6 @@ export type appointmentsWhereUniqueInput = Prisma.AtLeast<{
   patient_profiles?: Prisma.XOR<Prisma.Patient_profilesScalarRelationFilter, Prisma.patient_profilesWhereInput>
   appointment_slots?: Prisma.XOR<Prisma.Appointment_slotsNullableScalarRelationFilter, Prisma.appointment_slotsWhereInput> | null
   patient_records?: Prisma.Patient_recordsListRelationFilter
-  payments?: Prisma.PaymentsListRelationFilter
 }, "id">
 
 export type appointmentsOrderByWithAggregationInput = {
@@ -406,7 +403,6 @@ export type appointmentsCreateInput = {
   patient_profiles: Prisma.patient_profilesCreateNestedOneWithoutAppointmentsInput
   appointment_slots?: Prisma.appointment_slotsCreateNestedOneWithoutAppointmentsInput
   patient_records?: Prisma.patient_recordsCreateNestedManyWithoutAppointmentsInput
-  payments?: Prisma.paymentsCreateNestedManyWithoutAppointmentInput
 }
 
 export type appointmentsUncheckedCreateInput = {
@@ -424,7 +420,6 @@ export type appointmentsUncheckedCreateInput = {
   doctor_id: bigint | number
   slot_id?: bigint | number | null
   patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutAppointmentsInput
-  payments?: Prisma.paymentsUncheckedCreateNestedManyWithoutAppointmentInput
 }
 
 export type appointmentsUpdateInput = {
@@ -442,7 +437,6 @@ export type appointmentsUpdateInput = {
   patient_profiles?: Prisma.patient_profilesUpdateOneRequiredWithoutAppointmentsNestedInput
   appointment_slots?: Prisma.appointment_slotsUpdateOneWithoutAppointmentsNestedInput
   patient_records?: Prisma.patient_recordsUpdateManyWithoutAppointmentsNestedInput
-  payments?: Prisma.paymentsUpdateManyWithoutAppointmentNestedInput
 }
 
 export type appointmentsUncheckedUpdateInput = {
@@ -460,7 +454,6 @@ export type appointmentsUncheckedUpdateInput = {
   doctor_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   slot_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutAppointmentsNestedInput
-  payments?: Prisma.paymentsUncheckedUpdateManyWithoutAppointmentNestedInput
 }
 
 export type appointmentsCreateManyInput = {
@@ -786,22 +779,6 @@ export type appointmentsUncheckedUpdateManyWithoutUsers_appointments_doctor_idTo
   deleteMany?: Prisma.appointmentsScalarWhereInput | Prisma.appointmentsScalarWhereInput[]
 }
 
-export type appointmentsCreateNestedOneWithoutPaymentsInput = {
-  create?: Prisma.XOR<Prisma.appointmentsCreateWithoutPaymentsInput, Prisma.appointmentsUncheckedCreateWithoutPaymentsInput>
-  connectOrCreate?: Prisma.appointmentsCreateOrConnectWithoutPaymentsInput
-  connect?: Prisma.appointmentsWhereUniqueInput
-}
-
-export type appointmentsUpdateOneWithoutPaymentsNestedInput = {
-  create?: Prisma.XOR<Prisma.appointmentsCreateWithoutPaymentsInput, Prisma.appointmentsUncheckedCreateWithoutPaymentsInput>
-  connectOrCreate?: Prisma.appointmentsCreateOrConnectWithoutPaymentsInput
-  upsert?: Prisma.appointmentsUpsertWithoutPaymentsInput
-  disconnect?: Prisma.appointmentsWhereInput | boolean
-  delete?: Prisma.appointmentsWhereInput | boolean
-  connect?: Prisma.appointmentsWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.appointmentsUpdateToOneWithWhereWithoutPaymentsInput, Prisma.appointmentsUpdateWithoutPaymentsInput>, Prisma.appointmentsUncheckedUpdateWithoutPaymentsInput>
-}
-
 export type appointmentsCreateWithoutAppointment_slotsInput = {
   id?: bigint | number
   appointment_date: Date | string
@@ -816,7 +793,6 @@ export type appointmentsCreateWithoutAppointment_slotsInput = {
   users_appointments_doctor_idTousers: Prisma.usersCreateNestedOneWithoutAppointments_appointments_doctor_idTousersInput
   patient_profiles: Prisma.patient_profilesCreateNestedOneWithoutAppointmentsInput
   patient_records?: Prisma.patient_recordsCreateNestedManyWithoutAppointmentsInput
-  payments?: Prisma.paymentsCreateNestedManyWithoutAppointmentInput
 }
 
 export type appointmentsUncheckedCreateWithoutAppointment_slotsInput = {
@@ -833,7 +809,6 @@ export type appointmentsUncheckedCreateWithoutAppointment_slotsInput = {
   updated_at?: Date | string
   doctor_id: bigint | number
   patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutAppointmentsInput
-  payments?: Prisma.paymentsUncheckedCreateNestedManyWithoutAppointmentInput
 }
 
 export type appointmentsCreateOrConnectWithoutAppointment_slotsInput = {
@@ -895,7 +870,6 @@ export type appointmentsCreateWithoutPatient_profilesInput = {
   users_appointments_doctor_idTousers: Prisma.usersCreateNestedOneWithoutAppointments_appointments_doctor_idTousersInput
   appointment_slots?: Prisma.appointment_slotsCreateNestedOneWithoutAppointmentsInput
   patient_records?: Prisma.patient_recordsCreateNestedManyWithoutAppointmentsInput
-  payments?: Prisma.paymentsCreateNestedManyWithoutAppointmentInput
 }
 
 export type appointmentsUncheckedCreateWithoutPatient_profilesInput = {
@@ -912,7 +886,6 @@ export type appointmentsUncheckedCreateWithoutPatient_profilesInput = {
   doctor_id: bigint | number
   slot_id?: bigint | number | null
   patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutAppointmentsInput
-  payments?: Prisma.paymentsUncheckedCreateNestedManyWithoutAppointmentInput
 }
 
 export type appointmentsCreateOrConnectWithoutPatient_profilesInput = {
@@ -955,7 +928,6 @@ export type appointmentsCreateWithoutPatient_recordsInput = {
   users_appointments_doctor_idTousers: Prisma.usersCreateNestedOneWithoutAppointments_appointments_doctor_idTousersInput
   patient_profiles: Prisma.patient_profilesCreateNestedOneWithoutAppointmentsInput
   appointment_slots?: Prisma.appointment_slotsCreateNestedOneWithoutAppointmentsInput
-  payments?: Prisma.paymentsCreateNestedManyWithoutAppointmentInput
 }
 
 export type appointmentsUncheckedCreateWithoutPatient_recordsInput = {
@@ -972,7 +944,6 @@ export type appointmentsUncheckedCreateWithoutPatient_recordsInput = {
   updated_at?: Date | string
   doctor_id: bigint | number
   slot_id?: bigint | number | null
-  payments?: Prisma.paymentsUncheckedCreateNestedManyWithoutAppointmentInput
 }
 
 export type appointmentsCreateOrConnectWithoutPatient_recordsInput = {
@@ -1005,7 +976,6 @@ export type appointmentsUpdateWithoutPatient_recordsInput = {
   users_appointments_doctor_idTousers?: Prisma.usersUpdateOneRequiredWithoutAppointments_appointments_doctor_idTousersNestedInput
   patient_profiles?: Prisma.patient_profilesUpdateOneRequiredWithoutAppointmentsNestedInput
   appointment_slots?: Prisma.appointment_slotsUpdateOneWithoutAppointmentsNestedInput
-  payments?: Prisma.paymentsUpdateManyWithoutAppointmentNestedInput
 }
 
 export type appointmentsUncheckedUpdateWithoutPatient_recordsInput = {
@@ -1022,7 +992,6 @@ export type appointmentsUncheckedUpdateWithoutPatient_recordsInput = {
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   doctor_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   slot_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  payments?: Prisma.paymentsUncheckedUpdateManyWithoutAppointmentNestedInput
 }
 
 export type appointmentsCreateWithoutUsers_appointments_created_byTousersInput = {
@@ -1039,7 +1008,6 @@ export type appointmentsCreateWithoutUsers_appointments_created_byTousersInput =
   patient_profiles: Prisma.patient_profilesCreateNestedOneWithoutAppointmentsInput
   appointment_slots?: Prisma.appointment_slotsCreateNestedOneWithoutAppointmentsInput
   patient_records?: Prisma.patient_recordsCreateNestedManyWithoutAppointmentsInput
-  payments?: Prisma.paymentsCreateNestedManyWithoutAppointmentInput
 }
 
 export type appointmentsUncheckedCreateWithoutUsers_appointments_created_byTousersInput = {
@@ -1056,7 +1024,6 @@ export type appointmentsUncheckedCreateWithoutUsers_appointments_created_byTouse
   doctor_id: bigint | number
   slot_id?: bigint | number | null
   patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutAppointmentsInput
-  payments?: Prisma.paymentsUncheckedCreateNestedManyWithoutAppointmentInput
 }
 
 export type appointmentsCreateOrConnectWithoutUsers_appointments_created_byTousersInput = {
@@ -1083,7 +1050,6 @@ export type appointmentsCreateWithoutUsers_appointments_doctor_idTousersInput = 
   patient_profiles: Prisma.patient_profilesCreateNestedOneWithoutAppointmentsInput
   appointment_slots?: Prisma.appointment_slotsCreateNestedOneWithoutAppointmentsInput
   patient_records?: Prisma.patient_recordsCreateNestedManyWithoutAppointmentsInput
-  payments?: Prisma.paymentsCreateNestedManyWithoutAppointmentInput
 }
 
 export type appointmentsUncheckedCreateWithoutUsers_appointments_doctor_idTousersInput = {
@@ -1100,7 +1066,6 @@ export type appointmentsUncheckedCreateWithoutUsers_appointments_doctor_idTouser
   updated_at?: Date | string
   slot_id?: bigint | number | null
   patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutAppointmentsInput
-  payments?: Prisma.paymentsUncheckedCreateNestedManyWithoutAppointmentInput
 }
 
 export type appointmentsCreateOrConnectWithoutUsers_appointments_doctor_idTousersInput = {
@@ -1145,90 +1110,6 @@ export type appointmentsUpdateManyWithWhereWithoutUsers_appointments_doctor_idTo
   data: Prisma.XOR<Prisma.appointmentsUpdateManyMutationInput, Prisma.appointmentsUncheckedUpdateManyWithoutUsers_appointments_doctor_idTousersInput>
 }
 
-export type appointmentsCreateWithoutPaymentsInput = {
-  id?: bigint | number
-  appointment_date: Date | string
-  start_time: Date | string
-  end_time: Date | string
-  status?: string
-  reason?: string | null
-  notes?: string | null
-  created_at?: Date | string
-  updated_at?: Date | string
-  users_appointments_created_byTousers?: Prisma.usersCreateNestedOneWithoutAppointments_appointments_created_byTousersInput
-  users_appointments_doctor_idTousers: Prisma.usersCreateNestedOneWithoutAppointments_appointments_doctor_idTousersInput
-  patient_profiles: Prisma.patient_profilesCreateNestedOneWithoutAppointmentsInput
-  appointment_slots?: Prisma.appointment_slotsCreateNestedOneWithoutAppointmentsInput
-  patient_records?: Prisma.patient_recordsCreateNestedManyWithoutAppointmentsInput
-}
-
-export type appointmentsUncheckedCreateWithoutPaymentsInput = {
-  id?: bigint | number
-  patient_id: bigint | number
-  appointment_date: Date | string
-  start_time: Date | string
-  end_time: Date | string
-  status?: string
-  reason?: string | null
-  notes?: string | null
-  created_by?: bigint | number | null
-  created_at?: Date | string
-  updated_at?: Date | string
-  doctor_id: bigint | number
-  slot_id?: bigint | number | null
-  patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutAppointmentsInput
-}
-
-export type appointmentsCreateOrConnectWithoutPaymentsInput = {
-  where: Prisma.appointmentsWhereUniqueInput
-  create: Prisma.XOR<Prisma.appointmentsCreateWithoutPaymentsInput, Prisma.appointmentsUncheckedCreateWithoutPaymentsInput>
-}
-
-export type appointmentsUpsertWithoutPaymentsInput = {
-  update: Prisma.XOR<Prisma.appointmentsUpdateWithoutPaymentsInput, Prisma.appointmentsUncheckedUpdateWithoutPaymentsInput>
-  create: Prisma.XOR<Prisma.appointmentsCreateWithoutPaymentsInput, Prisma.appointmentsUncheckedCreateWithoutPaymentsInput>
-  where?: Prisma.appointmentsWhereInput
-}
-
-export type appointmentsUpdateToOneWithWhereWithoutPaymentsInput = {
-  where?: Prisma.appointmentsWhereInput
-  data: Prisma.XOR<Prisma.appointmentsUpdateWithoutPaymentsInput, Prisma.appointmentsUncheckedUpdateWithoutPaymentsInput>
-}
-
-export type appointmentsUpdateWithoutPaymentsInput = {
-  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  appointment_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  start_time?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  end_time?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  users_appointments_created_byTousers?: Prisma.usersUpdateOneWithoutAppointments_appointments_created_byTousersNestedInput
-  users_appointments_doctor_idTousers?: Prisma.usersUpdateOneRequiredWithoutAppointments_appointments_doctor_idTousersNestedInput
-  patient_profiles?: Prisma.patient_profilesUpdateOneRequiredWithoutAppointmentsNestedInput
-  appointment_slots?: Prisma.appointment_slotsUpdateOneWithoutAppointmentsNestedInput
-  patient_records?: Prisma.patient_recordsUpdateManyWithoutAppointmentsNestedInput
-}
-
-export type appointmentsUncheckedUpdateWithoutPaymentsInput = {
-  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  appointment_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  start_time?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  end_time?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  doctor_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  slot_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutAppointmentsNestedInput
-}
-
 export type appointmentsCreateManyAppointment_slotsInput = {
   id?: bigint | number
   patient_id: bigint | number
@@ -1258,7 +1139,6 @@ export type appointmentsUpdateWithoutAppointment_slotsInput = {
   users_appointments_doctor_idTousers?: Prisma.usersUpdateOneRequiredWithoutAppointments_appointments_doctor_idTousersNestedInput
   patient_profiles?: Prisma.patient_profilesUpdateOneRequiredWithoutAppointmentsNestedInput
   patient_records?: Prisma.patient_recordsUpdateManyWithoutAppointmentsNestedInput
-  payments?: Prisma.paymentsUpdateManyWithoutAppointmentNestedInput
 }
 
 export type appointmentsUncheckedUpdateWithoutAppointment_slotsInput = {
@@ -1275,7 +1155,6 @@ export type appointmentsUncheckedUpdateWithoutAppointment_slotsInput = {
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   doctor_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutAppointmentsNestedInput
-  payments?: Prisma.paymentsUncheckedUpdateManyWithoutAppointmentNestedInput
 }
 
 export type appointmentsUncheckedUpdateManyWithoutAppointment_slotsInput = {
@@ -1322,7 +1201,6 @@ export type appointmentsUpdateWithoutPatient_profilesInput = {
   users_appointments_doctor_idTousers?: Prisma.usersUpdateOneRequiredWithoutAppointments_appointments_doctor_idTousersNestedInput
   appointment_slots?: Prisma.appointment_slotsUpdateOneWithoutAppointmentsNestedInput
   patient_records?: Prisma.patient_recordsUpdateManyWithoutAppointmentsNestedInput
-  payments?: Prisma.paymentsUpdateManyWithoutAppointmentNestedInput
 }
 
 export type appointmentsUncheckedUpdateWithoutPatient_profilesInput = {
@@ -1339,7 +1217,6 @@ export type appointmentsUncheckedUpdateWithoutPatient_profilesInput = {
   doctor_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   slot_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutAppointmentsNestedInput
-  payments?: Prisma.paymentsUncheckedUpdateManyWithoutAppointmentNestedInput
 }
 
 export type appointmentsUncheckedUpdateManyWithoutPatient_profilesInput = {
@@ -1401,7 +1278,6 @@ export type appointmentsUpdateWithoutUsers_appointments_created_byTousersInput =
   patient_profiles?: Prisma.patient_profilesUpdateOneRequiredWithoutAppointmentsNestedInput
   appointment_slots?: Prisma.appointment_slotsUpdateOneWithoutAppointmentsNestedInput
   patient_records?: Prisma.patient_recordsUpdateManyWithoutAppointmentsNestedInput
-  payments?: Prisma.paymentsUpdateManyWithoutAppointmentNestedInput
 }
 
 export type appointmentsUncheckedUpdateWithoutUsers_appointments_created_byTousersInput = {
@@ -1418,7 +1294,6 @@ export type appointmentsUncheckedUpdateWithoutUsers_appointments_created_byTouse
   doctor_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   slot_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutAppointmentsNestedInput
-  payments?: Prisma.paymentsUncheckedUpdateManyWithoutAppointmentNestedInput
 }
 
 export type appointmentsUncheckedUpdateManyWithoutUsers_appointments_created_byTousersInput = {
@@ -1450,7 +1325,6 @@ export type appointmentsUpdateWithoutUsers_appointments_doctor_idTousersInput = 
   patient_profiles?: Prisma.patient_profilesUpdateOneRequiredWithoutAppointmentsNestedInput
   appointment_slots?: Prisma.appointment_slotsUpdateOneWithoutAppointmentsNestedInput
   patient_records?: Prisma.patient_recordsUpdateManyWithoutAppointmentsNestedInput
-  payments?: Prisma.paymentsUpdateManyWithoutAppointmentNestedInput
 }
 
 export type appointmentsUncheckedUpdateWithoutUsers_appointments_doctor_idTousersInput = {
@@ -1467,7 +1341,6 @@ export type appointmentsUncheckedUpdateWithoutUsers_appointments_doctor_idTouser
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   slot_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutAppointmentsNestedInput
-  payments?: Prisma.paymentsUncheckedUpdateManyWithoutAppointmentNestedInput
 }
 
 export type appointmentsUncheckedUpdateManyWithoutUsers_appointments_doctor_idTousersInput = {
@@ -1492,12 +1365,10 @@ export type appointmentsUncheckedUpdateManyWithoutUsers_appointments_doctor_idTo
 
 export type AppointmentsCountOutputType = {
   patient_records: number
-  payments: number
 }
 
 export type AppointmentsCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   patient_records?: boolean | AppointmentsCountOutputTypeCountPatient_recordsArgs
-  payments?: boolean | AppointmentsCountOutputTypeCountPaymentsArgs
 }
 
 /**
@@ -1515,13 +1386,6 @@ export type AppointmentsCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types
  */
 export type AppointmentsCountOutputTypeCountPatient_recordsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.patient_recordsWhereInput
-}
-
-/**
- * AppointmentsCountOutputType without action
- */
-export type AppointmentsCountOutputTypeCountPaymentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.paymentsWhereInput
 }
 
 
@@ -1544,7 +1408,6 @@ export type appointmentsSelect<ExtArgs extends runtime.Types.Extensions.Internal
   patient_profiles?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
   appointment_slots?: boolean | Prisma.appointments$appointment_slotsArgs<ExtArgs>
   patient_records?: boolean | Prisma.appointments$patient_recordsArgs<ExtArgs>
-  payments?: boolean | Prisma.appointments$paymentsArgs<ExtArgs>
   _count?: boolean | Prisma.AppointmentsCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["appointments"]>
 
@@ -1611,7 +1474,6 @@ export type appointmentsInclude<ExtArgs extends runtime.Types.Extensions.Interna
   patient_profiles?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
   appointment_slots?: boolean | Prisma.appointments$appointment_slotsArgs<ExtArgs>
   patient_records?: boolean | Prisma.appointments$patient_recordsArgs<ExtArgs>
-  payments?: boolean | Prisma.appointments$paymentsArgs<ExtArgs>
   _count?: boolean | Prisma.AppointmentsCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type appointmentsIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1635,7 +1497,6 @@ export type $appointmentsPayload<ExtArgs extends runtime.Types.Extensions.Intern
     patient_profiles: Prisma.$patient_profilesPayload<ExtArgs>
     appointment_slots: Prisma.$appointment_slotsPayload<ExtArgs> | null
     patient_records: Prisma.$patient_recordsPayload<ExtArgs>[]
-    payments: Prisma.$paymentsPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: bigint
@@ -2050,7 +1911,6 @@ export interface Prisma__appointmentsClient<T, Null = never, ExtArgs extends run
   patient_profiles<T extends Prisma.patient_profilesDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.patient_profilesDefaultArgs<ExtArgs>>): Prisma.Prisma__patient_profilesClient<runtime.Types.Result.GetResult<Prisma.$patient_profilesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   appointment_slots<T extends Prisma.appointments$appointment_slotsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.appointments$appointment_slotsArgs<ExtArgs>>): Prisma.Prisma__appointment_slotsClient<runtime.Types.Result.GetResult<Prisma.$appointment_slotsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   patient_records<T extends Prisma.appointments$patient_recordsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.appointments$patient_recordsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$patient_recordsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  payments<T extends Prisma.appointments$paymentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.appointments$paymentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$paymentsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2553,30 +2413,6 @@ export type appointments$patient_recordsArgs<ExtArgs extends runtime.Types.Exten
   take?: number
   skip?: number
   distinct?: Prisma.Patient_recordsScalarFieldEnum | Prisma.Patient_recordsScalarFieldEnum[]
-}
-
-/**
- * appointments.payments
- */
-export type appointments$paymentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the payments
-   */
-  select?: Prisma.paymentsSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the payments
-   */
-  omit?: Prisma.paymentsOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.paymentsInclude<ExtArgs> | null
-  where?: Prisma.paymentsWhereInput
-  orderBy?: Prisma.paymentsOrderByWithRelationInput | Prisma.paymentsOrderByWithRelationInput[]
-  cursor?: Prisma.paymentsWhereUniqueInput
-  take?: number
-  skip?: number
-  distinct?: Prisma.PaymentsScalarFieldEnum | Prisma.PaymentsScalarFieldEnum[]
 }
 
 /**

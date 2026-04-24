@@ -48,6 +48,11 @@ RUN npm install -g @supabase/mcp-server-supabase
 COPY --from=deps    /app/node_modules          ./node_modules
 # Prisma generated client (prisma generate writes into @prisma/client; Prisma 7 uses Wasm, no .prisma dir)
 COPY --from=builder /app/node_modules/@prisma  ./node_modules/@prisma
+# Prisma CLI (needed to run migrate deploy at startup)
+COPY --from=builder /app/node_modules/prisma   ./node_modules/prisma
+COPY --from=builder /app/node_modules/.bin/prisma ./node_modules/.bin/prisma
+# Prisma schema (needed by the generated client)
+COPY --from=builder /app/prisma                ./prisma
 # Compiled NestJS app
 COPY --from=builder /app/dist                  ./dist
 

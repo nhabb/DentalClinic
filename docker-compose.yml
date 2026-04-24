@@ -34,8 +34,8 @@ services:
       context: ./docker/nginx
       dockerfile: Dockerfile
     ports:
-      - "80:80"
-      - "443:443"
+      - "8080:80"    # HTTP
+      - "8443:443"   # HTTPS
     volumes:
       # Certs are auto-generated on first start by entrypoint.sh and persisted here.
       # To use real certs, drop cert.pem + key.pem into docker/ssl/ before starting.

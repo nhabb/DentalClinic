@@ -216,7 +216,33 @@ export default function ExpensesPage() {
           subtitle={t("expenses.subtitle")}
           data={expenses}
           filename="expenses"
-          onImport={(rows) => setExpenses((prev) => [...prev, ...(rows as Expense[])])}
+          onImport={async (rows) => {
+            let ok = 0; let fail = 0;
+            const today = new Date().toISOString().split("T")[0];
+            for (const row of rows as Record<string, unknown>[]) {
+              try {
+                const rawCat = String(row.category ?? "other").toLowerCase();
+                const allowed = ["utilities","rent","equipment","supplies","maintenance","other"];
+                const category = allowed.includes(rawCat) ? rawCat : "other";
+                const payload = {
+                  title: String(row.description ?? row.title ?? "Imported Expense"),
+                  category,
+                  amount: Number(row.amount ?? 0),
+                  expense_date: String(row.date ?? row.expense_date ?? today),
+                };
+                if (!payload.title || payload.amount <= 0) { fail++; continue; }
+                const res = await apiFetch("/api/expenses", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+                if (res.ok) { ok++; } else {
+                  const err = await res.text().catch(() => res.status.toString());
+                  console.error("Expense import row failed:", res.status, err, payload);
+                  fail++;
+                }
+              } catch (e) { console.error("Expense import exception:", e); fail++; }
+            }
+            await fetchExpenses();
+            if (ok > 0) toast.success(`${ok} expense${ok > 1 ? "s" : ""} imported.`);
+            if (fail > 0) toast.error(`${fail} row${fail > 1 ? "s" : ""} failed.`);
+          }}
           onAdd={handleOpenAdd}
           addLabel={t("expenses.addExpense")}
         />

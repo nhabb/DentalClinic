@@ -10,17 +10,15 @@ import { useTranslation } from "@/lib/i18n";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { apiFetch } from '@/lib/api/client';
 import { Avatar } from "@/components/ui/Avatar";
+import ChangePasswordModal from "@/components/ui/ChangePasswordModal";
 import {
   FaTooth,
   FaCalendarAlt,
   FaClipboardList,
-  FaPills,
-  FaBell,
   FaSignOutAlt,
   FaFileInvoiceDollar,
+  FaKey,
 } from "react-icons/fa";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
 
 export default function PatientDashboard() {
   const router = useRouter();
@@ -30,6 +28,7 @@ export default function PatientDashboard() {
   const [patientName, setPatientName] = useState("");
   const [patientEmail, setPatientEmail] = useState("");
   const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined);
+  const [showChangePassword, setShowChangePassword] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -136,6 +135,15 @@ export default function PatientDashboard() {
               />
 
               <button
+                onClick={() => setShowChangePassword(true)}
+                title="Change Password"
+                className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors"
+              >
+                <FaKey />
+                <span className="hidden sm:inline">Change Password</span>
+              </button>
+
+              <button
                 onClick={handleLogout}
                 className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors"
               >
@@ -235,6 +243,13 @@ export default function PatientDashboard() {
         </div>
 
       </main>
+
+      {showChangePassword && (
+        <ChangePasswordModal
+          email={patientEmail}
+          onClose={() => setShowChangePassword(false)}
+        />
+      )}
     </div>
   );
 }
