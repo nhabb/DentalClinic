@@ -1,4 +1,5 @@
 import { IsIn, IsNumber, IsOptional, IsString, IsDateString, Min, MaxLength } from 'class-validator';
+
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
@@ -31,6 +32,11 @@ export class CreateExpenseDto {
   @ApiProperty({ description: 'Date of the expense (YYYY-MM-DD)', example: '2026-04-10' })
   @IsDateString()
   expense_date: string;
+
+  @ApiPropertyOptional({ description: 'Payment status', enum: ['paid', 'pending'], default: 'pending' })
+  @IsOptional()
+  @IsIn(['paid', 'pending'])
+  status?: string;
 
   @ApiPropertyOptional({ description: 'ID of the user recording this expense' })
   @IsOptional()

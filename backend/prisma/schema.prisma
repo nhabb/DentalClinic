@@ -233,6 +233,7 @@ model expenses {
   id           BigInt   @id @default(autoincrement())
   title        String   @db.VarChar
   category     String   @default("other") @db.VarChar
+  status       String   @default("pending") @db.VarChar
   amount       Decimal  @db.Decimal(10, 2)
   description  String?
   expense_date DateTime @db.Date

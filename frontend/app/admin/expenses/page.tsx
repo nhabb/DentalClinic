@@ -83,6 +83,7 @@ export default function ExpensesPage() {
       setExpenses(
         (data.data || []).map((e: any) => ({
           ...e,
+          date: e.expense_date ? String(e.expense_date).split('T')[0] : new Date().toISOString().split('T')[0],
           amount: Number(e.amount) || 0,
           category: e.category
             ? e.category.charAt(0).toUpperCase() + e.category.slice(1).toLowerCase()
@@ -173,6 +174,7 @@ export default function ExpensesPage() {
           expense_date: form.date,
           category: form.category.toLowerCase(),
           amount: parseFloat(form.amount),
+          status: form.status,
         }),
       });
       await fetchExpenses();

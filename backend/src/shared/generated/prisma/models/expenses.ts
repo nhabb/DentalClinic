@@ -42,6 +42,7 @@ export type ExpensesMinAggregateOutputType = {
   id: bigint | null
   title: string | null
   category: string | null
+  status: string | null
   amount: runtime.Decimal | null
   description: string | null
   expense_date: Date | null
@@ -54,6 +55,7 @@ export type ExpensesMaxAggregateOutputType = {
   id: bigint | null
   title: string | null
   category: string | null
+  status: string | null
   amount: runtime.Decimal | null
   description: string | null
   expense_date: Date | null
@@ -66,6 +68,7 @@ export type ExpensesCountAggregateOutputType = {
   id: number
   title: number
   category: number
+  status: number
   amount: number
   description: number
   expense_date: number
@@ -92,6 +95,7 @@ export type ExpensesMinAggregateInputType = {
   id?: true
   title?: true
   category?: true
+  status?: true
   amount?: true
   description?: true
   expense_date?: true
@@ -104,6 +108,7 @@ export type ExpensesMaxAggregateInputType = {
   id?: true
   title?: true
   category?: true
+  status?: true
   amount?: true
   description?: true
   expense_date?: true
@@ -116,6 +121,7 @@ export type ExpensesCountAggregateInputType = {
   id?: true
   title?: true
   category?: true
+  status?: true
   amount?: true
   description?: true
   expense_date?: true
@@ -215,6 +221,7 @@ export type ExpensesGroupByOutputType = {
   id: bigint
   title: string
   category: string
+  status: string
   amount: runtime.Decimal
   description: string | null
   expense_date: Date
@@ -250,6 +257,7 @@ export type expensesWhereInput = {
   id?: Prisma.BigIntFilter<"expenses"> | bigint | number
   title?: Prisma.StringFilter<"expenses"> | string
   category?: Prisma.StringFilter<"expenses"> | string
+  status?: Prisma.StringFilter<"expenses"> | string
   amount?: Prisma.DecimalFilter<"expenses"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   description?: Prisma.StringNullableFilter<"expenses"> | string | null
   expense_date?: Prisma.DateTimeFilter<"expenses"> | Date | string
@@ -263,6 +271,7 @@ export type expensesOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   title?: Prisma.SortOrder
   category?: Prisma.SortOrder
+  status?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   expense_date?: Prisma.SortOrder
@@ -279,6 +288,7 @@ export type expensesWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.expensesWhereInput | Prisma.expensesWhereInput[]
   title?: Prisma.StringFilter<"expenses"> | string
   category?: Prisma.StringFilter<"expenses"> | string
+  status?: Prisma.StringFilter<"expenses"> | string
   amount?: Prisma.DecimalFilter<"expenses"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   description?: Prisma.StringNullableFilter<"expenses"> | string | null
   expense_date?: Prisma.DateTimeFilter<"expenses"> | Date | string
@@ -292,6 +302,7 @@ export type expensesOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   title?: Prisma.SortOrder
   category?: Prisma.SortOrder
+  status?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   expense_date?: Prisma.SortOrder
@@ -312,6 +323,7 @@ export type expensesScalarWhereWithAggregatesInput = {
   id?: Prisma.BigIntWithAggregatesFilter<"expenses"> | bigint | number
   title?: Prisma.StringWithAggregatesFilter<"expenses"> | string
   category?: Prisma.StringWithAggregatesFilter<"expenses"> | string
+  status?: Prisma.StringWithAggregatesFilter<"expenses"> | string
   amount?: Prisma.DecimalWithAggregatesFilter<"expenses"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   description?: Prisma.StringNullableWithAggregatesFilter<"expenses"> | string | null
   expense_date?: Prisma.DateTimeWithAggregatesFilter<"expenses"> | Date | string
@@ -324,6 +336,7 @@ export type expensesCreateInput = {
   id?: bigint | number
   title: string
   category?: string
+  status?: string
   amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   description?: string | null
   expense_date: Date | string
@@ -336,6 +349,7 @@ export type expensesUncheckedCreateInput = {
   id?: bigint | number
   title: string
   category?: string
+  status?: string
   amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   description?: string | null
   expense_date: Date | string
@@ -348,6 +362,7 @@ export type expensesUpdateInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
   amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   expense_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -360,6 +375,7 @@ export type expensesUncheckedUpdateInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
   amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   expense_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -372,6 +388,7 @@ export type expensesCreateManyInput = {
   id?: bigint | number
   title: string
   category?: string
+  status?: string
   amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   description?: string | null
   expense_date: Date | string
@@ -384,6 +401,7 @@ export type expensesUpdateManyMutationInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
   amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   expense_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -395,6 +413,7 @@ export type expensesUncheckedUpdateManyInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
   amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   expense_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -417,6 +436,7 @@ export type expensesCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   title?: Prisma.SortOrder
   category?: Prisma.SortOrder
+  status?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   description?: Prisma.SortOrder
   expense_date?: Prisma.SortOrder
@@ -435,6 +455,7 @@ export type expensesMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   title?: Prisma.SortOrder
   category?: Prisma.SortOrder
+  status?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   description?: Prisma.SortOrder
   expense_date?: Prisma.SortOrder
@@ -447,6 +468,7 @@ export type expensesMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   title?: Prisma.SortOrder
   category?: Prisma.SortOrder
+  status?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   description?: Prisma.SortOrder
   expense_date?: Prisma.SortOrder
@@ -515,6 +537,7 @@ export type expensesCreateWithoutCreatorInput = {
   id?: bigint | number
   title: string
   category?: string
+  status?: string
   amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   description?: string | null
   expense_date: Date | string
@@ -526,6 +549,7 @@ export type expensesUncheckedCreateWithoutCreatorInput = {
   id?: bigint | number
   title: string
   category?: string
+  status?: string
   amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   description?: string | null
   expense_date: Date | string
@@ -566,6 +590,7 @@ export type expensesScalarWhereInput = {
   id?: Prisma.BigIntFilter<"expenses"> | bigint | number
   title?: Prisma.StringFilter<"expenses"> | string
   category?: Prisma.StringFilter<"expenses"> | string
+  status?: Prisma.StringFilter<"expenses"> | string
   amount?: Prisma.DecimalFilter<"expenses"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   description?: Prisma.StringNullableFilter<"expenses"> | string | null
   expense_date?: Prisma.DateTimeFilter<"expenses"> | Date | string
@@ -578,6 +603,7 @@ export type expensesCreateManyCreatorInput = {
   id?: bigint | number
   title: string
   category?: string
+  status?: string
   amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   description?: string | null
   expense_date: Date | string
@@ -589,6 +615,7 @@ export type expensesUpdateWithoutCreatorInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
   amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   expense_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -600,6 +627,7 @@ export type expensesUncheckedUpdateWithoutCreatorInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
   amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   expense_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -611,6 +639,7 @@ export type expensesUncheckedUpdateManyWithoutCreatorInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
   amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   expense_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -624,6 +653,7 @@ export type expensesSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   id?: boolean
   title?: boolean
   category?: boolean
+  status?: boolean
   amount?: boolean
   description?: boolean
   expense_date?: boolean
@@ -637,6 +667,7 @@ export type expensesSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   id?: boolean
   title?: boolean
   category?: boolean
+  status?: boolean
   amount?: boolean
   description?: boolean
   expense_date?: boolean
@@ -650,6 +681,7 @@ export type expensesSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   id?: boolean
   title?: boolean
   category?: boolean
+  status?: boolean
   amount?: boolean
   description?: boolean
   expense_date?: boolean
@@ -663,6 +695,7 @@ export type expensesSelectScalar = {
   id?: boolean
   title?: boolean
   category?: boolean
+  status?: boolean
   amount?: boolean
   description?: boolean
   expense_date?: boolean
@@ -671,7 +704,7 @@ export type expensesSelectScalar = {
   updated_at?: boolean
 }
 
-export type expensesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "title" | "category" | "amount" | "description" | "expense_date" | "created_by" | "created_at" | "updated_at", ExtArgs["result"]["expenses"]>
+export type expensesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "title" | "category" | "status" | "amount" | "description" | "expense_date" | "created_by" | "created_at" | "updated_at", ExtArgs["result"]["expenses"]>
 export type expensesInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   creator?: boolean | Prisma.expenses$creatorArgs<ExtArgs>
 }
@@ -691,6 +724,7 @@ export type $expensesPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     id: bigint
     title: string
     category: string
+    status: string
     amount: runtime.Decimal
     description: string | null
     expense_date: Date
@@ -1124,6 +1158,7 @@ export interface expensesFieldRefs {
   readonly id: Prisma.FieldRef<"expenses", 'BigInt'>
   readonly title: Prisma.FieldRef<"expenses", 'String'>
   readonly category: Prisma.FieldRef<"expenses", 'String'>
+  readonly status: Prisma.FieldRef<"expenses", 'String'>
   readonly amount: Prisma.FieldRef<"expenses", 'Decimal'>
   readonly description: Prisma.FieldRef<"expenses", 'String'>
   readonly expense_date: Prisma.FieldRef<"expenses", 'DateTime'>

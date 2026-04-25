@@ -18,9 +18,10 @@ export class ExpensesService {
       data: {
         title: dto.title,
         category: dto.category ?? 'other',
+        status: dto.status ?? 'pending',
         amount: dto.amount,
         description: dto.description,
-        expense_date: new Date(dto.expense_date),
+        expense_date: new Date(`${dto.expense_date.split('T')[0]}T12:00:00.000Z`),
         created_by: dto.created_by ? BigInt(dto.created_by) : null,
       },
       include: expenseInclude,
@@ -75,11 +76,15 @@ export class ExpensesService {
     await this.findOne(id);
 
     const data: any = { updated_at: new Date() };
-    if (dto.title !== undefined) data.title = dto.title;
-    if (dto.category !== undefined) data.category = dto.category;
-    if (dto.amount !== undefined) data.amount = dto.amount;
-    if (dto.description !== undefined) data.description = dto.description;
-    if (dto.expense_date !== undefined) data.expense_date = new Date(dto.expense_date);
+    if (typeof dto.title === 'string') data.title = dto.title;
+    if (typeof dto.category === 'string') data.category = dto.category;
+    if (typeof dto.status === 'string') data.status = dto.status;
+    if (typeof dto.amount === 'number') data.amount = dto.amount;
+    if (typeof dto.description === 'string') data.description = dto.description;
+    if (typeof dto.expense_date === 'string') {
+      const dateOnly = dto.expense_date.split('T')[0];
+      data.expense_date = new Date(`${dateOnly}T12:00:00.000Z`);
+    }
     if (dto.created_by !== undefined) data.created_by = dto.created_by ? BigInt(dto.created_by) : null;
 
     return this.prisma.expenses.update({
