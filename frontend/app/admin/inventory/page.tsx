@@ -43,6 +43,7 @@ type InventoryItem = {
   lastRestocked: string;
   status: string;
   image_url?: string;
+  cost_price?: number;
 };
 
 const categoryKeys = ["all", "disposables", "materials", "medications", "instruments"] as const;
@@ -134,12 +135,12 @@ export default function InventoryManagement() {
   // Add form state
   const [addForm, setAddForm] = useState({
     name: "", category: "Disposables", unit: "piece",
-    quantity: 0, minimum_quantity: 0, description: "",
+    quantity: 0, minimum_quantity: 0, description: "", cost_price: 0,
   });
   const [addSaving, setAddSaving] = useState(false);
 
   // Edit form state
-  const [editForm, setEditForm] = useState({ name: "", minimum_quantity: 0 });
+  const [editForm, setEditForm] = useState({ name: "", minimum_quantity: 0, cost_price: 0 });
   const [editSaving, setEditSaving] = useState(false);
 
   // Stock adjustment state
@@ -172,6 +173,7 @@ export default function InventoryManagement() {
         lastRestocked: item.updated_at?.split("T")[0] || "",
         status: item.quantity <= item.minimum_quantity ? "low" : "ok",
         image_url: item.image_url ?? undefined,
+        cost_price: item.cost_price ? Number(item.cost_price) : 0,
       }));
       setInventoryItems(mapped);
     } catch (e) {
@@ -223,7 +225,7 @@ export default function InventoryManagement() {
     setSelectedItem(item);
     setEditImageFile(null);
     setEditImagePreview(item.image_url ?? null);
-    setEditForm({ name: item.name, minimum_quantity: item.minimumStock });
+    setEditForm({ name: item.name, minimum_quantity: item.minimumStock, cost_price: item.cost_price ?? 0 });
     setStockQty(1);
     setStockType("in");
     setStockNote("");
@@ -287,7 +289,7 @@ export default function InventoryManagement() {
     setShowAddModal(false);
     setAddImageFile(null);
     setAddImagePreview(null);
-    setAddForm({ name: "", category: "Disposables", unit: "piece", quantity: 0, minimum_quantity: 0, description: "" });
+    setAddForm({ name: "", category: "Disposables", unit: "piece", quantity: 0, minimum_quantity: 0, description: "", cost_price: 0 });
   };
 
   const handleAddSave = async () => {
@@ -572,6 +574,17 @@ export default function InventoryManagement() {
               />
             </FormField>
           </div>
+          <FormField label="Unit Cost Price">
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder="0.00"
+              className={inputClass}
+              value={addForm.cost_price}
+              onChange={(e) => setAddForm((f) => ({ ...f, cost_price: Number(e.target.value) }))}
+            />
+          </FormField>
           <FormField label={t("inventory.supplier")}>
             <input
               type="text"
@@ -624,6 +637,16 @@ export default function InventoryManagement() {
                   className={inputClass}
                   value={editForm.minimum_quantity}
                   onChange={(e) => setEditForm((f) => ({ ...f, minimum_quantity: Number(e.target.value) }))}
+                />
+              </FormField>
+              <FormField label="Unit Cost Price">
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  className={inputClass}
+                  value={editForm.cost_price}
+                  onChange={(e) => setEditForm((f) => ({ ...f, cost_price: Number(e.target.value) }))}
                 />
               </FormField>
             </div>
