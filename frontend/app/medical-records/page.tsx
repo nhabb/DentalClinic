@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { Avatar } from "@/components/ui/Avatar";
 import { PatientPageHeader } from "@/components/ui/PatientPageHeader";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/lib/i18n";
 import {
   FaFileMedical,
   FaCalendarAlt,
@@ -31,6 +32,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
 
 export default function MedicalRecords() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [patientInfo, setPatientInfo] = useState({
     name: "",
     dateOfBirth: "",
@@ -259,10 +261,10 @@ export default function MedicalRecords() {
         {/* Page Title */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Medical Records
+            {t("medicalRecords.title")}
           </h1>
           <p className="text-gray-600">
-            View your complete dental health history
+            {t("medicalRecords.subtitle")}
           </p>
         </div>
 
@@ -277,8 +279,8 @@ export default function MedicalRecords() {
                   {patientInfo.name}
                 </h2>
                 <p className="text-gray-500">
-                  DOB: {new Date(patientInfo.dateOfBirth).toLocaleDateString()}{" "}
-                  | Blood Type: {patientInfo.bloodType}
+                  {t("medicalRecords.dob")} {new Date(patientInfo.dateOfBirth).toLocaleDateString()}{" "}
+                  | {t("medicalRecords.bloodType")} {patientInfo.bloodType}
                 </p>
               </div>
             </div>
@@ -287,14 +289,14 @@ export default function MedicalRecords() {
             <div className="grid grid-cols-3 gap-4">
               <div className="text-center p-3 bg-red-50 rounded-xl">
                 <FaAllergies className="text-red-500 text-xl mx-auto mb-1" />
-                <p className="text-xs text-gray-500">Allergies</p>
+                <p className="text-xs text-gray-500">{t("medicalRecords.allergies")}</p>
                 <p className="text-sm font-semibold text-gray-900">
                   {patientInfo.allergies.length}
                 </p>
               </div>
               <div className="text-center p-3 bg-blue-50 rounded-xl">
                 <FaCalendarAlt className="text-blue-500 text-xl mx-auto mb-1" />
-                <p className="text-xs text-gray-500">Last Visit</p>
+                <p className="text-xs text-gray-500">{t("medicalRecords.lastVisit")}</p>
                 <p className="text-sm font-semibold text-gray-900">
                   {new Date(patientInfo.lastVisit).toLocaleDateString("en-US", {
                     month: "short",
@@ -304,7 +306,7 @@ export default function MedicalRecords() {
               </div>
               <div className="text-center p-3 bg-green-50 rounded-xl">
                 <FaHeartbeat className="text-green-500 text-xl mx-auto mb-1" />
-                <p className="text-xs text-gray-500">Conditions</p>
+                <p className="text-xs text-gray-500">{t("medicalRecords.conditions")}</p>
                 <p className="text-sm font-semibold text-gray-900">
                   {patientInfo.conditions[0]}
                 </p>
@@ -319,7 +321,7 @@ export default function MedicalRecords() {
                 <FaAllergies className="text-red-500" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-700">Allergies</p>
+                <p className="text-sm font-medium text-gray-700">{t("medicalRecords.allergies")}</p>
                 <div className="flex flex-wrap gap-2 mt-1">
                   {patientInfo.allergies.map((allergy) => (
                     <span
@@ -338,7 +340,7 @@ export default function MedicalRecords() {
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-700">
-                  Current Medications
+                  {t("medicalRecords.currentMedications")}
                 </p>
                 <p className="text-sm text-gray-500 mt-1">
                   {patientInfo.medications.join(", ")}
@@ -359,7 +361,7 @@ export default function MedicalRecords() {
             }`}
           >
             <FaNotesMedical className="inline mr-2" />
-            Visit History
+            {t("medicalRecords.visitHistory")}
           </button>
           <button
             onClick={() => setActiveTab("documents")}
@@ -370,7 +372,7 @@ export default function MedicalRecords() {
             }`}
           >
             <FaFileMedical className="inline mr-2" />
-            Documents
+            {t("medicalRecords.documents")}
           </button>
         </div>
 
@@ -384,7 +386,7 @@ export default function MedicalRecords() {
                   <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input
                     type="text"
-                    placeholder="Search visits by type, doctor, or notes..."
+                    placeholder={t("medicalRecords.searchPlaceholder")}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
@@ -397,7 +399,7 @@ export default function MedicalRecords() {
                     onClick={() => setShowFilter((v) => !v)}
                   >
                     <FaFilter className="mr-2" />
-                    Filter
+                    {t("common.filter")}
                     {filterType !== "all" && (
                       <span className="ml-2 w-2 h-2 rounded-full bg-dental-blue inline-block" />
                     )}
@@ -414,7 +416,7 @@ export default function MedicalRecords() {
                               : "hover:bg-gray-50 text-gray-700"
                           }`}
                         >
-                          {type === "all" ? "All Types" : type}
+                          {type === "all" ? t("medicalRecords.allTypes") : type}
                         </button>
                       ))}
                     </div>
@@ -481,7 +483,7 @@ export default function MedicalRecords() {
                       <div className="grid md:grid-cols-2 gap-6">
                         <div>
                           <h4 className="text-sm font-semibold text-gray-700 mb-2">
-                            Notes
+                            {t("medicalRecords.notes")}
                           </h4>
                           <p className="text-gray-600 text-sm leading-relaxed">
                             {visit.notes}
@@ -489,7 +491,7 @@ export default function MedicalRecords() {
                         </div>
                         <div>
                           <h4 className="text-sm font-semibold text-gray-700 mb-2">
-                            Treatments Performed
+                            {t("medicalRecords.treatmentsPerformed")}
                           </h4>
                           <div className="flex flex-wrap gap-2">
                             {visit.treatments.map((treatment) => (
@@ -505,14 +507,14 @@ export default function MedicalRecords() {
                       </div>
                       <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center">
                         <span className="text-sm text-gray-500">
-                          Cost:{" "}
+                          {t("medicalRecords.cost")}{" "}
                           <span className="font-semibold text-gray-900">
                             {visit.cost}
                           </span>
                         </span>
                         <Button variant="outline" size="sm" onClick={() => handleDownloadReport(visit)}>
                           <FaDownload className="mr-2" />
-                          Download Report
+                          {t("medicalRecords.downloadReport")}
                         </Button>
                       </div>
                     </div>
@@ -528,7 +530,7 @@ export default function MedicalRecords() {
           <div className="animate-fadeIn">
             <div className="bg-white rounded-2xl shadow-sm p-6">
               {documents.length === 0 ? (
-                <p className="text-center text-gray-500 py-8">No documents found.</p>
+                <p className="text-center text-gray-500 py-8">{t("medicalRecords.noDocuments")}</p>
               ) : (
                 <div className="grid sm:grid-cols-2 gap-4">
                   {documents.map((doc) => (

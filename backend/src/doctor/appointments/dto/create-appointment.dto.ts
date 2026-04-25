@@ -1,4 +1,4 @@
-import { IsNumber, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsInt, IsNumber, IsOptional, IsString, MaxLength, Min } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateAppointmentDto {
@@ -15,4 +15,10 @@ export class CreateAppointmentDto {
   @IsString()
   @MaxLength(500)
   reason?: string;
+
+  @ApiPropertyOptional({ description: 'Required procedure duration in minutes — slot must be at least this long' })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  duration_minutes?: number;
 }

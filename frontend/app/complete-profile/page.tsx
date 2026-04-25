@@ -63,9 +63,16 @@ export default function CompleteProfilePage() {
     setIsLoading(false);
   }, [router]);
 
+  const PHONE_FIELDS = ["phone", "emergency_contact_phone"];
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => setForm({ ...form, [e.target.name]: e.target.value });
+  ) => {
+    const value = PHONE_FIELDS.includes(e.target.name)
+      ? e.target.value.replace(/[^0-9+\-\s()]/g, "")
+      : e.target.value;
+    setForm({ ...form, [e.target.name]: value });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -169,7 +176,8 @@ export default function CompleteProfilePage() {
               </Field>
               <Field label="Date of Birth" required>
                 <input name="date_of_birth" type="date" value={form.date_of_birth}
-                  onChange={handleChange} required className={input} />
+                  onChange={handleChange} required className={input}
+                  max={new Date().toISOString().split("T")[0]} />
               </Field>
             </div>
 

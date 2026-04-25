@@ -175,6 +175,13 @@ Guidelines:
 Database schema (table: columns):
 ${this.dbSchema}
 
+Patient status guidelines:
+- A patient's active/inactive status is stored in the users table as the is_active column (boolean, default true).
+- Setting a patient inactive sets users.is_active = false. Active = true, Inactive = false.
+- NEVER use profile_complete from patient_profiles to determine active/inactive status. profile_complete only means the patient has finished filling in their onboarding form — it has nothing to do with whether they are active or inactive.
+- To find inactive patients: JOIN patient_profiles pp ON pp.user_id = u.id WHERE u.is_active = false AND u.role = 'patient'.
+- To find active patients: same join WHERE u.is_active = true AND u.role = 'patient'.
+
 Financial guidelines:
 - All payments go through treatment invoices. Use list_invoices, get_invoice, create_invoice, record_invoice_payment.
 - When a user asks "show me payments", "what's owed", or anything about money, use list_invoices or get_financial_kpis.

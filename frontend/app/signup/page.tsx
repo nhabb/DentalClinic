@@ -63,8 +63,14 @@ export default function SignupPage() {
     currentMedications: "",
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const PHONE_FIELDS = ["phone", "emergencyPhone"];
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = PHONE_FIELDS.includes(e.target.name)
+      ? e.target.value.replace(/[^0-9+\-\s()]/g, "")
+      : e.target.value;
+    setForm({ ...form, [e.target.name]: value });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -290,6 +296,7 @@ export default function SignupPage() {
                         locale={dateLocale}
                         fromYear={1920}
                         toYear={new Date().getFullYear()}
+                        disabled={(date) => date > new Date()}
                         classNames={{ nav: "hidden" }}
                       />
                     </PopoverContent>

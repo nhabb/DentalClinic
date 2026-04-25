@@ -39,6 +39,18 @@ export class AppointmentsService {
     if (!slot) throw new NotFoundException('Appointment slot not found');
     if (slot.is_booked) throw new BadRequestException('This slot is already booked');
 
+    // Validate that the slot is long enough for the requested procedure
+    if (dto.duration_minutes) {
+      const slotMinutes = Math.round(
+        (new Date(slot.end_time).getTime() - new Date(slot.start_time).getTime()) / 60000,
+      );
+      if (slotMinutes < dto.duration_minutes) {
+        throw new BadRequestException(
+          `This slot is only ${slotMinutes} min but the selected procedure requires ${dto.duration_minutes} min.`,
+        );
+      }
+    }
+
     // Validate patient profile
     const patient = await this.prisma.patient_profiles.findUnique({
       where: { id: BigInt(dto.patient_id) },

@@ -6,6 +6,8 @@ import { FaTooth, FaArrowLeft } from "react-icons/fa";
 import { Avatar } from "@/components/ui/Avatar";
 import { getStoredPhoto } from "@/lib/profilePhoto";
 import { supabase } from "@/lib/supabase/client";
+import { useTranslation } from "@/lib/i18n";
+import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 
 interface PatientPageHeaderProps {
   backHref?: string;
@@ -14,8 +16,10 @@ interface PatientPageHeaderProps {
 
 export function PatientPageHeader({
   backHref = "/patient-dashboard",
-  backLabel = "Back to Dashboard",
+  backLabel,
 }: PatientPageHeaderProps) {
+  const { t } = useTranslation();
+  const displayLabel = backLabel ?? t("patientHeader.backToDashboard");
   const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined);
   const [name, setName] = useState("");
 
@@ -60,6 +64,7 @@ export function PatientPageHeader({
             <span className="text-xl font-bold text-gray-900">BrightSmile</span>
           </Link>
           <div className="flex items-center gap-4">
+            <LanguageSwitcher />
             {(photoUrl || name) && (
               <Avatar name={name || "User"} size="sm" src={photoUrl} />
             )}
@@ -68,7 +73,7 @@ export function PatientPageHeader({
               className="text-gray-600 hover:text-dental-blue transition-colors flex items-center gap-2"
             >
               <FaArrowLeft className="text-sm" />
-              {backLabel}
+              {displayLabel}
             </Link>
           </div>
         </div>

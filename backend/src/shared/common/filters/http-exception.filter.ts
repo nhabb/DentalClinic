@@ -6,6 +6,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { Prisma } from '../../generated/prisma/client';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
@@ -13,6 +14,33 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
+
+    // ── Prisma known errors → meaningful 400s ─────────────────────────────────
+    if (exception instanceof Prisma.PrismaClientKnownRequestError) {
+      const prismaMessages: Record<string, string> = {
+        P2002: 'A record with this value already exists.',
+        P2025: 'Record not found.',
+        P2020: 'A numeric value is out of the allowed range.',
+        P2006: 'The provided value is invalid for this field.',
+      };
+      const msg = prismaMessages[exception.code] ?? 'Database error.';
+      return response.status(HttpStatus.BAD_REQUEST).json({
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: msg,
+        path: request.url,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    // ── Prisma validation errors (e.g. value too large for column type) ───────
+    if (exception instanceof Prisma.PrismaClientValidationError) {
+      return response.status(HttpStatus.BAD_REQUEST).json({
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: 'Invalid value provided. Check that all fields are within the allowed range.',
+        path: request.url,
+        timestamp: new Date().toISOString(),
+      });
+    }
 
     const status =
       exception instanceof HttpException

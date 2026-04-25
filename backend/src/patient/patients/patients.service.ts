@@ -45,6 +45,7 @@ export class PatientsService {
         date_of_birth: true,
         gender: true,
         address: true,
+        is_active: true,
       },
     },
   };

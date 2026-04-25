@@ -1101,7 +1101,7 @@ export default function PatientsPage() {
                   <input
                     type="tel"
                     value={editPatientForm.phone}
-                    onChange={(e) => setEditPatientForm((f) => ({ ...f, phone: e.target.value }))}
+                    onChange={(e) => setEditPatientForm((f) => ({ ...f, phone: e.target.value.replace(/[^0-9+\-\s()]/g, "") }))}
                     className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
                   />
                 </div>

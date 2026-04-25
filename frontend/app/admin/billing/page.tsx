@@ -270,6 +270,52 @@ export default function BillingPage() {
     setShowViewModal(true);
   };
 
+  // ── Export / Import data ─────────────────────────────────────────────────────
+
+  const exportData = invoices.map((inv) => ({
+    id: inv.id,
+    patient_name: `${inv.patient.users.first_name} ${inv.patient.users.last_name}`,
+    patient_email: inv.patient.users.email,
+    patient_id: inv.patient.id,
+    procedure_date: new Date(inv.procedure_date).toLocaleDateString("en-CA"),
+    procedures: inv.line_items.map((li) => `${li.procedure_name}: ${li.amount.toFixed(2)}`).join("; "),
+    total_amount: inv.total_amount,
+    amount_paid: inv.amount_paid,
+    remaining_amount: inv.remaining_amount,
+    status: inv.status,
+    notes: inv.notes ?? "",
+  }));
+
+  const handleImport = async (rows: Record<string, unknown>[]) => {
+    let created = 0;
+    let failed = 0;
+    for (const row of rows) {
+      try {
+        const patientId = Number(row.patient_id);
+        const procedureDate = String(row.procedure_date ?? "");
+        const procedureName = String(row.procedure_name ?? row.procedures ?? "");
+        const amount = Number(row.amount ?? row.total_amount ?? 0);
+        if (!patientId || !procedureDate || !procedureName || amount <= 0) { failed++; continue; }
+        const firstProc = procedureName.split(";")[0].split(":")[0].trim();
+        const validProc = PROCEDURES.includes(firstProc as typeof PROCEDURES[number]) ? firstProc : "Checkup";
+        const res = await apiFetch("/api/billing/invoices", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            patient_id: patientId,
+            procedure_date: procedureDate,
+            notes: String(row.notes ?? "") || undefined,
+            line_items: [{ procedure_name: validProc, amount }],
+          }),
+        });
+        if (res.ok) created++; else failed++;
+      } catch { failed++; }
+    }
+    await fetchInvoices();
+    if (created) toast.success(`${created} invoice(s) imported.`);
+    if (failed) toast.error(`${failed} row(s) failed (missing patient_id, date, or amount).`);
+  };
+
   const handleLogout = () => {
     toast.success("Logged out.");
     safeStorage.removeItem("adminAuth");
@@ -289,6 +335,9 @@ export default function BillingPage() {
         <AdminPageHeader
           title={t("billing.title")}
           subtitle={t("billing.subtitle")}
+          data={exportData}
+          filename="invoices"
+          onImport={handleImport}
           onAdd={() => { resetCreateModal(); setShowCreateModal(true); }}
           addLabel={t("billing.newInvoice")}
           extraActions={

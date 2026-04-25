@@ -11,6 +11,8 @@ import { getStoredPhoto } from "@/lib/profilePhoto";
 import { supabase } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
+import { useTranslation } from "@/lib/i18n";
+import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import {
   FaTooth,
   FaCalendarAlt,
@@ -31,6 +33,7 @@ type ServiceType = "checkup" | "procedure" | null;
 interface TimeSlot {
   time: string;
   available: boolean;
+  durationMinutes: number;
 }
 
 interface Doctor {
@@ -98,6 +101,7 @@ const procedures: Procedure[] = [
 
 export default function BookAppointment() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [step, setStep] = useState(1);
   const [selectedDoctor, setSelectedDoctor] = useState<number | null>(null);
   const [serviceType, setServiceType] = useState<ServiceType>(null);
@@ -230,10 +234,16 @@ export default function BookAppointment() {
       });
       const res = await apiFetch(`/api/patient/available-slots?${params}`);
       const data = await res.json();
-      const slots = (data.data || []).map((s: any) => ({
-        time: new Date(s.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "UTC" }),
-        available: true,
-      }));
+      const slots = (data.data || []).map((s: any) => {
+        const durationMinutes = Math.round(
+          (new Date(s.end_time).getTime() - new Date(s.start_time).getTime()) / 60000
+        );
+        return {
+          time: new Date(s.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "UTC" }),
+          available: true,
+          durationMinutes,
+        };
+      });
       setTimeSlots(slots);
     } catch (e) {
       setTimeSlots([]);
@@ -284,6 +294,7 @@ export default function BookAppointment() {
           patient_id: Number(profile.id),
           slot_id: Number(slot.id),
           reason: getSelectedProcedureInfo()?.name ?? (serviceType === "checkup" ? "Regular Checkup" : "Checkup"),
+          duration_minutes: getRequiredDurationMinutes() || undefined,
         }),
       });
 
@@ -312,8 +323,13 @@ export default function BookAppointment() {
         );
       case 3:
         return selectedDate !== undefined;
-      case 4:
-        return selectedTime !== null;
+      case 4: {
+        if (!selectedTime) return false;
+        const requiredDuration = getRequiredDurationMinutes();
+        const selectedSlot = timeSlots.find((s) => s.time === selectedTime);
+        if (requiredDuration > 0 && selectedSlot && selectedSlot.durationMinutes < requiredDuration) return false;
+        return true;
+      }
       default:
         return false;
     }
@@ -336,6 +352,13 @@ export default function BookAppointment() {
   const getSelectedProcedureInfo = () =>
     procedures.find((p) => p.id === selectedProcedure);
 
+  const getRequiredDurationMinutes = () => {
+    if (serviceType === "checkup") return 30;
+    const proc = getSelectedProcedureInfo();
+    if (!proc) return 0;
+    return parseInt(proc.duration, 10);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-primary-50">
       {/* Header */}
@@ -354,6 +377,7 @@ export default function BookAppointment() {
               </span>
             </Link>
             <div className="flex items-center gap-4">
+              <LanguageSwitcher />
               {(photoUrl || patientName) && (
                 <Avatar name={patientName || "User"} size="sm" src={photoUrl} />
               )}
@@ -362,7 +386,7 @@ export default function BookAppointment() {
                 className="text-gray-600 hover:text-dental-blue transition-colors flex items-center gap-2"
               >
                 <FaArrowLeft className="text-sm" />
-                Back to Dashboard
+                {t("patientHeader.backToDashboard")}
               </Link>
             </div>
           </div>
@@ -373,10 +397,10 @@ export default function BookAppointment() {
         {/* Page Title */}
         <div className="text-center mb-10">
           <h1 className="text-4xl font-bold text-gray-900 mb-3">
-            Book Your Appointment
+            {t("bookAppointment.title")}
           </h1>
           <p className="text-gray-600 text-lg">
-            Schedule your visit in just a few simple steps
+            {t("bookAppointment.subtitle")}
           </p>
         </div>
 
@@ -413,28 +437,28 @@ export default function BookAppointment() {
                   step >= 1 ? "text-dental-blue font-medium" : "text-gray-400"
                 }
               >
-                Doctor
+                {t("bookAppointment.stepDoctor")}
               </span>
               <span
                 className={
                   step >= 2 ? "text-dental-blue font-medium" : "text-gray-400"
                 }
               >
-                Service
+                {t("bookAppointment.stepService")}
               </span>
               <span
                 className={
                   step >= 3 ? "text-dental-blue font-medium" : "text-gray-400"
                 }
               >
-                Date
+                {t("bookAppointment.stepDate")}
               </span>
               <span
                 className={
                   step >= 4 ? "text-dental-blue font-medium" : "text-gray-400"
                 }
               >
-                Time
+                {t("bookAppointment.stepTime")}
               </span>
             </div>
           </div>
@@ -446,21 +470,21 @@ export default function BookAppointment() {
           {step === 1 && (
             <div className="animate-fadeIn">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Choose Your Dentist
+                {t("bookAppointment.chooseDentist")}
               </h2>
               <p className="text-gray-600 mb-8">
-                Select the doctor you'd like to see for your appointment
+                {t("bookAppointment.chooseDentistDesc")}
               </p>
 
               {loadingDoctors ? (
                 <div className="flex justify-center items-center py-12">
                   <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-dental-blue"></div>
-                  <span className="ml-3 text-gray-600">Loading doctors...</span>
+                  <span className="ml-3 text-gray-600">{t("bookAppointment.loadingDoctors")}</span>
                 </div>
               ) : doctors.length === 0 ? (
                 <div className="text-center py-12 text-gray-500">
-                  <p className="text-lg font-medium">No doctors available at this time.</p>
-                  <p className="text-sm mt-1">Please contact the clinic to schedule an appointment.</p>
+                  <p className="text-lg font-medium">{t("bookAppointment.noDoctors")}</p>
+                  <p className="text-sm mt-1">{t("bookAppointment.noDoctorsContact")}</p>
                 </div>
               ) : (
                 <div className="grid md:grid-cols-3 gap-6">
@@ -503,7 +527,7 @@ export default function BookAppointment() {
                         </div>
                         {!doctor.available && (
                           <span className="inline-block mt-3 text-xs font-medium text-red-500 bg-red-50 px-2 py-1 rounded-full w-full text-center">
-                            Not Available Today
+                            {t("bookAppointment.notAvailable")}
                           </span>
                         )}
                         {doctor.available && isSelected && (
@@ -511,7 +535,7 @@ export default function BookAppointment() {
                             <div className="w-8 h-8 bg-dental-blue rounded-full flex items-center justify-center">
                               <FaCheckCircle className="text-white" />
                             </div>
-                            <span className="text-[10px] text-dental-blue font-medium">tap to deselect</span>
+                            <span className="text-[10px] text-dental-blue font-medium">{t("bookAppointment.tapToDeselect")}</span>
                           </div>
                         )}
                       </button>
@@ -526,10 +550,10 @@ export default function BookAppointment() {
           {step === 2 && (
             <div className="animate-fadeIn">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                What would you like to book?
+                {t("bookAppointment.serviceTitle")}
               </h2>
               <p className="text-gray-600 mb-8">
-                Choose between a routine checkup or a specific procedure
+                {t("bookAppointment.serviceDesc")}
               </p>
 
               <div className="grid md:grid-cols-2 gap-6 mb-8">
@@ -555,14 +579,13 @@ export default function BookAppointment() {
                     <FaStethoscope className="text-3xl" />
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-2">
-                    Regular Checkup
+                    {t("bookAppointment.regularCheckup")}
                   </h3>
                   <p className="text-gray-600">
-                    Routine dental examination to ensure your oral health is in
-                    great shape
+                    {t("bookAppointment.regularCheckupDesc")}
                   </p>
                   <span className="inline-block mt-4 text-sm font-medium text-dental-blue">
-                    Duration: 30 min
+                    {t("bookAppointment.duration30")}
                   </span>
                   {serviceType === "checkup" && (
                     <div className="absolute top-4 right-4 w-8 h-8 bg-dental-blue rounded-full flex items-center justify-center">
@@ -590,14 +613,13 @@ export default function BookAppointment() {
                     <FaTeeth className="text-3xl" />
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-2">
-                    Dental Procedure
+                    {t("bookAppointment.dentalProcedure")}
                   </h3>
                   <p className="text-gray-600">
-                    Specific treatments like cleaning, whitening, fillings, and
-                    more
+                    {t("bookAppointment.dentalProcedureDesc")}
                   </p>
                   <span className="inline-block mt-4 text-sm font-medium text-dental-blue">
-                    Various durations
+                    {t("bookAppointment.variousDurations")}
                   </span>
                   {serviceType === "procedure" && (
                     <div className="absolute top-4 right-4 w-8 h-8 bg-dental-blue rounded-full flex items-center justify-center">
@@ -611,7 +633,7 @@ export default function BookAppointment() {
               {serviceType === "procedure" && (
                 <div className="animate-fadeIn">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                    Select a procedure
+                    {t("bookAppointment.selectProcedure")}
                   </h3>
                   <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {procedures.map((proc) => (
@@ -638,7 +660,7 @@ export default function BookAppointment() {
               <div className="mt-8 p-4 bg-gray-50 rounded-xl flex items-center gap-4">
                 <Avatar name={getSelectedDoctorInfo()?.name ?? ""} size="md" />
                 <div>
-                  <p className="text-sm text-gray-500">Your selected doctor</p>
+                  <p className="text-sm text-gray-500">{t("bookAppointment.yourSelectedDoctor")}</p>
                   <p className="font-semibold text-gray-900">
                     {getSelectedDoctorInfo()?.name}
                   </p>
@@ -651,10 +673,10 @@ export default function BookAppointment() {
           {step === 3 && (
             <div className="animate-fadeIn">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Choose a Date
+                {t("bookAppointment.chooseDate")}
               </h2>
               <p className="text-gray-600 mb-8">
-                Select your preferred appointment date with{" "}
+                {t("bookAppointment.chooseDateDesc")}{" "}
                 {getSelectedDoctorInfo()?.name}
               </p>
 
@@ -662,7 +684,7 @@ export default function BookAppointment() {
                 {loadingDates ? (
                   <div className="flex items-center gap-3 py-16 text-gray-500">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-dental-blue" />
-                    Loading available dates...
+                    {t("bookAppointment.loadingDates")}
                   </div>
                 ) : (
                 <Calendar
@@ -713,7 +735,7 @@ export default function BookAppointment() {
               {selectedDate && (
                 <div className="mt-6 text-center">
                   <p className="text-lg">
-                    Selected:{" "}
+                    {t("bookAppointment.selected")}{" "}
                     <span className="font-semibold text-dental-blue">
                       {selectedDate.toLocaleDateString("en-US", {
                         weekday: "long",
@@ -732,10 +754,10 @@ export default function BookAppointment() {
           {step === 4 && (
             <div className="animate-fadeIn">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Select a Time
+                {t("bookAppointment.selectTime")}
               </h2>
               <p className="text-gray-600 mb-8">
-                Choose an available time slot with{" "}
+                {t("bookAppointment.selectTimeDesc")}{" "}
                 {getSelectedDoctorInfo()?.name}
               </p>
 
@@ -743,30 +765,34 @@ export default function BookAppointment() {
                 <div className="flex justify-center items-center py-12">
                   <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-dental-blue"></div>
                   <span className="ml-3 text-gray-600">
-                    Loading {getSelectedDoctorInfo()?.name}'s available slots...
+                    {t("bookAppointment.loadingDoctors")}
                   </span>
                 </div>
               ) : timeSlots.length === 0 ? (
                 <div className="text-center py-12 text-gray-500">
                   <FaClock className="mx-auto text-4xl mb-3 text-gray-300" />
-                  <p className="font-medium">No available slots for this date.</p>
-                  <p className="text-sm mt-1">Please select a different date or doctor.</p>
+                  <p className="font-medium">{t("bookAppointment.noSlots")}</p>
+                  <p className="text-sm mt-1">{t("bookAppointment.noSlotsDesc")}</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-4">
                   {timeSlots.map((slot) => {
                     const isSelected = selectedTime === slot.time;
+                    const requiredDuration = getRequiredDurationMinutes();
+                    const tooShort = requiredDuration > 0 && slot.durationMinutes < requiredDuration;
+                    const isDisabled = !slot.available || tooShort;
                     return (
                       <button
                         key={slot.time}
                         onClick={() => {
-                          if (!slot.available) return;
+                          if (isDisabled) return;
                           setSelectedTime(isSelected ? null : slot.time);
                         }}
-                        disabled={!slot.available}
+                        disabled={isDisabled}
+                        title={tooShort ? `Slot is ${slot.durationMinutes} min — procedure needs ${requiredDuration} min` : undefined}
                         className={`p-4 rounded-xl border-2 font-medium transition-all ${
-                          !slot.available
-                            ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed line-through"
+                          isDisabled
+                            ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
                             : isSelected
                               ? "border-dental-blue bg-dental-blue text-white shadow-lg shadow-dental-blue/30"
                               : "border-gray-200 hover:border-dental-blue/50 text-gray-700 hover:bg-gray-50"
@@ -774,7 +800,7 @@ export default function BookAppointment() {
                       >
                         <FaClock
                           className={`mx-auto mb-2 ${
-                            !slot.available
+                            isDisabled
                               ? "text-gray-400"
                               : isSelected
                                 ? "text-white"
@@ -784,12 +810,17 @@ export default function BookAppointment() {
                         {slot.time}
                         {isSelected && (
                           <span className="block text-[10px] mt-1 text-white/80">
-                            tap to deselect
+                            {t("bookAppointment.tapToDeselect")}
                           </span>
                         )}
-                        {!slot.available && (
+                        {tooShort && (
+                          <span className="block text-[10px] mt-1 text-gray-400">
+                            {slot.durationMinutes}min slot
+                          </span>
+                        )}
+                        {!tooShort && !slot.available && (
                           <span className="block text-xs mt-1 text-gray-400">
-                            Booked
+                            {t("bookAppointment.slotBooked")}
                           </span>
                         )}
                       </button>
@@ -802,7 +833,7 @@ export default function BookAppointment() {
               {selectedTime && (
                 <div className="mt-8 p-6 bg-gradient-to-r from-dental-blue/5 to-dental-teal/5 rounded-2xl">
                   <h3 className="text-lg font-bold text-gray-900 mb-4">
-                    Appointment Summary
+                    {t("bookAppointment.appointmentSummary")}
                   </h3>
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="flex items-center gap-3">
@@ -810,7 +841,7 @@ export default function BookAppointment() {
                         <FaUserMd className="text-dental-blue" />
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Dentist</p>
+                        <p className="text-sm text-gray-500">{t("bookAppointment.dentist")}</p>
                         <p className="font-semibold text-gray-900">
                           {getSelectedDoctorInfo()?.name}
                         </p>
@@ -821,10 +852,10 @@ export default function BookAppointment() {
                         <FaStethoscope className="text-dental-blue" />
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Service</p>
+                        <p className="text-sm text-gray-500">{t("bookAppointment.stepService")}</p>
                         <p className="font-semibold text-gray-900">
                           {serviceType === "checkup"
-                            ? "Regular Checkup"
+                            ? t("bookAppointment.regularCheckup")
                             : getSelectedProcedureInfo()?.name}
                         </p>
                       </div>
@@ -834,7 +865,7 @@ export default function BookAppointment() {
                         <FaCalendarAlt className="text-dental-blue" />
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Date & Time</p>
+                        <p className="text-sm text-gray-500">{t("bookAppointment.dateTime")}</p>
                         <p className="font-semibold text-gray-900">
                           {selectedDate?.toLocaleDateString("en-US", {
                             month: "short",
@@ -849,7 +880,7 @@ export default function BookAppointment() {
                         <FaClock className="text-dental-blue" />
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Duration</p>
+                        <p className="text-sm text-gray-500">{t("bookAppointment.duration")}</p>
                         <p className="font-semibold text-gray-900">
                           {serviceType === "checkup"
                             ? "30 min"
@@ -881,7 +912,7 @@ export default function BookAppointment() {
               className={`px-6 py-3 ${step === 1 ? "opacity-0 pointer-events-none" : ""}`}
             >
               <FaArrowLeft className="mr-2" />
-              Back
+              {t("common.back")}
             </Button>
 
             {step < totalSteps ? (
@@ -890,7 +921,7 @@ export default function BookAppointment() {
                 disabled={!canProceed()}
                 className="px-8 py-3 bg-dental-blue hover:bg-dental-blue/90 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Continue
+                {t("bookAppointment.continue")}
                 <FaArrowRight className="ml-2" />
               </Button>
             ) : (
@@ -902,11 +933,11 @@ export default function BookAppointment() {
                 {submitting ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Booking...
+                    {t("bookAppointment.booking")}
                   </>
                 ) : (
                   <>
-                    Confirm Appointment
+                    {t("bookAppointment.confirmAppointment")}
                     <FaCheckCircle className="ml-2" />
                   </>
                 )}
@@ -922,10 +953,10 @@ export default function BookAppointment() {
               <FaCheckCircle className="text-green-500 text-4xl" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              Appointment Booked!
+              {t("bookAppointment.appointmentBooked")}
             </h2>
             <p className="text-gray-600 mb-6">
-              Your appointment has been successfully scheduled for{" "}
+              {t("bookAppointment.appointmentBookedDesc")}{" "}
               <span className="font-semibold">
                 {selectedDate?.toLocaleDateString("en-US", {
                   weekday: "long",
@@ -937,7 +968,7 @@ export default function BookAppointment() {
               at <span className="font-semibold">{selectedTime}</span>
             </p>
             <p className="text-gray-600 mb-8">
-              with{" "}
+              {t("bookAppointment.appointmentWith")}{" "}
               <span className="font-semibold">
                 {getSelectedDoctorInfo()?.name}
               </span>
@@ -945,7 +976,7 @@ export default function BookAppointment() {
             <div className="flex gap-4 justify-center">
               <Link href="/patient-dashboard">
                 <Button className="px-6 py-3 bg-dental-blue hover:bg-dental-blue/90">
-                  Go to Dashboard
+                  {t("common.goToDashboard")}
                 </Button>
               </Link>
               <Button
@@ -962,7 +993,7 @@ export default function BookAppointment() {
                 }}
                 className="px-6 py-3"
               >
-                Book Another
+                {t("bookAppointment.bookAnother")}
               </Button>
             </div>
           </div>

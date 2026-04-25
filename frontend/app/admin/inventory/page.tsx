@@ -135,12 +135,12 @@ export default function InventoryManagement() {
   // Add form state
   const [addForm, setAddForm] = useState({
     name: "", category: "Disposables", unit: "piece",
-    quantity: 0, minimum_quantity: 0, description: "", cost_price: 0,
+    quantity: "", minimum_quantity: "", description: "", cost_price: "",
   });
   const [addSaving, setAddSaving] = useState(false);
 
   // Edit form state
-  const [editForm, setEditForm] = useState({ name: "", minimum_quantity: 0, cost_price: 0 });
+  const [editForm, setEditForm] = useState({ name: "", minimum_quantity: "" as string | number, cost_price: "" as string | number });
   const [editSaving, setEditSaving] = useState(false);
 
   // Stock adjustment state
@@ -289,7 +289,7 @@ export default function InventoryManagement() {
     setShowAddModal(false);
     setAddImageFile(null);
     setAddImagePreview(null);
-    setAddForm({ name: "", category: "Disposables", unit: "piece", quantity: 0, minimum_quantity: 0, description: "", cost_price: 0 });
+    setAddForm({ name: "", category: "Disposables", unit: "piece", quantity: "", minimum_quantity: "", description: "", cost_price: "" });
   };
 
   const handleAddSave = async () => {
@@ -299,7 +299,12 @@ export default function InventoryManagement() {
       const res = await apiFetch("/api/inventory", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(addForm),
+        body: JSON.stringify({
+          ...addForm,
+          quantity: Number(addForm.quantity) || 0,
+          minimum_quantity: Number(addForm.minimum_quantity) || 0,
+          cost_price: Number(addForm.cost_price) || 0,
+        }),
       });
       if (!res.ok) { toast.error("Failed to add item."); return; }
       const newItem = await res.json();
@@ -335,7 +340,11 @@ export default function InventoryManagement() {
       await apiFetch(`/api/inventory/${selectedItem.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editForm),
+        body: JSON.stringify({
+          ...editForm,
+          minimum_quantity: Number(editForm.minimum_quantity) || 0,
+          cost_price: Number(editForm.cost_price) || 0,
+        }),
       });
       if (editImageFile) await uploadItemImage(selectedItem.id, editImageFile);
       await fetchInventory();
@@ -561,7 +570,7 @@ export default function InventoryManagement() {
                 placeholder="0"
                 className={inputClass}
                 value={addForm.quantity}
-                onChange={(e) => setAddForm((f) => ({ ...f, quantity: Number(e.target.value) }))}
+                onChange={(e) => setAddForm((f) => ({ ...f, quantity: e.target.value }))}
               />
             </FormField>
             <FormField label={t("inventory.minimumStock")}>
@@ -570,7 +579,7 @@ export default function InventoryManagement() {
                 placeholder="0"
                 className={inputClass}
                 value={addForm.minimum_quantity}
-                onChange={(e) => setAddForm((f) => ({ ...f, minimum_quantity: Number(e.target.value) }))}
+                onChange={(e) => setAddForm((f) => ({ ...f, minimum_quantity: e.target.value }))}
               />
             </FormField>
           </div>
@@ -582,7 +591,7 @@ export default function InventoryManagement() {
               placeholder="0.00"
               className={inputClass}
               value={addForm.cost_price}
-              onChange={(e) => setAddForm((f) => ({ ...f, cost_price: Number(e.target.value) }))}
+              onChange={(e) => setAddForm((f) => ({ ...f, cost_price: e.target.value }))}
             />
           </FormField>
           <FormField label={t("inventory.supplier")}>
@@ -636,7 +645,7 @@ export default function InventoryManagement() {
                   type="number"
                   className={inputClass}
                   value={editForm.minimum_quantity}
-                  onChange={(e) => setEditForm((f) => ({ ...f, minimum_quantity: Number(e.target.value) }))}
+                  onChange={(e) => setEditForm((f) => ({ ...f, minimum_quantity: e.target.value }))}
                 />
               </FormField>
               <FormField label="Unit Cost Price">
@@ -646,7 +655,7 @@ export default function InventoryManagement() {
                   min="0"
                   className={inputClass}
                   value={editForm.cost_price}
-                  onChange={(e) => setEditForm((f) => ({ ...f, cost_price: Number(e.target.value) }))}
+                  onChange={(e) => setEditForm((f) => ({ ...f, cost_price: e.target.value }))}
                 />
               </FormField>
             </div>
