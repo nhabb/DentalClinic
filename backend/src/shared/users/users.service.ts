@@ -192,8 +192,14 @@ export class UsersService {
     const user = await this.prisma.users.findUnique({ where: { id } });
     if (!user) throw new NotFoundException('User not found');
 
-    const valid = await bcrypt.compare(dto.old_password, user.password_hash);
-    if (!valid) throw new BadRequestException('Old password is incorrect');
+    const isOAuthAccount = user.password_hash === 'oauth';
+
+    if (!isOAuthAccount) {
+      if (!dto.old_password) throw new BadRequestException('Old password is required');
+      const valid = await bcrypt.compare(dto.old_password, user.password_hash);
+      if (!valid) throw new BadRequestException('Old password is incorrect');
+    }
+    // OAuth accounts have no password — skip old-password check and just set the new one
 
     const password_hash = await bcrypt.hash(dto.new_password, 10);
 

@@ -113,7 +113,10 @@ export class AgentService implements OnModuleInit, OnModuleDestroy {
           description: tool.description ?? tool.name,
           parameters: tool.inputSchema as any,
         },
-      })); //collecting the tools from the MCP server and converting them into the format expected by the OpenAI API so that they can be included in the list of available tools when making chat completion requests. This allows the AI assistant to call these MCP tools as part of its responses, enabling it to perform a wider range of actions and access more data when assisting users with their queries related to managing the dental clinic.
+      }));
+
+      console.log(`[MCP] Connected — ${this.mcpTools.length} tools loaded:`);
+      this.mcpTools.forEach((t) => console.log(`  • ${(t as any).function.name}`));
 
     } catch (err: any) {
       console.warn('[MCP] Server unavailable, falling back to query_database only:', err.message);
@@ -206,7 +209,16 @@ Financial guidelines:
     const fn = (call as any).function;
     const input = JSON.parse(fn.arguments);
 
+    const toolType = this.mcpTools.some((t) => (t as any).function?.name === fn.name)
+      ? 'MCP'
+      : fn.name === 'query_database' ? 'SQL' : 'API';
+
+    console.log(`\n[TOOL CALL][${toolType}] ${fn.name}`);
+    console.log(`[TOOL INPUT]`, JSON.stringify(input, null, 2));
+
     const result = await this.executeTool(fn.name, input);
+
+    console.log(`[TOOL RESULT]`, result.slice(0, 500));
 
     return { role: 'tool' as const, tool_call_id: call.id, content: result };
   }),
@@ -234,6 +246,8 @@ Financial guidelines:
 
   private async executeTool(name: string, input: Record<string, any>): Promise<string> {
     const isMcp = this.mcpTools.some((t) => (t as any).function?.name === name);
+    const source = isMcp ? '[MCP]' : name === 'query_database' ? '[SQL]' : '[API]';
+    console.log(`${source} routing → ${name}`);
 
     try {
       switch (name) {
@@ -424,3 +438,4 @@ Financial guidelines:
     }
   }
 }
+

@@ -1,16 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FaTimes, FaEye, FaEyeSlash } from "react-icons/fa";
+import { FcGoogle } from "react-icons/fc";
 import { toast } from "sonner";
+import { apiFetch } from "@/lib/api/client";
 import { supabase } from "@/lib/supabase/client";
 
 type Props = {
-  email: string;
   onClose: () => void;
 };
 
-export default function ChangePasswordModal({ email, onClose }: Props) {
+export default function ChangePasswordModal({ onClose }: Props) {
+  const [isOAuth, setIsOAuth] = useState(false);
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -19,13 +21,23 @@ export default function ChangePasswordModal({ email, onClose }: Props) {
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) setIsOAuth(true);
+    });
+  }, []);
+
   const handleSubmit = async () => {
-    if (!oldPassword) {
+    if (!isOAuth && !oldPassword) {
       toast.error("Please enter your current password.");
       return;
     }
     if (newPassword.length < 8) {
       toast.error("New password must be at least 8 characters.");
+      return;
+    }
+    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(newPassword)) {
+      toast.error("New password must contain an uppercase letter, a lowercase letter, and a number.");
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -37,31 +49,31 @@ export default function ChangePasswordModal({ email, onClose }: Props) {
       return;
     }
 
+    const userId = typeof window !== "undefined" ? sessionStorage.getItem("userId") : null;
+    if (!userId) {
+      toast.error("Session expired. Please log in again.");
+      return;
+    }
+
     setLoading(true);
     try {
-      // Re-authenticate to verify the old password
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password: oldPassword,
+      const body: Record<string, string> = { new_password: newPassword };
+      if (!isOAuth) body.old_password = oldPassword;
+
+      const res = await apiFetch(`/api/users/${userId}/password`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
       });
 
-      if (signInError) {
-        toast.error("Current password is incorrect.");
-        setLoading(false);
+      if (!res.ok) {
+        const data = await res.json();
+        const msg = Array.isArray(data.message) ? data.message.join(", ") : data.message;
+        toast.error(msg || "Failed to change password.");
         return;
       }
 
-      // Update to the new password
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: newPassword,
-      });
-
-      if (updateError) {
-        toast.error(updateError.message);
-      } else {
-        toast.success("Password updated successfully.");
-        onClose();
-      }
+      toast.success("Password updated successfully.");
+      onClose();
     } catch {
       toast.error("Something went wrong. Please try again.");
     } finally {
@@ -80,26 +92,36 @@ export default function ChangePasswordModal({ email, onClose }: Props) {
         </div>
 
         <div className="space-y-4">
-          {/* Old password */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
-            <div className="relative">
-              <input
-                type={showOld ? "text" : "password"}
-                value={oldPassword}
-                onChange={(e) => setOldPassword(e.target.value)}
-                placeholder="Enter current password"
-                className="w-full px-4 py-3 pr-11 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue text-gray-900"
-              />
-              <button
-                type="button"
-                onClick={() => setShowOld(!showOld)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                {showOld ? <FaEyeSlash /> : <FaEye />}
-              </button>
+          {/* OAuth notice */}
+          {isOAuth && (
+            <div className="flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 text-sm text-blue-700">
+              <FcGoogle className="text-xl shrink-0" />
+              <span>You signed in with Google — no current password needed.</span>
             </div>
-          </div>
+          )}
+
+          {/* Old password — hidden for OAuth users */}
+          {!isOAuth && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+              <div className="relative">
+                <input
+                  type={showOld ? "text" : "password"}
+                  value={oldPassword}
+                  onChange={(e) => setOldPassword(e.target.value)}
+                  placeholder="Enter current password"
+                  className="w-full px-4 py-3 pr-11 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue text-gray-900"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowOld(!showOld)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {showOld ? <FaEyeSlash /> : <FaEye />}
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* New password */}
           <div>
@@ -109,7 +131,7 @@ export default function ChangePasswordModal({ email, onClose }: Props) {
                 type={showNew ? "text" : "password"}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="At least 8 characters"
+                placeholder="Min 8 chars, upper + lower + number"
                 className="w-full px-4 py-3 pr-11 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue text-gray-900"
               />
               <button

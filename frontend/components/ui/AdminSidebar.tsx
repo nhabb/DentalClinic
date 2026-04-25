@@ -157,7 +157,6 @@ export default function AdminSidebar({ activePage, sidebarOpen, onToggle, onLogo
 
       {showChangePassword && (
         <ChangePasswordModal
-          email={userEmail}
           onClose={() => setShowChangePassword(false)}
         />
       )}

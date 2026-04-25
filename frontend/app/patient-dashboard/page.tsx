@@ -254,7 +254,6 @@ export default function PatientDashboard() {
 
       {showChangePassword && (
         <ChangePasswordModal
-          email={patientEmail}
           onClose={() => setShowChangePassword(false)}
         />
       )}

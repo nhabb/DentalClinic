@@ -49,9 +49,9 @@ export class UpdateUserDto {
 
 export class ChangePasswordDto {
   @ApiPropertyOptional()
+  @IsOptional()
   @IsString()
-  @MinLength(1)
-  old_password: string;
+  old_password?: string;
 
   @IsString()
   @MinLength(8)
