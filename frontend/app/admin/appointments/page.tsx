@@ -264,28 +264,26 @@ export default function AppointmentsManagement() {
     switch (status) {
       case "completed":
         return (
-          <Badge
-            icon={FaCheckCircle}
-            bgClass="bg-green-100"
-            textClass="text-green-700"
-          >
-            {t("appointments.completed")}
+          <Badge icon={FaCheckCircle} bgClass="bg-green-100" textClass="text-green-700">
+            Completed
           </Badge>
         );
-      case "in_progress":
+      case "confirmed":
         return (
-          <Badge icon={FaClock} bgClass="bg-blue-100" textClass="text-blue-700">
-            {t("appointments.inProgress")}
+          <Badge icon={FaCheckCircle} bgClass="bg-blue-100" textClass="text-blue-700">
+            Confirmed
           </Badge>
         );
-      case "upcoming":
+      case "scheduled":
         return (
-          <Badge
-            icon={FaClock}
-            bgClass="bg-yellow-100"
-            textClass="text-yellow-700"
-          >
-            {t("appointments.upcoming")}
+          <Badge icon={FaClock} bgClass="bg-yellow-100" textClass="text-yellow-700">
+            Scheduled
+          </Badge>
+        );
+      case "no_show":
+        return (
+          <Badge icon={FaTimes} bgClass="bg-orange-100" textClass="text-orange-700">
+            No Show
           </Badge>
         );
       case "cancelled":
@@ -325,8 +323,8 @@ export default function AppointmentsManagement() {
   const todayStats = {
     total: dateAppointments.length,
     completed: dateAppointments.filter((a) => a.status === "completed").length,
-    upcoming: dateAppointments.filter((a) => a.status === "upcoming").length,
-    cancelled: dateAppointments.filter((a) => a.status === "cancelled").length,
+    upcoming: dateAppointments.filter((a) => ["scheduled", "confirmed"].includes(a.status)).length,
+    cancelled: dateAppointments.filter((a) => ["cancelled", "no_show"].includes(a.status)).length,
   };
 
   const navigateDate = (direction: "prev" | "next") => {
@@ -554,24 +552,43 @@ export default function AppointmentsManagement() {
     }
   };
 
-  const handleStartAppointment = async (appointmentId: number) => {
-    // API call removed
-    setAppointments((prev) =>
-      prev.map((apt) =>
-        apt.id === appointmentId ? { ...apt, status: "in_progress" } : apt,
-      ),
-    );
-    toast.success("Appointment started.");
+  const handleConfirmAppointment = async (appointmentId: number) => {
+    try {
+      const res = await apiFetch(`/api/appointments/${appointmentId}/confirm`, { method: "PATCH" });
+      if (!res.ok) { toast.error("Failed to confirm appointment."); return; }
+      setAppointments((prev) =>
+        prev.map((apt) => apt.id === appointmentId ? { ...apt, status: "confirmed" } : apt),
+      );
+      toast.success("Appointment confirmed.");
+    } catch {
+      toast.error("Failed to confirm appointment.");
+    }
   };
 
   const handleCompleteAppointment = async (appointmentId: number) => {
-    // API call removed
-    setAppointments((prev) =>
-      prev.map((apt) =>
-        apt.id === appointmentId ? { ...apt, status: "completed" } : apt,
-      ),
-    );
-    toast.success("Appointment completed.");
+    try {
+      const res = await apiFetch(`/api/appointments/${appointmentId}/complete`, { method: "PATCH" });
+      if (!res.ok) { toast.error("Failed to complete appointment."); return; }
+      setAppointments((prev) =>
+        prev.map((apt) => apt.id === appointmentId ? { ...apt, status: "completed" } : apt),
+      );
+      toast.success("Appointment completed.");
+    } catch {
+      toast.error("Failed to complete appointment.");
+    }
+  };
+
+  const handleNoShowAppointment = async (appointmentId: number) => {
+    try {
+      const res = await apiFetch(`/api/appointments/${appointmentId}/no-show`, { method: "PATCH" });
+      if (!res.ok) { toast.error("Failed to mark as no-show."); return; }
+      setAppointments((prev) =>
+        prev.map((apt) => apt.id === appointmentId ? { ...apt, status: "no_show" } : apt),
+      );
+      toast.success("Marked as no-show.");
+    } catch {
+      toast.error("Failed to mark as no-show.");
+    }
   };
 
   const handleCancelAppointment = async (appointmentId: number) => {
@@ -884,42 +901,35 @@ export default function AppointmentsManagement() {
 
                           {/* Actions */}
                           <div className="flex items-center gap-2">
-                            {apt.status === "upcoming" && (
-                              <>
-                                <Button
-                                  size="sm"
-                                  className="bg-green-600 hover:bg-green-700"
-                                  onClick={() => handleStartAppointment(apt.id)}
-                                >
-                                  <FaCheckCircle className="mr-1 rtl:mr-0 rtl:ml-1" />{" "}
-                                  {t("appointments.start")}
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="text-red-600 border-red-200 hover:bg-red-50"
-                                  onClick={() =>
-                                    handleCancelAppointment(apt.id)
-                                  }
-                                >
-                                  <FaTimes className="mr-1 rtl:mr-0 rtl:ml-1" />{" "}
-                                  {t("appointments.cancel")}
-                                </Button>
-                              </>
-                            )}
-                            {apt.status === "in_progress" && (
+                            {apt.status === "scheduled" && (
                               <Button
                                 size="sm"
                                 className="bg-blue-600 hover:bg-blue-700"
-                                onClick={() =>
-                                  handleCompleteAppointment(apt.id)
-                                }
+                                onClick={() => handleConfirmAppointment(apt.id)}
                               >
-                                <FaCheckCircle className="mr-1 rtl:mr-0 rtl:ml-1" />{" "}
-                                {t("appointments.complete")}
+                                <FaCheckCircle className="mr-1 rtl:mr-0 rtl:ml-1" /> Confirm
                               </Button>
                             )}
-                            {apt.status !== "completed" && apt.status !== "cancelled" && (
+                            {(apt.status === "confirmed" || apt.status === "scheduled") && (
+                              <Button
+                                size="sm"
+                                className="bg-green-600 hover:bg-green-700"
+                                onClick={() => handleCompleteAppointment(apt.id)}
+                              >
+                                <FaCheckCircle className="mr-1 rtl:mr-0 rtl:ml-1" /> Complete
+                              </Button>
+                            )}
+                            {(apt.status === "scheduled" || apt.status === "confirmed") && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-orange-600 border-orange-200 hover:bg-orange-50"
+                                onClick={() => handleNoShowAppointment(apt.id)}
+                              >
+                                <FaTimes className="mr-1 rtl:mr-0 rtl:ml-1" /> No Show
+                              </Button>
+                            )}
+                            {!["completed", "cancelled", "no_show"].includes(apt.status) && (
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-gray-700">

@@ -72,6 +72,12 @@ export class AppointmentsController {
     return this.appointmentsService.complete(BigInt(id));
   }
 
+  @Patch(':id/no-show')
+  @ApiOperation({ summary: 'Doctor marks appointment as no-show (patient missed)' })
+  noShow(@Param('id', ParseIntPipe) id: number) {
+    return this.appointmentsService.noShow(BigInt(id));
+  }
+
   @Patch(':id/cancel')
   @ApiOperation({ summary: 'Doctor or patient cancels an appointment (frees the slot)' })
   cancel(

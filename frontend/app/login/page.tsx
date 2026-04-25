@@ -9,6 +9,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/lib/i18n";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
+import { supabase } from "@/lib/supabase/client";
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
 
 const ROLE_REDIRECTS: Record<string, string> = {
@@ -38,8 +39,22 @@ export default function LoginPage() {
     setError("");
   };
 
-  const handleGoogleLogin = () => {
-    router.push("/complete-profile");
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: `${window.location.origin}/auth/callback` },
+      });
+      if (error) {
+        toast.error(error.message);
+        setIsLoading(false);
+      }
+      // No error → browser redirects to Google — nothing more to do here
+    } catch {
+      toast.error("Failed to start Google sign-in. Please try again.");
+      setIsLoading(false);
+    }
   };
 
   const onLogin = async (e: React.FormEvent) => {

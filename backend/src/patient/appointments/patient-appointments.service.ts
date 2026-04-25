@@ -7,16 +7,9 @@ import { AppointmentsService } from '../../doctor/appointments/appointments.serv
 import { CancelAppointmentDto } from '../../doctor/appointments/dto/update-appointment.dto';
 
 const appointmentInclude = {
-  patient_profiles: {
-    select: {
-      id: true,
-      users: { select: { id: true, first_name: true, last_name: true, email: true, phone: true } },
-    },
-  },
   users_appointments_doctor_idTousers: {
-    select: { id: true, first_name: true, last_name: true, email: true },
+    select: { id: true, first_name: true, last_name: true },
   },
-  appointment_slots: true,
 };
 
 @Injectable()
@@ -26,19 +19,20 @@ export class PatientAppointmentsService {
     private readonly appointmentsService: AppointmentsService,
   ) {}
 
-  private async resolvePatientProfile(userId: number) {
-    return this.prisma.patient_profiles.upsert({
+  private async getPatientProfileId(userId: number): Promise<bigint> {
+    const profile = await this.prisma.patient_profiles.findUnique({
       where: { user_id: BigInt(userId) },
-      create: { user_id: BigInt(userId) },
-      update: {},
+      select: { id: true },
     });
+    if (!profile) throw new ForbiddenException('Patient profile not found');
+    return profile.id;
   }
 
   async getUpcoming(userId: number, page = 1, limit = 20) {
-    const profile = await this.resolvePatientProfile(userId);
+    const patientId = await this.getPatientProfileId(userId);
     const skip = (page - 1) * limit;
     const where = {
-      patient_id: profile.id,
+      patient_id: patientId,
       status: { in: ['pending', 'scheduled', 'confirmed'] },
     };
 
@@ -60,10 +54,10 @@ export class PatientAppointmentsService {
   }
 
   async getHistory(userId: number, page = 1, limit = 20) {
-    const profile = await this.resolvePatientProfile(userId);
+    const patientId = await this.getPatientProfileId(userId);
     const skip = (page - 1) * limit;
     const where = {
-      patient_id: profile.id,
+      patient_id: patientId,
       status: { in: ['completed', 'cancelled', 'no_show'] },
     };
 
@@ -85,10 +79,10 @@ export class PatientAppointmentsService {
   }
 
   async cancel(userId: number, appointmentId: number, dto: CancelAppointmentDto) {
-    const profile = await this.resolvePatientProfile(userId);
+    const patientId = await this.getPatientProfileId(userId);
     const appointment = await this.appointmentsService.findOne(BigInt(appointmentId));
 
-    if (appointment.patient_profiles.id.toString() !== profile.id.toString()) {
+    if (appointment.patient_profiles.id.toString() !== patientId.toString()) {
       throw new ForbiddenException('You can only cancel your own appointments');
     }
 

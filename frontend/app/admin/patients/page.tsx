@@ -945,7 +945,7 @@ export default function PatientsPage() {
                               <p className="font-medium text-gray-900 text-sm">{doc.file_name || doc.original_name || "Document"}</p>
                               <p className="text-xs text-gray-500 flex items-center gap-1">
                                 <FaClock className="text-xs" />
-                                {new Date(doc.created_at).toLocaleDateString()}
+                                {doc.uploaded_at ? new Date(doc.uploaded_at).toLocaleDateString() : "—"}
                               </p>
                             </div>
                           </div>

@@ -4,7 +4,9 @@ import { PrismaService } from '../prisma/prisma.service';
 export type NotificationType =
   | 'appointment_booked'
   | 'appointment_confirmed'
-  | 'appointment_cancelled';
+  | 'appointment_cancelled'
+  | 'appointment_completed'
+  | 'appointment_no_show';
 
 @Injectable()
 export class NotificationsService {

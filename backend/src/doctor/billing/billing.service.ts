@@ -252,6 +252,150 @@ export class BillingService {
     };
   }
 
+  // ── Outstanding invoices ────────────────────────────────────────────────
+  async getOutstandingPayments() {
+    const invoices = await this.prisma.treatment_invoices.findMany({
+      where: { status: { in: ['open', 'partial'] } },
+      include: {
+        patient: {
+          select: { id: true, users: { select: { first_name: true, last_name: true } } },
+        },
+      },
+      orderBy: { created_at: 'asc' },
+    });
+
+    return invoices.map((inv) => ({
+      id: Number(inv.id),
+      patient_id: Number(inv.patient_id),
+      patient_name: inv.patient?.users
+        ? `${inv.patient.users.first_name} ${inv.patient.users.last_name}`
+        : `Patient #${inv.patient_id}`,
+      total_amount: Number(inv.total_amount),
+      amount_paid: Number(inv.amount_paid),
+      remaining: Number(inv.remaining_amount),
+      status: inv.status,
+      created_at: inv.created_at,
+    }));
+  }
+
+  // ── A/R aging report ────────────────────────────────────────────────────
+  async getAgingReport() {
+    const invoices = await this.prisma.treatment_invoices.findMany({
+      where: { status: { in: ['open', 'partial'] } },
+      select: { id: true, remaining_amount: true, created_at: true },
+    });
+
+    const now = new Date();
+    const buckets = { '0_30_days': 0, '31_60_days': 0, '61_90_days': 0, '90_plus_days': 0 };
+    const counts  = { '0_30_days': 0, '31_60_days': 0, '61_90_days': 0, '90_plus_days': 0 };
+
+    for (const inv of invoices) {
+      const days = Math.floor((now.getTime() - new Date(inv.created_at).getTime()) / 86_400_000);
+      const amount = Number(inv.remaining_amount);
+      const key =
+        days <= 30  ? '0_30_days'   :
+        days <= 60  ? '31_60_days'  :
+        days <= 90  ? '61_90_days'  : '90_plus_days';
+      buckets[key] += amount;
+      counts[key]++;
+    }
+
+    return {
+      buckets,
+      invoice_counts: counts,
+      total_outstanding: Object.values(buckets).reduce((s, v) => s + v, 0),
+    };
+  }
+
+  // ── Per-patient financial summary ───────────────────────────────────────
+  async getPatientFinancials(patient_id?: number) {
+    const where: any = {};
+    if (patient_id) where.patient_id = BigInt(patient_id);
+
+    const invoices = await this.prisma.treatment_invoices.findMany({
+      where,
+      select: {
+        patient_id: true,
+        total_amount: true,
+        amount_paid: true,
+        remaining_amount: true,
+        patient: { select: { users: { select: { first_name: true, last_name: true } } } },
+      },
+    });
+
+    const byPatient: Record<string, {
+      patient_id: string; patient_name: string;
+      total_billed: number; total_paid: number; outstanding: number; invoice_count: number;
+    }> = {};
+
+    for (const inv of invoices) {
+      const pid = String(inv.patient_id);
+      if (!byPatient[pid]) {
+        byPatient[pid] = {
+          patient_id: pid,
+          patient_name: inv.patient?.users
+            ? `${inv.patient.users.first_name} ${inv.patient.users.last_name}`
+            : `Patient #${pid}`,
+          total_billed: 0, total_paid: 0, outstanding: 0, invoice_count: 0,
+        };
+      }
+      byPatient[pid].total_billed  += Number(inv.total_amount);
+      byPatient[pid].total_paid    += Number(inv.amount_paid);
+      byPatient[pid].outstanding   += Number(inv.remaining_amount);
+      byPatient[pid].invoice_count++;
+    }
+
+    return Object.values(byPatient).map((p) => ({
+      ...p,
+      collection_rate_pct:
+        p.total_billed > 0 ? Math.round((p.total_paid / p.total_billed) * 1000) / 10 : 0,
+    }));
+  }
+
+  // ── Monthly trends + payment method breakdown ────────────────────────────
+  async getPaymentsAnalytics(months = 12) {
+    const since = new Date();
+    since.setMonth(since.getMonth() - months);
+
+    const [payments, expenses] = await Promise.all([
+      this.prisma.invoice_payments.findMany({
+        where: { created_at: { gte: since } },
+        select: { amount: true, payment_method: true, created_at: true },
+      }),
+      this.prisma.expenses.findMany({
+        where: { expense_date: { gte: since } },
+        select: { amount: true, expense_date: true },
+      }),
+    ]);
+
+    const monthly: Record<string, { income: number; expenses: number }> = {};
+
+    for (const p of payments) {
+      const key = p.created_at.toISOString().slice(0, 7);
+      if (!monthly[key]) monthly[key] = { income: 0, expenses: 0 };
+      monthly[key].income += Number(p.amount);
+    }
+    for (const e of expenses) {
+      const key = e.expense_date.toISOString().slice(0, 7);
+      if (!monthly[key]) monthly[key] = { income: 0, expenses: 0 };
+      monthly[key].expenses += Number(e.amount);
+    }
+
+    const methods: Record<string, number> = {};
+    for (const p of payments) {
+      const m = p.payment_method ?? 'unknown';
+      methods[m] = (methods[m] ?? 0) + Number(p.amount);
+    }
+
+    return {
+      monthly_trends: Object.entries(monthly)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([month, data]) => ({ month, ...data, net: data.income - data.expenses })),
+      payment_methods: methods,
+      total_payments: payments.length,
+    };
+  }
+
   // ── Raw invoice payments list for charts ─────────────────────────────────
   async listInvoicePayments(limit = 500) {
     const rows = await this.prisma.invoice_payments.findMany({

@@ -106,24 +106,38 @@ export class AuthService {
     let is_new_user = false;
 
     if (!user) {
-      // New OAuth user — create as patient with a placeholder password hash
-      const created = await this.prisma.users.create({
-        data: {
-          email,
-          password_hash: 'oauth',
-          first_name: firstName,
-          last_name: lastName,
-          role: 'patient',
-        },
-        select,
-      });
+      try {
+        // New OAuth user — create as patient with a placeholder password hash
+        const created = await this.prisma.users.create({
+          data: {
+            email,
+            password_hash: 'oauth',
+            first_name: firstName,
+            last_name: lastName,
+            role: 'patient',
+          },
+          select,
+        });
 
-      await this.prisma.patient_profiles.create({
-        data: { user_id: created.id },
-      });
+        // Create patient profile, ignoring a duplicate if a race already made one
+        await this.prisma.patient_profiles.upsert({
+          where: { user_id: created.id },
+          create: { user_id: created.id },
+          update: {},
+        });
 
-      user = created;
-      is_new_user = true;
+        user = created;
+        is_new_user = true;
+      } catch (err: any) {
+        // Race condition: a concurrent request already created the user between
+        // our findUnique and create — just look them up and treat as existing
+        if (err?.code === 'P2002') {
+          user = await this.prisma.users.findUnique({ where: { email }, select });
+          if (!user) throw err;
+        } else {
+          throw err;
+        }
+      }
     }
 
     if (!user.is_active) {

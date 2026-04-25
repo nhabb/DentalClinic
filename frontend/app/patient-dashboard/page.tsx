@@ -203,7 +203,9 @@ export default function PatientDashboard() {
                       <p className="font-semibold text-gray-800">{appt.type}</p>
                       <p className="text-sm text-gray-500">{appt.doctor} · {appt.date} {appt.time}</p>
                     </div>
-                    <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full capitalize">{appt.status}</span>
+                    <span className={`text-xs px-2 py-1 rounded-full capitalize ${appt.status === "confirmed" ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"}`}>
+                      {appt.status === "scheduled" ? "Awaiting Confirmation" : appt.status === "confirmed" ? "Confirmed" : appt.status}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -234,7 +236,13 @@ export default function PatientDashboard() {
                       <p className="font-semibold text-gray-800">{visit.type}</p>
                       <p className="text-sm text-gray-500">{visit.doctor} · {visit.date}</p>
                     </div>
-                    <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">Completed</span>
+                    {visit.status === "no_show" ? (
+                      <span className="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded-full">Missed</span>
+                    ) : visit.status === "cancelled" ? (
+                      <span className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded-full">Cancelled</span>
+                    ) : (
+                      <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">Completed</span>
+                    )}
                   </li>
                 ))}
               </ul>

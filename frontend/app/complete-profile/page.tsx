@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase/client";
 import { FaTooth } from "react-icons/fa";
-import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
 
 const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
@@ -34,19 +34,88 @@ export default function CompleteProfilePage() {
   const router = useRouter();
   const [form, setForm] = useState(EMPTY_FORM);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
 
-  // If the user already has an active Google session, skip the form and sign in directly
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.access_token) {
-        // Already authenticated with Google — go straight to the callback to provision/login
-        router.replace("/auth/callback");
-      } else {
-        setIsLoading(false);
-      }
-    });
+    const token = sessionStorage.getItem("authToken");
+    const userId = sessionStorage.getItem("userId");
+
+    if (!token || !userId) {
+      // Arrived here without an OAuth session — go back to login
+      router.replace("/login");
+      return;
+    }
+
+    // Pre-fill name from Google (stored in sessionStorage by the callback)
+    const raw = sessionStorage.getItem("adminUser");
+    if (raw) {
+      try {
+        const { firstName, lastName } = JSON.parse(raw);
+        setForm((prev) => ({
+          ...prev,
+          first_name: firstName || prev.first_name,
+          last_name: lastName || prev.last_name,
+        }));
+      } catch {}
+    }
+
+    setIsLoading(false);
   }, [router]);
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => setForm({ ...form, [e.target.name]: e.target.value });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSaving(true);
+    setError("");
+
+    const token = sessionStorage.getItem("authToken")!;
+    const userId = sessionStorage.getItem("userId")!;
+
+    const {
+      city, governate, emergency_contact_name, emergency_contact_phone,
+      blood_type, allergies, current_medications, medical_notes,
+      insurance_provider, insurance_policy,
+      ...userFields
+    } = form;
+
+    const headers = { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
+
+    try {
+      await Promise.all([
+        fetch(`${API_URL}/api/users/${userId}`, {
+          method: "PATCH",
+          headers,
+          body: JSON.stringify(userFields),
+        }),
+        fetch(`${API_URL}/api/patients/by-user/${userId}`, {
+          method: "PATCH",
+          headers,
+          body: JSON.stringify({
+            city,
+            governate,
+            emergency_contact_name,
+            emergency_contact_phone,
+            blood_type: blood_type || undefined,
+            allergies,
+            current_medications,
+            medical_notes,
+            insurance_provider,
+            insurance_policy,
+            profile_complete: true,
+          }),
+        }),
+      ]);
+
+      router.replace("/patient-dashboard");
+    } catch {
+      setError("Failed to save your profile. Please try again.");
+      setIsSaving(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -55,36 +124,6 @@ export default function CompleteProfilePage() {
       </div>
     );
   }
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => setForm({ ...form, [e.target.name]: e.target.value });
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true); // show spinner on the button while redirecting to Google
-    setError("");
-
-    // Persist the form data so the OAuth callback can save it after account creation
-    localStorage.setItem("oauthPendingProfile", JSON.stringify(form));
-
-    try {
-      const { error: oauthError } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: { redirectTo: `${window.location.origin}/auth/callback` },
-      });
-      if (oauthError) {
-        localStorage.removeItem("oauthPendingProfile");
-        setError(oauthError.message);
-        setIsLoading(false);
-      }
-      // If no error: browser is redirecting to Google — nothing more to do
-    } catch {
-      localStorage.removeItem("oauthPendingProfile");
-      setError("Failed to start Google sign-in. Please try again.");
-      setIsLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white py-12 px-4">
@@ -97,9 +136,9 @@ export default function CompleteProfilePage() {
             </div>
             <span className="text-2xl font-bold text-gray-900">BrightSmile</span>
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900">Create Your Patient Profile</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Complete Your Profile</h1>
           <p className="mt-2 text-gray-500">
-            Fill in your details, then we&apos;ll connect your Google account.
+            We&apos;ve connected your Google account. Just fill in a few more details to get started.
           </p>
         </div>
 
@@ -214,25 +253,19 @@ export default function CompleteProfilePage() {
             </Field>
           </Section>
 
-          {/* Submit */}
           <button
             type="submit"
-            disabled={isLoading}
-            className="w-full flex items-center justify-center gap-3 py-4 rounded-xl bg-white border-2 border-gray-300 hover:border-blue-500 hover:shadow-md disabled:opacity-60 transition-all font-semibold text-gray-700 text-base"
+            disabled={isSaving}
+            className="w-full flex items-center justify-center gap-3 py-4 rounded-xl bg-gradient-to-r from-dental-blue to-dental-teal text-white font-semibold text-base hover:shadow-lg disabled:opacity-60 transition-all"
           >
-            {isLoading ? (
-              <span className="w-5 h-5 border-2 border-gray-400 border-t-blue-600 rounded-full animate-spin" />
-            ) : (
-              <FcGoogle className="text-2xl" />
-            )}
-            {isLoading ? "Redirecting to Google…" : "Save & Continue with Google"}
+            {isSaving ? (
+              <span className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+            ) : null}
+            {isSaving ? "Saving…" : "Save & Go to Dashboard"}
           </button>
 
-          <p className="text-center text-sm text-gray-500">
-            Already have an account?{" "}
-            <Link href="/login" className="font-semibold text-blue-600 hover:underline">
-              Sign in
-            </Link>
+          <p className="text-center text-xs text-gray-400">
+            You can update these details anytime from your profile settings.
           </p>
         </form>
       </div>

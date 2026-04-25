@@ -288,6 +288,20 @@ Financial guidelines:
         case 'get_patient':
           return serialize(await this.patients.findById(BigInt(input.id)));
 
+        case 'list_patient_documents': {
+          const page = input.page ?? 1;
+          const limit = input.limit ?? 20;
+          const skip = (page - 1) * limit;
+          const where = { patient_id: BigInt(input.patient_id) };
+          const [docs, total] = await Promise.all([
+            this.prisma.patient_documents.findMany({
+              where, orderBy: { uploaded_at: 'desc' }, skip, take: limit,
+            }),
+            this.prisma.patient_documents.count({ where }),
+          ]);
+          return serialize({ data: docs, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } });
+        }
+
         // ── Inventory ──────────────────────────────────────────────
         case 'list_inventory':
           return serialize(await this.inventory.findAll({ search: input.search, category: input.category, low_stock_only: input.low_stock_only, page: 1, limit: 20 }));
@@ -319,8 +333,21 @@ Financial guidelines:
         case 'get_financial_summary':
           return serialize(await this.billing.getSummary({ from: input.from, to: input.to }));
 
+        case 'get_payments_analytics':
+          return serialize(await this.billing.getPaymentsAnalytics(input.months ?? 12));
+
+        case 'get_outstanding_payments':
+          return serialize(await this.billing.getOutstandingPayments());
+
+        case 'get_aging_report':
+          return serialize(await this.billing.getAgingReport());
+
+        case 'get_patient_financials':
+          return serialize(await this.billing.getPatientFinancials(input.patient_id));
+
         // ── Treatment Billing ──────────────────────────────────────
         case 'list_invoices':
+        case 'list_payments': // alias — old tool name, same data source
           return serialize(await this.billing.findAll({
             patient_id: input.patient_id,
             status: input.status,
@@ -334,19 +361,24 @@ Financial guidelines:
           return serialize(await this.billing.findOne(BigInt(input.id)));
 
         case 'create_invoice':
+        case 'create_payment': // alias — old tool name
           return serialize(await this.billing.create({
             patient_id: input.patient_id,
-            procedure_date: input.procedure_date,
-            notes: input.notes,
-            line_items: input.line_items,
+            procedure_date: input.procedure_date ?? input.date ?? new Date().toISOString().split('T')[0],
+            notes: input.notes ?? input.description,
+            line_items: input.line_items ?? [{ procedure_name: 'Checkup', amount: input.amount ?? 0 }],
           }));
 
         case 'record_invoice_payment':
-          return serialize(await this.billing.recordPayment(BigInt(input.invoice_id), {
-            amount: input.amount,
-            payment_method: input.payment_method ?? 'cash',
-            notes: input.notes,
-          }));
+        case 'record_payment': // alias — old tool name
+          return serialize(await this.billing.recordPayment(
+            BigInt(input.invoice_id ?? input.id),
+            {
+              amount: input.amount ?? input.amount_paid,
+              payment_method: input.payment_method ?? 'cash',
+              notes: input.notes,
+            },
+          ));
 
         // ── Expenses ───────────────────────────────────────────────
         case 'list_expenses':

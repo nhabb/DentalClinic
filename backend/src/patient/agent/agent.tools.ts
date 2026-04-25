@@ -217,6 +217,24 @@ export const AGENT_TOOLS: OpenAI.ChatCompletionTool[] = [
     },
   },
 
+  // ── Patient Documents ─────────────────────────────────────────
+  {
+    type: 'function',
+    function: {
+      name: 'list_patient_documents',
+      description: 'List documents uploaded for a patient (X-rays, scans, reports, prescriptions). Use this when asked about patient files, photos, or documents. You must provide the patient_id (from list_patients or get_patient).',
+      parameters: {
+        type: 'object',
+        properties: {
+          patient_id: { type: 'number', description: 'Patient profile ID' },
+          page: { type: 'number' },
+          limit: { type: 'number' },
+        },
+        required: ['patient_id'],
+      },
+    },
+  },
+
   // ── Doctors ───────────────────────────────────────────────────
   {
     type: 'function',

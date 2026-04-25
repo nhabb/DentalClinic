@@ -152,15 +152,46 @@ export class AppointmentsService {
 
   async complete(id: bigint) {
     const appointment = await this.findOne(id);
-    if (appointment.status !== 'confirmed') {
+    if (!['scheduled', 'confirmed'].includes(appointment.status)) {
       throw new BadRequestException(`Cannot complete an appointment with status '${appointment.status}'`);
     }
 
-    return this.prisma.appointments.update({
+    const updated = await this.prisma.appointments.update({
       where: { id },
       data: { status: 'completed', updated_at: new Date() },
       include: appointmentInclude,
     });
+
+    await this.notifications.create({
+      user_id: appointment.patient_profiles.users.id,
+      type: 'appointment_completed',
+      title: 'Appointment Completed',
+      message: `Your appointment on ${appointment.appointment_date.toISOString().split('T')[0]} has been marked as completed.`,
+    });
+
+    return updated;
+  }
+
+  async noShow(id: bigint) {
+    const appointment = await this.findOne(id);
+    if (!['scheduled', 'confirmed'].includes(appointment.status)) {
+      throw new BadRequestException(`Cannot mark an appointment as no-show with status '${appointment.status}'`);
+    }
+
+    const updated = await this.prisma.appointments.update({
+      where: { id },
+      data: { status: 'no_show', updated_at: new Date() },
+      include: appointmentInclude,
+    });
+
+    await this.notifications.create({
+      user_id: appointment.patient_profiles.users.id,
+      type: 'appointment_no_show',
+      title: 'Missed Appointment',
+      message: `You missed your appointment on ${appointment.appointment_date.toISOString().split('T')[0]}. Please contact us to reschedule.`,
+    });
+
+    return updated;
   }
 
   async cancel(id: bigint, dto: CancelAppointmentDto) {

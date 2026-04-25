@@ -3,8 +3,6 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
-import type { OAuthPendingProfile } from "@/app/complete-profile/page";
-
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 const ROLE_REDIRECTS: Record<string, string> = {
@@ -46,41 +44,6 @@ async function provisionAndPersist(supabaseToken: string): Promise<{ redirect: s
   };
 }
 
-async function savePendingProfile(userId: string, token: string, profile: OAuthPendingProfile) {
-  const {
-    city, governate, emergency_contact_name, emergency_contact_phone,
-    blood_type, allergies, current_medications, medical_notes,
-    insurance_provider, insurance_policy,
-    ...userFields
-  } = profile;
-
-  const headers = { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
-
-  await Promise.all([
-    fetch(`${API_URL}/api/users/${userId}`, {
-      method: "PATCH",
-      headers,
-      body: JSON.stringify(userFields),
-    }),
-    fetch(`${API_URL}/api/patients/by-user/${userId}`, {
-      method: "PATCH",
-      headers,
-      body: JSON.stringify({
-        city,
-        governate,
-        emergency_contact_name,
-        emergency_contact_phone,
-        blood_type: blood_type || undefined,
-        allergies,
-        current_medications,
-        medical_notes,
-        insurance_provider,
-        insurance_policy,
-        profile_complete: true,
-      }),
-    }),
-  ]);
-}
 
 export default function AuthCallbackPage() {
   const router = useRouter();
@@ -106,29 +69,17 @@ export default function AuthCallbackPage() {
       }
 
       try {
-        const { redirect, userId, isNew } = await provisionAndPersist(accessToken);
+        const { redirect, isNew } = await provisionAndPersist(accessToken);
 
-        // If this was a new account and the user pre-filled a profile form, save it now
         if (isNew) {
-          const raw = localStorage.getItem("oauthPendingProfile");
-          if (raw) {
-            try {
-              const profile: OAuthPendingProfile = JSON.parse(raw);
-              const token = sessionStorage.getItem("authToken")!;
-              await savePendingProfile(userId, token, profile);
-            } catch {
-              // Non-fatal — user can update profile later
-            } finally {
-              localStorage.removeItem("oauthPendingProfile");
-            }
-          }
+          // New Google user — send them to complete their profile (form is pre-filled from sessionStorage)
+          router.replace("/complete-profile");
+        } else {
+          router.replace(redirect);
         }
-
-        router.replace(redirect);
       } catch {
         sessionStorage.setItem("authToken", accessToken);
         sessionStorage.setItem("userRole", "patient");
-        localStorage.removeItem("oauthPendingProfile");
         router.replace("/patient-dashboard");
       }
     };

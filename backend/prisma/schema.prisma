@@ -49,6 +49,7 @@ model appointments {
   @@index([doctor_id], map: "idx_appointments_doctor_id")
   @@index([patient_id], map: "idx_appointments_patient_id")
   @@index([status], map: "idx_appointments_status")
+  @@index([patient_id, status], map: "idx_appointments_patient_status")
 }
 
 model audit_logs {

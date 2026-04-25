@@ -55,6 +55,10 @@ export class PatientDocumentsService {
 
     const publicUrl = await this.storage.upload(BUCKET, storagePath, file.buffer, file.mimetype);
 
+    const uploaderExists = uploaded_by
+      ? await this.prisma.users.findUnique({ where: { id: BigInt(uploaded_by) }, select: { id: true } })
+      : null;
+
     const doc = await this.prisma.patient_documents.create({
       data: {
         patient_id: BigInt(patient_id),
@@ -62,7 +66,7 @@ export class PatientDocumentsService {
         file_name: file.originalname,
         file_path: storagePath,
         document_type: document_type ?? 'other',
-        uploaded_by: BigInt(uploaded_by),
+        uploaded_by: uploaderExists ? BigInt(uploaded_by) : null,
       },
     });
 
