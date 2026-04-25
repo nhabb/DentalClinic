@@ -200,6 +200,22 @@ export const AGENT_TOOLS: OpenAI.ChatCompletionTool[] = [
       parameters: { type: 'object', properties: {} },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'list_inventory_movements',
+      description: 'List stock movement history (items added or removed from inventory). Shows item name, quantity, movement type (in/out/adjustment), date, and who performed it. Use this when asked about stock updates, restocking history, or recent inventory changes.',
+      parameters: {
+        type: 'object',
+        properties: {
+          item_id: { type: 'number', description: 'Filter movements for a specific inventory item ID' },
+          movement_type: { type: 'string', enum: ['in', 'out', 'adjustment'], description: 'Filter by movement type' },
+          page: { type: 'number' },
+          limit: { type: 'number' },
+        },
+      },
+    },
+  },
 
   // ── Doctors ───────────────────────────────────────────────────
   {

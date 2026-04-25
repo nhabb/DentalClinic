@@ -295,6 +295,14 @@ Financial guidelines:
         case 'get_low_stock_items':
           return serialize(await this.inventory.findLowStock());
 
+        case 'list_inventory_movements':
+          return serialize(await this.inventory.listMovements({
+            item_id: input.item_id ? BigInt(input.item_id) : undefined,
+            movement_type: input.movement_type,
+            page: input.page ?? 1,
+            limit: input.limit ?? 20,
+          }));
+
         // ── Users ──────────────────────────────────────────────────
         case 'list_doctors':
           return serialize(await this.users.findAll('admin'));

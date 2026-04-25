@@ -194,9 +194,8 @@ export class InventoryService {
       this.prisma.inventory_movements.findMany({
         where: { item_id: itemId },
         include: {
-          users: {
-            select: { id: true, first_name: true, last_name: true },
-          },
+          users: { select: { id: true, first_name: true, last_name: true } },
+          inventory_items: { select: { id: true, name: true, unit: true } },
         },
         orderBy: { created_at: 'desc' },
         skip,
@@ -205,9 +204,30 @@ export class InventoryService {
       this.prisma.inventory_movements.count({ where: { item_id: itemId } }),
     ]);
 
-    return {
-      data,
-      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
-    };
+    return { data, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } };
+  }
+
+  async listMovements(filters: { item_id?: bigint; movement_type?: string; page?: number; limit?: number }) {
+    const { item_id, movement_type, page = 1, limit = 20 } = filters;
+    const skip = (page - 1) * limit;
+    const where: any = {};
+    if (item_id) where.item_id = item_id;
+    if (movement_type) where.movement_type = movement_type;
+
+    const [data, total] = await Promise.all([
+      this.prisma.inventory_movements.findMany({
+        where,
+        include: {
+          users: { select: { id: true, first_name: true, last_name: true } },
+          inventory_items: { select: { id: true, name: true, unit: true } },
+        },
+        orderBy: { created_at: 'desc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.inventory_movements.count({ where }),
+    ]);
+
+    return { data, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } };
   }
 }
