@@ -103,8 +103,8 @@ export default function PatientDashboard() {
       href: "/medical-records",
     },
     {
-      title: "My Invoices",
-      description: "View your treatment bills and payment history",
+      title: t("patientDashboard.myInvoices"),
+      description: t("patientDashboard.myInvoicesDesc"),
       icon: <FaFileInvoiceDollar className="text-4xl text-dental-blue" />,
       href: "/patient-dashboard/billing",
     },
@@ -136,11 +136,11 @@ export default function PatientDashboard() {
 
               <button
                 onClick={() => setShowChangePassword(true)}
-                title="Change Password"
+                title={t("common.changePassword")}
                 className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors"
               >
                 <FaKey />
-                <span className="hidden sm:inline">Change Password</span>
+                <span className="hidden sm:inline">{t("common.changePassword")}</span>
               </button>
 
               <button
@@ -204,7 +204,7 @@ export default function PatientDashboard() {
                       <p className="text-sm text-gray-500">{appt.doctor} · {appt.date} {appt.time}</p>
                     </div>
                     <span className={`text-xs px-2 py-1 rounded-full capitalize ${appt.status === "confirmed" ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"}`}>
-                      {appt.status === "scheduled" ? "Awaiting Confirmation" : appt.status === "confirmed" ? "Confirmed" : appt.status}
+                      {appt.status === "scheduled" ? t("patientDashboard.awaitingConfirmation") : appt.status === "confirmed" ? t("patientDashboard.confirmed") : appt.status}
                     </span>
                   </li>
                 ))}

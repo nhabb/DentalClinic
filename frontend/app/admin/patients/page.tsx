@@ -509,7 +509,7 @@ export default function PatientsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      <AdminSidebar activePage="patients" sidebarOpen={sidebarOpen} onLogout={handleLogout} />
+      <AdminSidebar activePage="patients" sidebarOpen={sidebarOpen} onToggle={() => setSidebarOpen((v) => !v)} onLogout={handleLogout} />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">

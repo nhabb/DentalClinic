@@ -272,7 +272,7 @@ export default function AdminDashboard() {
       case "cancelled":
         return (
           <span className="flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">
-            <FaTimes className="text-xs" /> Cancelled
+            <FaTimes className="text-xs" /> {t("adminDashboard.cancelled")}
           </span>
         );
       default:
@@ -362,14 +362,14 @@ export default function AdminDashboard() {
           sidebarOpen ? "w-64" : "w-20"
         } bg-gradient-to-b from-gray-900 to-gray-800 text-white transition-all duration-300 flex flex-col`}
       >
-        {/* Logo */}
-        <div className="p-6 border-b border-gray-700">
-          <Link href="/admin" className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-dental-blue to-dental-teal rounded-lg flex items-center justify-center">
+        {/* Logo + Burger */}
+        <div className="p-4 border-b border-gray-700 flex items-center justify-between">
+          <Link href="/admin" className="flex items-center space-x-3 min-w-0">
+            <div className="w-10 h-10 flex-shrink-0 bg-gradient-to-br from-dental-blue to-dental-teal rounded-lg flex items-center justify-center">
               <FaTooth className="text-white text-xl" />
             </div>
             {sidebarOpen && (
-              <div>
+              <div className="min-w-0">
                 <span className="text-lg font-bold">BrightSmile</span>
                 <p className="text-xs text-gray-400">
                   {userRole === "doctor"
@@ -379,6 +379,13 @@ export default function AdminDashboard() {
               </div>
             )}
           </Link>
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="p-2 hover:bg-gray-700/60 rounded-lg transition-colors flex-shrink-0"
+            aria-label="Toggle sidebar"
+          >
+            <FaBars className="text-gray-300 text-lg" />
+          </button>
         </div>
 
         {/* Navigation */}
@@ -463,12 +470,6 @@ export default function AdminDashboard() {
         {/* Top Header */}
         <header className="bg-white shadow-sm px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <FaBars className="text-xl text-gray-600" />
-            </button>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
                 {t("nav.dashboard")}
@@ -520,7 +521,7 @@ export default function AdminDashboard() {
               <p className="text-2xl font-bold text-gray-900">
                 {kpis ? `$${kpis.total_income.toLocaleString()}` : "—"}
               </p>
-              <p className="text-sm text-gray-500 mt-1">Total Income</p>
+              <p className="text-sm text-gray-500 mt-1">{t("adminDashboard.totalIncome")}</p>
             </div>
 
             {/* Total Expenses */}
@@ -531,7 +532,7 @@ export default function AdminDashboard() {
               <p className="text-2xl font-bold text-gray-900">
                 {kpis ? `$${kpis.total_expenses.toLocaleString()}` : "—"}
               </p>
-              <p className="text-sm text-gray-500 mt-1">Total Expenses</p>
+              <p className="text-sm text-gray-500 mt-1">{t("adminDashboard.totalExpenses")}</p>
             </div>
 
             {/* Net Profit */}
@@ -542,7 +543,7 @@ export default function AdminDashboard() {
               <p className={`text-2xl font-bold ${kpis && kpis.net < 0 ? "text-red-600" : "text-gray-900"}`}>
                 {kpis ? `$${kpis.net.toLocaleString()}` : "—"}
               </p>
-              <p className="text-sm text-gray-500 mt-1">Net Profit</p>
+              <p className="text-sm text-gray-500 mt-1">{t("adminDashboard.netProfit")}</p>
             </div>
 
             {/* Outstanding */}
@@ -553,7 +554,7 @@ export default function AdminDashboard() {
               <p className="text-2xl font-bold text-yellow-700">
                 {kpis ? `$${kpis.total_outstanding.toLocaleString()}` : "—"}
               </p>
-              <p className="text-sm text-gray-500 mt-1">Outstanding</p>
+              <p className="text-sm text-gray-500 mt-1">{t("adminDashboard.outstanding")}</p>
             </div>
 
             {/* Total Patients - secretary only */}
@@ -630,7 +631,7 @@ export default function AdminDashboard() {
                                   setPostponeTime(apt.time);
                                 }}
                               >
-                                <FaCalendarPlus className="text-dental-blue" /> Postpone
+                                <FaCalendarPlus className="text-dental-blue" /> {t("adminDashboard.postpone")}
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => handleCancelAppointment(apt.id)}
@@ -710,13 +711,13 @@ export default function AdminDashboard() {
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h3 className="text-base font-bold text-gray-900">Revenue vs Expenses</h3>
-                  <p className="text-xs text-gray-500">Last 6 months</p>
+                  <h3 className="text-base font-bold text-gray-900">{t("adminDashboard.revenueVsExpenses")}</h3>
+                  <p className="text-xs text-gray-500">{t("adminDashboard.last6Months")}</p>
                 </div>
                 {kpis && (
                   <div className="flex gap-4 text-sm">
                     <span className="text-gray-500">
-                      Net profit:{" "}
+                      {t("adminDashboard.netProfitLabel")}{" "}
                       <span className="font-semibold text-gray-900">
                         ${kpis.net.toLocaleString()}
                       </span>
@@ -752,7 +753,7 @@ export default function AdminDashboard() {
                 </ResponsiveContainer>
               ) : (
                 <div className="flex items-center justify-center h-[280px] text-gray-400 text-sm">
-                  No financial data available
+                  {t("adminDashboard.noFinancialData")}
                 </div>
               )}
             </div>
@@ -764,10 +765,10 @@ export default function AdminDashboard() {
       {postponeApptId !== null && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Postpone Appointment</h3>
+            <h3 className="text-lg font-bold text-gray-900 mb-4">{t("adminDashboard.postponeAppointment")}</h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">New Date</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t("adminDashboard.newDate")}</label>
                 <input
                   type="date"
                   value={postponeDate}
@@ -777,7 +778,7 @@ export default function AdminDashboard() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">New Time</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t("adminDashboard.newTime")}</label>
                 <input
                   type="time"
                   value={postponeTime}
@@ -785,21 +786,21 @@ export default function AdminDashboard() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
                 />
               </div>
-              <p className="text-xs text-gray-500">If no slot exists for this time, one will be created automatically.</p>
+              <p className="text-xs text-gray-500">{t("adminDashboard.slotAutoCreate")}</p>
             </div>
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => setPostponeApptId(null)}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
               >
-                Cancel
+                {t("common.cancel")}
               </button>
               <button
                 onClick={handlePostponeSubmit}
                 disabled={!postponeDate || !postponeTime || postponeLoading}
                 className="flex-1 px-4 py-2 bg-dental-blue text-white rounded-lg text-sm font-medium hover:bg-dental-blue/90 disabled:opacity-50 transition-colors"
               >
-                {postponeLoading ? "Saving..." : "Confirm"}
+                {postponeLoading ? t("common.saving") : t("common.confirm")}
               </button>
             </div>
           </div>

@@ -181,7 +181,7 @@ export default function AgentChat({ doctorName = "Doctor", doctorId }: Props) {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKey}
-                placeholder="Ask anything about appointments, patients, inventory..."
+              placeholder="Ask anything..."
                 rows={1}
                 className="flex-1 resize-none text-sm border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue max-h-28 overflow-y-auto"
                 style={{ lineHeight: "1.5" }}

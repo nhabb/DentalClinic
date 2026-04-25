@@ -13,6 +13,7 @@ import {
   FaMoneyBillWave,
   FaFileInvoiceDollar,
   FaKey,
+  FaBars,
 } from "react-icons/fa";
 import { Avatar } from "@/components/ui/Avatar";
 import { getStoredPhoto } from "@/lib/profilePhoto";
@@ -24,6 +25,7 @@ type ActivePage = "dashboard" | "appointments" | "inventory" | "patients" | "not
 type Props = {
   activePage: ActivePage;
   sidebarOpen: boolean;
+  onToggle: () => void;
   onLogout: () => void;
 };
 
@@ -36,7 +38,7 @@ const navItems = [
   { id: "billing",       href: "/admin/billing",        icon: FaFileInvoiceDollar, labelKey: "nav.billing"    },
 ] as const;
 
-export default function AdminSidebar({ activePage, sidebarOpen, onLogout }: Props) {
+export default function AdminSidebar({ activePage, sidebarOpen, onToggle, onLogout }: Props) {
   const { t } = useTranslation();
   const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined);
   const [userName, setUserName] = useState("");
@@ -78,19 +80,26 @@ export default function AdminSidebar({ activePage, sidebarOpen, onLogout }: Prop
         sidebarOpen ? "w-64" : "w-20"
       } bg-gradient-to-b from-gray-900 to-gray-800 text-white transition-all duration-300 flex flex-col sticky top-0 h-screen`}
     >
-      {/* Logo */}
-      <div className="p-6 border-b border-gray-700">
-        <Link href="/admin" className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-dental-blue to-dental-teal rounded-lg flex items-center justify-center">
+      {/* Logo + Burger */}
+      <div className="p-4 border-b border-gray-700 flex items-center justify-between">
+        <Link href="/admin" className="flex items-center space-x-3 min-w-0">
+          <div className="w-10 h-10 flex-shrink-0 bg-gradient-to-br from-dental-blue to-dental-teal rounded-lg flex items-center justify-center">
             <FaTooth className="text-white text-xl" />
           </div>
           {sidebarOpen && (
-            <div>
+            <div className="min-w-0">
               <span className="text-lg font-bold">BrightSmile</span>
               <p className="text-xs text-gray-400">{t("nav.adminPanel")}</p>
             </div>
           )}
         </Link>
+        <button
+          onClick={onToggle}
+          className="p-2 hover:bg-gray-700/60 rounded-lg transition-colors flex-shrink-0"
+          aria-label="Toggle sidebar"
+        >
+          <FaBars className="text-gray-300 text-lg" />
+        </button>
       </div>
 
       {/* Navigation */}
@@ -131,7 +140,7 @@ export default function AdminSidebar({ activePage, sidebarOpen, onLogout }: Prop
           className="w-full flex items-center space-x-3 px-4 py-3 text-gray-400 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
         >
           <FaKey className="text-lg" />
-          {sidebarOpen && <span className="font-medium text-sm">Change Password</span>}
+          {sidebarOpen && <span className="font-medium text-sm">{t("common.changePassword")}</span>}
         </button>
       </div>
 

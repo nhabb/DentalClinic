@@ -1,4 +1,4 @@
-*This project has been created as part of the 42 curriculum by ldarsa, nhabb, hshehab.*
+*This project has been created as part of the 42 curriculum by ldarsa, nhaber, hshehab.*
 
 ---
 
@@ -100,6 +100,14 @@ npx prisma generate
 npm run start:dev
 ```
 
+### Docker Cleanup
+
+Remove all stopped containers, unused images, volumes, and build cache:
+
+```bash
+docker system prune -a --volumes
+```
+
 ### Demo Accounts
 
 | Email | Password | Role / Dashboard |
@@ -112,9 +120,9 @@ npm run start:dev
 
 | Login | Name | Role(s) | Responsibilities |
 |-------|------|---------|-----------------|
-| hshehab | Hussein Shehab | Product Owner + Developer | Product vision, feature prioritization, backlog management, AI agent, i18n, landing page, legal pages |
+| hshehab | Hussein Shehab | Product Owner + Developer | Product vision, feature prioritization, backlog management, AI agent, landing page, legal pages |
 | ldarsa | Loai Darsa | Project Manager + Developer | Team coordination, progress tracking, patient-facing flows, booking system, billing UI, data export |
-| nhabb | Nehme Haber | Tech Lead + Developer | Architecture, backend modules, Prisma schema, DevOps, Docker/Nginx, auth system, file uploads, all frontend UI |
+| nhabb | Nehme Haber | Tech Lead + Developer | Architecture, backend modules, Prisma schema, DevOps, Docker/Nginx, auth system, file uploads, i18n, all frontend UI |
 
 > The team has 3 members, so each member holds two roles as per the project guidelines.
 

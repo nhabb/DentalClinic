@@ -86,7 +86,7 @@ interface Doctor {
 
 export default function AppointmentsManagement() {
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<"day" | "week">("day");
@@ -678,6 +678,7 @@ export default function AppointmentsManagement() {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <AdminSidebar
+        onToggle={() => setSidebarOpen((v) => !v)}
         activePage="appointments"
         sidebarOpen={sidebarOpen}
         onLogout={handleLogout}
@@ -733,7 +734,7 @@ export default function AppointmentsManagement() {
                   iconBgClass="bg-blue-100"
                   iconColorClass="text-blue-600"
                   value={todayStats.total}
-                  label={selectedDateStr === new Date().toISOString().split("T")[0] ? t("appointments.todaysTotal") : "Total"}
+                  label={selectedDateStr === new Date().toISOString().split("T")[0] ? t("appointments.todaysTotal") : t("billing.colTotal")}
                 />
                 <StatsCard
                   icon={FaCalendarCheck}
@@ -874,7 +875,7 @@ export default function AppointmentsManagement() {
                                   {apt.patient}
                                 </p>
                                 {apt.status === "cancelled" && apt.notes.includes("Postponed")
-                                  ? <Badge icon={FaCalendarPlus} bgClass="bg-orange-100" textClass="text-orange-700">Postponed</Badge>
+                                  ? <Badge icon={FaCalendarPlus} bgClass="bg-orange-100" textClass="text-orange-700">{t("appointments.postponed")}</Badge>
                                   : apt.isRescheduled
                                   ? <Badge icon={FaCalendarCheck} bgClass="bg-teal-100" textClass="text-teal-700">Rescheduled</Badge>
                                   : getStatusBadge(apt.status)
@@ -907,7 +908,7 @@ export default function AppointmentsManagement() {
                                 className="bg-blue-600 hover:bg-blue-700"
                                 onClick={() => handleConfirmAppointment(apt.id)}
                               >
-                                <FaCheckCircle className="mr-1 rtl:mr-0 rtl:ml-1" /> Confirm
+                                <FaCheckCircle className="mr-1 rtl:mr-0 rtl:ml-1" /> {t("appointments.confirmAppt")}
                               </Button>
                             )}
                             {(apt.status === "confirmed" || apt.status === "scheduled") && (
@@ -916,7 +917,7 @@ export default function AppointmentsManagement() {
                                 className="bg-green-600 hover:bg-green-700"
                                 onClick={() => handleCompleteAppointment(apt.id)}
                               >
-                                <FaCheckCircle className="mr-1 rtl:mr-0 rtl:ml-1" /> Complete
+                                <FaCheckCircle className="mr-1 rtl:mr-0 rtl:ml-1" /> {t("appointments.complete")}
                               </Button>
                             )}
                             {(apt.status === "scheduled" || apt.status === "confirmed") && (
@@ -926,7 +927,7 @@ export default function AppointmentsManagement() {
                                 className="text-orange-600 border-orange-200 hover:bg-orange-50"
                                 onClick={() => handleNoShowAppointment(apt.id)}
                               >
-                                <FaTimes className="mr-1 rtl:mr-0 rtl:ml-1" /> No Show
+                                <FaTimes className="mr-1 rtl:mr-0 rtl:ml-1" /> {t("appointments.noShow")}
                               </Button>
                             )}
                             {!["completed", "cancelled", "no_show"].includes(apt.status) && (
@@ -944,13 +945,13 @@ export default function AppointmentsManagement() {
                                       setPostponeTime(apt.time);
                                     }}
                                   >
-                                    <FaCalendarPlus className="text-dental-blue" /> Postpone
+                                    <FaCalendarPlus className="text-dental-blue" /> {t("appointments.postpone")}
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
                                     onClick={() => handleCancelAppointment(apt.id)}
                                     className="text-red-600 focus:text-red-600"
                                   >
-                                    <FaBan className="text-red-500" /> Cancel
+                                    <FaBan className="text-red-500" /> {t("appointments.cancelAppt")}
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
@@ -982,22 +983,22 @@ export default function AppointmentsManagement() {
         <div className="space-y-4">
           {addError && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">{addError}</p>}
 
-          <FormField label="Patient">
+          <FormField label={t("appointments.patientName")}>
             <select className={inputClass} value={newAppt.patientId} onChange={(e) => setNewAppt({ ...newAppt, patientId: e.target.value })}>
-              <option value="">Select a patient...</option>
+              <option value="">{t("billing.selectPatient")}</option>
               {patients.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </FormField>
 
-          <FormField label="Doctor">
+          <FormField label={t("appointments.doctor")}>
             <select className={inputClass} value={newAppt.doctorId} onChange={(e) => setNewAppt({ ...newAppt, doctorId: e.target.value })}>
-              <option value="">Select a doctor...</option>
+              <option value="">{t("appointments.allDoctors")}</option>
               {doctors.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
             </select>
           </FormField>
 
           <div className="grid grid-cols-2 gap-4">
-            <FormField label="Date">
+            <FormField label={t("appointments.date")}>
               <input
                 type="date"
                 className={inputClass}
@@ -1006,7 +1007,7 @@ export default function AppointmentsManagement() {
                 onChange={(e) => setNewAppt({ ...newAppt, date: e.target.value })}
               />
             </FormField>
-            <FormField label="Time">
+            <FormField label={t("appointments.time")}>
               <input
                 type="time"
                 className={inputClass}
@@ -1016,7 +1017,7 @@ export default function AppointmentsManagement() {
             </FormField>
           </div>
 
-          <FormField label="Reason">
+          <FormField label={t("appointments.appointmentType")}>
             <select className={inputClass} value={newAppt.reason} onChange={(e) => setNewAppt({ ...newAppt, reason: e.target.value })}>
               <option>Regular Checkup</option>
               <option>Teeth Cleaning</option>
@@ -1031,16 +1032,16 @@ export default function AppointmentsManagement() {
 
         <div className="flex gap-3 mt-6">
           <Button variant="outline" className="flex-1" onClick={() => setShowAddModal(false)}>
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button className="flex-1 bg-dental-blue hover:bg-dental-blue/90" onClick={handleAddAppointment} disabled={addLoading}>
-            {addLoading ? "Scheduling..." : "Schedule Appointment"}
+            {addLoading ? t("appointments.scheduling") : t("appointments.scheduleAppointment")}
           </Button>
         </div>
       </Modal>
 
       {/* Open Availability Modal */}
-      <Modal isOpen={showAvailabilityModal} onClose={() => setShowAvailabilityModal(false)} title="Manage Availability">
+      <Modal isOpen={showAvailabilityModal} onClose={() => setShowAvailabilityModal(false)} title={t("appointments.manageAvailability")}>
         <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
 
           {availabilityMsg && (
@@ -1051,21 +1052,21 @@ export default function AppointmentsManagement() {
 
           {/* Doctor + Date */}
           <div className="grid grid-cols-2 gap-4">
-            <FormField label="Doctor">
+            <FormField label={t("appointments.doctor")}>
               <select className={inputClass} value={selectedAvailabilityDoctorId ?? ""}
                 onChange={(e) => {
                   const id = e.target.value ? Number(e.target.value) : null;
                   setSelectedAvailabilityDoctorId(id);
                   if (id && availabilityDate) fetchExistingSlots(id, availabilityDate);
                 }}>
-                <option value="">Select a doctor</option>
+                <option value="">{t("appointments.selectDoctor")}</option>
                 {doctors.map((d) => (
                   <option key={d.id} value={d.id}>{d.name}</option>
                 ))}
               </select>
             </FormField>
 
-            <FormField label="Date">
+            <FormField label={t("common.date")}>
               <input type="date" className={inputClass} value={availabilityDate}
                 min={new Date().toISOString().split("T")[0]}
                 onChange={(e) => {
@@ -1078,16 +1079,16 @@ export default function AppointmentsManagement() {
           {/* Existing Slots */}
           {(existingSlots.length > 0 || loadingExistingSlots) && (
             <div>
-              <p className="text-sm font-medium text-gray-700 mb-2">Existing Slots</p>
+              <p className="text-sm font-medium text-gray-700 mb-2">{t("appointments.existingSlots")}</p>
               {loadingExistingSlots ? (
-                <p className="text-xs text-gray-400">Loading...</p>
+                <p className="text-xs text-gray-400">{t("common.loading")}</p>
               ) : (
                 <div className="flex flex-wrap gap-2">
                   {existingSlots.map((s) => (
                     <div key={s.id} className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${s.isBooked ? "bg-blue-50 border-blue-200 text-blue-700" : "bg-gray-50 border-gray-200 text-gray-700"}`}>
                       <span>{s.time}</span>
                       {s.isBooked ? (
-                        <span className="text-blue-400 text-[10px] ml-1">booked</span>
+                        <span className="text-blue-400 text-[10px] ml-1">{t("appointments.booked")}</span>
                       ) : (
                         <button
                           onClick={() => handleDeleteSlot(s.id)}
@@ -1107,12 +1108,12 @@ export default function AppointmentsManagement() {
           {/* Time Ranges */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-medium text-gray-700">Time Ranges</p>
+              <p className="text-sm font-medium text-gray-700">{t("appointments.timeRanges")}</p>
               <button
                 onClick={() => setTimeRanges((prev) => [...prev, { fromTime: "09:00", toTime: "17:00", slotDuration: 30 }])}
                 className="text-xs text-teal-600 hover:text-teal-800 font-medium"
               >
-                + Add Range
+                {t("appointments.addRange")}
               </button>
             </div>
 
@@ -1125,22 +1126,22 @@ export default function AppointmentsManagement() {
                 const slotCount = totalMin > 0 ? Math.floor(totalMin / slotDur) : 0;
                 const preview = totalMin > 0 && slotCount > 0
                   ? `→ ${slotCount} slot${slotCount !== 1 ? "s" : ""} × ${slotDur} min`
-                  : totalMin <= 0 ? "Invalid range" : "Slot duration too large";
+                  : totalMin <= 0 ? t("appointments.invalidRange") : t("appointments.slotDurationTooLarge");
                 return (
                   <div key={i} className="border border-gray-200 rounded-lg p-3 space-y-2 bg-gray-50">
                     <div className="grid grid-cols-3 gap-2">
                       <div>
-                        <label className="text-xs text-gray-500 mb-1 block">From</label>
+                        <label className="text-xs text-gray-500 mb-1 block">{t("appointments.from")}</label>
                         <input type="time" className={inputClass} value={range.fromTime}
                           onChange={(e) => setTimeRanges((prev) => prev.map((r, j) => j === i ? { ...r, fromTime: e.target.value } : r))} />
                       </div>
                       <div>
-                        <label className="text-xs text-gray-500 mb-1 block">To</label>
+                        <label className="text-xs text-gray-500 mb-1 block">{t("appointments.to")}</label>
                         <input type="time" className={inputClass} value={range.toTime}
                           onChange={(e) => setTimeRanges((prev) => prev.map((r, j) => j === i ? { ...r, toTime: e.target.value } : r))} />
                       </div>
                       <div>
-                        <label className="text-xs text-gray-500 mb-1 block">Slot (min)</label>
+                        <label className="text-xs text-gray-500 mb-1 block">{t("appointments.slotMin")}</label>
                         <select className={inputClass} value={range.slotDuration}
                           onChange={(e) => setTimeRanges((prev) => prev.map((r, j) => j === i ? { ...r, slotDuration: Number(e.target.value) } : r))}>
                           <option value={15}>15 min</option>
@@ -1157,7 +1158,7 @@ export default function AppointmentsManagement() {
                       {timeRanges.length > 1 && (
                         <button onClick={() => setTimeRanges((prev) => prev.filter((_, j) => j !== i))}
                           className="text-xs text-red-400 hover:text-red-600">
-                          Remove
+                          {t("appointments.remove")}
                         </button>
                       )}
                     </div>
@@ -1169,20 +1170,20 @@ export default function AppointmentsManagement() {
         </div>
 
         <div className="flex gap-3 mt-6">
-          <Button variant="outline" className="flex-1" onClick={() => setShowAvailabilityModal(false)}>Close</Button>
+          <Button variant="outline" className="flex-1" onClick={() => setShowAvailabilityModal(false)}>{t("common.close")}</Button>
           <Button className="flex-1 bg-teal-600 hover:bg-teal-700" onClick={handleOpenAvailability} disabled={availabilityLoading}>
-            {availabilityLoading ? "Creating slots..." : "Create Slots"}
+            {availabilityLoading ? t("common.creating") : t("appointments.scheduleAppointment")}
           </Button>
         </div>
       </Modal>
 
       {/* Slot Calendar Modal */}
-      <Modal isOpen={showSlotCalendar} onClose={() => setShowSlotCalendar(false)} title="My Opened Slots">
+      <Modal isOpen={showSlotCalendar} onClose={() => setShowSlotCalendar(false)} title={t("appointments.myOpenedSlots")}>
         <div className="space-y-4">
 
           {/* Doctor selector (admins only) */}
           {doctors.length > 1 && (
-            <FormField label="Doctor">
+            <FormField label={t("appointments.doctor")}>
               <select className={inputClass} value={calendarDoctorId ?? ""}
                 onChange={(e) => {
                   const id = e.target.value ? Number(e.target.value) : null;
@@ -1190,7 +1191,7 @@ export default function AppointmentsManagement() {
                   setCalendarSelectedDay(null);
                   if (id) fetchMonthSlots(id);
                 }}>
-                <option value="">Select a doctor</option>
+                <option value="">{t("appointments.selectDoctor")}</option>
                 {doctors.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
               </select>
             </FormField>
@@ -1245,7 +1246,9 @@ export default function AppointmentsManagement() {
                 <div>
                   {/* Day headers */}
                   <div className="grid grid-cols-7 mb-1">
-                    {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((d) => (
+                    {Array.from({ length: 7 }, (_, i) =>
+                      new Intl.DateTimeFormat(language, { weekday: "short" }).format(new Date(2023, 0, 1 + i))
+                    ).map((d) => (
                       <div key={d} className="text-center text-xs font-medium text-gray-400 py-1">{d}</div>
                     ))}
                   </div>
@@ -1319,7 +1322,7 @@ export default function AppointmentsManagement() {
                       ${s.isBooked ? "bg-blue-50 border-blue-200 text-blue-700" : "bg-teal-50 border-teal-200 text-teal-700"}`}>
                       <span>{s.time}</span>
                       {s.isBooked ? (
-                        <span className="text-blue-400 text-[10px] ml-1">booked</span>
+                        <span className="text-blue-400 text-[10px] ml-1">{t("appointments.booked")}</span>
                       ) : (
                         <button
                           onClick={() => handleCalendarDeleteSlot(s.id, calendarSelectedDay)}
@@ -1336,7 +1339,7 @@ export default function AppointmentsManagement() {
         </div>
 
         <div className="flex gap-3 mt-6">
-          <Button className="flex-1" variant="outline" onClick={() => setShowSlotCalendar(false)}>Close</Button>
+          <Button className="flex-1" variant="outline" onClick={() => setShowSlotCalendar(false)}>{t("common.close")}</Button>
         </div>
       </Modal>
 
@@ -1344,10 +1347,10 @@ export default function AppointmentsManagement() {
       {postponeApptId !== null && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Postpone Appointment</h3>
+            <h3 className="text-lg font-bold text-gray-900 mb-4">{t("appointments.postponeAppointment")}</h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">New Date</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t("appointments.newDate")}</label>
                 <input
                   type="date"
                   value={postponeDate}
@@ -1357,7 +1360,7 @@ export default function AppointmentsManagement() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">New Time</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t("appointments.newTime")}</label>
                 <input
                   type="time"
                   value={postponeTime}
@@ -1365,21 +1368,21 @@ export default function AppointmentsManagement() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
                 />
               </div>
-              <p className="text-xs text-gray-500">If no slot exists for this time, one will be created automatically.</p>
+              <p className="text-xs text-gray-500">{t("appointments.slotAutoCreate")}</p>
             </div>
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => setPostponeApptId(null)}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
               >
-                Cancel
+                {t("common.cancel")}
               </button>
               <button
                 onClick={handlePostponeSubmit}
                 disabled={!postponeDate || !postponeTime || postponeLoading}
                 className="flex-1 px-4 py-2 bg-dental-blue text-white rounded-lg text-sm font-medium hover:bg-dental-blue/90 disabled:opacity-50 transition-colors"
               >
-                {postponeLoading ? "Saving..." : "Confirm"}
+                {postponeLoading ? t("common.saving") : t("common.confirm")}
               </button>
             </div>
           </div>

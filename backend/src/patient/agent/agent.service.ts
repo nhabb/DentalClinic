@@ -93,8 +93,6 @@ export class AgentService implements OnModuleInit, OnModuleDestroy {
     try {
       // Extract project ref from SUPABASE_URL (https://<ref>.supabase.co)
       const projectRef = process.env.SUPABASE_URL?.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1];
-      console.log('[MCP] Using project ref:', projectRef ?? '(none — no --project-ref flag will be passed)');
-
       const transport = new StdioClientTransport({ //what is stdio transport? The StdioClientTransport is a communication mechanism that allows the AgentService to interact with an external MCP (Model Context Protocol) server process using standard input and output streams. When the AgentService starts, it spawns a child process that runs the MCP server (in this case, the @supabase/mcp-server-supabase) and communicates with it through these streams. The transport handles sending requests to the MCP server and receiving responses, allowing the AgentService to call tools defined in the MCP server as if they were local functions. This setup enables the AgentService to leverage additional tools and capabilities provided by the MCP server while keeping the communication efficient and straightforward through standard I/O.
         command: 'mcp-server-supabase',
         args: [
@@ -117,7 +115,6 @@ export class AgentService implements OnModuleInit, OnModuleDestroy {
         },
       })); //collecting the tools from the MCP server and converting them into the format expected by the OpenAI API so that they can be included in the list of available tools when making chat completion requests. This allows the AI assistant to call these MCP tools as part of its responses, enabling it to perform a wider range of actions and access more data when assisting users with their queries related to managing the dental clinic.
 
-      console.log(`[MCP] Connected — ${this.mcpTools.length} tools loaded`);
     } catch (err: any) {
       console.warn('[MCP] Server unavailable, falling back to query_database only:', err.message);
       this.mcpClient = null;
@@ -209,13 +206,7 @@ Financial guidelines:
     const fn = (call as any).function;
     const input = JSON.parse(fn.arguments);
 
-    // 👇 add this
-    console.log(`[TOOL PICKED] ${fn.name}`);
-    console.log(`[TOOL INPUT] ${JSON.stringify(input, null, 2)}`);
-
     const result = await this.executeTool(fn.name, input);
-
-    console.log(`[TOOL RESULT] ${result}`); // 👈 optional: see the result too
 
     return { role: 'tool' as const, tool_call_id: call.id, content: result };
   }),
@@ -243,8 +234,6 @@ Financial guidelines:
 
   private async executeTool(name: string, input: Record<string, any>): Promise<string> {
     const isMcp = this.mcpTools.some((t) => (t as any).function?.name === name);
-    const source = isMcp ? '[MCP]' : name === 'query_database' ? '[SQL]' : '[API]';
-    console.log(`${source} tool called: ${name}`, Object.keys(input).length ? input : '');
 
     try {
       switch (name) {
@@ -427,7 +416,6 @@ Financial guidelines:
             return JSON.stringify({ error: 'Query references restricted columns or schemas.' });
           }
           const mcpResult = await this.mcpClient.callTool({ name, arguments: input });
-          console.log(`[MCP] raw result for ${name}:`, JSON.stringify(mcpResult).slice(0, 500));
           return serialize(redactSensitiveFields(mcpResult));
         }
       }

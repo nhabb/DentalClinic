@@ -283,20 +283,20 @@ export default function BillingPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      <AdminSidebar activePage="billing" sidebarOpen={sidebarOpen} onLogout={handleLogout} />
+      <AdminSidebar activePage="billing" sidebarOpen={sidebarOpen} onToggle={() => setSidebarOpen((v) => !v)} onLogout={handleLogout} />
 
       <div className="flex-1 flex flex-col">
         <AdminPageHeader
-          title="Treatment Billing"
-          subtitle="Create treatment invoices and record patient payments"
+          title={t("billing.title")}
+          subtitle={t("billing.subtitle")}
           onAdd={() => { resetCreateModal(); setShowCreateModal(true); }}
-          addLabel="New Invoice"
+          addLabel={t("billing.newInvoice")}
           extraActions={
             <Link
               href="/admin"
               className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors"
             >
-              <FaChartLine className="text-xs" /> Go to Dashboard
+              <FaChartLine className="text-xs" /> {t("billing.goToDashboard")}
             </Link>
           }
         />
@@ -313,28 +313,28 @@ export default function BillingPage() {
                   iconBgClass="bg-blue-100"
                   iconColorClass="text-blue-600"
                   value={`$${totalInvoiced.toFixed(2)}`}
-                  label="Total Invoiced"
+                  label={t("billing.totalInvoiced")}
                 />
                 <StatsCard
                   icon={FaCheckCircle}
                   iconBgClass="bg-green-100"
                   iconColorClass="text-green-600"
                   value={`$${totalCollected.toFixed(2)}`}
-                  label="Total Collected"
+                  label={t("billing.totalCollected")}
                 />
                 <StatsCard
                   icon={FaClock}
                   iconBgClass="bg-yellow-100"
                   iconColorClass="text-yellow-600"
                   value={`$${outstanding.toFixed(2)}`}
-                  label="Outstanding"
+                  label={t("billing.outstanding")}
                 />
                 <StatsCard
                   icon={FaHashtag}
                   iconBgClass="bg-purple-100"
                   iconColorClass="text-purple-600"
                   value={String(invoices.length)}
-                  label="Total Invoices"
+                  label={t("billing.totalInvoices")}
                 />
               </div>
 
@@ -342,23 +342,28 @@ export default function BillingPage() {
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-6 flex flex-wrap gap-3 items-center">
                 <input
                   type="text"
-                  placeholder="Search by patient name..."
+                  placeholder={t("billing.searchPlaceholder")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className={`${inputClass} w-64`}
                 />
                 <div className="flex gap-2">
-                  {["All", "Open", "Partial", "Paid"].map((s) => (
+                  {([
+                    { value: "All", label: t("billing.statusAll") },
+                    { value: "Open", label: t("billing.statusOpen") },
+                    { value: "Partial", label: t("billing.statusPartial") },
+                    { value: "Paid", label: t("billing.statusPaid") },
+                  ]).map(({ value, label }) => (
                     <button
-                      key={s}
-                      onClick={() => setSelectedStatus(s)}
+                      key={value}
+                      onClick={() => setSelectedStatus(value)}
                       className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                        selectedStatus === s
+                        selectedStatus === value
                           ? "bg-dental-blue text-white"
                           : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                       }`}
                     >
-                      {s}
+                      {label}
                     </button>
                   ))}
                 </div>
@@ -369,15 +374,15 @@ export default function BillingPage() {
                 {filtered.length === 0 ? (
                   <EmptyState
                     icon={FaFileInvoiceDollar}
-                    title="No invoices found"
-                    description="Create a treatment invoice using the button above."
+                    title={t("billing.noInvoices")}
+                    description={t("billing.noInvoicesDesc")}
                   />
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead className="bg-gray-50 border-b border-gray-200">
                         <tr>
-                          {["Patient", "Date", "Procedures", "Total", "Paid", "Remaining", "Status", ""].map((h) => (
+                          {[t("billing.colPatient"), t("billing.colDate"), t("billing.colProcedures"), t("billing.colTotal"), t("billing.colPaid"), t("billing.colRemaining"), t("billing.colStatus"), ""].map((h) => (
                             <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
                               {h}
                             </th>
@@ -399,7 +404,7 @@ export default function BillingPage() {
                               {new Date(inv.procedure_date).toLocaleDateString()}
                             </td>
                             <td className="px-4 py-3 text-gray-600">
-                              {inv.line_items.length} item{inv.line_items.length !== 1 ? "s" : ""}
+                              {inv.line_items.length} {inv.line_items.length !== 1 ? t("billing.items") : t("billing.item")}
                             </td>
                             <td className="px-4 py-3 font-semibold text-gray-900">${inv.total_amount.toFixed(2)}</td>
                             <td className="px-4 py-3 font-medium text-green-700">${inv.amount_paid.toFixed(2)}</td>
@@ -409,7 +414,7 @@ export default function BillingPage() {
                               <button
                                 onClick={() => openViewModal(inv)}
                                 className="p-2 text-dental-blue hover:bg-blue-50 rounded-lg transition-colors"
-                                title="View invoice"
+                                title={t("billing.viewInvoice")}
                               >
                                 <FaEye />
                               </button>
@@ -430,17 +435,17 @@ export default function BillingPage() {
       <Modal
         isOpen={showCreateModal}
         onClose={() => { setShowCreateModal(false); resetCreateModal(); }}
-        title="Create Treatment Invoice"
+        title={t("billing.createInvoice")}
         maxWidth="max-w-2xl"
       >
         <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
-          <FormField label="Patient *">
+          <FormField label={t("billing.patientRequired")}>
             <select
               value={createForm.patient_id}
               onChange={(e) => setCreateForm((f) => ({ ...f, patient_id: e.target.value }))}
               className={inputClass}
             >
-              <option value="">Select a patient...</option>
+              <option value="">{t("billing.selectPatient")}</option>
               {patients
                 .slice()
                 .sort((a, b) => a.label.localeCompare(b.label))
@@ -450,7 +455,7 @@ export default function BillingPage() {
             </select>
           </FormField>
 
-          <FormField label="Procedure Date *">
+          <FormField label={t("billing.procedureDateRequired")}>
             <input
               type="date"
               value={createForm.procedure_date}
@@ -459,19 +464,19 @@ export default function BillingPage() {
             />
           </FormField>
 
-          <FormField label="Notes (optional)">
+          <FormField label={t("billing.notesOptional")}>
             <textarea
               value={createForm.notes}
               onChange={(e) => setCreateForm((f) => ({ ...f, notes: e.target.value }))}
               rows={2}
-              placeholder="Additional notes about the procedure..."
+              placeholder={t("billing.additionalNotes")}
               className={`${inputClass} resize-none`}
             />
           </FormField>
 
           {/* Line items */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Procedures *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t("billing.proceduresRequired")}</label>
             <div className="space-y-2">
               {lineItems.map((item, idx) => (
                 <div key={idx} className="flex gap-2 items-center">
@@ -480,7 +485,7 @@ export default function BillingPage() {
                     onChange={(e) => updateLineItem(idx, "procedure_name", e.target.value)}
                     className="flex-1 min-w-0 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue text-gray-900 bg-white"
                   >
-                    <option value="">Select procedure...</option>
+                    <option value="">{t("billing.selectProcedure")}</option>
                     {PROCEDURES.map((p) => (
                       <option key={p} value={p}>{p}</option>
                     ))}
@@ -489,7 +494,7 @@ export default function BillingPage() {
                     type="number"
                     min="0"
                     step="0.01"
-                    placeholder="Amount"
+                    placeholder={t("billing.amountCol")}
                     value={item.amount}
                     onChange={(e) => updateLineItem(idx, "amount", e.target.value)}
                     className="w-32 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue text-gray-900 bg-white"
@@ -510,10 +515,10 @@ export default function BillingPage() {
               onClick={addLineItem}
               className="mt-2 flex items-center gap-1 text-sm text-dental-blue hover:text-dental-teal font-medium"
             >
-              <FaPlus className="text-xs" /> Add Line Item
+              <FaPlus className="text-xs" /> {t("billing.addLineItem")}
             </button>
             <div className="mt-3 text-right text-sm font-semibold text-gray-800">
-              Total: <span className="text-dental-blue text-base">${computedTotal.toFixed(2)}</span>
+              {t("billing.total")}: <span className="text-dental-blue text-base">${computedTotal.toFixed(2)}</span>
             </div>
           </div>
 
@@ -525,10 +530,10 @@ export default function BillingPage() {
 
           <div className="flex gap-3 justify-end pt-2">
             <Button variant="outline" onClick={() => { setShowCreateModal(false); resetCreateModal(); }}>
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button onClick={handleCreate} disabled={creating}>
-              {creating ? "Creating..." : "Create Invoice"}
+              {creating ? t("billing.creating") : t("billing.createInvoiceBtn")}
             </Button>
           </div>
         </div>
@@ -545,8 +550,8 @@ export default function BillingPage() {
           <div className="space-y-5 max-h-[75vh] overflow-y-auto pr-1">
             {/* Info row */}
             <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-              <span><strong>Date:</strong> {new Date(selectedInvoice.procedure_date).toLocaleDateString()}</span>
-              <span><strong>Status:</strong> <StatusBadge status={selectedInvoice.status} /></span>
+              <span><strong>{t("billing.dateLabel")}</strong> {new Date(selectedInvoice.procedure_date).toLocaleDateString()}</span>
+              <span><strong>{t("billing.statusLabel")}</strong> <StatusBadge status={selectedInvoice.status} /></span>
             </div>
 
             {selectedInvoice.notes && (
@@ -555,12 +560,12 @@ export default function BillingPage() {
 
             {/* Line items table */}
             <div>
-              <h4 className="font-semibold text-gray-800 mb-2">Procedures</h4>
+              <h4 className="font-semibold text-gray-800 mb-2">{t("billing.procedures")}</h4>
               <table className="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-3 py-2 text-left font-medium text-gray-600">Procedure</th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-600">Amount</th>
+                    <th className="px-3 py-2 text-left font-medium text-gray-600">{t("billing.procedureCol")}</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-600">{t("billing.amountCol")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -571,7 +576,7 @@ export default function BillingPage() {
                     </tr>
                   ))}
                   <tr className="bg-gray-50 font-semibold">
-                    <td className="px-3 py-2">Total</td>
+                    <td className="px-3 py-2">{t("billing.total")}</td>
                     <td className="px-3 py-2 text-right">${selectedInvoice.total_amount.toFixed(2)}</td>
                   </tr>
                 </tbody>
@@ -581,15 +586,15 @@ export default function BillingPage() {
             {/* Payment summary pills */}
             <div className="grid grid-cols-3 gap-3 text-center">
               <div className="bg-blue-50 rounded-xl p-3">
-                <p className="text-xs text-blue-600 font-medium">Total</p>
+                <p className="text-xs text-blue-600 font-medium">{t("billing.total")}</p>
                 <p className="text-lg font-bold text-blue-800">${selectedInvoice.total_amount.toFixed(2)}</p>
               </div>
               <div className="bg-green-50 rounded-xl p-3">
-                <p className="text-xs text-green-600 font-medium">Paid</p>
+                <p className="text-xs text-green-600 font-medium">{t("billing.colPaid")}</p>
                 <p className="text-lg font-bold text-green-800">${selectedInvoice.amount_paid.toFixed(2)}</p>
               </div>
               <div className="bg-red-50 rounded-xl p-3">
-                <p className="text-xs text-red-600 font-medium">Remaining</p>
+                <p className="text-xs text-red-600 font-medium">{t("billing.colRemaining")}</p>
                 <p className="text-lg font-bold text-red-800">${selectedInvoice.remaining_amount.toFixed(2)}</p>
               </div>
             </div>
@@ -597,7 +602,7 @@ export default function BillingPage() {
             {/* Payment history */}
             {selectedInvoice.invoice_payments.length > 0 && (
               <div>
-                <h4 className="font-semibold text-gray-800 mb-2">Payment History</h4>
+                <h4 className="font-semibold text-gray-800 mb-2">{t("billing.paymentHistory")}</h4>
                 <div className="space-y-2">
                   {selectedInvoice.invoice_payments.map((p) => (
                     <div key={p.id} className="flex items-center justify-between text-sm bg-gray-50 rounded-lg px-3 py-2">
@@ -616,7 +621,7 @@ export default function BillingPage() {
             {/* Record payment — only when not fully paid */}
             {selectedInvoice.status !== "paid" && (
               <div className="border-t border-gray-200 pt-4">
-                <h4 className="font-semibold text-gray-800 mb-3">Record Payment</h4>
+                <h4 className="font-semibold text-gray-800 mb-3">{t("billing.recordPayment")}</h4>
                 <div className="space-y-3">
                   <div className="flex gap-3">
                     <div className="flex-1">
@@ -634,24 +639,24 @@ export default function BillingPage() {
                       </FormField>
                     </div>
                     <div className="flex-1">
-                      <FormField label="Payment Method *">
+                      <FormField label={t("billing.paymentMethodRequired")}>
                         <select
                           value={paymentForm.payment_method}
                           onChange={(e) => setPaymentForm((f) => ({ ...f, payment_method: e.target.value }))}
                           className={inputClass}
                         >
-                          <option value="cash">Cash</option>
-                          <option value="card">Card</option>
-                          <option value="insurance">Insurance</option>
-                          <option value="bank_transfer">Bank Transfer</option>
+                          <option value="cash">{t("billing.cash")}</option>
+                          <option value="card">{t("billing.card")}</option>
+                          <option value="insurance">{t("billing.insurance")}</option>
+                          <option value="bank_transfer">{t("billing.bankTransfer")}</option>
                         </select>
                       </FormField>
                     </div>
                   </div>
-                  <FormField label="Notes (optional)">
+                  <FormField label={t("billing.notesOptional")}>
                     <input
                       type="text"
-                      placeholder="e.g. First installment"
+                      placeholder={t("billing.notesPlaceholder")}
                       value={paymentForm.notes}
                       onChange={(e) => setPaymentForm((f) => ({ ...f, notes: e.target.value }))}
                       className={inputClass}
@@ -663,7 +668,7 @@ export default function BillingPage() {
                     </p>
                   )}
                   <Button onClick={handleRecordPayment} disabled={recordingPayment} className="w-full">
-                    {recordingPayment ? "Recording..." : "Record Payment"}
+                    {recordingPayment ? t("billing.recording") : t("billing.recordPayment")}
                   </Button>
                 </div>
               </div>

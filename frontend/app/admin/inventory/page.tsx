@@ -350,7 +350,7 @@ export default function InventoryManagement() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      <AdminSidebar activePage="inventory" sidebarOpen={sidebarOpen} onLogout={handleLogout} />
+      <AdminSidebar activePage="inventory" sidebarOpen={sidebarOpen} onToggle={() => setSidebarOpen((v) => !v)} onLogout={handleLogout} />
 
       <div className="flex-1 flex flex-col">
         <AdminPageHeader

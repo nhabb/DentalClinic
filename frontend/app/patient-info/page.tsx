@@ -23,7 +23,6 @@ export default function PatientInfoPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     // TODO: Handle form submission (send to API)
-    console.log('Form submitted:', formData)
     alert('Patient information saved successfully!')
   }
 

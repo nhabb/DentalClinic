@@ -210,7 +210,7 @@ export default function ExpensesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      <AdminSidebar activePage="expenses" sidebarOpen={sidebarOpen} onLogout={handleLogout} />
+      <AdminSidebar activePage="expenses" sidebarOpen={sidebarOpen} onToggle={() => setSidebarOpen((v) => !v)} onLogout={handleLogout} />
 
       <div className="flex-1 flex flex-col">
         <AdminPageHeader
