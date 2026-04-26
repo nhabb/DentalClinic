@@ -30,14 +30,70 @@ export class AppointmentsService {
     private readonly notifications: NotificationsService,
   ) {}
 
+  private toTimeDate(timeStr: string): Date {
+    const [h, m] = timeStr.split(':').map(Number);
+    const d = new Date(0);
+    d.setUTCHours(h, m, 0, 0);
+    return d;
+  }
+
   async create(dto: CreateAppointmentDto) {
-    // Validate slot
-    const slot = await this.prisma.appointment_slots.findUnique({
-      where: { id: BigInt(dto.slot_id) },
-      include: { users: { select: { id: true, first_name: true, last_name: true } } },
-    });
-    if (!slot) throw new NotFoundException('Appointment slot not found');
-    if (slot.is_booked) throw new BadRequestException('This slot is already booked');
+    let slot: any;
+
+    if (dto.slot_id) {
+      // ── Slot-based booking ──────────────────────────────────────
+      slot = await this.prisma.appointment_slots.findUnique({
+        where: { id: BigInt(dto.slot_id) },
+        include: { users: { select: { id: true, first_name: true, last_name: true } } },
+      });
+      if (!slot) throw new NotFoundException('Appointment slot not found');
+      if (slot.is_booked) throw new BadRequestException('This slot is already booked');
+    } else {
+      // ── Direct booking (no pre-existing slot) ───────────────────
+      if (!dto.doctor_id || !dto.appointment_date || !dto.start_time || !dto.end_time) {
+        throw new BadRequestException(
+          'Provide either slot_id or doctor_id + appointment_date + start_time + end_time',
+        );
+      }
+      const doctor = await this.prisma.users.findFirst({
+        where: { id: BigInt(dto.doctor_id), role: { in: ['admin', 'doctor'] } },
+      });
+      if (!doctor) throw new NotFoundException('Doctor not found');
+
+      const slotDate = new Date(dto.appointment_date);
+      const startTime = this.toTimeDate(dto.start_time);
+      const endTime = this.toTimeDate(dto.end_time);
+
+      if (startTime >= endTime) {
+        throw new BadRequestException('end_time must be after start_time');
+      }
+
+      // Reuse an existing free slot at that time, or create one on-the-fly
+      const existing = await this.prisma.appointment_slots.findFirst({
+        where: { doctor_id: BigInt(dto.doctor_id), slot_date: slotDate, start_time: startTime, is_booked: false },
+        include: { users: { select: { id: true, first_name: true, last_name: true } } },
+      });
+
+      if (existing) {
+        slot = existing;
+      } else {
+        const conflict = await this.prisma.appointment_slots.findFirst({
+          where: { doctor_id: BigInt(dto.doctor_id), slot_date: slotDate, start_time: startTime, is_booked: true },
+        });
+        if (conflict) throw new BadRequestException('This time slot is already booked for this doctor');
+
+        slot = await this.prisma.appointment_slots.create({
+          data: {
+            doctor_id: BigInt(dto.doctor_id),
+            slot_date: slotDate,
+            start_time: startTime,
+            end_time: endTime,
+            is_booked: false,
+          },
+          include: { users: { select: { id: true, first_name: true, last_name: true } } },
+        });
+      }
+    }
 
     // Validate that the slot is long enough for the requested procedure
     if (dto.duration_minutes) {
@@ -68,7 +124,7 @@ export class AppointmentsService {
           appointment_date: slot.slot_date,
           start_time: slot.start_time,
           end_time: slot.end_time,
-          status: 'scheduled',
+          status: dto.auto_confirm ? 'confirmed' : 'scheduled',
           reason: dto.reason,
         },
         include: appointmentInclude,

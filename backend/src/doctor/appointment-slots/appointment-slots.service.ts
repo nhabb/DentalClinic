@@ -78,7 +78,11 @@ export class AppointmentSlotsService {
 
     const slotDate = new Date(dto.slot_date);
     const startTime = this.toTimeDate(dto.start_time);
-    const endTime = this.toTimeDate(this.buildEndTime(dto.start_time));
+    const endTime = this.toTimeDate(dto.end_time);
+
+    if (startTime >= endTime) {
+      throw new BadRequestException('end_time must be after start_time');
+    }
 
     // Prevent duplicate slot for same doctor/date/time
     const existing = await this.prisma.appointment_slots.findFirst({

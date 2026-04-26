@@ -101,7 +101,10 @@ export default function PatientsPage() {
   // Book appointment state
   const [showBookModal, setShowBookModal] = useState(false);
   const [bookDate, setBookDate] = useState(new Date().toISOString().split("T")[0]);
-  const [bookTime, setBookTime] = useState("09:00");
+  const [bookStartTime, setBookStartTime] = useState("09:00");
+  const [bookEndTime, setBookEndTime] = useState("10:00");
+  const [bookDoctorId, setBookDoctorId] = useState<number | null>(null);
+  const [doctors, setDoctors] = useState<any[]>([]);
   const [bookReason, setBookReason] = useState("");
   const [bookLoading, setBookLoading] = useState(false);
   const [bookError, setBookError] = useState("");
@@ -253,34 +256,40 @@ export default function PatientsPage() {
     }
   };
 
+  const fetchDoctors = async () => {
+    try {
+      const res = await apiFetch(`/api/users`);
+      const data = await res.json();
+      const list: any[] = Array.isArray(data) ? data : (data.data ?? []);
+      setDoctors(list.filter((u: any) => u.role === 'doctor' || u.role === 'admin'));
+    } catch {}
+  };
+
   const handleBookAppointment = async () => {
     if (!selectedPatient) return;
+    const effectiveDoctorId = bookDoctorId ?? doctorId;
+    if (!effectiveDoctorId) {
+      setBookError("Please select a doctor.");
+      return;
+    }
+    if (bookStartTime >= bookEndTime) {
+      setBookError("End time must be after start time.");
+      return;
+    }
     setBookLoading(true);
     setBookError("");
     try {
-      // Fetch available slots for the chosen date and find one matching the chosen time
-      const slotsRes = await apiFetch(`/api/appointment-slots?date=${bookDate}&available_only=true&limit=100`);
-      const slotsData = await slotsRes.json();
-      const slots: any[] = slotsData.data || [];
-
-      // Find an exact or nearest-after match on start_time
-      const target = bookTime; // "HH:MM"
-      let matched = slots.find((s) => s.start_time?.slice(0, 5) === target);
-      if (!matched) matched = slots.find((s) => (s.start_time?.slice(0, 5) ?? "00:00") >= target);
-      if (!matched) matched = slots[0]; // fallback to first available
-
-      if (!matched) {
-        setBookError("No available slots on this date. Please try a different date.");
-        return;
-      }
-
       const res = await apiFetch("/api/appointments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           patient_id: selectedPatient.id,
-          slot_id: matched.id,
+          doctor_id: effectiveDoctorId,
+          appointment_date: bookDate,
+          start_time: bookStartTime,
+          end_time: bookEndTime,
           reason: bookReason || undefined,
+          auto_confirm: true,
         }),
       });
       if (res.ok) {
@@ -291,7 +300,7 @@ export default function PatientsPage() {
         fetchPatientHistory(selectedPatient.id);
       } else {
         const err = await res.json().catch(() => ({}));
-        const msg = err.message || "Failed to book appointment.";
+        const msg = Array.isArray(err.message) ? err.message.join(", ") : (err.message || "Failed to book appointment.");
         setBookError(msg);
         toast.error(msg);
       }
@@ -683,7 +692,7 @@ export default function PatientsPage() {
                 <Button
                   size="sm"
                   className="bg-dental-blue hover:bg-dental-blue/90"
-                  onClick={() => { setBookDate(new Date().toISOString().split("T")[0]); setBookTime("09:00"); setBookError(""); setShowBookModal(true); }}
+                  onClick={() => { setBookDate(new Date().toISOString().split("T")[0]); setBookStartTime("09:00"); setBookEndTime("10:00"); setBookDoctorId(doctorId); setBookError(""); fetchDoctors(); setShowBookModal(true); }}
                 >
                   <FaCalendarPlus className="mr-2 rtl:mr-0 rtl:ml-2" /> {t("patients.bookAppointment")}
                 </Button>
@@ -1014,7 +1023,7 @@ export default function PatientsPage() {
             <div className="p-6 border-b border-gray-100 flex items-center justify-between">
               <h2 className="text-xl font-bold text-gray-900">Book Appointment</h2>
               <button
-                onClick={() => { setShowBookModal(false); setBookReason(""); setBookError(""); }}
+                onClick={() => { setShowBookModal(false); setBookReason(""); setBookError(""); setDoctors([]); }}
                 className="p-2 hover:bg-gray-100 rounded-lg"
               >
                 <FaTimes className="text-gray-500" />
@@ -1024,23 +1033,50 @@ export default function PatientsPage() {
             <div className="p-6 space-y-4">
               <p className="text-sm text-gray-500">Patient: <span className="font-medium text-gray-900">{selectedPatient.name}</span></p>
 
+              {/* Doctor selector — shown to admins/secretaries; auto-set for doctors */}
+              {(userRole === "admin" || userRole === "secretary" || !doctorId) && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Doctor</label>
+                  <select
+                    value={bookDoctorId ?? ""}
+                    onChange={(e) => { setBookDoctorId(Number(e.target.value) || null); setBookError(""); }}
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                  >
+                    <option value="">Select a doctor…</option>
+                    {doctors.map((d) => (
+                      <option key={d.id} value={d.id}>{d.first_name} {d.last_name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                <input
+                  type="date"
+                  value={bookDate}
+                  min={new Date().toISOString().split("T")[0]}
+                  onChange={(e) => { setBookDate(e.target.value); setBookError(""); }}
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                />
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
                   <input
-                    type="date"
-                    value={bookDate}
-                    min={new Date().toISOString().split("T")[0]}
-                    onChange={(e) => { setBookDate(e.target.value); setBookError(""); }}
+                    type="time"
+                    value={bookStartTime}
+                    onChange={(e) => { setBookStartTime(e.target.value); setBookError(""); }}
                     className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Preferred Time</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
                   <input
                     type="time"
-                    value={bookTime}
-                    onChange={(e) => { setBookTime(e.target.value); setBookError(""); }}
+                    value={bookEndTime}
+                    onChange={(e) => { setBookEndTime(e.target.value); setBookError(""); }}
                     className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
                   />
                 </div>
@@ -1065,7 +1101,7 @@ export default function PatientsPage() {
             <div className="p-6 border-t border-gray-100 flex justify-end gap-3">
               <Button
                 variant="outline"
-                onClick={() => { setShowBookModal(false); setBookReason(""); setBookError(""); }}
+                onClick={() => { setShowBookModal(false); setBookReason(""); setBookError(""); setDoctors([]); }}
               >
                 Cancel
               </Button>
@@ -1110,6 +1146,7 @@ export default function PatientsPage() {
                   <input
                     type="date"
                     value={editPatientForm.dateOfBirth}
+                    max={new Date().toISOString().split("T")[0]}
                     onChange={(e) => setEditPatientForm((f) => ({ ...f, dateOfBirth: e.target.value }))}
                     className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
                   />

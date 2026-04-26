@@ -51,6 +51,7 @@ export default function PatientInfoPage() {
               value={formData.dateOfBirth}
               onChange={handleChange}
               required
+              max={new Date().toISOString().split("T")[0]}
             />
             <InputField
               label="Phone Number"
@@ -227,7 +228,8 @@ function InputField({
   placeholder,
   value,
   onChange,
-  required = false
+  required = false,
+  max,
 }: {
   label: string
   name: string
@@ -236,6 +238,7 @@ function InputField({
   value: string
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   required?: boolean
+  max?: string
 }) {
   return (
     <div>
@@ -250,6 +253,7 @@ function InputField({
         value={value}
         onChange={onChange}
         required={required}
+        max={max}
         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-dental-blue focus:border-transparent transition-all"
       />
     </div>

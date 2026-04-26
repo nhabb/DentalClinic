@@ -273,17 +273,16 @@ export default function BillingPage() {
   // ── Export / Import data ─────────────────────────────────────────────────────
 
   const exportData = invoices.map((inv) => ({
-    id: inv.id,
-    patient_name: `${inv.patient.users.first_name} ${inv.patient.users.last_name}`,
-    patient_email: inv.patient.users.email,
-    patient_id: inv.patient.id,
-    procedure_date: new Date(inv.procedure_date).toLocaleDateString("en-CA"),
-    procedures: inv.line_items.map((li) => `${li.procedure_name}: ${li.amount.toFixed(2)}`).join("; "),
-    total_amount: inv.total_amount,
-    amount_paid: inv.amount_paid,
-    remaining_amount: inv.remaining_amount,
-    status: inv.status,
-    notes: inv.notes ?? "",
+    ID: inv.id,
+    Patient: `${inv.patient.users.first_name} ${inv.patient.users.last_name}`,
+    Email: inv.patient.users.email,
+    Date: new Date(inv.procedure_date).toLocaleDateString("en-CA"),
+    Procedures: inv.line_items.map((li) => `${li.procedure_name}: ${li.amount.toFixed(2)}`).join("; "),
+    "Total ($)": inv.total_amount,
+    "Paid ($)": inv.amount_paid,
+    "Remaining ($)": inv.remaining_amount,
+    Status: inv.status,
+    Notes: inv.notes ?? "",
   }));
 
   const handleImport = async (rows: Record<string, unknown>[]) => {

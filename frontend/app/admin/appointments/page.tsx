@@ -93,7 +93,7 @@ export default function AppointmentsManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDoctor, setSelectedDoctor] = useState<string>("all");
   const [showAddModal, setShowAddModal] = useState(false);
-  const [newAppt, setNewAppt] = useState({ patientId: "", doctorId: "", date: "", time: "", reason: "Regular Checkup" });
+  const [newAppt, setNewAppt] = useState({ patientId: "", doctorId: "", date: "", startTime: "09:00", endTime: "10:00", reason: "Regular Checkup" });
   const [addError, setAddError] = useState("");
   const [addLoading, setAddLoading] = useState(false);
   const [availableSlots, setAvailableSlots] = useState<{ id: number; label: string }[]>([]);
@@ -114,7 +114,15 @@ export default function AppointmentsManagement() {
   const [showSlotCalendar, setShowSlotCalendar] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(new Date());
   const [calendarDoctorId, setCalendarDoctorId] = useState<number | null>(null);
-  const [monthSlots, setMonthSlots] = useState<Record<string, { id: number; time: string; isBooked: boolean }[]>>({});
+  const [monthSlots, setMonthSlots] = useState<Record<string, {
+    id: number;
+    appointmentId?: number;
+    time: string;
+    endTime?: string;
+    isBooked: boolean;
+    appointmentStatus?: string;
+    patientName?: string;
+  }[]>>({});
   const [loadingMonthSlots, setLoadingMonthSlots] = useState(false);
   const [calendarSelectedDay, setCalendarSelectedDay] = useState<string | null>(null);
 
@@ -133,6 +141,7 @@ export default function AppointmentsManagement() {
   const [postponeApptId, setPostponeApptId] = useState<number | null>(null);
   const [postponeDate, setPostponeDate] = useState("");
   const [postponeTime, setPostponeTime] = useState("");
+  const [postponeEndTime, setPostponeEndTime] = useState("");
   const [postponeLoading, setPostponeLoading] = useState(false);
 
   // Check auth and load user data (auth disabled)
@@ -240,6 +249,7 @@ export default function AppointmentsManagement() {
     fetchData();
   }, [selectedDate]);
 
+
   const handleLogout = () => {
     toast.success("Logged out.");
     safeStorage.removeItem("adminAuth");
@@ -336,19 +346,52 @@ export default function AppointmentsManagement() {
   const fetchMonthSlots = async (doctorId: number) => {
     setLoadingMonthSlots(true);
     try {
-      const res = await apiFetch(`/api/appointment-slots?doctor_id=${doctorId}&limit=500`);
-      const data = await res.json();
-      const grouped: Record<string, { id: number; time: string; isBooked: boolean }[]> = {};
-      (data.data || []).forEach((s: any) => {
+      const toTime = (raw: string) =>
+        new Date(raw).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "UTC" });
+
+      const [slotsRes, apptRes] = await Promise.all([
+        apiFetch(`/api/appointment-slots?doctor_id=${doctorId}&limit=500`),
+        apiFetch(`/api/appointments?limit=1000`),
+      ]);
+
+      const slotsData = slotsRes.ok ? await slotsRes.json() : { data: [] };
+      const apptData  = apptRes.ok  ? await apptRes.json()  : { data: [] };
+
+      const grouped: typeof monthSlots = {};
+
+      // Open (unbooked) slots
+      for (const s of (slotsData.data || []) as any[]) {
+        if (s.is_booked) continue;
         const date = s.slot_date ? new Date(s.slot_date).toLocaleDateString("en-CA") : "";
-        if (!date) return;
-        if (!grouped[date]) grouped[date] = [];
-        grouped[date].push({
+        if (!date) continue;
+        (grouped[date] ??= []).push({
           id: Number(s.id),
-          time: new Date(s.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "UTC" }),
-          isBooked: s.is_booked,
+          time: s.start_time ? toTime(s.start_time) : "",
+          endTime: s.end_time ? toTime(s.end_time) : undefined,
+          isBooked: false,
         });
-      });
+      }
+
+      // All appointments directly from API — avoids race condition with appointments state
+      for (const a of (apptData.data || []) as any[]) {
+        if (a.status === "cancelled") continue;
+        const dateStr = a.appointment_date ? String(a.appointment_date).slice(0, 10) : "";
+        if (!dateStr) continue;
+        const patientUser = a.patient_profiles?.users;
+        const patientName = patientUser
+          ? `${patientUser.first_name} ${patientUser.last_name}`
+          : `Patient #${a.patient_id}`;
+        const time = a.start_time ? toTime(a.start_time) : "";
+        (grouped[dateStr] ??= []).push({
+          id: Number(a.id),
+          appointmentId: Number(a.id),
+          time,
+          isBooked: true,
+          appointmentStatus: a.status,
+          patientName,
+        });
+      }
+
       setMonthSlots(grouped);
     } catch {
       setMonthSlots({});
@@ -451,7 +494,7 @@ export default function AppointmentsManagement() {
 
   const openAddModal = async () => {
     setAddError("");
-    setNewAppt({ patientId: "", doctorId: "", date: "", time: "", reason: "Regular Checkup" });
+    setNewAppt({ patientId: "", doctorId: "", date: "", startTime: "09:00", endTime: "10:00", reason: "Regular Checkup" });
     setShowAddModal(true);
     try {
       const patientsRes = await apiFetch(`/api/patients`);
@@ -467,82 +510,36 @@ export default function AppointmentsManagement() {
   };
 
   const handleAddAppointment = async () => {
-    if (!newAppt.patientId || !newAppt.doctorId || !newAppt.date || !newAppt.time) {
+    if (!newAppt.patientId || !newAppt.doctorId || !newAppt.date || !newAppt.startTime || !newAppt.endTime) {
       setAddError("Please fill in all required fields.");
+      return;
+    }
+    if (newAppt.startTime >= newAppt.endTime) {
+      setAddError("End time must be after start time.");
       return;
     }
     setAddLoading(true);
     setAddError("");
     try {
-      // Look for an existing unbooked slot for this doctor/date/time
-      const slotsRes = await apiFetch(`/api/appointment-slots?doctor_id=${newAppt.doctorId}&date=${newAppt.date}&limit=100`);
-      const slotsData = slotsRes.ok ? await slotsRes.json() : { data: [] };
-
-      const toHHMM = (t: string) => {
-        const d = new Date(t);
-        return `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
-      };
-      const toMins = (hhmm: string) => {
-        const [h, m] = hhmm.split(":").map(Number);
-        return h * 60 + m;
-      };
-
-      const requestedStart = toMins(newAppt.time);
-      const requestedEnd = requestedStart + getProcedureDuration(newAppt.reason);
-
-      // Reject if any booked slot overlaps with the requested time range
-      const bookedConflict = (slotsData.data || []).find((s: any) => {
-        if (!s.is_booked) return false;
-        const slotStart = toMins(toHHMM(s.start_time));
-        const slotEnd = s.end_time ? toMins(toHHMM(s.end_time)) : slotStart + 30;
-        return requestedStart < slotEnd && requestedEnd > slotStart;
-      });
-      if (bookedConflict) throw new Error("This time overlaps with an existing appointment.");
-
-      let slot = (slotsData.data || []).find((s: any) =>
-        toHHMM(s.start_time) === newAppt.time && !s.is_booked
-      );
-
-      if (!slot) {
-        const duration = getProcedureDuration(newAppt.reason);
-        const toTime = addMinutesToTime(newAppt.time, duration);
-        const createRes = await apiFetch(`/api/appointment-slots/bulk`, {
-          method: "POST",
-          body: JSON.stringify({
-            doctor_id: Number(newAppt.doctorId),
-            slot_date: newAppt.date,
-            from_time: newAppt.time,
-            to_time: toTime,
-            duration_minutes: duration,
-          }),
-        });
-        if (!createRes.ok) {
-          const err = await createRes.json();
-          throw new Error(err.message || "Failed to create time slot.");
-        }
-        const refetchRes = await apiFetch(`/api/appointment-slots?doctor_id=${newAppt.doctorId}&date=${newAppt.date}&limit=100`);
-        const refetchData = refetchRes.ok ? await refetchRes.json() : { data: [] };
-        slot = (refetchData.data || []).find((s: any) =>
-          toHHMM(s.start_time) === newAppt.time && !s.is_booked
-        );
-        if (!slot) throw new Error("Could not find the created slot.");
-      }
-
       const res = await apiFetch(`/api/appointments`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           patient_id: Number(newAppt.patientId),
-          slot_id: Number(slot.id),
+          doctor_id: Number(newAppt.doctorId),
+          appointment_date: newAppt.date,
+          start_time: newAppt.startTime,
+          end_time: newAppt.endTime,
           reason: newAppt.reason,
+          auto_confirm: true,
         }),
       });
       if (!res.ok) {
-        const err = await res.json();
-        throw new Error(Array.isArray(err.message) ? err.message.join(", ") : err.message);
+        const err = await res.json().catch(() => ({}));
+        throw new Error(Array.isArray(err.message) ? err.message.join(", ") : (err.message || "Failed to create appointment."));
       }
       toast.success("Appointment created.");
       setShowAddModal(false);
-      // Navigate to the appointment's date — this triggers fetchData via useEffect
       const [y, mo, d] = newAppt.date.split("-").map(Number);
       setSelectedDate(new Date(y, mo - 1, d));
     } catch (e: any) {
@@ -610,37 +607,10 @@ export default function AppointmentsManagement() {
 
   const handlePostponeSubmit = async () => {
     const appt = appointments.find((a) => a.id === postponeApptId);
-    if (!appt || !postponeDate || !postponeTime) return;
+    if (!appt || !postponeDate || !postponeTime || !postponeEndTime) return;
+    if (postponeTime >= postponeEndTime) { toast.error("End time must be after start time."); return; }
     setPostponeLoading(true);
     try {
-      const slotsRes = await apiFetch(`/api/appointment-slots?doctor_id=${appt.doctorId}&date=${postponeDate}&limit=100`);
-      const slotsData = slotsRes.ok ? await slotsRes.json() : { data: [] };
-      const slotHHMM = (start_time: string) => {
-        const d = new Date(start_time);
-        return `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
-      };
-
-      let slot = (slotsData.data || []).find((s: any) =>
-        slotHHMM(s.start_time) === postponeTime && !s.is_booked
-      );
-
-      if (!slot) {
-        const duration = getProcedureDuration(appt.type);
-        const toTime = addMinutesToTime(postponeTime, duration);
-        const createRes = await apiFetch(`/api/appointment-slots/bulk`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ doctor_id: appt.doctorId, slot_date: postponeDate, from_time: postponeTime, to_time: toTime, duration_minutes: duration }),
-        });
-        if (!createRes.ok) { toast.error("Failed to create slot for new date."); return; }
-        const refetchRes = await apiFetch(`/api/appointment-slots?doctor_id=${appt.doctorId}&date=${postponeDate}&limit=100`);
-        const refetchData = refetchRes.ok ? await refetchRes.json() : { data: [] };
-        slot = (refetchData.data || []).find((s: any) =>
-          slotHHMM(s.start_time) === postponeTime && !s.is_booked
-        );
-        if (!slot) { toast.error("Could not find the new slot after creation."); return; }
-      }
-
       const cancelRes = await apiFetch(`/api/appointments/${appt.id}/cancel`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -651,13 +621,20 @@ export default function AppointmentsManagement() {
       const bookRes = await apiFetch(`/api/appointments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ patient_id: appt.patientId, slot_id: Number(slot.id), reason: `Rescheduled: ${appt.type}` }),
+        body: JSON.stringify({
+          patient_id: appt.patientId,
+          doctor_id: appt.doctorId,
+          appointment_date: postponeDate,
+          start_time: postponeTime,
+          end_time: postponeEndTime,
+          reason: `Rescheduled: ${appt.type}`,
+          auto_confirm: true,
+        }),
       });
       if (!bookRes.ok) { toast.error("Failed to book new appointment."); return; }
 
-      toast.success(`Appointment postponed to ${postponeDate} at ${postponeTime}.`);
+      toast.success(`Appointment rescheduled to ${postponeDate} at ${postponeTime}.`);
       setPostponeApptId(null);
-      // Navigate to the new appointment's date — triggers fetchData via useEffect
       const [y, mo, d] = postponeDate.split("-").map(Number);
       setSelectedDate(new Date(y, mo - 1, d));
     } catch {
@@ -1007,12 +984,20 @@ export default function AppointmentsManagement() {
                 onChange={(e) => setNewAppt({ ...newAppt, date: e.target.value })}
               />
             </FormField>
-            <FormField label={t("appointments.time")}>
+            <FormField label="Start Time">
               <input
                 type="time"
                 className={inputClass}
-                value={newAppt.time}
-                onChange={(e) => setNewAppt({ ...newAppt, time: e.target.value })}
+                value={newAppt.startTime}
+                onChange={(e) => setNewAppt({ ...newAppt, startTime: e.target.value })}
+              />
+            </FormField>
+            <FormField label="End Time">
+              <input
+                type="time"
+                className={inputClass}
+                value={newAppt.endTime}
+                onChange={(e) => setNewAppt({ ...newAppt, endTime: e.target.value })}
               />
             </FormField>
           </div>
@@ -1178,8 +1163,8 @@ export default function AppointmentsManagement() {
       </Modal>
 
       {/* Slot Calendar Modal */}
-      <Modal isOpen={showSlotCalendar} onClose={() => setShowSlotCalendar(false)} title={t("appointments.myOpenedSlots")}>
-        <div className="space-y-4">
+      <Modal isOpen={showSlotCalendar} onClose={() => { setShowSlotCalendar(false); setCalendarSelectedDay(null); }} title={t("appointments.myOpenedSlots")}>
+        <div className="space-y-3">
 
           {/* Doctor selector (admins only) */}
           {doctors.length > 1 && (
@@ -1204,11 +1189,10 @@ export default function AppointmentsManagement() {
                 const prev = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1);
                 setCalendarMonth(prev);
                 setCalendarSelectedDay(null);
+                if (calendarDoctorId) fetchMonthSlots(calendarDoctorId);
               }}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <FaChevronLeft className="text-gray-600" />
-            </button>
+            ><FaChevronLeft className="text-gray-600" /></button>
             <p className="font-semibold text-gray-800">
               {calendarMonth.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
             </p>
@@ -1217,129 +1201,176 @@ export default function AppointmentsManagement() {
                 const next = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1);
                 setCalendarMonth(next);
                 setCalendarSelectedDay(null);
+                if (calendarDoctorId) fetchMonthSlots(calendarDoctorId);
               }}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <FaChevronRight className="text-gray-600" />
-            </button>
+            ><FaChevronRight className="text-gray-600" /></button>
+          </div>
+
+          {/* Legend */}
+          <div className="flex flex-wrap gap-3 justify-center">
+            {[
+              { color: "bg-teal-400",  label: "Open slot" },
+              { color: "bg-blue-500",  label: "Confirmed" },
+              { color: "bg-green-500", label: "Completed" },
+              { color: "bg-red-400",   label: "No-show" },
+            ].map(({ color, label }) => (
+              <div key={label} className="flex items-center gap-1 text-xs text-gray-500">
+                <span className={`w-2.5 h-2.5 rounded-full ${color} inline-block`} /> {label}
+              </div>
+            ))}
           </div>
 
           {/* Calendar grid */}
           {loadingMonthSlots ? (
-            <div className="text-center py-6 text-sm text-gray-400">Loading slots...</div>
-          ) : (
-            (() => {
-              const year = calendarMonth.getFullYear();
-              const month = calendarMonth.getMonth();
-              const firstDow = new Date(year, month, 1).getDay();
-              const daysInMonth = new Date(year, month + 1, 0).getDate();
-              const pad = (n: number) => String(n).padStart(2, "0");
-              const todayStr = new Date().toLocaleDateString("en-CA");
-              const cells: (number | null)[] = [
-                ...Array(firstDow).fill(null),
-                ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
-              ];
-              // pad to full weeks
-              while (cells.length % 7 !== 0) cells.push(null);
+            <div className="text-center py-6 text-sm text-gray-400">Loading…</div>
+          ) : (() => {
+            const year  = calendarMonth.getFullYear();
+            const month = calendarMonth.getMonth();
+            const firstDow   = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const pad = (n: number) => String(n).padStart(2, "0");
+            const todayStr = new Date().toLocaleDateString("en-CA");
+            const cells: (number | null)[] = [
+              ...Array(firstDow).fill(null),
+              ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+            ];
+            while (cells.length % 7 !== 0) cells.push(null);
 
-              return (
-                <div>
-                  {/* Day headers */}
-                  <div className="grid grid-cols-7 mb-1">
-                    {Array.from({ length: 7 }, (_, i) =>
-                      new Intl.DateTimeFormat(language, { weekday: "short" }).format(new Date(2023, 0, 1 + i))
-                    ).map((d) => (
-                      <div key={d} className="text-center text-xs font-medium text-gray-400 py-1">{d}</div>
-                    ))}
+            const STATUS_COLOR: Record<string, string> = {
+              confirmed: "bg-blue-500",
+              completed: "bg-green-500",
+              no_show:   "bg-red-400",
+            };
+
+            return (
+              <div>
+                {/* Day-of-week headers */}
+                <div className="grid grid-cols-7 mb-1">
+                  {Array.from({ length: 7 }, (_, i) =>
+                    new Intl.DateTimeFormat(language, { weekday: "short" }).format(new Date(2023, 0, 1 + i))
+                  ).map((d) => (
+                    <div key={d} className="text-center text-[11px] font-medium text-gray-400 py-1">{d}</div>
+                  ))}
+                </div>
+
+                {/* Weeks */}
+                {Array.from({ length: cells.length / 7 }, (_, wi) => (
+                  <div key={wi} className="grid grid-cols-7">
+                    {cells.slice(wi * 7, wi * 7 + 7).map((day, di) => {
+                      if (!day) return <div key={di} className="m-0.5 min-h-[56px]" />;
+
+                      const dateStr  = `${year}-${pad(month + 1)}-${pad(day)}`;
+                      const dayData  = monthSlots[dateStr] || [];
+                      const hasData  = dayData.length > 0;
+                      const isToday  = dateStr === todayStr;
+                      const isSelected = dateStr === calendarSelectedDay;
+
+                      const openCount      = dayData.filter((s) => !s.isBooked).length;
+                      const confirmedCount = dayData.filter((s) => s.appointmentStatus === "confirmed").length;
+                      const completedCount = dayData.filter((s) => s.appointmentStatus === "completed").length;
+                      const noShowCount    = dayData.filter((s) => s.appointmentStatus === "no_show").length;
+
+                      return (
+                        <div
+                          key={di}
+                          onClick={() => setCalendarSelectedDay(isSelected ? null : dateStr)}
+                          className={`m-0.5 rounded-xl p-1.5 cursor-pointer transition-all min-h-[56px] flex flex-col items-center select-none
+                            ${!hasData ? "bg-gray-50 text-gray-300" : "hover:bg-gray-50"}
+                            ${isSelected ? "ring-2 ring-blue-400 bg-blue-50" : ""}
+                            ${isToday ? "ring-2 ring-blue-500" : ""}
+                          `}
+                        >
+                          <span className={`text-sm font-semibold mb-1
+                            ${!hasData ? "text-gray-300" : isToday ? "text-blue-600" : "text-gray-800"}
+                          `}>{day}</span>
+
+                          {hasData && (
+                            <div className="flex flex-wrap gap-0.5 justify-center">
+                              {openCount > 0 && (
+                                <span className="min-w-[16px] h-4 rounded-full bg-teal-400 text-white text-[9px] font-bold flex items-center justify-center px-1">
+                                  {openCount}
+                                </span>
+                              )}
+                              {confirmedCount > 0 && (
+                                <span className="min-w-[16px] h-4 rounded-full bg-blue-500 text-white text-[9px] font-bold flex items-center justify-center px-1">
+                                  {confirmedCount}
+                                </span>
+                              )}
+                              {completedCount > 0 && (
+                                <span className="min-w-[16px] h-4 rounded-full bg-green-500 text-white text-[9px] font-bold flex items-center justify-center px-1">
+                                  {completedCount}
+                                </span>
+                              )}
+                              {noShowCount > 0 && (
+                                <span className="min-w-[16px] h-4 rounded-full bg-red-400 text-white text-[9px] font-bold flex items-center justify-center px-1">
+                                  {noShowCount}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
-                  {/* Weeks */}
-                  {Array.from({ length: cells.length / 7 }, (_, wi) => (
-                    <div key={wi} className="grid grid-cols-7">
-                      {cells.slice(wi * 7, wi * 7 + 7).map((day, di) => {
-                        if (!day) return <div key={di} />;
-                        const dateStr = `${year}-${pad(month + 1)}-${pad(day)}`;
-                        const daySlots = monthSlots[dateStr] || [];
-                        const openCount = daySlots.filter((s) => !s.isBooked).length;
-                        const bookedCount = daySlots.filter((s) => s.isBooked).length;
-                        const isToday = dateStr === todayStr;
-                        const isSelected = dateStr === calendarSelectedDay;
+                ))}
 
-                        return (
-                          <div
-                            key={di}
-                            onClick={() => setCalendarSelectedDay(isSelected ? null : dateStr)}
-                            className={`relative m-0.5 rounded-lg p-1.5 cursor-pointer transition-colors min-h-[52px] flex flex-col items-center
-                              ${isSelected ? "bg-blue-100 border border-blue-400" : "hover:bg-gray-100"}
-                              ${isToday ? "ring-2 ring-blue-400" : ""}
-                            `}
-                          >
-                            <span className={`text-sm font-medium ${isToday ? "text-blue-600" : "text-gray-700"}`}>{day}</span>
-                            {daySlots.length > 0 && (
-                              <div className="flex gap-0.5 mt-1 flex-wrap justify-center">
-                                {openCount > 0 && (
-                                  <span className="w-2 h-2 rounded-full bg-teal-400" title={`${openCount} open`} />
-                                )}
-                                {bookedCount > 0 && (
-                                  <span className="w-2 h-2 rounded-full bg-blue-400" title={`${bookedCount} booked`} />
+                {/* Inline dropdown for selected day */}
+                {calendarSelectedDay && (() => {
+                  const dayData = (monthSlots[calendarSelectedDay] || [])
+                    .slice().sort((a, b) => a.time.localeCompare(b.time));
+                  return (
+                    <div className="mt-3 border border-gray-200 rounded-xl shadow-sm bg-white overflow-hidden">
+                      <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-b border-gray-100">
+                        <p className="text-sm font-semibold text-gray-800">
+                          {new Date(calendarSelectedDay + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+                        </p>
+                        <button onClick={() => setCalendarSelectedDay(null)} className="text-gray-400 hover:text-gray-600 text-lg leading-none">×</button>
+                      </div>
+                      {dayData.length === 0 ? (
+                        <p className="text-xs text-gray-400 px-4 py-3">No appointments or slots for this day.</p>
+                      ) : (
+                        <div className="divide-y divide-gray-50 max-h-52 overflow-y-auto">
+                          {dayData.map((s) => {
+                            const dotColor = !s.isBooked ? "bg-teal-400"
+                              : STATUS_COLOR[s.appointmentStatus ?? ""] ?? "bg-blue-500";
+                            const label = !s.isBooked ? "Open slot"
+                              : (s.appointmentStatus ?? "booked").replace("_", " ");
+                            return (
+                              <div key={`${s.id}-${s.appointmentId}`}
+                                className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors">
+                                <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${dotColor}`} />
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-semibold text-gray-800 truncate">
+                                    {s.patientName ?? "Open slot"}{" "}
+                                    <span className="font-normal text-gray-500">
+                                      · {s.time}{s.endTime ? ` – ${s.endTime}` : ""}
+                                    </span>
+                                  </p>
+                                  <p className="text-[11px] capitalize text-gray-400">{label}</p>
+                                </div>
+                                {!s.isBooked && (
+                                  <button
+                                    onClick={() => handleCalendarDeleteSlot(s.id, calendarSelectedDay)}
+                                    className="text-red-400 hover:text-red-600 text-sm font-bold flex-shrink-0"
+                                    title="Delete slot"
+                                  >×</button>
                                 )}
                               </div>
-                            )}
-                            {daySlots.length > 0 && (
-                              <span className="text-[10px] text-gray-400 mt-0.5">{daySlots.length}</span>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ))}
-
-                  {/* Legend */}
-                  <div className="flex gap-4 mt-2 justify-center">
-                    <div className="flex items-center gap-1 text-xs text-gray-500">
-                      <span className="w-2.5 h-2.5 rounded-full bg-teal-400 inline-block" /> Open
-                    </div>
-                    <div className="flex items-center gap-1 text-xs text-gray-500">
-                      <span className="w-2.5 h-2.5 rounded-full bg-blue-400 inline-block" /> Booked
-                    </div>
-                  </div>
-                </div>
-              );
-            })()
-          )}
-
-          {/* Selected day slots */}
-          {calendarSelectedDay && (
-            <div className="border-t pt-3">
-              <p className="text-sm font-semibold text-gray-700 mb-2">
-                {new Date(calendarSelectedDay + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
-              </p>
-              {(monthSlots[calendarSelectedDay] || []).length === 0 ? (
-                <p className="text-xs text-gray-400">No slots for this day.</p>
-              ) : (
-                <div className="flex flex-wrap gap-2">
-                  {(monthSlots[calendarSelectedDay] || []).map((s) => (
-                    <div key={s.id} className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border
-                      ${s.isBooked ? "bg-blue-50 border-blue-200 text-blue-700" : "bg-teal-50 border-teal-200 text-teal-700"}`}>
-                      <span>{s.time}</span>
-                      {s.isBooked ? (
-                        <span className="text-blue-400 text-[10px] ml-1">{t("appointments.booked")}</span>
-                      ) : (
-                        <button
-                          onClick={() => handleCalendarDeleteSlot(s.id, calendarSelectedDay)}
-                          className="ml-1 text-red-400 hover:text-red-600 leading-none font-bold"
-                          title="Delete slot"
-                        >×</button>
+                            );
+                          })}
+                        </div>
                       )}
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+                  );
+                })()}
+              </div>
+            );
+          })()}
         </div>
 
-        <div className="flex gap-3 mt-6">
-          <Button className="flex-1" variant="outline" onClick={() => setShowSlotCalendar(false)}>{t("common.close")}</Button>
+        <div className="flex gap-3 mt-4">
+          <Button className="flex-1" variant="outline" onClick={() => { setShowSlotCalendar(false); setCalendarSelectedDay(null); }}>{t("common.close")}</Button>
         </div>
       </Modal>
 
@@ -1359,16 +1390,26 @@ export default function AppointmentsManagement() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t("appointments.newTime")}</label>
-                <input
-                  type="time"
-                  value={postponeTime}
-                  onChange={(e) => setPostponeTime(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
+                  <input
+                    type="time"
+                    value={postponeTime}
+                    onChange={(e) => setPostponeTime(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
+                  <input
+                    type="time"
+                    value={postponeEndTime}
+                    onChange={(e) => setPostponeEndTime(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
+                  />
+                </div>
               </div>
-              <p className="text-xs text-gray-500">{t("appointments.slotAutoCreate")}</p>
             </div>
             <div className="flex gap-3 mt-6">
               <button
@@ -1379,7 +1420,7 @@ export default function AppointmentsManagement() {
               </button>
               <button
                 onClick={handlePostponeSubmit}
-                disabled={!postponeDate || !postponeTime || postponeLoading}
+                disabled={!postponeDate || !postponeTime || !postponeEndTime || postponeLoading}
                 className="flex-1 px-4 py-2 bg-dental-blue text-white rounded-lg text-sm font-medium hover:bg-dental-blue/90 disabled:opacity-50 transition-colors"
               >
                 {postponeLoading ? t("common.saving") : t("common.confirm")}

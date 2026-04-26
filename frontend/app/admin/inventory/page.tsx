@@ -226,7 +226,7 @@ export default function InventoryManagement() {
     setEditImageFile(null);
     setEditImagePreview(item.image_url ?? null);
     setEditForm({ name: item.name, minimum_quantity: item.minimumStock, cost_price: item.cost_price ?? 0 });
-    setStockQty(1);
+    setStockQty(0);
     setStockType("in");
     setStockNote("");
     setShowEditModal(true);
@@ -347,6 +347,18 @@ export default function InventoryManagement() {
         }),
       });
       if (editImageFile) await uploadItemImage(selectedItem.id, editImageFile);
+      if (stockQty > 0) {
+        const res = await apiFetch(`/api/inventory/${selectedItem.id}/movements`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ movement_type: stockType, quantity: stockQty, note: stockNote || undefined, performed_by: currentUserId }),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          toast.error(err.message || "Failed to adjust stock.");
+          return;
+        }
+      }
       await fetchInventory();
       toast.success("Item updated.");
     } finally {
@@ -687,9 +699,9 @@ export default function InventoryManagement() {
               <div className="flex gap-2">
                 <input
                   type="number"
-                  min={1}
-                  value={stockQty}
-                  onChange={(e) => setStockQty(Math.max(1, Number(e.target.value)))}
+                  min={0}
+                  value={stockQty || ""}
+                  onChange={(e) => setStockQty(Math.max(0, Number(e.target.value)))}
                   className={`${inputClass} w-24`}
                   placeholder="Qty"
                 />
@@ -700,13 +712,6 @@ export default function InventoryManagement() {
                   className={`${inputClass} flex-1`}
                   placeholder="Note (optional)"
                 />
-                <Button
-                  onClick={handleStockAdjustment}
-                  disabled={stockSaving || stockQty <= 0}
-                  className={`shrink-0 ${stockType === "in" ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"}`}
-                >
-                  {stockSaving ? "..." : "Apply"}
-                </Button>
               </div>
             </div>
 

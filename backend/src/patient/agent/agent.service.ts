@@ -272,24 +272,10 @@ Financial guidelines:
         case 'get_appointment':
           return serialize(await this.appointments.findOne(BigInt(input.id))); // here we pass the id from the input that have the exracted id from the ai response and we convert it to bigint because our database uses bigint for ids and then we serialize the result to a string that can be sent back to the ai as a tool response.
 
-        case 'confirm_appointment':
-          return serialize({ success: true, appointment: await this.appointments.confirm(BigInt(input.id)) });
-
-        case 'complete_appointment':
-          return serialize({ success: true, appointment: await this.appointments.complete(BigInt(input.id)) });
-
-        case 'cancel_appointment':
-          return serialize({ success: true, appointment: await this.appointments.cancel(BigInt(input.id), { reason: input.reason }) });
-
-        case 'update_appointment_notes':
-          return serialize({ success: true, appointment: await this.appointments.updateNotes(BigInt(input.id), { notes: input.notes, reason: input.reason }) });
 
         // ── Slots ──────────────────────────────────────────────────
         case 'list_slots':
           return serialize(await this.slots.findAll({ doctor_id: input.doctor_id, date: input.date, available_only: input.available_only, limit: 50 }));
-
-        case 'delete_slot':
-          return serialize(await this.slots.remove(BigInt(input.id)));
 
         // ── Patients ───────────────────────────────────────────────
         case 'list_patients':
@@ -331,11 +317,6 @@ Financial guidelines:
         case 'list_doctors':
           return serialize(await this.users.findAll('admin'));
 
-        // ── Notifications ──────────────────────────────────────────
-        case 'send_notification':
-          await this.notifications.create({ user_id: BigInt(input.user_id), title: input.title, message: input.message, type: 'appointment_booked' });
-          return serialize({ success: true });
-
         // ── Financial KPIs / summary (billing-based) ───────────────
         case 'get_financial_kpis':
           return serialize(await this.billing.getKpis());
@@ -370,25 +351,6 @@ Financial guidelines:
         case 'get_invoice':
           return serialize(await this.billing.findOne(BigInt(input.id)));
 
-        case 'create_invoice':
-        case 'create_payment': // alias — old tool name
-          return serialize(await this.billing.create({
-            patient_id: input.patient_id,
-            procedure_date: input.procedure_date ?? input.date ?? new Date().toISOString().split('T')[0],
-            notes: input.notes ?? input.description,
-            line_items: input.line_items ?? [{ procedure_name: 'Checkup', amount: input.amount ?? 0 }],
-          }));
-
-        case 'record_invoice_payment':
-        case 'record_payment': // alias — old tool name
-          return serialize(await this.billing.recordPayment(
-            BigInt(input.invoice_id ?? input.id),
-            {
-              amount: input.amount ?? input.amount_paid,
-              payment_method: input.payment_method ?? 'cash',
-              notes: input.notes,
-            },
-          ));
 
         // ── Expenses ───────────────────────────────────────────────
         case 'list_expenses':
@@ -400,14 +362,7 @@ Financial guidelines:
             limit: input.limit ?? 20,
           }));
 
-        case 'create_expense':
-          return serialize(await this.expenses.create({
-            title: input.title,
-            category: input.category ?? 'other',
-            amount: input.amount,
-            description: input.description,
-            expense_date: input.expense_date,
-          }));
+        
 
         case 'get_expenses_analytics':
           return serialize(await this.expenses.getAnalytics(input.months ?? 12));
