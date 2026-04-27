@@ -484,7 +484,12 @@ export default function AdminDashboard() {
           <div className="flex items-center gap-4">
             <LanguageSwitcher />
             <div className="flex items-center gap-3 pl-4 rtl:pl-0 rtl:pr-4 border-l rtl:border-l-0 rtl:border-r border-gray-200">
-              <Avatar name={displayName} size="md" src={photoUrl} onUpload={handlePhotoUpload} />
+              <Avatar
+                name={displayName}
+                size="md"
+                src={userRole === "doctor" ? photoUrl : undefined}
+                onUpload={userRole === "doctor" ? handlePhotoUpload : undefined}
+              />
               <div className="hidden sm:block">
                 <p className="text-sm font-medium text-gray-900">
                   {userRole === "doctor" ? `${t("adminLogin.doctor")}. ` : ""}

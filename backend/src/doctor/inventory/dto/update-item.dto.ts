@@ -2,6 +2,7 @@ import {
   IsString,
   IsOptional,
   IsNumber,
+  Max,
   Min,
   MaxLength,
   MinLength,

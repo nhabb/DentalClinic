@@ -333,17 +333,28 @@ export default function AppointmentsManagement() {
     setSelectedDate(newDate);
   };
 
-  const fetchMonthSlots = async (doctorId: number) => {
+  const fetchMonthSlots = async (doctorId: number, weekAnchor?: Date) => {
     setLoadingMonthSlots(true);
     try {
-      const res = await apiFetch(`/api/appointment-slots?doctor_id=${doctorId}&limit=500`);
+      const anchor = weekAnchor ?? calendarMonth;
+      const sunday = new Date(anchor);
+      sunday.setDate(sunday.getDate() - sunday.getDay());
+      const saturday = new Date(sunday);
+      saturday.setDate(sunday.getDate() + 6);
+      const pad = (n: number) => String(n).padStart(2, "0");
+      const fmt = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+      const fromDate = fmt(sunday);
+      const toDate = fmt(saturday);
+
+      const res = await apiFetch(`/api/appointment-slots?doctor_id=${doctorId}&from_date=${fromDate}&to_date=${toDate}&limit=500`);
       const data = await res.json();
       const grouped: Record<string, { id: number; time: string; isBooked: boolean }[]> = {};
       (data.data || []).forEach((s: any) => {
-        const date = s.slot_date ? new Date(s.slot_date).toLocaleDateString("en-CA") : "";
-        if (!date) return;
-        if (!grouped[date]) grouped[date] = [];
-        grouped[date].push({
+        // slot_date is a date-only field returned as ISO UTC midnight — safe to parse as local date
+        const raw = s.slot_date ? String(s.slot_date).slice(0, 10) : "";
+        if (!raw) return;
+        if (!grouped[raw]) grouped[raw] = [];
+        grouped[raw].push({
           id: Number(s.id),
           time: new Date(s.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "UTC" }),
           isBooked: s.is_booked,
@@ -565,7 +576,10 @@ export default function AppointmentsManagement() {
     }
   };
 
+  const [completingId, setCompletingId] = useState<number | null>(null);
+
   const handleCompleteAppointment = async (appointmentId: number) => {
+    setCompletingId(appointmentId);
     try {
       const res = await apiFetch(`/api/appointments/${appointmentId}/complete`, { method: "PATCH" });
       if (!res.ok) { toast.error("Failed to complete appointment."); return; }
@@ -575,6 +589,8 @@ export default function AppointmentsManagement() {
       toast.success("Appointment completed.");
     } catch {
       toast.error("Failed to complete appointment.");
+    } finally {
+      setCompletingId(null);
     }
   };
 
@@ -669,8 +685,8 @@ export default function AppointmentsManagement() {
 
   // Filter doctors list based on role
   const visibleDoctors =
-    userRole === "doctor" && doctorId
-      ? doctors.filter((d) => d.id === doctorId)
+    userRole === "doctor" && currentDoctorDbId
+      ? doctors.filter((d) => d.id === currentDoctorDbId)
       : userRole === "secretary" && assignedDoctorIds.length > 0
         ? doctors.filter((d) => assignedDoctorIds.includes(d.id))
         : doctors;
@@ -699,18 +715,19 @@ export default function AppointmentsManagement() {
           extraActions={
             <div className="flex gap-2">
               <button
-                onClick={() => { setAvailabilityMsg(""); setExistingSlots([]); setAvailabilityDate(""); setTimeRanges([{ fromTime: "09:00", toTime: "17:00", slotDuration: 30 }]); setShowAvailabilityModal(true); }}
+                onClick={() => { setAvailabilityMsg(""); setExistingSlots([]); setAvailabilityDate(""); setTimeRanges([{ fromTime: "09:00", toTime: "17:00", slotDuration: 30 }]); if (userRole === "doctor" && currentDoctorDbId) setSelectedAvailabilityDoctorId(currentDoctorDbId); setShowAvailabilityModal(true); }}
                 className="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-sm font-medium transition-colors"
               >
                 Open Availability
               </button>
               <button
                 onClick={() => {
-                  setCalendarMonth(new Date());
+                  const today = new Date();
+                  setCalendarMonth(today);
                   setCalendarSelectedDay(null);
                   const docId = currentDoctorDbId || (doctors[0]?.id ?? null);
                   setCalendarDoctorId(docId);
-                  if (docId) fetchMonthSlots(docId);
+                  if (docId) fetchMonthSlots(docId, today);
                   setShowSlotCalendar(true);
                 }}
                 className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
@@ -916,8 +933,14 @@ export default function AppointmentsManagement() {
                                 size="sm"
                                 className="bg-green-600 hover:bg-green-700"
                                 onClick={() => handleCompleteAppointment(apt.id)}
+                                disabled={completingId === apt.id}
                               >
-                                <FaCheckCircle className="mr-1 rtl:mr-0 rtl:ml-1" /> {t("appointments.complete")}
+                                {completingId === apt.id ? (
+                                  <span className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin mr-1" />
+                                ) : (
+                                  <FaCheckCircle className="mr-1 rtl:mr-0 rtl:ml-1" />
+                                )}
+                                {t("appointments.complete")}
                               </Button>
                             )}
                             {(apt.status === "scheduled" || apt.status === "confirmed") && (
@@ -1144,8 +1167,6 @@ export default function AppointmentsManagement() {
                         <label className="text-xs text-gray-500 mb-1 block">{t("appointments.slotMin")}</label>
                         <select className={inputClass} value={range.slotDuration}
                           onChange={(e) => setTimeRanges((prev) => prev.map((r, j) => j === i ? { ...r, slotDuration: Number(e.target.value) } : r))}>
-                          <option value={15}>15 min</option>
-                          <option value={20}>20 min</option>
                           <option value={30}>30 min</option>
                           <option value={45}>45 min</option>
                           <option value={60}>60 min</option>
@@ -1177,171 +1198,131 @@ export default function AppointmentsManagement() {
         </div>
       </Modal>
 
-      {/* Slot Calendar Modal */}
-      <Modal isOpen={showSlotCalendar} onClose={() => setShowSlotCalendar(false)} title={t("appointments.myOpenedSlots")}>
-        <div className="space-y-4">
+      {/* Slot Calendar — full-screen Outlook-style week view */}
+      {showSlotCalendar && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[95vh] flex flex-col overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 flex-shrink-0">
+              <div className="flex items-center gap-4">
+                <h2 className="text-xl font-bold text-gray-900">{t("appointments.myOpenedSlots")}</h2>
+                {doctors.length > 1 && (
+                  <select className={`${inputClass} w-48`} value={calendarDoctorId ?? ""}
+                    onChange={(e) => {
+                      const id = e.target.value ? Number(e.target.value) : null;
+                      setCalendarDoctorId(id);
+                      setCalendarSelectedDay(null);
+                      if (id) fetchMonthSlots(id, calendarMonth);
+                    }}>
+                    <option value="">{t("appointments.selectDoctor")}</option>
+                    {doctors.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+                  </select>
+                )}
+              </div>
+              <div className="flex items-center gap-3">
+                {/* Legend */}
+                <div className="flex items-center gap-3 text-xs text-gray-500 mr-4">
+                  <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-teal-100 border border-teal-300 inline-block" /> Available</span>
+                  <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-blue-100 border border-blue-300 inline-block" /> Booked</span>
+                </div>
+                {/* Week navigation */}
+                <button onClick={() => { const d = new Date(calendarMonth); d.setDate(d.getDate() - 7); setCalendarMonth(d); setCalendarSelectedDay(null); if (calendarDoctorId) fetchMonthSlots(calendarDoctorId, d); }} className="p-2 hover:bg-gray-100 rounded-lg transition-colors"><FaChevronLeft /></button>
+                <span className="font-semibold text-gray-800 min-w-[200px] text-center">
+                  {(() => {
+                    const anchor = new Date(calendarMonth);
+                    const sun = new Date(anchor); sun.setDate(sun.getDate() - sun.getDay());
+                    const sat = new Date(sun); sat.setDate(sun.getDate() + 6);
+                    const fmt = (d: Date) => d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+                    return `${fmt(sun)} – ${fmt(sat)}, ${sat.getFullYear()}`;
+                  })()}
+                </span>
+                <button onClick={() => { const d = new Date(calendarMonth); d.setDate(d.getDate() + 7); setCalendarMonth(d); setCalendarSelectedDay(null); if (calendarDoctorId) fetchMonthSlots(calendarDoctorId, d); }} className="p-2 hover:bg-gray-100 rounded-lg transition-colors"><FaChevronRight /></button>
+                <Button variant="outline" size="sm" onClick={() => { const d = new Date(); setCalendarMonth(d); setCalendarSelectedDay(null); if (calendarDoctorId) fetchMonthSlots(calendarDoctorId, d); }}>Today</Button>
+                <button onClick={() => setShowSlotCalendar(false)} className="p-2 hover:bg-gray-100 rounded-lg ml-2"><FaTimes className="text-gray-500" /></button>
+              </div>
+            </div>
 
-          {/* Doctor selector (admins only) */}
-          {doctors.length > 1 && (
-            <FormField label={t("appointments.doctor")}>
-              <select className={inputClass} value={calendarDoctorId ?? ""}
-                onChange={(e) => {
-                  const id = e.target.value ? Number(e.target.value) : null;
-                  setCalendarDoctorId(id);
-                  setCalendarSelectedDay(null);
-                  if (id) fetchMonthSlots(id);
-                }}>
-                <option value="">{t("appointments.selectDoctor")}</option>
-                {doctors.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-              </select>
-            </FormField>
-          )}
+            {/* Week grid */}
+            <div className="flex-1 overflow-auto">
+              {loadingMonthSlots ? (
+                <div className="flex items-center justify-center h-64 text-gray-400">Loading slots…</div>
+              ) : (() => {
+                // Build a 7-day week starting from Sunday of calendarMonth's week
+                const anchor = new Date(calendarMonth);
+                anchor.setDate(anchor.getDate() - anchor.getDay()); // Sunday of this week
+                const weekDays: Date[] = Array.from({ length: 7 }, (_, i) => {
+                  const d = new Date(anchor);
+                  d.setDate(anchor.getDate() + i);
+                  return d;
+                });
+                const pad = (n: number) => String(n).padStart(2, "0");
+                const toDateStr = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+                const todayStr = toDateStr(new Date());
 
-          {/* Month navigation */}
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => {
-                const prev = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1);
-                setCalendarMonth(prev);
-                setCalendarSelectedDay(null);
-              }}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <FaChevronLeft className="text-gray-600" />
-            </button>
-            <p className="font-semibold text-gray-800">
-              {calendarMonth.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
-            </p>
-            <button
-              onClick={() => {
-                const next = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1);
-                setCalendarMonth(next);
-                setCalendarSelectedDay(null);
-              }}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <FaChevronRight className="text-gray-600" />
-            </button>
-          </div>
+                // Collect all unique times across this week
+                const allTimes = new Set<string>();
+                weekDays.forEach((d) => {
+                  const ds = toDateStr(d);
+                  (monthSlots[ds] || []).forEach((s) => allTimes.add(s.time));
+                });
+                const sortedTimes = Array.from(allTimes).sort();
 
-          {/* Calendar grid */}
-          {loadingMonthSlots ? (
-            <div className="text-center py-6 text-sm text-gray-400">Loading slots...</div>
-          ) : (
-            (() => {
-              const year = calendarMonth.getFullYear();
-              const month = calendarMonth.getMonth();
-              const firstDow = new Date(year, month, 1).getDay();
-              const daysInMonth = new Date(year, month + 1, 0).getDate();
-              const pad = (n: number) => String(n).padStart(2, "0");
-              const todayStr = new Date().toLocaleDateString("en-CA");
-              const cells: (number | null)[] = [
-                ...Array(firstDow).fill(null),
-                ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
-              ];
-              // pad to full weeks
-              while (cells.length % 7 !== 0) cells.push(null);
-
-              return (
-                <div>
-                  {/* Day headers */}
-                  <div className="grid grid-cols-7 mb-1">
-                    {Array.from({ length: 7 }, (_, i) =>
-                      new Intl.DateTimeFormat(language, { weekday: "short" }).format(new Date(2023, 0, 1 + i))
-                    ).map((d) => (
-                      <div key={d} className="text-center text-xs font-medium text-gray-400 py-1">{d}</div>
-                    ))}
-                  </div>
-                  {/* Weeks */}
-                  {Array.from({ length: cells.length / 7 }, (_, wi) => (
-                    <div key={wi} className="grid grid-cols-7">
-                      {cells.slice(wi * 7, wi * 7 + 7).map((day, di) => {
-                        if (!day) return <div key={di} />;
-                        const dateStr = `${year}-${pad(month + 1)}-${pad(day)}`;
-                        const daySlots = monthSlots[dateStr] || [];
-                        const openCount = daySlots.filter((s) => !s.isBooked).length;
-                        const bookedCount = daySlots.filter((s) => s.isBooked).length;
-                        const isToday = dateStr === todayStr;
-                        const isSelected = dateStr === calendarSelectedDay;
-
+                return (
+                  <div className="min-w-[700px]">
+                    {/* Day header row */}
+                    <div className="grid border-b border-gray-200 bg-gray-50" style={{ gridTemplateColumns: "80px repeat(7, 1fr)" }}>
+                      <div className="py-3 px-2 text-xs font-medium text-gray-400 text-center">Time</div>
+                      {weekDays.map((d) => {
+                        const ds = toDateStr(d);
+                        const isToday = ds === todayStr;
                         return (
-                          <div
-                            key={di}
-                            onClick={() => setCalendarSelectedDay(isSelected ? null : dateStr)}
-                            className={`relative m-0.5 rounded-lg p-1.5 cursor-pointer transition-colors min-h-[52px] flex flex-col items-center
-                              ${isSelected ? "bg-blue-100 border border-blue-400" : "hover:bg-gray-100"}
-                              ${isToday ? "ring-2 ring-blue-400" : ""}
-                            `}
-                          >
-                            <span className={`text-sm font-medium ${isToday ? "text-blue-600" : "text-gray-700"}`}>{day}</span>
-                            {daySlots.length > 0 && (
-                              <div className="flex gap-0.5 mt-1 flex-wrap justify-center">
-                                {openCount > 0 && (
-                                  <span className="w-2 h-2 rounded-full bg-teal-400" title={`${openCount} open`} />
-                                )}
-                                {bookedCount > 0 && (
-                                  <span className="w-2 h-2 rounded-full bg-blue-400" title={`${bookedCount} booked`} />
-                                )}
-                              </div>
-                            )}
-                            {daySlots.length > 0 && (
-                              <span className="text-[10px] text-gray-400 mt-0.5">{daySlots.length}</span>
-                            )}
+                          <div key={ds} className={`py-3 px-2 text-center border-l border-gray-200 ${isToday ? "bg-blue-50" : ""}`}>
+                            <p className={`text-xs font-medium ${isToday ? "text-blue-600" : "text-gray-500"}`}>
+                              {d.toLocaleDateString("en-US", { weekday: "short" })}
+                            </p>
+                            <p className={`text-lg font-bold ${isToday ? "text-blue-700" : "text-gray-900"}`}>{d.getDate()}</p>
                           </div>
                         );
                       })}
                     </div>
-                  ))}
 
-                  {/* Legend */}
-                  <div className="flex gap-4 mt-2 justify-center">
-                    <div className="flex items-center gap-1 text-xs text-gray-500">
-                      <span className="w-2.5 h-2.5 rounded-full bg-teal-400 inline-block" /> Open
-                    </div>
-                    <div className="flex items-center gap-1 text-xs text-gray-500">
-                      <span className="w-2.5 h-2.5 rounded-full bg-blue-400 inline-block" /> Booked
-                    </div>
+                    {/* Time rows */}
+                    {sortedTimes.length === 0 ? (
+                      <div className="text-center py-16 text-gray-400 text-sm">No slots this week. Navigate to another week or open availability first.</div>
+                    ) : sortedTimes.map((time) => (
+                      <div key={time} className="grid border-b border-gray-100" style={{ gridTemplateColumns: "80px repeat(7, 1fr)" }}>
+                        <div className="py-2 px-2 text-xs font-medium text-gray-400 text-right pr-3 flex items-center justify-end">{time}</div>
+                        {weekDays.map((d) => {
+                          const ds = toDateStr(d);
+                          const slot = (monthSlots[ds] || []).find((s) => s.time === time);
+                          const isToday = ds === todayStr;
+                          return (
+                            <div key={ds} className={`border-l border-gray-100 px-1 py-1 min-h-[48px] flex items-center justify-center ${isToday ? "bg-blue-50/40" : ""}`}>
+                              {slot ? (
+                                <div className={`w-full mx-1 px-2 py-1.5 rounded-lg text-xs font-medium flex items-center justify-between gap-1
+                                  ${slot.isBooked ? "bg-blue-100 border border-blue-300 text-blue-800" : "bg-teal-100 border border-teal-300 text-teal-800"}`}>
+                                  <span className="truncate">{slot.isBooked ? "Booked" : "Open"}</span>
+                                  {!slot.isBooked && (
+                                    <button
+                                      onClick={() => handleCalendarDeleteSlot(slot.id, ds)}
+                                      className="text-red-400 hover:text-red-600 font-bold flex-shrink-0 leading-none"
+                                      title="Delete slot"
+                                    >×</button>
+                                  )}
+                                </div>
+                              ) : null}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ))}
                   </div>
-                </div>
-              );
-            })()
-          )}
-
-          {/* Selected day slots */}
-          {calendarSelectedDay && (
-            <div className="border-t pt-3">
-              <p className="text-sm font-semibold text-gray-700 mb-2">
-                {new Date(calendarSelectedDay + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
-              </p>
-              {(monthSlots[calendarSelectedDay] || []).length === 0 ? (
-                <p className="text-xs text-gray-400">No slots for this day.</p>
-              ) : (
-                <div className="flex flex-wrap gap-2">
-                  {(monthSlots[calendarSelectedDay] || []).map((s) => (
-                    <div key={s.id} className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border
-                      ${s.isBooked ? "bg-blue-50 border-blue-200 text-blue-700" : "bg-teal-50 border-teal-200 text-teal-700"}`}>
-                      <span>{s.time}</span>
-                      {s.isBooked ? (
-                        <span className="text-blue-400 text-[10px] ml-1">{t("appointments.booked")}</span>
-                      ) : (
-                        <button
-                          onClick={() => handleCalendarDeleteSlot(s.id, calendarSelectedDay)}
-                          className="ml-1 text-red-400 hover:text-red-600 leading-none font-bold"
-                          title="Delete slot"
-                        >×</button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
+                );
+              })()}
             </div>
-          )}
+          </div>
         </div>
-
-        <div className="flex gap-3 mt-6">
-          <Button className="flex-1" variant="outline" onClick={() => setShowSlotCalendar(false)}>{t("common.close")}</Button>
-        </div>
-      </Modal>
+      )}
 
       {/* Postpone Modal */}
       {postponeApptId !== null && (

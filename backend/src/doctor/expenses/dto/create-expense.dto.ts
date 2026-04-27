@@ -1,4 +1,4 @@
-import { IsIn, IsNumber, IsOptional, IsString, IsDateString, Min, MaxLength } from 'class-validator';
+import { IsIn, IsNumber, IsOptional, IsString, IsDateString, Max, Min, MaxLength } from 'class-validator';
 
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
@@ -22,6 +22,7 @@ export class CreateExpenseDto {
   @Type(() => Number)
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
+  @Max(100000)
   amount: number;
 
   @ApiPropertyOptional({ description: 'Additional details about the expense' })

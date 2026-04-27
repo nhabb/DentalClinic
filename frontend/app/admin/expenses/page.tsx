@@ -139,6 +139,9 @@ export default function ExpensesPage() {
   };
 
   const handleAdd = async () => {
+    const parsedAmount = parseFloat(form.amount);
+    if (!parsedAmount || parsedAmount <= 0) { toast.error("Please enter a valid amount."); return; }
+    if (parsedAmount > 100000) { toast.error("Amount cannot exceed $100,000."); return; }
     try {
       await apiFetch("/api/expenses", {
         method: "POST",
@@ -147,7 +150,7 @@ export default function ExpensesPage() {
           title: form.description,
           expense_date: form.date,
           category: form.category.toLowerCase(),
-          amount: parseFloat(form.amount),
+          amount: parsedAmount,
         }),
       });
       await fetchExpenses();
@@ -165,6 +168,9 @@ export default function ExpensesPage() {
 
   const handleEditSave = async () => {
     if (!selectedExpense) return;
+    const parsedAmount = parseFloat(form.amount);
+    if (!parsedAmount || parsedAmount <= 0) { toast.error("Please enter a valid amount."); return; }
+    if (parsedAmount > 100000) { toast.error("Amount cannot exceed $100,000."); return; }
     try {
       await apiFetch(`/api/expenses/${selectedExpense.id}`, {
         method: "PATCH",
@@ -173,7 +179,7 @@ export default function ExpensesPage() {
           title: form.description,
           expense_date: form.date,
           category: form.category.toLowerCase(),
-          amount: parseFloat(form.amount),
+          amount: parsedAmount,
           status: form.status,
         }),
       });
@@ -183,7 +189,7 @@ export default function ExpensesPage() {
       setExpenses((prev) =>
         prev.map((e) =>
           e.id === selectedExpense.id
-            ? { ...e, ...form, amount: parseFloat(form.amount) || e.amount }
+            ? { ...e, ...form, amount: parsedAmount || e.amount }
             : e
         )
       );
@@ -412,6 +418,8 @@ export default function ExpensesPage() {
               <input
                 type="number"
                 step="0.01"
+                min="0"
+                max={100000}
                 placeholder={t("expenses.amountPlaceholder")}
                 className={inputClass}
                 value={form.amount}
@@ -479,6 +487,8 @@ export default function ExpensesPage() {
                   <input
                     type="number"
                     step="0.01"
+                    min="0"
+                    max={100000}
                     className={inputClass}
                     value={form.amount}
                     onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}

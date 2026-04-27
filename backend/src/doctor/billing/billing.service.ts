@@ -114,6 +114,13 @@ export class BillingService {
     return invoice;
   }
 
+  async deleteInvoice(id: bigint) {
+    const invoice = await this.prisma.treatment_invoices.findUnique({ where: { id } });
+    if (!invoice) throw new NotFoundException('Treatment invoice not found');
+    await this.prisma.treatment_invoices.delete({ where: { id } });
+    return { success: true };
+  }
+
   // ── Financial summary (replaces payments/summary) ────────────────────────
   async getSummary(filters: { from?: string; to?: string } = {}) {
     const { from, to } = filters;

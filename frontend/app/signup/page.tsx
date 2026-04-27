@@ -27,13 +27,33 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
 import { ar, fr, enUS } from "date-fns/locale";
 import { FaTooth } from "react-icons/fa";
 
+function OptionalBadge() {
+  return (
+    <span className="ml-2 text-xs font-medium text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+      Optional
+    </span>
+  );
+}
+
+function hasNumbers(value: string) {
+  return /\d/.test(value);
+}
+
+function getAge(dob: string): number {
+  const birthDate = new Date(dob);
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const m = today.getMonth() - birthDate.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+  return age;
+}
+
 export default function SignupPage() {
   const router = useRouter();
   const { t, language } = useTranslation();
   const dateLocale = language === "ar" ? ar : language === "fr" ? fr : enUS;
 
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
   const [calendarOpen, setCalendarOpen] = useState(false);
 
   const [form, setForm] = useState({
@@ -63,20 +83,82 @@ export default function SignupPage() {
     currentMedications: "",
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setForm({ ...form, [e.target.name]: e.target.value });
+  // Per-field errors
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const setFieldError = (field: string, msg: string) =>
+    setErrors((prev) => ({ ...prev, [field]: msg }));
+  const clearFieldError = (field: string) =>
+    setErrors((prev) => { const next = { ...prev }; delete next[field]; return next; });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+
+    // Phone fields: strip all non-digit characters except +, -, space, parens
+    if (name === "phone" || name === "emergencyPhone") {
+      const stripped = value.replace(/[^0-9+\-\s()]/g, "");
+      setForm({ ...form, [name]: stripped });
+      if (stripped !== value) return; // nothing more to validate yet
+      clearFieldError(name);
+      return;
+    }
+
+    setForm({ ...form, [name]: value });
+
+    // Live validation for name fields
+    if ((name === "firstName" || name === "lastName" || name === "emergencyContact") && value && hasNumbers(value)) {
+      setFieldError(name, "Names cannot contain numbers.");
+    } else {
+      clearFieldError(name);
+    }
+  };
+
+  const validate = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!form.firstName.trim()) newErrors.firstName = "First name is required.";
+    else if (hasNumbers(form.firstName)) newErrors.firstName = "Names cannot contain numbers.";
+
+    if (!form.lastName.trim()) newErrors.lastName = "Last name is required.";
+    else if (hasNumbers(form.lastName)) newErrors.lastName = "Names cannot contain numbers.";
+
+    if (!form.phone.trim()) newErrors.phone = "Phone is required.";
+    else if (/[a-zA-Z]/.test(form.phone)) newErrors.phone = "Phone number cannot contain letters.";
+
+    if (!form.dateOfBirth) {
+      newErrors.dateOfBirth = "Date of birth is required.";
+    } else if (getAge(form.dateOfBirth) < 18) {
+      newErrors.dateOfBirth = "You must be at least 18 years old to sign up.";
+    }
+
+    if (!form.email.trim()) newErrors.email = "Email is required.";
+
+    if (!form.password) {
+      newErrors.password = "Password is required.";
+    } else if (form.password.length < 8) {
+      newErrors.password = "Password must be at least 8 characters.";
+    }
+
+    if (!form.confirmPassword) {
+      newErrors.confirmPassword = "Please confirm your password.";
+    } else if (form.password !== form.confirmPassword) {
+      newErrors.confirmPassword = t("signup.passwordsDoNotMatch");
+    }
+
+    if (!form.emergencyContact.trim()) {
+      newErrors.emergencyContact = "Emergency contact name is required.";
+    } else if (hasNumbers(form.emergencyContact)) {
+      newErrors.emergencyContact = "Names cannot contain numbers.";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    if (form.password !== form.confirmPassword) {
-      setError(t("signup.passwordsDoNotMatch"));
-      return;
-    }
-    if (form.password.length < 8) {
-      setError("Password must be at least 8 characters");
-      return;
-    }
+    if (!validate()) return;
+
     setIsLoading(true);
 
     try {
@@ -101,7 +183,7 @@ export default function SignupPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.message || "Signup failed. Please try again.");
+        setErrors({ email: data.message || "Signup failed. Please try again." });
         return;
       }
 
@@ -143,11 +225,16 @@ export default function SignupPage() {
 
       router.push("/patient-dashboard");
     } catch {
-      setError("Unable to connect to server. Please try again.");
+      setErrors({ email: "Unable to connect to server. Please try again." });
     } finally {
       setIsLoading(false);
     }
   };
+
+  const FieldError = ({ field }: { field: string }) =>
+    errors[field] ? (
+      <p className="text-xs text-red-600 mt-1">{errors[field]}</p>
+    ) : null;
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center px-4 sm:px-6 lg:px-8 gradient-auth-bg py-12">
@@ -172,13 +259,7 @@ export default function SignupPage() {
         </div>
 
         <form className="space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
-              {error}
-            </p>
-          )}
-
-          {/* Personal Information */}
+          {/* Personal Information — Required (section 1) */}
           <FieldSet className="border-2 border-dental-blue/20 rounded-xl p-6 bg-white shadow-xl">
             <FieldLegend className="text-2xl font-bold text-dental-blue px-3 bg-white tracking-tight">
               {t("continueLogin.personalInfo")}
@@ -189,10 +270,7 @@ export default function SignupPage() {
             <FieldGroup className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <Field>
-                  <FieldLabel
-                    htmlFor="firstName"
-                    className="text-gray-900 font-semibold text-sm tracking-wide"
-                  >
+                  <FieldLabel htmlFor="firstName" className="text-gray-900 font-semibold text-sm tracking-wide">
                     {t("continueLogin.firstName")}
                   </FieldLabel>
                   <Input
@@ -201,16 +279,13 @@ export default function SignupPage() {
                     type="text"
                     value={form.firstName}
                     onChange={handleChange}
-                    required
                     placeholder="Ahmad"
-                    className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
+                    className={`focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal ${errors.firstName ? "border-red-400" : ""}`}
                   />
+                  <FieldError field="firstName" />
                 </Field>
                 <Field>
-                  <FieldLabel
-                    htmlFor="lastName"
-                    className="text-gray-900 font-semibold text-sm tracking-wide"
-                  >
+                  <FieldLabel htmlFor="lastName" className="text-gray-900 font-semibold text-sm tracking-wide">
                     {t("continueLogin.lastName")}
                   </FieldLabel>
                   <Input
@@ -219,18 +294,15 @@ export default function SignupPage() {
                     type="text"
                     value={form.lastName}
                     onChange={handleChange}
-                    required
                     placeholder="Khoury"
-                    className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
+                    className={`focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal ${errors.lastName ? "border-red-400" : ""}`}
                   />
+                  <FieldError field="lastName" />
                 </Field>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <Field>
-                  <FieldLabel
-                    htmlFor="phone"
-                    className="text-gray-900 font-semibold text-sm tracking-wide"
-                  >
+                  <FieldLabel htmlFor="phone" className="text-gray-900 font-semibold text-sm tracking-wide">
                     {t("continueLogin.phone")}
                   </FieldLabel>
                   <Input
@@ -240,16 +312,13 @@ export default function SignupPage() {
                     dir="ltr"
                     value={form.phone}
                     onChange={handleChange}
-                    required
                     placeholder="+961 3 123 456"
-                    className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
+                    className={`focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal ${errors.phone ? "border-red-400" : ""}`}
                   />
+                  <FieldError field="phone" />
                 </Field>
                 <Field>
-                  <FieldLabel
-                    htmlFor="dateOfBirth"
-                    className="text-gray-900 font-semibold text-sm tracking-wide"
-                  >
+                  <FieldLabel htmlFor="dateOfBirth" className="text-gray-900 font-semibold text-sm tracking-wide">
                     {t("continueLogin.dateOfBirth")}
                   </FieldLabel>
                   <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
@@ -257,7 +326,7 @@ export default function SignupPage() {
                       <Button
                         variant="outline"
                         id="dateOfBirth"
-                        className="w-full justify-between font-normal"
+                        className={`w-full justify-between font-normal ${errors.dateOfBirth ? "border-red-400" : ""}`}
                       >
                         {form.dateOfBirth
                           ? new Date(form.dateOfBirth).toLocaleDateString()
@@ -274,45 +343,43 @@ export default function SignupPage() {
                     >
                       <Calendar
                         mode="single"
-                        selected={
-                          form.dateOfBirth
-                            ? new Date(form.dateOfBirth)
-                            : undefined
-                        }
+                        selected={form.dateOfBirth ? new Date(form.dateOfBirth) : undefined}
                         onSelect={(date) => {
-                          setForm({
-                            ...form,
-                            dateOfBirth: date ? date.toISOString() : null,
-                          });
+                          const iso = date ? date.toISOString() : null;
+                          setForm({ ...form, dateOfBirth: iso });
                           setCalendarOpen(false);
+                          if (iso && getAge(iso) < 18) {
+                            setFieldError("dateOfBirth", "You must be at least 18 years old to sign up.");
+                          } else {
+                            clearFieldError("dateOfBirth");
+                          }
                         }}
                         captionLayout="dropdown"
                         locale={dateLocale}
                         fromYear={1920}
-                        toYear={new Date().getFullYear()}
+                        toYear={new Date().getFullYear() - 18}
                         classNames={{ nav: "hidden" }}
                       />
                     </PopoverContent>
                   </Popover>
+                  <FieldError field="dateOfBirth" />
                 </Field>
               </div>
             </FieldGroup>
           </FieldSet>
 
-          {/* Address */}
+          {/* Address — Optional (section 2) */}
           <FieldSet className="border-2 border-dental-blue/20 rounded-xl p-6 bg-white shadow-xl">
-            <FieldLegend className="text-2xl font-bold text-dental-blue px-3 bg-white tracking-tight">
+            <FieldLegend className="text-2xl font-bold text-dental-blue px-3 bg-white tracking-tight flex items-center">
               {t("continueLogin.addressInfo")}
+              <OptionalBadge />
             </FieldLegend>
             <FieldDescription className="text-gray-600 mb-6 font-light text-base">
               {t("continueLogin.addressInfoDesc")}
             </FieldDescription>
             <FieldGroup className="space-y-4">
               <Field>
-                <FieldLabel
-                  htmlFor="address"
-                  className="text-gray-900 font-semibold text-sm tracking-wide"
-                >
+                <FieldLabel htmlFor="address" className="text-gray-900 font-semibold text-sm tracking-wide">
                   {t("continueLogin.streetAddress")}
                 </FieldLabel>
                 <Input
@@ -321,17 +388,13 @@ export default function SignupPage() {
                   type="text"
                   value={form.address}
                   onChange={handleChange}
-                  required
                   placeholder="Hamra Street, Building 123"
                   className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
                 />
               </Field>
               <div className="grid grid-cols-2 gap-4">
                 <Field>
-                  <FieldLabel
-                    htmlFor="city"
-                    className="text-gray-900 font-semibold text-sm tracking-wide"
-                  >
+                  <FieldLabel htmlFor="city" className="text-gray-900 font-semibold text-sm tracking-wide">
                     {t("continueLogin.city")}
                   </FieldLabel>
                   <Input
@@ -340,16 +403,12 @@ export default function SignupPage() {
                     type="text"
                     value={form.city}
                     onChange={handleChange}
-                    required
                     placeholder="Beirut"
                     className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
                   />
                 </Field>
                 <Field>
-                  <FieldLabel
-                    htmlFor="governate"
-                    className="text-gray-900 font-semibold text-sm tracking-wide"
-                  >
+                  <FieldLabel htmlFor="governate" className="text-gray-900 font-semibold text-sm tracking-wide">
                     {t("continueLogin.governorate")}
                   </FieldLabel>
                   <Input
@@ -358,7 +417,6 @@ export default function SignupPage() {
                     type="text"
                     value={form.governate}
                     onChange={handleChange}
-                    required
                     placeholder="Beirut"
                     className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
                   />
@@ -367,9 +425,9 @@ export default function SignupPage() {
             </FieldGroup>
           </FieldSet>
 
-          {/* Emergency Contact */}
+          {/* Emergency Contact — Required (section 3) */}
           <FieldSet className="border-2 border-dental-blue/20 rounded-xl p-6 bg-white shadow-xl">
-            <FieldLegend className="text-2xl font-bold text-dental-blue px-3 bg-white tracking-tight">
+            <FieldLegend className="text-2xl font-bold text-dental-blue px-3 bg-white tracking-tight flex items-center">
               {t("continueLogin.emergencyContact")}
             </FieldLegend>
             <FieldDescription className="text-gray-600 mb-6 font-light text-base">
@@ -378,10 +436,7 @@ export default function SignupPage() {
             <FieldGroup className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <Field>
-                  <FieldLabel
-                    htmlFor="emergencyContact"
-                    className="text-gray-900 font-semibold text-sm tracking-wide"
-                  >
+                  <FieldLabel htmlFor="emergencyContact" className="text-gray-900 font-semibold text-sm tracking-wide">
                     {t("continueLogin.contactName")}
                   </FieldLabel>
                   <Input
@@ -390,16 +445,13 @@ export default function SignupPage() {
                     type="text"
                     value={form.emergencyContact}
                     onChange={handleChange}
-                    required
                     placeholder="Layla Khoury"
-                    className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
+                    className={`focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal ${errors.emergencyContact ? "border-red-400" : ""}`}
                   />
+                  <FieldError field="emergencyContact" />
                 </Field>
                 <Field>
-                  <FieldLabel
-                    htmlFor="emergencyPhone"
-                    className="text-gray-900 font-semibold text-sm tracking-wide"
-                  >
+                  <FieldLabel htmlFor="emergencyPhone" className="text-gray-900 font-semibold text-sm tracking-wide">
                     {t("continueLogin.contactPhone")}
                   </FieldLabel>
                   <Input
@@ -409,7 +461,6 @@ export default function SignupPage() {
                     dir="ltr"
                     value={form.emergencyPhone}
                     onChange={handleChange}
-                    required
                     placeholder="+961 3 987 654"
                     className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
                   />
@@ -418,10 +469,11 @@ export default function SignupPage() {
             </FieldGroup>
           </FieldSet>
 
-          {/* Insurance */}
+          {/* Insurance — Optional (section 4) */}
           <FieldSet className="border-2 border-dental-blue/20 rounded-xl p-6 bg-white shadow-xl">
-            <FieldLegend className="text-2xl font-bold text-dental-blue px-3 bg-white tracking-tight">
+            <FieldLegend className="text-2xl font-bold text-dental-blue px-3 bg-white tracking-tight flex items-center">
               {t("continueLogin.insuranceInfo")}
+              <OptionalBadge />
             </FieldLegend>
             <FieldDescription className="text-gray-600 mb-6 font-light text-base">
               {t("continueLogin.insuranceInfoDesc")}
@@ -429,10 +481,7 @@ export default function SignupPage() {
             <FieldGroup className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <Field>
-                  <FieldLabel
-                    htmlFor="insuranceProvider"
-                    className="text-gray-900 font-semibold text-sm tracking-wide"
-                  >
+                  <FieldLabel htmlFor="insuranceProvider" className="text-gray-900 font-semibold text-sm tracking-wide">
                     {t("continueLogin.insuranceProvider")}
                   </FieldLabel>
                   <Input
@@ -446,10 +495,7 @@ export default function SignupPage() {
                   />
                 </Field>
                 <Field>
-                  <FieldLabel
-                    htmlFor="insurancePolicy"
-                    className="text-gray-900 font-semibold text-sm tracking-wide"
-                  >
+                  <FieldLabel htmlFor="insurancePolicy" className="text-gray-900 font-semibold text-sm tracking-wide">
                     {t("continueLogin.policyNumber")}
                   </FieldLabel>
                   <Input
@@ -466,20 +512,18 @@ export default function SignupPage() {
             </FieldGroup>
           </FieldSet>
 
-          {/* Medical History */}
+          {/* Medical History — Optional (section 5) */}
           <FieldSet className="border-2 border-dental-blue/20 rounded-xl p-6 bg-white shadow-xl">
-            <FieldLegend className="text-2xl font-bold text-dental-blue px-3 bg-white tracking-tight">
+            <FieldLegend className="text-2xl font-bold text-dental-blue px-3 bg-white tracking-tight flex items-center">
               {t("continueLogin.medicalHistory")}
+              <OptionalBadge />
             </FieldLegend>
             <FieldDescription className="text-gray-600 mb-6 font-light text-base">
               {t("continueLogin.medicalHistoryDesc")}
             </FieldDescription>
             <FieldGroup className="space-y-4">
               <Field>
-                <FieldLabel
-                  htmlFor="bloodType"
-                  className="text-gray-900 font-semibold text-sm tracking-wide"
-                >
+                <FieldLabel htmlFor="bloodType" className="text-gray-900 font-semibold text-sm tracking-wide">
                   Blood Type
                 </FieldLabel>
                 <select
@@ -496,10 +540,7 @@ export default function SignupPage() {
                 </select>
               </Field>
               <Field>
-                <FieldLabel
-                  htmlFor="medicalConditions"
-                  className="text-gray-900 font-semibold text-sm tracking-wide"
-                >
+                <FieldLabel htmlFor="medicalConditions" className="text-gray-900 font-semibold text-sm tracking-wide">
                   {t("continueLogin.medicalConditions")}
                 </FieldLabel>
                 <Input
@@ -513,10 +554,7 @@ export default function SignupPage() {
                 />
               </Field>
               <Field>
-                <FieldLabel
-                  htmlFor="allergies"
-                  className="text-gray-900 font-semibold text-sm tracking-wide"
-                >
+                <FieldLabel htmlFor="allergies" className="text-gray-900 font-semibold text-sm tracking-wide">
                   {t("continueLogin.allergies")}
                 </FieldLabel>
                 <Input
@@ -530,10 +568,7 @@ export default function SignupPage() {
                 />
               </Field>
               <Field>
-                <FieldLabel
-                  htmlFor="currentMedications"
-                  className="text-gray-900 font-semibold text-sm tracking-wide"
-                >
+                <FieldLabel htmlFor="currentMedications" className="text-gray-900 font-semibold text-sm tracking-wide">
                   {t("continueLogin.currentMedications")}
                 </FieldLabel>
                 <Input
@@ -548,7 +583,8 @@ export default function SignupPage() {
               </Field>
             </FieldGroup>
           </FieldSet>
-          {/* Account */}
+
+          {/* Account — Required (section 6 / last) */}
           <FieldSet className="border-2 border-dental-blue/20 rounded-xl p-6 bg-white shadow-xl">
             <FieldLegend className="text-2xl font-bold text-dental-blue px-3 bg-white tracking-tight">
               {t("signup.createAccount")}
@@ -558,10 +594,7 @@ export default function SignupPage() {
             </FieldDescription>
             <FieldGroup className="space-y-4">
               <Field>
-                <FieldLabel
-                  htmlFor="email"
-                  className="text-gray-900 font-semibold text-sm tracking-wide"
-                >
+                <FieldLabel htmlFor="email" className="text-gray-900 font-semibold text-sm tracking-wide">
                   {t("signup.emailAddress")}
                 </FieldLabel>
                 <Input
@@ -570,17 +603,14 @@ export default function SignupPage() {
                   type="email"
                   value={form.email}
                   onChange={handleChange}
-                  required
                   placeholder="ahmad@example.com"
-                  className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
+                  className={`focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal ${errors.email ? "border-red-400" : ""}`}
                 />
+                <FieldError field="email" />
               </Field>
               <div className="grid grid-cols-2 gap-4">
                 <Field>
-                  <FieldLabel
-                    htmlFor="password"
-                    className="text-gray-900 font-semibold text-sm tracking-wide"
-                  >
+                  <FieldLabel htmlFor="password" className="text-gray-900 font-semibold text-sm tracking-wide">
                     {t("signup.password")}
                   </FieldLabel>
                   <Input
@@ -589,16 +619,13 @@ export default function SignupPage() {
                     type="password"
                     value={form.password}
                     onChange={handleChange}
-                    required
                     placeholder={t("signup.createPassword")}
-                    className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
+                    className={`focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal ${errors.password ? "border-red-400" : ""}`}
                   />
+                  <FieldError field="password" />
                 </Field>
                 <Field>
-                  <FieldLabel
-                    htmlFor="confirmPassword"
-                    className="text-gray-900 font-semibold text-sm tracking-wide"
-                  >
+                  <FieldLabel htmlFor="confirmPassword" className="text-gray-900 font-semibold text-sm tracking-wide">
                     {t("signup.confirmPassword")}
                   </FieldLabel>
                   <Input
@@ -607,14 +634,15 @@ export default function SignupPage() {
                     type="password"
                     value={form.confirmPassword}
                     onChange={handleChange}
-                    required
                     placeholder={t("signup.repeatPassword")}
-                    className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
+                    className={`focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal ${errors.confirmPassword ? "border-red-400" : ""}`}
                   />
+                  <FieldError field="confirmPassword" />
                 </Field>
               </div>
             </FieldGroup>
           </FieldSet>
+
           <Button
             type="submit"
             disabled={isLoading}
@@ -633,10 +661,7 @@ export default function SignupPage() {
 
           <p className="text-center text-sm text-white/80">
             {t("signup.alreadyHaveAccount")}{" "}
-            <Link
-              href="/login"
-              className="font-semibold text-white hover:text-white/80 underline"
-            >
+            <Link href="/login" className="font-semibold text-white hover:text-white/80 underline">
               {t("signup.signIn")}
             </Link>
           </p>

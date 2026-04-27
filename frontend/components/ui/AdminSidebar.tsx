@@ -18,6 +18,7 @@ import {
 import { Avatar } from "@/components/ui/Avatar";
 import { getStoredPhoto } from "@/lib/profilePhoto";
 import { supabase } from "@/lib/supabase/client";
+import { apiFetch } from "@/lib/api/client";
 import ChangePasswordModal from "@/components/ui/ChangePasswordModal";
 
 type ActivePage = "dashboard" | "appointments" | "inventory" | "patients" | "notifications" | "expenses" | "billing";
@@ -45,6 +46,8 @@ export default function AdminSidebar({ activePage, sidebarOpen, onToggle, onLogo
 
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [userEmail, setUserEmail] = useState("");
+  const [userId, setUserId] = useState<number>(0);
+  const [isOAuth, setIsOAuth] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -70,6 +73,16 @@ export default function AdminSidebar({ activePage, sidebarOpen, onToggle, onLogo
         setPhotoUrl(getStoredPhoto(email));
         setUserEmail(email);
       }
+
+      // Fetch DB user to get ID and OAuth status
+      try {
+        const meRes = await apiFetch("/api/auth/me");
+        if (meRes.ok) {
+          const me = await meRes.json();
+          if (me?.id) setUserId(Number(me.id));
+          setIsOAuth(!!me?.is_oauth);
+        }
+      } catch {}
     };
     load();
   }, []);
@@ -133,16 +146,18 @@ export default function AdminSidebar({ activePage, sidebarOpen, onToggle, onLogo
         </div>
       )}
 
-      {/* Change Password */}
-      <div className="px-4 pb-2 border-t border-gray-700">
-        <button
-          onClick={() => setShowChangePassword(true)}
-          className="w-full flex items-center space-x-3 px-4 py-3 text-gray-400 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
-        >
-          <FaKey className="text-lg" />
-          {sidebarOpen && <span className="font-medium text-sm">{t("common.changePassword")}</span>}
-        </button>
-      </div>
+      {/* Change Password — hidden for OAuth users */}
+      {!isOAuth && (
+        <div className="px-4 pb-2 border-t border-gray-700">
+          <button
+            onClick={() => setShowChangePassword(true)}
+            className="w-full flex items-center space-x-3 px-4 py-3 text-gray-400 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
+          >
+            <FaKey className="text-lg" />
+            {sidebarOpen && <span className="font-medium text-sm">{t("common.changePassword")}</span>}
+          </button>
+        </div>
+      )}
 
       {/* Logout */}
       <div className="p-4 border-t border-gray-700">
@@ -155,9 +170,9 @@ export default function AdminSidebar({ activePage, sidebarOpen, onToggle, onLogo
         </button>
       </div>
 
-      {showChangePassword && (
+      {showChangePassword && userId > 0 && (
         <ChangePasswordModal
-          email={userEmail}
+          userId={userId}
           onClose={() => setShowChangePassword(false)}
         />
       )}

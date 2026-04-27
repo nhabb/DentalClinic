@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { apiFetch } from "@/lib/api/client";
+import { formatDateBeirut } from "@/lib/utils";
 import { safeStorage } from "@/lib/browser-compat";
 import { useTranslation } from "@/lib/i18n";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
@@ -17,7 +18,6 @@ import {
   FaFileInvoiceDollar,
   FaChevronDown,
   FaChevronUp,
-  FaArrowLeft,
 } from "react-icons/fa";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -166,14 +166,6 @@ export default function PatientBillingPage() {
 
       {/* Main */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Back link */}
-        <Link
-          href="/patient-dashboard"
-          className="inline-flex items-center gap-1.5 text-sm text-dental-blue hover:underline mb-6"
-        >
-          <FaArrowLeft className="text-xs" /> Back to Dashboard
-        </Link>
-
         {/* Page title */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
@@ -208,7 +200,7 @@ export default function PatientBillingPage() {
                           Invoice #{inv.id}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {new Date(inv.procedure_date).toLocaleDateString()}
+                          {formatDateBeirut(inv.procedure_date)}
                         </p>
                       </div>
                     </div>
@@ -288,7 +280,7 @@ export default function PatientBillingPage() {
                                   <span className="ml-2 text-gray-500 capitalize">{p.payment_method}</span>
                                   {p.notes && <span className="ml-2 text-gray-400 italic">{p.notes}</span>}
                                 </div>
-                                <span className="text-gray-400">{new Date(p.created_at).toLocaleDateString()}</span>
+                                <span className="text-gray-400">{formatDateBeirut(p.created_at)}</span>
                               </div>
                             ))}
                           </div>

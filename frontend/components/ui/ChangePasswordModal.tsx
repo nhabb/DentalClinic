@@ -3,14 +3,14 @@
 import { useState } from "react";
 import { FaTimes, FaEye, FaEyeSlash } from "react-icons/fa";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabase/client";
+import { apiFetch } from "@/lib/api/client";
 
 type Props = {
-  email: string;
+  userId: number;
   onClose: () => void;
 };
 
-export default function ChangePasswordModal({ email, onClose }: Props) {
+export default function ChangePasswordModal({ userId, onClose }: Props) {
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -39,29 +39,19 @@ export default function ChangePasswordModal({ email, onClose }: Props) {
 
     setLoading(true);
     try {
-      // Re-authenticate to verify the old password
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password: oldPassword,
+      const res = await apiFetch(`/api/users/${userId}/password`, {
+        method: "PATCH",
+        body: JSON.stringify({ old_password: oldPassword, new_password: newPassword }),
       });
 
-      if (signInError) {
-        toast.error("Current password is incorrect.");
-        setLoading(false);
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        toast.error(err.message ?? "Current password is incorrect.");
         return;
       }
 
-      // Update to the new password
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: newPassword,
-      });
-
-      if (updateError) {
-        toast.error(updateError.message);
-      } else {
-        toast.success("Password updated successfully.");
-        onClose();
-      }
+      toast.success("Password updated successfully.");
+      onClose();
     } catch {
       toast.error("Something went wrong. Please try again.");
     } finally {
@@ -80,7 +70,6 @@ export default function ChangePasswordModal({ email, onClose }: Props) {
         </div>
 
         <div className="space-y-4">
-          {/* Old password */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
             <div className="relative">
@@ -91,17 +80,12 @@ export default function ChangePasswordModal({ email, onClose }: Props) {
                 placeholder="Enter current password"
                 className="w-full px-4 py-3 pr-11 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue text-gray-900"
               />
-              <button
-                type="button"
-                onClick={() => setShowOld(!showOld)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
+              <button type="button" onClick={() => setShowOld(!showOld)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                 {showOld ? <FaEyeSlash /> : <FaEye />}
               </button>
             </div>
           </div>
 
-          {/* New password */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
             <div className="relative">
@@ -112,17 +96,12 @@ export default function ChangePasswordModal({ email, onClose }: Props) {
                 placeholder="At least 8 characters"
                 className="w-full px-4 py-3 pr-11 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue text-gray-900"
               />
-              <button
-                type="button"
-                onClick={() => setShowNew(!showNew)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
+              <button type="button" onClick={() => setShowNew(!showNew)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                 {showNew ? <FaEyeSlash /> : <FaEye />}
               </button>
             </div>
           </div>
 
-          {/* Confirm password */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
             <div className="relative">
@@ -133,11 +112,7 @@ export default function ChangePasswordModal({ email, onClose }: Props) {
                 placeholder="Repeat new password"
                 className="w-full px-4 py-3 pr-11 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue text-gray-900"
               />
-              <button
-                type="button"
-                onClick={() => setShowConfirm(!showConfirm)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
+              <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                 {showConfirm ? <FaEyeSlash /> : <FaEye />}
               </button>
             </div>
@@ -145,10 +120,7 @@ export default function ChangePasswordModal({ email, onClose }: Props) {
         </div>
 
         <div className="flex gap-3 mt-6">
-          <button
-            onClick={onClose}
-            className="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
-          >
+          <button onClick={onClose} className="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
             Cancel
           </button>
           <button
@@ -156,9 +128,7 @@ export default function ChangePasswordModal({ email, onClose }: Props) {
             disabled={loading}
             className="flex-1 px-4 py-3 bg-dental-blue text-white rounded-xl text-sm font-medium hover:bg-dental-blue/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
           >
-            {loading && (
-              <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-            )}
+            {loading && <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />}
             {loading ? "Saving…" : "Save Password"}
           </button>
         </div>

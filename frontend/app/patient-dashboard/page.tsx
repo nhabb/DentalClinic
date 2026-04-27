@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/i18n";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { apiFetch } from '@/lib/api/client';
+import { formatDateBeirut, formatTimeBeirut } from "@/lib/utils";
 import { Avatar } from "@/components/ui/Avatar";
 import ChangePasswordModal from "@/components/ui/ChangePasswordModal";
 import {
@@ -27,8 +28,10 @@ export default function PatientDashboard() {
   const [recentVisits, setRecentVisits] = useState<any[]>([]);
   const [patientName, setPatientName] = useState("");
   const [patientEmail, setPatientEmail] = useState("");
+  const [dbUserId, setDbUserId] = useState<number>(0);
   const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined);
   const [showChangePassword, setShowChangePassword] = useState(false);
+  const [isOAuth, setIsOAuth] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -41,6 +44,8 @@ export default function PatientDashboard() {
           const name = `${dbUser.first_name || ""} ${dbUser.last_name || ""}`.trim();
           setPatientName(name);
           setPatientEmail(dbUser.email || "");
+          setDbUserId(Number(dbUser.id));
+          setIsOAuth(!!dbUser.is_oauth);
           const saved = localStorage.getItem(`brightsmile_photo_${dbUser.email}`);
           if (saved) setPhotoUrl(saved);
         }
@@ -56,10 +61,8 @@ export default function PatientDashboard() {
 
         const mapAppt = (a: any) => ({
           id: a.id,
-          date: new Date(a.appointment_date).toLocaleDateString(),
-          time: a.start_time
-            ? new Date(a.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-            : "",
+          date: formatDateBeirut(a.appointment_date),
+          time: a.start_time ? formatTimeBeirut(a.start_time) : "",
           doctor: a.users_appointments_doctor_idTousers
             ? `Dr. ${a.users_appointments_doctor_idTousers.first_name} ${a.users_appointments_doctor_idTousers.last_name}`
             : "Doctor",
@@ -130,18 +133,19 @@ export default function PatientDashboard() {
               <Avatar
                 name={patientName || "Patient"}
                 size="md"
-                src={photoUrl}
-                onUpload={handlePhotoUpload}
+                src={undefined}
               />
 
-              <button
-                onClick={() => setShowChangePassword(true)}
-                title={t("common.changePassword")}
-                className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors"
-              >
-                <FaKey />
-                <span className="hidden sm:inline">{t("common.changePassword")}</span>
-              </button>
+              {!isOAuth && (
+                <button
+                  onClick={() => setShowChangePassword(true)}
+                  title={t("common.changePassword")}
+                  className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors"
+                >
+                  <FaKey />
+                  <span className="hidden sm:inline">{t("common.changePassword")}</span>
+                </button>
+              )}
 
               <button
                 onClick={handleLogout}
@@ -254,7 +258,7 @@ export default function PatientDashboard() {
 
       {showChangePassword && (
         <ChangePasswordModal
-          email={patientEmail}
+          userId={dbUserId}
           onClose={() => setShowChangePassword(false)}
         />
       )}

@@ -72,7 +72,7 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.message || "Invalid email or password");
+        setError("Wrong credentials. Please try again.");
         return;
       }
 

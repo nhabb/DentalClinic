@@ -154,7 +154,7 @@ export class AuthService {
   }
 
   async getMe(userId: number) {
-    return this.prisma.users.findUnique({
+    const user = await this.prisma.users.findUnique({
       where: { id: userId },
       select: {
         id: true,
@@ -167,7 +167,11 @@ export class AuthService {
         address: true,
         role: true,
         created_at: true,
+        password_hash: true,
       },
     });
+    if (!user) return null;
+    const { password_hash, ...rest } = user;
+    return { ...rest, is_oauth: password_hash === 'oauth' };
   }
 }

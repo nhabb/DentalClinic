@@ -41,20 +41,26 @@ export class AppointmentSlotsController {
   @ApiOperation({ summary: 'List slots with optional filters' })
   @ApiQuery({ name: 'doctor_id', required: false, type: Number })
   @ApiQuery({ name: 'date', required: false, type: String, description: 'YYYY-MM-DD' })
+  @ApiQuery({ name: 'from_date', required: false, type: String, description: 'YYYY-MM-DD range start (inclusive)' })
+  @ApiQuery({ name: 'to_date', required: false, type: String, description: 'YYYY-MM-DD range end (inclusive)' })
   @ApiQuery({ name: 'available_only', required: false, type: Boolean })
   @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })//all of these @ApiQuery are for swagger fdocumentation not needed for the actual functionality of the endpoint. They are used to describe the query parameters that can be accepted by this GET endpoint for listing appointment slots with optional filters such as doctor_id, date, available_only, page, and limit. This helps generate accurate API documentation in Swagger UI, allowing developers and testers to understand how to use the endpoint and what parameters they can include in their requests to filter and paginate the results effectively.
-  findAll(//this is the http request handler for the GET endpoint extracts the query parameters and then it calls the findAll method of the slotsService
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  findAll(
     @Query('doctor_id') doctor_id?: string,
     @Query('date') date?: string,
+    @Query('from_date') from_date?: string,
+    @Query('to_date') to_date?: string,
     @Query('available_only') available_only?: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
-    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit?: number,//matches the name not the position, so we can pass the parameters in any order and also have optional parameters with default values. This allows us to easily handle pagination and filtering of appointment slots based on the provided query parameters in the request URL, making it flexible for clients to retrieve the desired data according to their needs.
+    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit?: number,
   ) {
     return this.slotsService.findAll({
       doctor_id: doctor_id ? Number(doctor_id) : undefined,
       date,
-      available_only: available_only === 'true',//converting the available_only query parameter from a string to a boolean. Since query parameters are always received as strings, we check if the value is equal to the string 'true' to determine if it should be treated as a boolean true or false when passing it to the service layer for filtering appointment slots based on their availability.
+      from_date,
+      to_date,
+      available_only: available_only === 'true',
       page,
       limit,
     });

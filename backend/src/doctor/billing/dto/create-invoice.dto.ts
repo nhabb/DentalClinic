@@ -5,6 +5,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  Max,
   Min,
   ValidateNested,
 } from 'class-validator';
@@ -37,6 +38,7 @@ export class CreateLineItemDto {
   @ApiProperty({ example: 150 })
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
+  @Max(100000)
   amount: number;
 }
 

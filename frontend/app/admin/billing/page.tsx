@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api/client";
+import { formatDateBeirut } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { safeStorage } from "@/lib/browser-compat";
 import { useTranslation } from "@/lib/i18n";
@@ -118,6 +119,9 @@ export default function BillingPage() {
   const [recordingPayment, setRecordingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState("");
 
+  // Delete invoice
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+
   // ── Fetch helpers ────────────────────────────────────────────────────────────
 
   const normalizeInvoice = (inv: any): TreatmentInvoice => ({
@@ -196,6 +200,10 @@ export default function BillingPage() {
         setCreateError("Please enter a valid amount for all line items.");
         return;
       }
+      if (parseFloat(item.amount) > 100000) {
+        setCreateError("Amount cannot exceed $100,000 per line item.");
+        return;
+      }
     }
     setCreating(true);
     try {
@@ -236,6 +244,7 @@ export default function BillingPage() {
     setPaymentError("");
     const amount = parseFloat(paymentForm.amount);
     if (!amount || amount <= 0) { setPaymentError("Enter a valid amount."); return; }
+    if (amount > 100000) { setPaymentError("Amount cannot exceed $100,000."); return; }
     if (amount > selectedInvoice.remaining_amount + 0.001) {
       setPaymentError(`Amount exceeds remaining balance ($${selectedInvoice.remaining_amount.toFixed(2)}).`);
       return;
@@ -261,6 +270,25 @@ export default function BillingPage() {
       toast.error(e.message ?? "Failed to record payment.");
     } finally {
       setRecordingPayment(false);
+    }
+  };
+
+  const handleDeleteInvoice = async (inv: TreatmentInvoice) => {
+    if (!window.confirm(`Delete Invoice #${inv.id}? This cannot be undone.`)) return;
+    setDeletingId(inv.id);
+    try {
+      const res = await apiFetch(`/api/billing/invoices/${inv.id}`, { method: "DELETE" });
+      if (res.ok) {
+        setInvoices((prev) => prev.filter((i) => i.id !== inv.id));
+        toast.success("Invoice deleted.");
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast.error(err.message ?? "Failed to delete invoice.");
+      }
+    } catch {
+      toast.error("Failed to delete invoice.");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -401,7 +429,7 @@ export default function BillingPage() {
                               </div>
                             </td>
                             <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
-                              {new Date(inv.procedure_date).toLocaleDateString()}
+                              {formatDateBeirut(inv.procedure_date)}
                             </td>
                             <td className="px-4 py-3 text-gray-600">
                               {inv.line_items.length} {inv.line_items.length !== 1 ? t("billing.items") : t("billing.item")}
@@ -411,13 +439,27 @@ export default function BillingPage() {
                             <td className="px-4 py-3 font-medium text-red-600">${inv.remaining_amount.toFixed(2)}</td>
                             <td className="px-4 py-3"><StatusBadge status={inv.status} /></td>
                             <td className="px-4 py-3">
-                              <button
-                                onClick={() => openViewModal(inv)}
-                                className="p-2 text-dental-blue hover:bg-blue-50 rounded-lg transition-colors"
-                                title={t("billing.viewInvoice")}
-                              >
-                                <FaEye />
-                              </button>
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => openViewModal(inv)}
+                                  className="p-2 text-dental-blue hover:bg-blue-50 rounded-lg transition-colors"
+                                  title={t("billing.viewInvoice")}
+                                >
+                                  <FaEye />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteInvoice(inv)}
+                                  disabled={deletingId === inv.id}
+                                  className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-40"
+                                  title="Delete invoice"
+                                >
+                                  {deletingId === inv.id ? (
+                                    <span className="block w-3.5 h-3.5 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+                                  ) : (
+                                    <FaTrash className="text-sm" />
+                                  )}
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -493,6 +535,7 @@ export default function BillingPage() {
                   <input
                     type="number"
                     min="0"
+                    max={100000}
                     step="0.01"
                     placeholder={t("billing.amountCol")}
                     value={item.amount}
@@ -550,7 +593,7 @@ export default function BillingPage() {
           <div className="space-y-5 max-h-[75vh] overflow-y-auto pr-1">
             {/* Info row */}
             <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-              <span><strong>{t("billing.dateLabel")}</strong> {new Date(selectedInvoice.procedure_date).toLocaleDateString()}</span>
+              <span><strong>{t("billing.dateLabel")}</strong> {formatDateBeirut(selectedInvoice.procedure_date)}</span>
               <span><strong>{t("billing.statusLabel")}</strong> <StatusBadge status={selectedInvoice.status} /></span>
             </div>
 
@@ -611,7 +654,7 @@ export default function BillingPage() {
                         <span className="ml-2 text-gray-500 capitalize">{p.payment_method}</span>
                         {p.notes && <span className="ml-2 text-gray-400 italic">{p.notes}</span>}
                       </div>
-                      <span className="text-gray-400">{new Date(p.created_at).toLocaleDateString()}</span>
+                      <span className="text-gray-400">{formatDateBeirut(p.created_at)}</span>
                     </div>
                   ))}
                 </div>

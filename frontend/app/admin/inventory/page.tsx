@@ -135,12 +135,12 @@ export default function InventoryManagement() {
   // Add form state
   const [addForm, setAddForm] = useState({
     name: "", category: "Disposables", unit: "piece",
-    quantity: 0, minimum_quantity: 0, description: "", cost_price: 0,
+    quantity: 0, minimum_quantity: 0, description: "", cost_price: "" as string,
   });
   const [addSaving, setAddSaving] = useState(false);
 
   // Edit form state
-  const [editForm, setEditForm] = useState({ name: "", minimum_quantity: 0, cost_price: 0 });
+  const [editForm, setEditForm] = useState({ name: "", minimum_quantity: 0, cost_price: "" as string });
   const [editSaving, setEditSaving] = useState(false);
 
   // Stock adjustment state
@@ -171,7 +171,7 @@ export default function InventoryManagement() {
         unit: item.unit,
         supplier: item.description || "",
         lastRestocked: item.updated_at?.split("T")[0] || "",
-        status: item.quantity <= item.minimum_quantity ? "low" : "ok",
+        status: item.quantity === 0 ? "out" : item.quantity <= item.minimum_quantity ? "low" : "ok",
         image_url: item.image_url ?? undefined,
         cost_price: item.cost_price ? Number(item.cost_price) : 0,
       }));
@@ -197,6 +197,7 @@ export default function InventoryManagement() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedStatus, setSelectedStatus] = useState("All");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
@@ -206,10 +207,15 @@ export default function InventoryManagement() {
       item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.supplier.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === "All" || item.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+    const matchesStatus =
+      selectedStatus === "All" ||
+      (selectedStatus === "OK" && item.currentStock > item.minimumStock) ||
+      (selectedStatus === "Low" && item.currentStock > 0 && item.currentStock <= item.minimumStock) ||
+      (selectedStatus === "Out" && item.currentStock === 0);
+    return matchesSearch && matchesCategory && matchesStatus;
   });
 
-  const lowStockCount = inventoryItems.filter((item) => item.status === "low").length;
+  const lowStockCount = inventoryItems.filter((item) => item.status === "low" || item.status === "out").length;
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
@@ -225,7 +231,7 @@ export default function InventoryManagement() {
     setSelectedItem(item);
     setEditImageFile(null);
     setEditImagePreview(item.image_url ?? null);
-    setEditForm({ name: item.name, minimum_quantity: item.minimumStock, cost_price: item.cost_price ?? 0 });
+    setEditForm({ name: item.name, minimum_quantity: item.minimumStock, cost_price: String(item.cost_price ?? "") });
     setStockQty(1);
     setStockType("in");
     setStockNote("");
@@ -289,17 +295,19 @@ export default function InventoryManagement() {
     setShowAddModal(false);
     setAddImageFile(null);
     setAddImagePreview(null);
-    setAddForm({ name: "", category: "Disposables", unit: "piece", quantity: 0, minimum_quantity: 0, description: "", cost_price: 0 });
+    setAddForm({ name: "", category: "Disposables", unit: "piece", quantity: 0, minimum_quantity: 0, description: "", cost_price: "" });
   };
 
   const handleAddSave = async () => {
     if (!addForm.name.trim()) return;
+    const parsedCost = parseFloat(addForm.cost_price as string) || 0;
+    if (parsedCost > 100000) { toast.error("Cost price cannot exceed $100,000."); return; }
     setAddSaving(true);
     try {
       const res = await apiFetch("/api/inventory", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(addForm),
+        body: JSON.stringify({ ...addForm, cost_price: parsedCost }),
       });
       if (!res.ok) { toast.error("Failed to add item."); return; }
       const newItem = await res.json();
@@ -330,12 +338,14 @@ export default function InventoryManagement() {
 
   const handleEditSave = async () => {
     if (!selectedItem) return;
+    const parsedCost = parseFloat(editForm.cost_price as string) || 0;
+    if (parsedCost > 100000) { toast.error("Cost price cannot exceed $100,000."); return; }
     setEditSaving(true);
     try {
       await apiFetch(`/api/inventory/${selectedItem.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editForm),
+        body: JSON.stringify({ ...editForm, cost_price: parsedCost }),
       });
       if (editImageFile) await uploadItemImage(selectedItem.id, editImageFile);
       await fetchInventory();
@@ -406,6 +416,31 @@ export default function InventoryManagement() {
             onFilterChange={setSelectedCategory}
           />
 
+          {/* Stock status filter */}
+          <div className="flex gap-2 mb-4">
+            {[
+              { value: "All", label: "All Items" },
+              { value: "OK", label: "OK" },
+              { value: "Low", label: "Low in Stock" },
+              { value: "Out", label: "Out of Stock" },
+            ].map(({ value, label }) => (
+              <button
+                key={value}
+                onClick={() => setSelectedStatus(value)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  selectedStatus === value
+                    ? value === "OK" ? "bg-green-500 text-white"
+                      : value === "Low" ? "bg-yellow-500 text-white"
+                      : value === "Out" ? "bg-red-500 text-white"
+                      : "bg-dental-blue text-white"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -458,7 +493,11 @@ export default function InventoryManagement() {
                         <p className="text-gray-700 text-sm">{item.supplier}</p>
                       </td>
                       <td className="py-4 px-6 text-center">
-                        {item.status === "low" ? (
+                        {item.status === "out" ? (
+                          <span className="inline-flex items-center gap-1 px-3 py-1 bg-gray-200 text-gray-700 text-xs font-medium rounded-full">
+                            <FaExclamationTriangle className="text-xs" /> Out of Stock
+                          </span>
+                        ) : item.status === "low" ? (
                           <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">
                             <FaExclamationTriangle className="text-xs" /> {t("inventory.lowStockBadge")}
                           </span>
@@ -579,10 +618,11 @@ export default function InventoryManagement() {
               type="number"
               step="0.01"
               min="0"
+              max={100000}
               placeholder="0.00"
               className={inputClass}
               value={addForm.cost_price}
-              onChange={(e) => setAddForm((f) => ({ ...f, cost_price: Number(e.target.value) }))}
+              onChange={(e) => setAddForm((f) => ({ ...f, cost_price: e.target.value }))}
             />
           </FormField>
           <FormField label={t("inventory.supplier")}>
@@ -644,9 +684,10 @@ export default function InventoryManagement() {
                   type="number"
                   step="0.01"
                   min="0"
+                  max={100000}
                   className={inputClass}
                   value={editForm.cost_price}
-                  onChange={(e) => setEditForm((f) => ({ ...f, cost_price: Number(e.target.value) }))}
+                  onChange={(e) => setEditForm((f) => ({ ...f, cost_price: e.target.value }))}
                 />
               </FormField>
             </div>

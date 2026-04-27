@@ -38,10 +38,31 @@ export default function ImportExportMenu({ data, filename, onImport }: ImportExp
     toast.success(`Exported ${filename}.json`);
   }
 
+  function sanitizeRow(row: Row): Row {
+    const safe: Row = {};
+    for (const [key, val] of Object.entries(row)) {
+      if (val === null || val === undefined) {
+        safe[key] = "";
+      } else if (typeof val === "bigint") {
+        safe[key] = val.toString();
+      } else if (Array.isArray(val)) {
+        safe[key] = val.join(", ");
+      } else if (typeof val === "object") {
+        safe[key] = JSON.stringify(val);
+      } else if (typeof val === "number" && (val > 2147483647 || val < -2147483648 || !isFinite(val))) {
+        safe[key] = val.toString();
+      } else {
+        safe[key] = val;
+      }
+    }
+    return safe;
+  }
+
   function exportExcel() {
-    const ws = XLSX.utils.json_to_sheet(data);
+    const sanitized = data.map(sanitizeRow);
+    const ws = XLSX.utils.json_to_sheet(sanitized);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, filename);
+    XLSX.utils.book_append_sheet(wb, ws, filename.slice(0, 31));
     XLSX.writeFile(wb, `${filename}.xlsx`);
     toast.success(`Exported ${filename}.xlsx`);
   }

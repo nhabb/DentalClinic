@@ -111,23 +111,30 @@ export class AppointmentSlotsService {
     });
   }
 
-  async findAll(filters: {//here arguments are passed as an object and can be passed in any order, and we can also have optional parameters with default values (like page and limit). This is a common pattern for functions that accept multiple parameters, especially when some of them are optional or when there are many parameters, as it improves readability and flexibility when calling the function.
+  async findAll(filters: {
     doctor_id?: number;
     date?: string;
+    from_date?: string;
+    to_date?: string;
     available_only?: boolean;
     page?: number;
     limit?: number;
   }) {
-    const { doctor_id, date, available_only, page = 1, limit = 20 } = filters;
-    const skip = (page - 1) * limit; //this calculates the number of records to skip based on the current page and the limit of records per page. For example, if page is 1, skip will be 0 (no records skipped), if page is 2, skip will be 20 (the first 20 records are skipped), if page is 3, skip will be 40 (the first 40 records are skipped), and so on. This is used for pagination when retrieving appointment slots from the database, allowing us to fetch a specific subset of records based on the requested page and limit.
+    const { doctor_id, date, from_date, to_date, available_only, page = 1, limit = 20 } = filters;
+    const skip = (page - 1) * limit;
 
-    const where: any = {};//start with an empty where object and conditionally add filters based on the presence of doctor_id, date, and available_only parameters. This allows us to build a dynamic query for retrieving appointment slots from the database based on the provided filters, ensuring that we only fetch the relevant records that match the specified criteria.
-    if (doctor_id) where.doctor_id = BigInt(doctor_id);//if doctor_id is provided in the filters, we add a condition to the where object to filter appointment slots by the specified doctor_id. This allows us to retrieve only the appointment slots that belong to the specified doctor when fetching data from the database.
-    if (date) {//if date is provided in the filters, we add a condition to the where object to filter appointment slots by the specified date. We use a range query to find slots that fall within the entire day of the specified date, from 00:00:00 to 23:59:59. This allows us to retrieve all appointment slots that are scheduled for the specified date when fetching data from the database.
+    const where: any = {};
+    if (doctor_id) where.doctor_id = BigInt(doctor_id);
+    if (date) {
       where.slot_date = {
         gte: new Date(`${date}T00:00:00.000Z`),
         lte: new Date(`${date}T23:59:59.999Z`),
       };
+    } else if (from_date || to_date) {
+      const slotDateFilter: any = {};
+      if (from_date) slotDateFilter.gte = new Date(`${from_date}T00:00:00.000Z`);
+      if (to_date) slotDateFilter.lte = new Date(`${to_date}T23:59:59.999Z`);
+      where.slot_date = slotDateFilter;
     }
     if (available_only) where.is_booked = false;
 

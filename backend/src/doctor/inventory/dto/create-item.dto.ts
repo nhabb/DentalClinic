@@ -3,6 +3,7 @@ import {
   IsOptional,
   IsNumber,
   IsPositive,
+  Max,
   Min,
   MaxLength,
   MinLength,
@@ -55,5 +56,6 @@ export class CreateInventoryItemDto {
   @IsOptional()
   @IsNumber()
   @Min(0)
+  @Max(100000)
   cost_price?: number;
 }

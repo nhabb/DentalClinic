@@ -93,4 +93,10 @@ export class BillingController {
   ) {
     return this.billingService.recordPayment(BigInt(id), dto);
   }
+
+  @Delete('invoices/:id')
+  @ApiOperation({ summary: 'Delete a treatment invoice and all its payments and line items' })
+  deleteInvoice(@Param('id', ParseIntPipe) id: number) {
+    return this.billingService.deleteInvoice(BigInt(id));
+  }
 }

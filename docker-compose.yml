@@ -28,6 +28,22 @@ services:
     networks:
       - app-network
 
+  # ── Prisma Studio ─────────────────────────────────────────────────────────────
+  prisma-studio:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    env_file:
+      - ./backend/.env
+    command: ["npx", "prisma", "studio", "--port", "5555", "--hostname", "0.0.0.0"]
+    ports:
+      - "5555:5555"
+    restart: "no"
+    networks:
+      - app-network
+    profiles:
+      - studio
+
   # ── Nginx reverse proxy (HTTP → HTTPS, SSL termination) ───────────────────────
   nginx:
     build:
