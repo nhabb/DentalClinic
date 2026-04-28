@@ -46,6 +46,7 @@ export const AGENT_TOOLS: OpenAI.ChatCompletionTool[] = [
           patient_id: { type: 'number', description: 'Filter by patient ID' },
           page: { type: 'number' },
           limit: { type: 'number' },
+          order: { type: 'string', enum: ['asc', 'desc'], description: 'Sort order by date (default: asc). Use desc to get most recent first.' },
         },
       },
     },

@@ -175,6 +175,67 @@ Guidelines:
 Database schema (table: columns):
 ${this.dbSchema}
 
+CRITICAL QUERY PATTERNS:
+
+"Last/most recent appointment" → list_appointments with order:"desc" + limit:1. NEVER use order:"asc" + limit:1 for a "last" query.
+
+"Last completed appointment for a doctor":
+  SELECT a.id, a.appointment_date, a.start_time, a.status, u.first_name, u.last_name
+  FROM appointments a
+  JOIN patient_profiles pp ON pp.id = a.patient_id
+  JOIN users u ON u.id = pp.user_id
+  WHERE a.doctor_id = <id> AND a.status = 'completed'
+  ORDER BY a.appointment_date DESC, a.start_time DESC LIMIT 1
+
+PATIENT NAME SEARCH — run ALL THREE queries every time, never stop early:
+
+Extensions installed: pg_trgm (similarity) and fuzzystrmatch (soundex, levenshtein).
+
+MANDATORY: Always run all three queries below for every name search and MERGE the results before replying. Do NOT stop because one query returned results — run all three regardless. Collect every unique patient ID across all three queries and present the full combined list.
+
+IMPORTANT — token rules:
+- Split the user's input into at most two tokens: token1 = first word, token2 = second word (or repeat token1 if only one word given).
+- Do NOT break tokens into individual characters or sub-strings.
+- Copy these SQL templates exactly — do NOT add extra OR conditions, do NOT change the thresholds.
+
+Query A — ILIKE (catches case differences and partial matches):
+  SELECT DISTINCT pp.id, u.first_name, u.last_name, u.email, u.phone
+  FROM users u JOIN patient_profiles pp ON pp.user_id = u.id
+  WHERE u.role = 'patient'
+    AND (u.first_name ILIKE '%<token1>%' OR u.last_name ILIKE '%<token1>%'
+      OR u.first_name ILIKE '%<token2>%' OR u.last_name ILIKE '%<token2>%')
+
+Query B — Trigram similarity (catches typos, swapped letters, partial spellings):
+  SELECT DISTINCT pp.id, u.first_name, u.last_name, u.email, u.phone
+  FROM users u JOIN patient_profiles pp ON pp.user_id = u.id
+  WHERE u.role = 'patient'
+    AND GREATEST(
+      similarity(u.first_name, '<token1>'), similarity(u.last_name, '<token1>'),
+      similarity(u.first_name, '<token2>'), similarity(u.last_name, '<token2>')
+    ) > 0.3
+
+Query C — Soundex + Levenshtein (catches transliterations and phonetic variants):
+  SELECT DISTINCT pp.id, u.first_name, u.last_name, u.email, u.phone
+  FROM users u JOIN patient_profiles pp ON pp.user_id = u.id
+  WHERE u.role = 'patient'
+    AND (
+      soundex(u.first_name) = soundex('<token1>') OR soundex(u.last_name) = soundex('<token1>')
+      OR soundex(u.first_name) = soundex('<token2>') OR soundex(u.last_name) = soundex('<token2>')
+      OR (length('<token1>') >= 4 AND levenshtein(lower(u.first_name), lower('<token1>')) <= 2)
+      OR (length('<token1>') >= 4 AND levenshtein(lower(u.last_name),  lower('<token1>')) <= 2)
+      OR (length('<token2>') >= 4 AND levenshtein(lower(u.first_name), lower('<token2>')) <= 2)
+      OR (length('<token2>') >= 4 AND levenshtein(lower(u.last_name),  lower('<token2>')) <= 2)
+    )
+
+After all three queries:
+- Deduplicate by patient ID.
+- VALIDATION STEP (mandatory): for each result, confirm that its name has a genuine phonetic or spelling link to at least one search token. If a result shares NO clear phonetic or spelling connection to ANY token, silently drop it — do NOT include it in the final answer.
+- Present every result that passes validation (name + email + phone).
+- If multiple patients found, list them ALL and ask which one the user means.
+- Only report "not found" if all three queries return zero combined results after validation.
+- NEVER use exact = for name matching.
+- Arabic transliteration equivalents: Yousef/Youssef/Yusuf, Hussein/Hussain/Hossein, Mohamed/Mohammed/Muhammad, Ahmad/Ahmed, Nour/Nur, Rima/Reema.
+
 Patient status guidelines:
 - A patient's active/inactive status is stored in the users table as the is_active column (boolean, default true).
 - Setting a patient inactive sets users.is_active = false. Active = true, Inactive = false.
@@ -267,6 +328,7 @@ Financial guidelines:
             date: input.date,
             page: input.page ?? 1,
             limit: input.limit ?? 10,
+            order: input.order ?? 'asc',
           }));
 
         case 'get_appointment':

@@ -153,8 +153,9 @@ export class AppointmentsService {
     date?: string;
     page?: number;
     limit?: number;
+    order?: 'asc' | 'desc';
   }) {
-    const { doctor_id, patient_id, status, date, page = 1, limit = 20 } = filters;
+    const { doctor_id, patient_id, status, date, page = 1, limit = 20, order = 'asc' } = filters;
     const skip = (page - 1) * limit;
 
     const where: any = {};
@@ -175,7 +176,7 @@ export class AppointmentsService {
         include: appointmentInclude,
         skip,
         take: limit,
-        orderBy: [{ appointment_date: 'asc' }, { start_time: 'asc' }],
+        orderBy: [{ appointment_date: order }, { start_time: order }],
       }),
       this.prisma.appointments.count({ where }),
     ]);
