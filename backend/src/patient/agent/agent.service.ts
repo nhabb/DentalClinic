@@ -20,7 +20,14 @@ export interface ChatMessage {
 
 /** Safely serialize Prisma results (BigInt → number) */
 function serialize(data: any): string {//why ?? Because Prisma often returns BigInt values for IDs and other numeric fields, which can cause issues when trying to serialize the data to JSON for sending it back to the OpenAI API or for logging purposes. The standard JSON.stringify does not support BigInt and will throw an error if it encounters one. By using a custom replacer function in JSON.stringify, we can convert any BigInt values to regular numbers before serialization, ensuring that the data can be safely converted to a JSON string without errors. This allows us to handle Prisma results that contain BigInt values without running into serialization issues.
-  return JSON.stringify(data, (_, v) => (typeof v === 'bigint' ? Number(v) : v), 2);
+  return JSON.stringify(data, (_, v) => {
+    if (typeof v === 'bigint') return Number(v);
+    // Prisma $queryRaw returns Date objects for date/timestamp columns;
+    // they serialize as {} without this explicit conversion.
+    if (v instanceof Date) return v.toISOString();
+    if (v && typeof v === 'object' && typeof v.toISOString === 'function') return v.toISOString();
+    return v;
+  }, 2);
 }
 
 // SQL mutation guard — only SELECT allowed through MCP and query_database
@@ -186,6 +193,19 @@ CRITICAL QUERY PATTERNS:
   JOIN users u ON u.id = pp.user_id
   WHERE a.doctor_id = <id> AND a.status = 'completed'
   ORDER BY a.appointment_date DESC, a.start_time DESC LIMIT 1
+
+"Patients who attended/completed after a date" (use query_database — list_appointments only does exact date):
+  SELECT DISTINCT pp.id, u.first_name, u.last_name, u.email, u.phone,
+         MAX(a.appointment_date) AS last_visit
+  FROM appointments a
+  JOIN patient_profiles pp ON pp.id = a.patient_id
+  JOIN users u ON u.id = pp.user_id
+  WHERE a.status = 'completed'
+    AND a.appointment_date > '<YYYY-MM-DD>'
+  GROUP BY pp.id, u.first_name, u.last_name, u.email, u.phone
+  ORDER BY last_visit DESC
+- "came" / "visited" / "attended" = status = 'completed'. Never use 'scheduled' or 'confirmed' for this.
+- ">= date" means on-or-after, "> date" means strictly after — match the user's wording exactly.
 
 PATIENT NAME SEARCH — run ALL THREE queries every time, never stop early:
 
