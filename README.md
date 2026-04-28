@@ -430,7 +430,7 @@ Implemented across all major resources:
 - **Role-based dashboards:** patients see `/patient-dashboard`; doctors and secretaries see `/admin` with full patient roster access.
 - **Implemented by:** nhabb (UI + API)
 
----
+git ---
 
 #### Module 13 — Data Export and Import (Minor, 1pt) ✅
 

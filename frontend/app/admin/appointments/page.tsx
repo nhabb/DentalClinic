@@ -343,36 +343,53 @@ export default function AppointmentsManagement() {
     setSelectedDate(newDate);
   };
 
-  const fetchMonthSlots = async (doctorId: number) => {
+  const fetchMonthSlots = async (doctorId: number, targetMonth?: Date) => {
     setLoadingMonthSlots(true);
     try {
       const toTime = (raw: string) =>
         new Date(raw).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "UTC" });
 
-      const [slotsRes, apptRes] = await Promise.all([
-        apiFetch(`/api/appointment-slots?doctor_id=${doctorId}&limit=500`),
+      const month = targetMonth ?? calendarMonth;
+      const year = month.getFullYear();
+      const monthNum = month.getMonth();
+      const daysInMonth = new Date(year, monthNum + 1, 0).getDate();
+      const pad = (n: number) => String(n).padStart(2, "0");
+
+      // Build date strings for every day of the month
+      const dayDates = Array.from({ length: daysInMonth }, (_, i) =>
+        `${year}-${pad(monthNum + 1)}-${pad(i + 1)}`
+      );
+
+      // Fetch slots per day (same API as Open Availability) + appointments in parallel
+      const [daySlotResults, apptRes] = await Promise.all([
+        Promise.all(
+          dayDates.map((date) =>
+            apiFetch(`/api/appointment-slots?doctor_id=${doctorId}&date=${date}&limit=100`)
+              .then((r) => (r.ok ? r.json() : { data: [] }))
+              .catch((e) => { console.error("[MySlots] fetch error:", e); return { data: [] }; })
+          )
+        ),
         apiFetch(`/api/appointments?limit=1000`),
       ]);
 
-      const slotsData = slotsRes.ok ? await slotsRes.json() : { data: [] };
-      const apptData  = apptRes.ok  ? await apptRes.json()  : { data: [] };
-
+      const apptData = apptRes.ok ? await apptRes.json() : { data: [] };
       const grouped: typeof monthSlots = {};
 
-      // Open (unbooked) slots
-      for (const s of (slotsData.data || []) as any[]) {
-        if (s.is_booked) continue;
-        const date = s.slot_date ? new Date(s.slot_date).toLocaleDateString("en-CA") : "";
-        if (!date) continue;
-        (grouped[date] ??= []).push({
-          id: Number(s.id),
-          time: s.start_time ? toTime(s.start_time) : "",
-          endTime: s.end_time ? toTime(s.end_time) : undefined,
-          isBooked: false,
-        });
+      // Open (unbooked) slots — one batch per day
+      for (let i = 0; i < dayDates.length; i++) {
+        const date = dayDates[i];
+        for (const s of (daySlotResults[i].data || []) as any[]) {
+          if (s.is_booked) continue;
+          (grouped[date] ??= []).push({
+            id: Number(s.id),
+            time: s.start_time ? toTime(s.start_time) : "",
+            endTime: s.end_time ? toTime(s.end_time) : undefined,
+            isBooked: false,
+          });
+        }
       }
 
-      // All appointments directly from API — avoids race condition with appointments state
+      // Booked appointments
       for (const a of (apptData.data || []) as any[]) {
         if (a.status === "cancelled") continue;
         const dateStr = a.appointment_date ? String(a.appointment_date).slice(0, 10) : "";
@@ -685,7 +702,8 @@ export default function AppointmentsManagement() {
                 onClick={() => {
                   setCalendarMonth(new Date());
                   setCalendarSelectedDay(null);
-                  const docId = currentDoctorDbId || (doctors[0]?.id ?? null);
+                  const isDoctor = doctors.some((d) => d.id === currentDoctorDbId);
+                  const docId = (isDoctor ? currentDoctorDbId : null) || (doctors[0]?.id ?? null);
                   setCalendarDoctorId(docId);
                   if (docId) fetchMonthSlots(docId);
                   setShowSlotCalendar(true);
@@ -1189,7 +1207,7 @@ export default function AppointmentsManagement() {
                 const prev = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1);
                 setCalendarMonth(prev);
                 setCalendarSelectedDay(null);
-                if (calendarDoctorId) fetchMonthSlots(calendarDoctorId);
+                if (calendarDoctorId) fetchMonthSlots(calendarDoctorId, prev);
               }}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             ><FaChevronLeft className="text-gray-600" /></button>
@@ -1201,7 +1219,7 @@ export default function AppointmentsManagement() {
                 const next = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1);
                 setCalendarMonth(next);
                 setCalendarSelectedDay(null);
-                if (calendarDoctorId) fetchMonthSlots(calendarDoctorId);
+                if (calendarDoctorId) fetchMonthSlots(calendarDoctorId, next);
               }}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             ><FaChevronRight className="text-gray-600" /></button>

@@ -410,12 +410,15 @@ export default function ExpensesPage() {
           <div className="grid grid-cols-2 gap-4">
             <FormField label={t("expenses.amount")}>
               <input
-                type="number"
-                step="0.01"
+                type="text"
+                inputMode="decimal"
                 placeholder={t("expenses.amountPlaceholder")}
                 className={inputClass}
                 value={form.amount}
-                onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
+                onChange={(e) => {
+                  const v = e.target.value.replace(/[^0-9.]/g, "");
+                  if ((v.match(/\./g) || []).length <= 1) setForm((f) => ({ ...f, amount: v }));
+                }}
               />
             </FormField>
             <FormField label={t("common.date")}>
@@ -477,11 +480,14 @@ export default function ExpensesPage() {
               <div className="grid grid-cols-2 gap-4">
                 <FormField label={t("expenses.amount")}>
                   <input
-                    type="number"
-                    step="0.01"
+                    type="text"
+                    inputMode="decimal"
                     className={inputClass}
                     value={form.amount}
-                    onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
+                    onChange={(e) => {
+                      const v = e.target.value.replace(/[^0-9.]/g, "");
+                      if ((v.match(/\./g) || []).length <= 1) setForm((f) => ({ ...f, amount: v }));
+                    }}
                   />
                 </FormField>
                 <FormField label={t("common.date")}>

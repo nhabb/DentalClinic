@@ -81,7 +81,7 @@ export default function PatientsPage() {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [showPatientModal, setShowPatientModal] = useState(false);
   const [activeTab, setActiveTab] = useState<
-    "info" | "appointments" | "treatments" | "documents"
+    "info" | "appointments" | "documents"
   >("info");
   const [statusFilter, setStatusFilter] = useState<
     "all" | "active" | "inactive"
@@ -504,7 +504,7 @@ export default function PatientsPage() {
     fetchPatientHistory(patient.id);
   };
 
-  const handleTabChange = (tab: "info" | "appointments" | "treatments" | "documents") => {
+  const handleTabChange = (tab: "info" | "appointments" | "documents") => {
     setActiveTab(tab);
     if (tab === "documents" && selectedPatient && documents.length === 0) {
       fetchDocuments(selectedPatient.id);
@@ -715,7 +715,7 @@ export default function PatientsPage() {
 
             {/* Tabs */}
             <div className="flex border-b border-gray-100 px-6">
-              {(["info", "appointments", "treatments", "documents"] as const).map((tab) => (
+              {(["info", "appointments", "documents"] as const).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => handleTabChange(tab)}
@@ -725,8 +725,7 @@ export default function PatientsPage() {
                 >
                   {tab === "info" && <><FaIdCard className="inline mr-2" />{t("patients.info")}</>}
                   {tab === "appointments" && <><FaCalendarAlt className="inline mr-2" />{t("appointments.appointments")}</>}
-                  {tab === "treatments" && <><FaTooth className="inline mr-2" />{t("patients.treatmentsTab")}</>}
-                  {tab === "documents" && <><FaFileAlt className="inline mr-2" />Documents</>}
+{tab === "documents" && <><FaFileAlt className="inline mr-2" />Documents</>}
                   {activeTab === tab && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-dental-blue" />}
                 </button>
               ))}
@@ -877,41 +876,6 @@ export default function PatientsPage() {
                 </div>
               )}
 
-              {/* Treatments Tab */}
-              {activeTab === "treatments" && patientHistory && (
-                <div className="space-y-4">
-                  {patientHistory.treatments.length > 0 ? (
-                    patientHistory.treatments.map((treatment, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-4 bg-gray-50 rounded-xl"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                            <FaTooth className="text-purple-600" />
-                          </div>
-                          <div>
-                            <p className="font-semibold text-gray-900">
-                              {treatment.treatment}
-                            </p>
-                            <p className="text-sm text-gray-500">
-                              {t("patients.tooth")} {treatment.tooth} • {treatment.doctor}
-                            </p>
-                          </div>
-                        </div>
-                        <span className="text-gray-500">
-                          {new Date(treatment.date).toLocaleDateString()}
-                        </span>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      {t("patients.noTreatmentsFound")}
-                    </div>
-                  )}
-                </div>
-              )}
-
               {/* Documents Tab */}
               {activeTab === "documents" && (
                 <div className="space-y-4">
@@ -1005,7 +969,7 @@ export default function PatientsPage() {
               )}
 
               {/* Loading state for history */}
-              {(activeTab === "appointments" || activeTab === "treatments") && !patientHistory && (
+              {activeTab === "appointments" && !patientHistory && (
                 <div className="text-center py-12">
                   <LoadingSpinner />
                   <p className="text-gray-500 mt-4">{t("patients.loadingHistory")}</p>

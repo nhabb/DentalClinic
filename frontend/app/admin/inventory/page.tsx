@@ -578,32 +578,36 @@ export default function InventoryManagement() {
           <div className="grid grid-cols-2 gap-4">
             <FormField label={t("inventory.currentStock")}>
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
                 placeholder="0"
                 className={inputClass}
                 value={addForm.quantity}
-                onChange={(e) => setAddForm((f) => ({ ...f, quantity: e.target.value }))}
+                onChange={(e) => setAddForm((f) => ({ ...f, quantity: e.target.value.replace(/[^0-9]/g, "") }))}
               />
             </FormField>
             <FormField label={t("inventory.minimumStock")}>
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
                 placeholder="0"
                 className={inputClass}
                 value={addForm.minimum_quantity}
-                onChange={(e) => setAddForm((f) => ({ ...f, minimum_quantity: e.target.value }))}
+                onChange={(e) => setAddForm((f) => ({ ...f, minimum_quantity: e.target.value.replace(/[^0-9]/g, "") }))}
               />
             </FormField>
           </div>
           <FormField label="Unit Cost Price">
             <input
-              type="number"
-              step="0.01"
-              min="0"
+              type="text"
+              inputMode="decimal"
               placeholder="0.00"
               className={inputClass}
               value={addForm.cost_price}
-              onChange={(e) => setAddForm((f) => ({ ...f, cost_price: e.target.value }))}
+              onChange={(e) => {
+                const v = e.target.value.replace(/[^0-9.]/g, "");
+                if ((v.match(/\./g) || []).length <= 1) setAddForm((f) => ({ ...f, cost_price: v }));
+              }}
             />
           </FormField>
           <FormField label={t("inventory.supplier")}>
@@ -654,20 +658,23 @@ export default function InventoryManagement() {
               </FormField>
               <FormField label={t("inventory.minimumStock")}>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
                   className={inputClass}
                   value={editForm.minimum_quantity}
-                  onChange={(e) => setEditForm((f) => ({ ...f, minimum_quantity: e.target.value }))}
+                  onChange={(e) => setEditForm((f) => ({ ...f, minimum_quantity: e.target.value.replace(/[^0-9]/g, "") }))}
                 />
               </FormField>
               <FormField label="Unit Cost Price">
                 <input
-                  type="number"
-                  step="0.01"
-                  min="0"
+                  type="text"
+                  inputMode="decimal"
                   className={inputClass}
                   value={editForm.cost_price}
-                  onChange={(e) => setEditForm((f) => ({ ...f, cost_price: e.target.value }))}
+                  onChange={(e) => {
+                    const v = e.target.value.replace(/[^0-9.]/g, "");
+                    if ((v.match(/\./g) || []).length <= 1) setEditForm((f) => ({ ...f, cost_price: v }));
+                  }}
                 />
               </FormField>
             </div>

@@ -27,6 +27,7 @@ async function provisionAndPersist(supabaseToken: string): Promise<{ redirect: s
   const role: string = user.role ?? "patient";
 
   sessionStorage.setItem("authToken", token);
+  sessionStorage.setItem("authProvider", "oauth");
   sessionStorage.setItem("userRole", role);
   sessionStorage.setItem("userId", user.id.toString());
   sessionStorage.setItem(

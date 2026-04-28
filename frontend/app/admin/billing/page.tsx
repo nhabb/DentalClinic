@@ -539,12 +539,14 @@ export default function BillingPage() {
                     ))}
                   </select>
                   <input
-                    type="number"
-                    min="0"
-                    step="0.01"
+                    type="text"
+                    inputMode="decimal"
                     placeholder={t("billing.amountCol")}
                     value={item.amount}
-                    onChange={(e) => updateLineItem(idx, "amount", e.target.value)}
+                    onChange={(e) => {
+                      const v = e.target.value.replace(/[^0-9.]/g, "");
+                      if ((v.match(/\./g) || []).length <= 1) updateLineItem(idx, "amount", v);
+                    }}
                     className="w-32 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue text-gray-900 bg-white"
                   />
                   {lineItems.length > 1 && (
@@ -675,13 +677,14 @@ export default function BillingPage() {
                     <div className="flex-1">
                       <FormField label={`Amount (max $${selectedInvoice.remaining_amount.toFixed(2)}) *`}>
                         <input
-                          type="number"
-                          min="0.01"
-                          step="0.01"
-                          max={selectedInvoice.remaining_amount}
+                          type="text"
+                          inputMode="decimal"
                           placeholder="0.00"
                           value={paymentForm.amount}
-                          onChange={(e) => setPaymentForm((f) => ({ ...f, amount: e.target.value }))}
+                          onChange={(e) => {
+                            const v = e.target.value.replace(/[^0-9.]/g, "");
+                            if ((v.match(/\./g) || []).length <= 1) setPaymentForm((f) => ({ ...f, amount: v }));
+                          }}
                           className={inputClass}
                         />
                       </FormField>

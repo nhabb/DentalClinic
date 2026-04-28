@@ -28,21 +28,31 @@ export default function PatientDashboard() {
   const [patientName, setPatientName] = useState("");
   const [patientEmail, setPatientEmail] = useState("");
   const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined);
+  const [userId, setUserId] = useState<number | null>(null);
   const [showChangePassword, setShowChangePassword] = useState(false);
+  const [isOAuthUser, setIsOAuthUser] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        if (sessionStorage.getItem("authProvider") === "oauth") setIsOAuthUser(true);
+
         // Resolve current user from backend JWT
         const meRes = await apiFetch(`/api/auth/me`);
         const dbUser = meRes.ok ? await meRes.json() : null;
 
         if (dbUser) {
+          setUserId(dbUser.id);
           const name = `${dbUser.first_name || ""} ${dbUser.last_name || ""}`.trim();
           setPatientName(name);
           setPatientEmail(dbUser.email || "");
-          const saved = localStorage.getItem(`brightsmile_photo_${dbUser.email}`);
-          if (saved) setPhotoUrl(saved);
+
+          // Load avatar from backend (persists across devices)
+          const userDetailRes = await apiFetch(`/api/users/${dbUser.id}`);
+          if (userDetailRes.ok) {
+            const userDetail = await userDetailRes.json();
+            if (userDetail.avatar_url) setPhotoUrl(userDetail.avatar_url);
+          }
         }
 
         if (!dbUser) return;
@@ -76,9 +86,15 @@ export default function PatientDashboard() {
     fetchData();
   }, []);
 
-  const handlePhotoUpload = (dataUrl: string) => {
-    setPhotoUrl(dataUrl);
-    if (patientEmail) localStorage.setItem(`brightsmile_photo_${patientEmail}`, dataUrl);
+  const handlePhotoUpload = async (file: File) => {
+    if (!userId) return;
+    const form = new FormData();
+    form.append("file", file);
+    const res = await apiFetch(`/api/users/${userId}/avatar`, { method: "PATCH", body: form });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.avatar_url) setPhotoUrl(data.avatar_url);
+    }
   };
 
   const handleLogout = () => {
@@ -86,6 +102,7 @@ export default function PatientDashboard() {
     safeStorage.removeItem("patientAuth");
     safeStorage.removeItem("authToken");
     safeStorage.removeItem("userRole");
+    safeStorage.removeItem("authProvider");
     router.push("/login");
   };
 
@@ -134,14 +151,16 @@ export default function PatientDashboard() {
                 onUpload={handlePhotoUpload}
               />
 
-              <button
-                onClick={() => setShowChangePassword(true)}
-                title={t("common.changePassword")}
-                className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors"
-              >
-                <FaKey />
-                <span className="hidden sm:inline">{t("common.changePassword")}</span>
-              </button>
+              {!isOAuthUser && (
+                <button
+                  onClick={() => setShowChangePassword(true)}
+                  title={t("common.changePassword")}
+                  className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors"
+                >
+                  <FaKey />
+                  <span className="hidden sm:inline">{t("common.changePassword")}</span>
+                </button>
+              )}
 
               <button
                 onClick={handleLogout}

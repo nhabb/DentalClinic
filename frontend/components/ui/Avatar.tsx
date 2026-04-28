@@ -6,7 +6,7 @@ interface AvatarProps {
   name: string;
   size?: "sm" | "md" | "lg" | "xl";
   src?: string;
-  onUpload?: (dataUrl: string) => void;
+  onUpload?: (file: File) => void;
 }
 
 const sizeClasses: Record<string, string> = {
@@ -39,10 +39,7 @@ export function Avatar({ name, size = "lg", src, onUpload }: AvatarProps) {
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !onUpload) return;
-    const reader = new FileReader();
-    reader.onload = () => onUpload(reader.result as string);
-    reader.readAsDataURL(file);
-    // reset so the same file can be re-selected
+    onUpload(file);
     e.target.value = "";
   };
 

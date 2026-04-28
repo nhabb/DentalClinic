@@ -124,10 +124,7 @@ export default function AdminDashboard() {
       if (storedUser) {
         try { email = JSON.parse(storedUser).email || ""; } catch {}
       }
-      if (email) {
-        const saved = localStorage.getItem(`brightsmile_photo_${email}`);
-        if (saved) setPhotoUrl(saved);
-      }
+
 
       try {
         // Fire all requests simultaneously — one round-trip wave
@@ -146,7 +143,15 @@ export default function AdminDashboard() {
         if (userRes?.ok) {
           const u = await userRes.json();
           setUser({ id: Number(u.id), firstName: u.first_name || "", lastName: u.last_name || "", email: u.email, role: u.role });
-          if (u.id) safeStorage.setItem("doctorDbId", String(u.id));
+          if (u.id) {
+            safeStorage.setItem("doctorDbId", String(u.id));
+            // Load avatar from backend (persists across devices)
+            const detailRes = await apiFetch(`/api/users/${u.id}`);
+            if (detailRes.ok) {
+              const detail = await detailRes.json();
+              if (detail.avatar_url) setPhotoUrl(detail.avatar_url);
+            }
+          }
         } else if (storedUser) {
           const parsed = JSON.parse(storedUser);
           setUser({ ...parsed, firstName: parsed.firstName || parsed.first_name || "", lastName: parsed.lastName || parsed.last_name || "" });
@@ -232,10 +237,15 @@ export default function AdminDashboard() {
     fetchAll();
   }, []);
 
-  const handlePhotoUpload = (dataUrl: string) => {
-    setPhotoUrl(dataUrl);
-    const email = user?.email;
-    if (email) localStorage.setItem(`brightsmile_photo_${email}`, dataUrl);
+  const handlePhotoUpload = async (file: File) => {
+    if (!user?.id) return;
+    const form = new FormData();
+    form.append("file", file);
+    const res = await apiFetch(`/api/users/${user.id}/avatar`, { method: "PATCH", body: form });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.avatar_url) setPhotoUrl(data.avatar_url);
+    }
   };
 
   const handleLogout = () => {

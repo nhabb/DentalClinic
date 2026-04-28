@@ -69,19 +69,26 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await res.json();
+      // Parse JSON safely — error responses might not be JSON (e.g. HTML gateway errors)
+      let data: Record<string, unknown> = {};
+      try {
+        data = await res.json();
+      } catch {
+        // Non-JSON response
+      }
 
       if (!res.ok) {
-        setError(data.message || "Invalid email or password");
+        setError((data.message as string) || "Invalid email or password.");
         return;
       }
 
-      const { user, token } = data;
+      const { user, token } = data as { user: Record<string, unknown>; token: string };
 
       // Persist auth (sessionStorage keeps each tab's session independent)
+      sessionStorage.removeItem("authProvider"); // clear any leftover OAuth flag
       sessionStorage.setItem("authToken", token);
-      sessionStorage.setItem("userRole", user.role);
-      sessionStorage.setItem("userId", user.id.toString());
+      sessionStorage.setItem("userRole", user.role as string);
+      sessionStorage.setItem("userId", String(user.id));
       sessionStorage.setItem(
         "adminUser",
         JSON.stringify({
@@ -93,12 +100,12 @@ export default function LoginPage() {
       );
       // Mark admin-role users as authenticated for the admin layout guard
       const adminRoles = ["doctor", "admin", "secretary", "superadmin"];
-      if (adminRoles.includes(user.role)) {
+      if (adminRoles.includes(user.role as string)) {
         sessionStorage.setItem("adminAuth", "true");
       }
 
       toast.success("Logged in successfully.");
-      const redirect = ROLE_REDIRECTS[user.role] ?? "/patient-dashboard";
+      const redirect = ROLE_REDIRECTS[user.role as string] ?? "/patient-dashboard";
       router.push(redirect);
     } catch {
       setError("Unable to connect to server. Please try again.");
