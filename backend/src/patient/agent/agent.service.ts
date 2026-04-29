@@ -314,55 +314,56 @@ Financial guidelines:
 
     const allTools = [...AGENT_TOOLS, ...this.mcpTools];
 
+    const agentStart = Date.now();
+    let totalToolCalls = 0;
+
     let response = await this.openai.chat.completions.create({
       model: 'gpt-4o-mini',
       tools: allTools,
       messages: openaiMessages,
     });
 
-    while (response.choices[0].finish_reason === 'tool_calls') {//what does this while loop do? This while loop checks if the OpenAI response indicates that the model has made tool calls (finish_reason === 'tool_calls'). If it has, it means that the model has requested to call one or more tools to retrieve information or perform actions based on the user's input. The loop then processes each tool call by executing the corresponding function for each requested tool, collects the results, and appends them to the conversation history. After processing the tool calls, it sends a new request to the OpenAI API with the updated conversation history (including the tool results) to get a new response from the model. This allows for an iterative process where the model can make multiple tool calls and receive updated information before generating a final response to the user.
-      // "show me today's appointments" -> the model thinks i need to call a tool ->then finish_reason will be tool_calls -> we execute the tool calls and get the results -> we send a new request to openai with the updated messages (including the tool results) -> we get a new response from openai which may or may not require more tool calls -> if it does, we repeat the process until we get a response that does not require any more tool calls and then we return that response to the user.
+    while (response.choices[0].finish_reason === 'tool_calls') {
       const assistantMessage = response.choices[0].message;
-      openaiMessages.push(assistantMessage);//here i am adding the response from the assistant to the conversation history before processing the tool calls, so that the context of the conversation is maintained when we execute the tools and send the updated messages back to OpenAI for further processing. This way, the model can see its previous response and the results of the tool calls in the context of the conversation, allowing it to generate a more informed and relevant response in subsequent iterations.
+      openaiMessages.push(assistantMessage);
 
       const toolResults = await Promise.all(
-  (assistantMessage.tool_calls ?? []).map(async (call) => {
-    const fn = (call as any).function;
-    const input = JSON.parse(fn.arguments);
+        (assistantMessage.tool_calls ?? []).map(async (call) => {
+          const fn = (call as any).function;
+          const input = JSON.parse(fn.arguments);
 
-    const toolType = this.mcpTools.some((t) => (t as any).function?.name === fn.name)
-      ? 'MCP'
-      : fn.name === 'query_database' ? 'SQL' : 'API';
+          const toolType = this.mcpTools.some((t) => (t as any).function?.name === fn.name)
+            ? 'MCP'
+            : fn.name === 'query_database' ? 'SQL' : 'API';
 
-    console.log(`\n[TOOL CALL][${toolType}] ${fn.name}`);
-    console.log(`[TOOL INPUT]`, JSON.stringify(input, null, 2));
+          totalToolCalls++;
+          const toolStart = Date.now();
 
-    const result = await this.executeTool(fn.name, input);
+          console.log(`\n[TOOL CALL #${totalToolCalls}][${toolType}] ${fn.name}`);
+          console.log(`[TOOL INPUT]`, JSON.stringify(input, null, 2));
 
-    console.log(`[TOOL RESULT]`, result.slice(0, 500));
+          const result = await this.executeTool(fn.name, input);
+          const toolMs = Date.now() - toolStart;
 
-    return { role: 'tool' as const, tool_call_id: call.id, content: result };
-  }),
-);
-      /*
-          (assistantMessage.tool_calls ?? []).map(async (call) => {
-        const fn = (call as any).function;       // { name: 'list_slots', arguments: '{"doctor_id":3,...}' }
-        const input = JSON.parse(fn.arguments);  // { doctor_id: 3, date: '2026-04-24' }
-        const result = await this.executeTool(fn.name, input);
-        return { role: 'tool', tool_call_id: call.id, content: result };
-      })
-      */
+          console.log(`[TOOL RESULT] (${toolMs}ms)`, result.slice(0, 500));
+
+          return { role: 'tool' as const, tool_call_id: call.id, content: result };
+        }),
+      );
 
       openaiMessages = [...openaiMessages, ...toolResults];
 
-      response = await this.openai.chat.completions.create({ //why above we are creating a new chat completion request to OpenAI with the updated messages that now include the results of the tool calls. This allows the model to see the output from the tools it requested and use that information to generate a more informed response in the next iteration. The loop will continue until the model's response does not include any more tool calls, at which point we can return the final response to the user.
+      response = await this.openai.chat.completions.create({
         model: 'gpt-4o-mini',
         tools: allTools,
         messages: openaiMessages,
       });
     }
 
-    return response.choices[0].message.content ?? 'No response generated.';//after processing all tool calls and getting a final response from the model, we return the content of the assistant's message as the final reply to the user. If for some reason there is no content in the message, we return a default string indicating that no response was generated.
+    const totalMs = Date.now() - agentStart;
+    console.log(`\n[AGENT DONE] tools called: ${totalToolCalls} | total time: ${totalMs}ms`);
+
+    return response.choices[0].message.content ?? 'No response generated.';
   }
 
   private async executeTool(name: string, input: Record<string, any>): Promise<string> {
