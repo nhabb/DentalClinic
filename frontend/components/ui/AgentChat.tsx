@@ -9,12 +9,11 @@ interface Message {
 }
 
 interface Props {
-  doctorName?: string; // kept for display only
-  doctorId?: number;   // no longer sent to backend
+  doctorName?: string;
+  doctorId?: number;
 }
 
 function MarkdownText({ text }: { text: string }) {
-  // Minimal markdown: bold, bullet lists, line breaks
   const lines = text.split("\n");
   return (
     <div className="space-y-1">
@@ -64,12 +63,57 @@ export default function AgentChat({ doctorName = "Doctor", doctorId }: Props) {
     setLoading(true);
 
     try {
-      const res = await apiFetch("/api/agent/chat", {
+      const res = await apiFetch("/api/agent/chat/stream", {
         method: "POST",
         body: JSON.stringify({ messages: newMessages }),
       });
-      const data = await res.json();
-      setMessages((prev) => [...prev, { role: "assistant", content: data.reply ?? "No response." }]);
+
+      if (!res.ok || !res.body) throw new Error("Stream failed");
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let started = false;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const raw = line.slice(6).trim();
+          if (raw === "[DONE]") break;
+          try {
+            const parsed = JSON.parse(raw) as { token?: string; error?: string };
+            if (parsed.error) throw new Error(parsed.error);
+            if (!parsed.token) continue;
+            if (!started) {
+              setMessages((prev) => [...prev, { role: "assistant", content: parsed.token as string }]);
+              setLoading(false);
+              started = true;
+            } else {
+              setMessages((prev) => {
+                const updated = [...prev];
+                updated[updated.length - 1] = {
+                  ...updated[updated.length - 1],
+                  content: updated[updated.length - 1].content + (parsed.token as string),
+                };
+                return updated;
+              });
+            }
+          } catch {
+            // ignore malformed chunks
+          }
+        }
+      }
+
+      if (!started) {
+        setMessages((prev) => [...prev, { role: "assistant", content: "No response." }]);
+      }
     } catch {
       setMessages((prev) => [...prev, { role: "assistant", content: "Sorry, something went wrong. Please try again." }]);
     } finally {
@@ -181,7 +225,7 @@ export default function AgentChat({ doctorName = "Doctor", doctorId }: Props) {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKey}
-              placeholder="Ask anything..."
+                placeholder="Ask anything..."
                 rows={1}
                 className="flex-1 resize-none text-sm border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue max-h-28 overflow-y-auto"
                 style={{ lineHeight: "1.5" }}

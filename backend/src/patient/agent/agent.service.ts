@@ -85,23 +85,66 @@ export class AgentService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit() {
     try {
-      const rows = await this.prisma.$queryRaw<{ table_name: string; column_name: string; data_type: string }[]>`
-        SELECT table_name, column_name, data_type
-        FROM information_schema.columns
-        WHERE table_schema = 'public'
-        ORDER BY table_name, ordinal_position
-      `;
+      const [columns, fkeys] = await Promise.all([
+        this.prisma.$queryRaw<{ table_name: string; column_name: string; data_type: string }[]>`
+          SELECT table_name, column_name, data_type
+          FROM information_schema.columns
+          WHERE table_schema = 'public'
+          ORDER BY table_name, ordinal_position
+        `,
+        this.prisma.$queryRaw<{ table_name: string; column_name: string; foreign_table: string; foreign_column: string }[]>`
+          SELECT
+            kcu.table_name,
+            kcu.column_name,
+            ccu.table_name  AS foreign_table,
+            ccu.column_name AS foreign_column
+          FROM information_schema.table_constraints        AS tc
+          JOIN information_schema.key_column_usage         AS kcu ON tc.constraint_name = kcu.constraint_name AND tc.table_schema = kcu.table_schema
+          JOIN information_schema.constraint_column_usage  AS ccu ON tc.constraint_name = ccu.constraint_name AND tc.table_schema = ccu.table_schema
+          WHERE tc.constraint_type = 'FOREIGN KEY'
+            AND tc.table_schema = 'public'
+        `,
+      ]);
 
       // Group columns by table
       const tables: Record<string, string[]> = {};
-      for (const row of rows) {
+      for (const row of columns) {
         if (!tables[row.table_name]) tables[row.table_name] = [];
         tables[row.table_name].push(`${row.column_name} (${row.data_type})`);
-      } //this is for what? This code is querying the database schema to get a list of all tables and their columns along with the data types. It then groups the columns by their respective tables and formats this information into a string that can be included in the system prompt for the AI assistant. By providing the AI with the database schema, it can make informed decisions about how to construct SQL queries when using the query_database tool, ensuring that it uses the correct table and column names as defined in the database. This helps to improve the accuracy of the AI's responses and reduces the likelihood of errors when executing database queries.
+      }
 
-      this.dbSchema = Object.entries(tables)
+      // Build FK map: "table.column → foreign_table.foreign_column"
+      const fkLines: string[] = fkeys.map(
+        (fk) => `  ${fk.table_name}.${fk.column_name} → ${fk.foreign_table}.${fk.foreign_column}`,
+      );
+
+      const tableSchema = Object.entries(tables)
         .map(([table, cols]) => `  ${table}: ${cols.join(', ')}`)
         .join('\n');
+
+      const fkSchema = fkLines.length
+        ? '\nForeign key relationships (use these for JOINs):\n' + fkLines.join('\n')
+        : '';
+
+      const businessContext = `
+Business context (what each table means):
+  users — every person in the system (patients, doctors, secretaries, admins). role column = 'patient'|'doctor'|'secretary'|'admin'.
+  patient_profiles — extra profile info for patients; linked to users via user_id.
+  appointments — scheduled visits; links patient_profiles (patient_id) and users (doctor_id).
+  appointment_slots — available time slots a doctor has opened.
+  treatment_invoices — bills issued to patients; procedure_date = the date shown to users as the bill date (what users mean when they say "invoice date"); created_at = internal system timestamp, never shown in the UI.
+  invoice_line_items — individual procedures/charges on a treatment invoice.
+  invoice_payments — payments recorded against a treatment invoice.
+  inventory_items — clinic supplies (gloves, materials, etc.).
+  inventory_movements — stock additions/removals for inventory items.
+  patient_records — clinical notes and treatment records per patient.
+  patient_documents — uploaded files/documents for a patient.
+  notifications — in-app notifications sent to users.
+  expenses — clinic operational expenses (rent, utilities, etc.).
+  audit_logs — history of important actions.
+  clinic_profile — single-row table with clinic name, address, contact info.`;
+
+      this.dbSchema = tableSchema + fkSchema + businessContext;
     } catch (err: any) {
       console.warn('[Schema] Could not load DB schema:', err.message);
     }
@@ -182,12 +225,14 @@ Guidelines:
 - If a tool call fails, explain the error clearly.
 - Appointment flow: scheduled → confirmed → completed. cancelled and no_show are terminal states.
 - Always pass dates in YYYY-MM-DD format (e.g., ${today}).
+- GLOBAL SQL RULE — apply to every query you write without exception: any date, timestamp, or time column MUST be cast to text using ::text (e.g. date_of_birth::text, created_at::text, appointment_date::text). Never select a date/timestamp column without ::text — it will return {} and be unreadable. If you are unsure whether a column is a date type, cast it anyway.
 - You have a query_database tool that runs any PostgreSQL SELECT directly against the database. Use it proactively:
   1. When a dedicated tool returns empty results and the user seems confident the data exists, do NOT ask the user to try a different keyword — immediately use query_database to investigate, then retry with the correct values.
   2. For any question not covered by dedicated tools (aggregations, joins, counts, schema discovery) go straight to query_database.
   3. Never tell the user "I cannot find X" before trying query_database first.
   4. Never use query_database for mutations (INSERT, UPDATE, DELETE, DROP).
   5. Always use the exact column names from the schema below — never guess column names.
+  6. NEVER use a value from one query as a filter in another query issued in the same batch. If Query B needs an ID or value that comes from Query A, you MUST wait for Query A's result before writing Query B. When in doubt, collapse both into a single SQL query using a JOIN or subquery instead of two separate tool calls.
 Database schema (table: columns):
 ${this.dbSchema}
 
@@ -229,16 +274,16 @@ Example: appointment_date::text, created_at::text, MAX(appointment_date)::text A
 - ">= date" means on-or-after, "> date" means strictly after — match the user's wording exactly.
 
 "When did X become a patient" / "registration date" / "patient since":
-  The registration date is users.created_at (when their account was created) — NOT patient_profiles.created_at.
-  MANDATORY two-step process — do NOT report "not available" before completing both steps:
-  Step 1: find the patient using the name search queries above (get their pp.id).
-  Step 2: run this query:
-    SELECT u.first_name, u.last_name, u.created_at::text AS registered_at
-    FROM users u
-    JOIN patient_profiles pp ON pp.user_id = u.id
-    WHERE u.role = 'patient'
-      AND pp.id = <patient_profile_id>
-  The answer is registered_at. Never skip step 2.
+  Use a SINGLE query — do NOT split into two steps. Search by name and return the date in one go:
+  SELECT u.first_name, u.last_name, u.created_at::text AS registered_at, pp.id AS patient_id
+  FROM users u
+  JOIN patient_profiles pp ON pp.user_id = u.id
+  WHERE u.role = 'patient'
+    AND (u.first_name ILIKE '%<token1>%' OR u.last_name ILIKE '%<token1>%'
+      OR u.first_name ILIKE '%<token2>%' OR u.last_name ILIKE '%<token2>%')
+  - If one result: report their name and registered_at date directly.
+  - If multiple results: list all of them with their registered_at dates and ask which one the user means.
+  - The registration date is users.created_at — NOT patient_profiles.created_at.
 
 PATIENT NAME SEARCH — run ALL THREE queries every time, never stop early:
 
@@ -297,15 +342,61 @@ Patient status guidelines:
 - To find active patients: same join WHERE u.is_active = true AND u.role = 'patient'.
 
 Financial guidelines:
-- All payments go through treatment invoices. Use list_invoices, get_invoice, create_invoice, record_invoice_payment.
-- When a user asks "show me payments", "what's owed", or anything about money, use list_invoices or get_financial_kpis.
-- For a money overview use get_financial_kpis first.
-- Invoice statuses: open (unpaid), partial (partially paid), paid (fully settled).
-- After a procedure, create a treatment invoice with create_invoice specifying each procedure and its cost.
-- To accept a payment on an invoice use record_invoice_payment — the remaining balance updates automatically.
-- Use list_invoices with status: "open" or status: "partial" to find unpaid invoices.
-- Use get_invoice to see full procedure list and payment history for a specific invoice.
-- Amounts are in the clinic's local currency.`;
+
+BILLING BUSINESS LOGIC — understand this flow before answering any billing question:
+
+1. A procedure happens at the clinic.
+2. Staff creates a bill in the system → one row in treatment_invoices is created.
+   - procedure_date = the date the dental work was done (e.g. the patient's visit date).
+   - created_at     = the date/time the bill was entered into the system. This is "when the bill was issued."
+   - total_amount   = sum of all procedures on the bill.
+   - amount_paid    = how much the patient has paid so far (starts at 0).
+   - remaining_amount = total_amount − amount_paid (what the patient still owes).
+   - status: open (nothing paid yet), partial (some paid), paid (fully settled — remaining = 0).
+3. Each individual procedure on the bill is a row in invoice_line_items (linked by treatment_invoice_id).
+   Example: "Veneers: 700", "Orthodontic: 500" → two line items on one invoice.
+4. Each time the patient makes a payment, staff records it → one row added to invoice_payments (linked by invoice_id).
+   After recording: amount_paid increases, remaining_amount decreases, status updates automatically.
+5. The invoice is "paid" only when remaining_amount = 0.
+
+KEY RULES from this logic:
+- procedure_date is the date SHOWN TO USERS in the frontend as the invoice date. When users say "bill date", "first bill", "last bill", "issued on April 15" — they always mean procedure_date.
+- created_at is internal (when the record was saved in the system). Users never see this date. Do NOT use created_at for any user-facing date question.
+- "First bill" → ORDER BY procedure_date ASC LIMIT 1.
+- "Last bill"  → ORDER BY procedure_date DESC LIMIT 1.
+- "Outstanding" or "unpaid" → status IN ('open', 'partial').
+- "How much does patient X owe?" → remaining_amount on their open/partial invoices.
+- "Payment history for invoice X" → query invoice_payments WHERE invoice_id = X.
+- "First payment ever" / "when did the first patient pay":
+    SELECT ip.amount::text, ip.payment_date::text, ip.payment_method,
+           ti.id AS invoice_id, u.first_name || ' ' || u.last_name AS patient_name
+    FROM invoice_payments ip
+    JOIN treatment_invoices ti ON ti.id = ip.invoice_id
+    JOIN patient_profiles pp ON pp.id = ti.patient_id
+    JOIN users u ON u.id = pp.user_id
+    ORDER BY ip.payment_date ASC LIMIT 1
+- "How much did patient X pay" / "payment details for patient X":
+    SELECT ip.id, ip.amount::text, ip.payment_date::text, ip.payment_method, ti.id AS invoice_id
+    FROM invoice_payments ip
+    JOIN treatment_invoices ti ON ti.id = ip.invoice_id
+    JOIN patient_profiles pp ON pp.id = ti.patient_id
+    JOIN users u ON u.id = pp.user_id
+    WHERE u.first_name ILIKE '%<name>%' OR u.last_name ILIKE '%<name>%'
+    ORDER BY ip.payment_date ASC
+- CONTEXT RULE: if the user asks a follow-up like "how much?" or "which invoice?" after you already identified a patient and date, do NOT re-run a name search — use the patient and date from your previous answer to query invoice_payments directly. Never say a payment doesn't exist without first querying invoice_payments.
+- GLOBAL SQL RULE for monetary columns: always cast NUMERIC/DECIMAL to text using ::text (e.g. total_amount::text).
+
+Tool usage:
+- list_invoices, get_invoice, create_invoice, record_invoice_payment for standard operations.
+- get_financial_kpis for a revenue/collection overview.
+- For first/last invoice or cross-status sorting, use query_database:
+    SELECT ti.id, ti.procedure_date::text AS bill_date, ti.total_amount::text, ti.status,
+           u.first_name || ' ' || u.last_name AS patient_name
+    FROM treatment_invoices ti
+    JOIN patient_profiles pp ON pp.id = ti.patient_id
+    JOIN users u ON u.id = pp.user_id
+    ORDER BY ti.created_at ASC LIMIT 1;
+    -- Change ASC to DESC for the last invoice.`;
 
     let openaiMessages: OpenAI.ChatCompletionMessageParam[] = [
       { role: 'system', content: systemPrompt },
@@ -364,6 +455,15 @@ Financial guidelines:
     console.log(`\n[AGENT DONE] tools called: ${totalToolCalls} | total time: ${totalMs}ms`);
 
     return response.choices[0].message.content ?? 'No response generated.';
+  }
+
+  async *chatStream(messages: ChatMessage[], context: { userId: number }): AsyncGenerator<string> {
+    const fullReply = await this.chat(messages, context);
+    const words = fullReply.split(' ');
+    for (const word of words) {
+      yield word + ' ';
+      await Promise.resolve();
+    }
   }
 
   private async executeTool(name: string, input: Record<string, any>): Promise<string> {
@@ -493,7 +593,19 @@ Financial guidelines:
             return JSON.stringify({ error: 'Query references restricted columns or schemas.' });
           }
           const rows = await this.prisma.$queryRawUnsafe(sql);
-          return serialize(redactSensitiveFields(rows));
+          const normalized = (rows as any[]).map((row) =>
+            Object.fromEntries(
+              Object.entries(row as Record<string, any>).map(([k, v]) => {
+                if (v instanceof Date) return [k, v.toISOString()];
+                if (v && typeof v === 'object' && typeof (v as any).toISOString === 'function') return [k, (v as any).toISOString()];
+                if (typeof v === 'bigint') return [k, Number(v)];
+                if (v && typeof v === 'object' && v.constructor?.name === 'Decimal') return [k, Number(v)];
+                if (v && typeof v === 'object' && typeof (v as any).toNumber === 'function') return [k, (v as any).toNumber()];
+                return [k, v];
+              }),
+            ),
+          );
+          return serialize(redactSensitiveFields(normalized));
         }
 
         default: {
