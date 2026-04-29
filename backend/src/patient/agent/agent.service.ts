@@ -387,7 +387,7 @@ KEY RULES from this logic:
 - GLOBAL SQL RULE for monetary columns: always cast NUMERIC/DECIMAL to text using ::text (e.g. total_amount::text).
 
 Tool usage:
-- list_invoices, get_invoice, create_invoice, record_invoice_payment for standard operations.
+- list_invoices, get_invoice, create_invoice, record_invoice_payment for standard operations. list_invoices fetches up to 200 records — for anything requiring ALL records (totals, first/last, counts across the full history) use query_database instead to avoid missing data.
 - get_financial_kpis for a revenue/collection overview.
 - For first/last invoice or cross-status sorting, use query_database:
     SELECT ti.id, ti.procedure_date::text AS bill_date, ti.total_amount::text, ti.status,
@@ -396,7 +396,50 @@ Tool usage:
     JOIN patient_profiles pp ON pp.id = ti.patient_id
     JOIN users u ON u.id = pp.user_id
     ORDER BY ti.created_at ASC LIMIT 1;
-    -- Change ASC to DESC for the last invoice.`;
+    -- Change ASC to DESC for the last invoice.
+
+EXPENSES BUSINESS LOGIC — expenses are completely separate from patient invoices:
+
+- expenses = clinic operational costs (rent, utilities, salaries, supplies, equipment). Stored in the expenses table.
+- treatment_invoices = bills sent to patients for dental procedures. Completely different table.
+- NEVER use get_outstanding_payments for expenses — that tool is for patient invoices only.
+- ALWAYS use list_expenses or query_database for any question about clinic expenses.
+
+expenses table columns: id, title, category, amount (NUMERIC), status ('paid'|'pending'|'cancelled'), expense_date, notes, created_at.
+
+AGGREGATION RULE — mandatory for ALL totals/sums questions:
+NEVER manually add up numbers from a list result. Always use query_database with SUM() for any question asking "how much total", "what is the total", "sum of", etc.
+This applies to expenses, invoices, payments, or any monetary aggregation.
+
+Expense query patterns:
+
+"Total expenses by status" (paid vs pending):
+  SELECT status, SUM(amount)::text AS total, COUNT(*) AS count
+  FROM expenses
+  GROUP BY status
+
+"Total expenses in a period":
+  SELECT SUM(amount)::text AS total
+  FROM expenses
+  WHERE expense_date BETWEEN '<from>' AND '<to>'
+
+"Expenses by category with totals":
+  SELECT category, SUM(amount)::text AS total, COUNT(*) AS count
+  FROM expenses
+  GROUP BY category
+  ORDER BY SUM(amount) DESC
+
+"List all expenses (with pagination for large datasets)":
+  SELECT title, category, amount::text, status, expense_date::text, notes
+  FROM expenses
+  WHERE expense_date BETWEEN '<from>' AND '<to>'
+  ORDER BY expense_date DESC
+
+"Total paid expenses":
+  SELECT SUM(amount)::text AS total_paid FROM expenses WHERE status = 'paid'
+
+"Total pending expenses":
+  SELECT SUM(amount)::text AS total_pending FROM expenses WHERE status = 'pending'`;
 
     let openaiMessages: OpenAI.ChatCompletionMessageParam[] = [
       { role: 'system', content: systemPrompt },
@@ -561,7 +604,7 @@ Tool usage:
             from: input.from,
             to: input.to,
             page: input.page ?? 1,
-            limit: input.limit ?? 20,
+            limit: input.limit ?? 200,
           }));
 
         case 'get_invoice':
