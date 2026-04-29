@@ -18,14 +18,23 @@ export interface ChatMessage {
   content: string;//it can be other than string, it can be an object with image_url or other properties, but for simplicity we will keep it as string and we can stringify the objects before sending them to the chat function and parse them back when we receive them in the tool calls.
 }
 
-/** Safely serialize Prisma results (BigInt → number) */
-function serialize(data: any): string {//why ?? Because Prisma often returns BigInt values for IDs and other numeric fields, which can cause issues when trying to serialize the data to JSON for sending it back to the OpenAI API or for logging purposes. The standard JSON.stringify does not support BigInt and will throw an error if it encounters one. By using a custom replacer function in JSON.stringify, we can convert any BigInt values to regular numbers before serialization, ensuring that the data can be safely converted to a JSON string without errors. This allows us to handle Prisma results that contain BigInt values without running into serialization issues.
+/** Safely serialize Prisma results to a JSON string for the OpenAI API.
+ *  Prisma $queryRaw can return types that JSON.stringify cannot handle:
+ *  - BigInt (IDs)         → number
+ *  - Date (timestamps)    → ISO string
+ *  - Decimal (amounts)    → number
+ *  - Buffer (binary)      → base64 string
+ */
+function serialize(data: any): string {
   return JSON.stringify(data, (_, v) => {
     if (typeof v === 'bigint') return Number(v);
-    // Prisma $queryRaw returns Date objects for date/timestamp columns;
-    // they serialize as {} without this explicit conversion.
     if (v instanceof Date) return v.toISOString();
+    // Fallback for date-like objects Prisma may return that aren't native Date instances
     if (v && typeof v === 'object' && typeof v.toISOString === 'function') return v.toISOString();
+    // Prisma Decimal (used for NUMERIC/DECIMAL columns like invoice amounts)
+    if (v && typeof v === 'object' && v.constructor?.name === 'Decimal') return Number(v);
+    // Buffer (used for BYTEA columns like stored files)
+    if (Buffer.isBuffer(v)) return v.toString('base64');
     return v;
   }, 2);
 }
@@ -186,17 +195,29 @@ CRITICAL QUERY PATTERNS:
 
 "Last/most recent appointment" → list_appointments with order:"desc" + limit:1. NEVER use order:"asc" + limit:1 for a "last" query.
 
+IMPORTANT — date casting rule: ALWAYS cast date/timestamp columns to text in raw SQL using ::text.
+This is mandatory because date objects do not serialize to JSON correctly.
+Example: appointment_date::text, created_at::text, MAX(appointment_date)::text AS last_visit
+
 "Last completed appointment for a doctor":
-  SELECT a.id, a.appointment_date, a.start_time, a.status, u.first_name, u.last_name
+  SELECT a.id, a.appointment_date::text, a.start_time::text, a.status, u.first_name, u.last_name
   FROM appointments a
   JOIN patient_profiles pp ON pp.id = a.patient_id
   JOIN users u ON u.id = pp.user_id
   WHERE a.doctor_id = <id> AND a.status = 'completed'
   ORDER BY a.appointment_date DESC, a.start_time DESC LIMIT 1
 
+"Last visit for a specific patient" (use query_database):
+  SELECT MAX(a.appointment_date)::text AS last_visit
+  FROM appointments a
+  JOIN patient_profiles pp ON pp.id = a.patient_id
+  JOIN users u ON u.id = pp.user_id
+  WHERE a.status = 'completed'
+    AND (u.first_name ILIKE '%<token1>%' OR u.last_name ILIKE '%<token2>%')
+
 "Patients who attended/completed after a date" (use query_database — list_appointments only does exact date):
   SELECT DISTINCT pp.id, u.first_name, u.last_name, u.email, u.phone,
-         MAX(a.appointment_date) AS last_visit
+         MAX(a.appointment_date)::text AS last_visit
   FROM appointments a
   JOIN patient_profiles pp ON pp.id = a.patient_id
   JOIN users u ON u.id = pp.user_id
@@ -206,6 +227,18 @@ CRITICAL QUERY PATTERNS:
   ORDER BY last_visit DESC
 - "came" / "visited" / "attended" = status = 'completed'. Never use 'scheduled' or 'confirmed' for this.
 - ">= date" means on-or-after, "> date" means strictly after — match the user's wording exactly.
+
+"When did X become a patient" / "registration date" / "patient since":
+  The registration date is users.created_at (when their account was created) — NOT patient_profiles.created_at.
+  MANDATORY two-step process — do NOT report "not available" before completing both steps:
+  Step 1: find the patient using the name search queries above (get their pp.id).
+  Step 2: run this query:
+    SELECT u.first_name, u.last_name, u.created_at::text AS registered_at
+    FROM users u
+    JOIN patient_profiles pp ON pp.user_id = u.id
+    WHERE u.role = 'patient'
+      AND pp.id = <patient_profile_id>
+  The answer is registered_at. Never skip step 2.
 
 PATIENT NAME SEARCH — run ALL THREE queries every time, never stop early:
 
