@@ -157,6 +157,7 @@ Business context (what each table means):
         args: [
           '--access-token', process.env.SUPABASE_ACCESS_TOKEN!,
           '--read-only',
+          '--features', 'database',
           ...(projectRef ? ['--project-ref', projectRef] : []),
         ],
       });
