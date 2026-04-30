@@ -5,7 +5,6 @@ import { FaTimes, FaEye, FaEyeSlash } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api/client";
-import { supabase } from "@/lib/supabase/client";
 
 type Props = {
   onClose: () => void;
@@ -22,9 +21,7 @@ export default function ChangePasswordModal({ onClose }: Props) {
   const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) setIsOAuth(true);
-    });
+    setIsOAuth(sessionStorage.getItem("authProvider") === "oauth");
   }, []);
 
   const handleSubmit = async () => {

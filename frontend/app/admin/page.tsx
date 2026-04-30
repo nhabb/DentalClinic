@@ -700,9 +700,6 @@ export default function AdminDashboard() {
                             </p>
                           </div>
                         </div>
-                        <button className="text-xs text-red-600 font-medium hover:underline">
-                          {t("adminDashboard.reorder")}
-                        </button>
                       </div>
                     ))}
                   </div>
@@ -782,7 +779,7 @@ export default function AdminDashboard() {
                 <input
                   type="date"
                   value={postponeDate}
-                  min={new Date().toISOString().split("T")[0]}
+                  min={new Date().toLocaleDateString("en-CA")}
                   onChange={(e) => setPostponeDate(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
                 />
