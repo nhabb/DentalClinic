@@ -227,6 +227,12 @@ Guidelines:
 - Appointment flow: scheduled → confirmed → completed. cancelled and no_show are terminal states.
 - Always pass dates in YYYY-MM-DD format (e.g., ${today}).
 - GLOBAL SQL RULE — apply to every query you write without exception: any date, timestamp, or time column MUST be cast to text using ::text (e.g. date_of_birth::text, created_at::text, appointment_date::text). Never select a date/timestamp column without ::text — it will return {} and be unreadable. If you are unsure whether a column is a date type, cast it anyway.
+- CALCULATION RULE — MANDATORY: Never compute numbers yourself. Any time the answer involves a sum, count, average, difference, percentage, ranking, or any other arithmetic derived from database rows, you MUST use a SQL aggregate function (SUM, COUNT, AVG, MIN, MAX, etc.) inside query_database. Do NOT fetch a list of rows and add them up in your head — this always produces wrong answers. Examples:
+  - "How much has patient X paid in total?" → SUM(ti.amount_paid) in SQL, not listing invoices and adding
+  - "How many patients visited this month?" → COUNT(*) in SQL
+  - "What is the outstanding balance?" → SUM(ti.remaining_amount) in SQL
+  - "Who is the highest paying patient?" → ORDER BY SUM(ti.amount_paid) DESC LIMIT 1 in SQL
+  - "What percentage of invoices are paid?" → COUNT(*) FILTER (WHERE status='paid') / COUNT(*)::float * 100 in SQL
 - You have a query_database tool that runs any PostgreSQL SELECT directly against the database. Use it proactively:
   1. When a dedicated tool returns empty results and the user seems confident the data exists, do NOT ask the user to try a different keyword — immediately use query_database to investigate, then retry with the correct values.
   2. For any question not covered by dedicated tools (aggregations, joins, counts, schema discovery) go straight to query_database.
@@ -338,7 +344,17 @@ Query C — Soundex + Levenshtein (catches transliterations and phonetic variant
 
 After all three queries:
 - Deduplicate by patient ID.
-- VALIDATION STEP (mandatory): for each result, confirm that its name has a genuine phonetic or spelling link to at least one search token. If a result shares NO clear phonetic or spelling connection to ANY token, silently drop it — do NOT include it in the final answer.
+- VALIDATION STEP (mandatory — apply strictly):
+  For each result, check: does the result's first_name OR last_name share at least 2 consecutive characters with at least one input token?
+  Example: token "nhme" vs name "nehmeh" → "nhm"/"hme" overlap → KEEP. token "nhme" vs name "ahmaden" → no 2-char overlap → DROP.
+  If a result fails this check, silently drop it. Never include it in the final answer.
+- CONFIDENCE CHECK (mandatory after validation):
+  If ANY surviving result's name does not obviously correspond to the input (i.e., you cannot clearly explain why "token X matches name Y"), treat the match as low-confidence.
+  For low-confidence matches: do NOT proceed to fetch invoices/records/appointments. Instead, present every surviving result as a "did you mean?" list and ask the user to confirm before doing anything else.
+  Example: "I couldn't find an exact match. Did you mean one of these?
+  1. nehmeh haber\` — nehmehabr19@gmail.com
+  2. nehmeh haberr — nehmeh@gmail.com
+  Please confirm which patient you mean."
 - Always display names VERBATIM as returned from the database — never clean, normalize, or remove special characters (backticks, apostrophes, diacritics, etc.).
 - Only report "not found" if all three queries return zero combined results after validation.
 - NEVER use exact = for name matching.
@@ -536,10 +552,73 @@ Expense query patterns:
       });
     }
 
+    let finalAnswer = response.choices[0].message.content ?? 'No response generated.';
+
+    // ── Self-verification loop ─────────────────────────────────────
+    const MAX_VERIFY_ROUNDS = 2;
+    for (let round = 1; round <= MAX_VERIFY_ROUNDS; round++) {
+      openaiMessages.push({ role: 'assistant', content: finalAnswer });
+      openaiMessages.push({
+        role: 'user',
+        content: `[SELF-VERIFY] Silently review your answer above against every tool result in this conversation. Check:
+1. Every number (totals, counts, amounts) — does it exactly match a SQL aggregate or tool result? Was it computed by the database, not by you manually?
+2. Every patient name and ID — do they match the database results exactly, including special characters?
+3. Every date — does it come from a tool result and match what the user asked for?
+4. Did you miss any records the user asked about?
+IMPORTANT OUTPUT RULES:
+- If everything is correct: reply with exactly the single word VERIFIED and nothing else.
+- If you find errors: call the necessary tools to fix them, then output ONLY the corrected final answer exactly as the user would see it. Do NOT mention the verification process, do NOT explain what was wrong, do NOT say "The review identified errors" or any similar meta-commentary. Just output the clean corrected answer.`,
+      });
+
+      let verifyResp = await this.openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        tools: allTools,
+        messages: openaiMessages,
+      });
+
+      while (verifyResp.choices[0].finish_reason === 'tool_calls') {
+        const assistantMsg = verifyResp.choices[0].message;
+        openaiMessages.push(assistantMsg);
+        const toolResults = await Promise.all(
+          (assistantMsg.tool_calls ?? []).map(async (call) => {
+            const fn = (call as any).function;
+            const input = JSON.parse(fn.arguments);
+            const toolType = this.mcpTools.some((t) => (t as any).function?.name === fn.name)
+              ? 'MCP' : fn.name === 'query_database' ? 'SQL' : 'API';
+            totalToolCalls++;
+            const toolStart = Date.now();
+            console.log(`\n[VERIFY r${round}][TOOL #${totalToolCalls}][${toolType}] ${fn.name}`);
+            console.log(`[TOOL INPUT]`, JSON.stringify(input, null, 2));
+            const result = await this.executeTool(fn.name, input);
+            console.log(`[TOOL RESULT] (${Date.now() - toolStart}ms)`, result.slice(0, 300));
+            return { role: 'tool' as const, tool_call_id: call.id, content: result };
+          }),
+        );
+        openaiMessages = [...openaiMessages, ...toolResults];
+        verifyResp = await this.openai.chat.completions.create({
+          model: 'gpt-4o-mini',
+          tools: allTools,
+          messages: openaiMessages,
+        });
+      }
+
+      const verifyContent = verifyResp.choices[0].message.content ?? '';
+      console.log(`\n[VERIFY r${round}] ${verifyContent.slice(0, 150)}`);
+
+      if (verifyContent.trim().toUpperCase().startsWith('VERIFIED')) {
+        console.log(`[VERIFY] Confirmed on round ${round}`);
+        break;
+      }
+
+      // Verifier found issues — use the corrected answer and continue
+      finalAnswer = verifyContent;
+      openaiMessages.push({ role: 'assistant', content: finalAnswer });
+    }
+
     const totalMs = Date.now() - agentStart;
     console.log(`\n[AGENT DONE] tools called: ${totalToolCalls} | total time: ${totalMs}ms`);
 
-    return response.choices[0].message.content ?? 'No response generated.';
+    return finalAnswer;
   }
 
   async *chatStream(messages: ChatMessage[], context: { userId: number }): AsyncGenerator<string> {
