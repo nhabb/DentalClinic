@@ -1,4 +1,5 @@
-import { UseGuards,
+import {
+  UseGuards,
   Controller,
   Get,
   Post,
@@ -10,10 +11,18 @@ import { UseGuards,
   DefaultValuePipe,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../../shared/common/guards/jwt-auth.guard';
-import { ApiBearerAuth, ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiTags,
+  ApiOperation,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { AppointmentsService } from './appointments.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
-import { CancelAppointmentDto, UpdateAppointmentNotesDto } from './dto/update-appointment.dto';
+import {
+  CancelAppointmentDto,
+  UpdateAppointmentNotesDto,
+} from './dto/update-appointment.dto';
 
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
@@ -23,7 +32,9 @@ export class AppointmentsController {
   constructor(private readonly appointmentsService: AppointmentsService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Patient books an available slot (status: scheduled)' })
+  @ApiOperation({
+    summary: 'Patient books an available slot (status: scheduled)',
+  })
   create(@Body() dto: CreateAppointmentDto) {
     return this.appointmentsService.create(dto);
   }
@@ -32,8 +43,17 @@ export class AppointmentsController {
   @ApiOperation({ summary: 'List appointments with filters' })
   @ApiQuery({ name: 'doctor_id', required: false, type: Number })
   @ApiQuery({ name: 'patient_id', required: false, type: Number })
-  @ApiQuery({ name: 'status', required: false, enum: ['scheduled', 'confirmed', 'completed', 'cancelled', 'no_show'] })
-  @ApiQuery({ name: 'date', required: false, type: String, description: 'YYYY-MM-DD' })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: ['scheduled', 'confirmed', 'completed', 'cancelled', 'no_show'],
+  })
+  @ApiQuery({
+    name: 'date',
+    required: false,
+    type: String,
+    description: 'YYYY-MM-DD',
+  })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   findAll(
@@ -73,13 +93,17 @@ export class AppointmentsController {
   }
 
   @Patch(':id/no-show')
-  @ApiOperation({ summary: 'Doctor marks appointment as no-show (patient missed)' })
+  @ApiOperation({
+    summary: 'Doctor marks appointment as no-show (patient missed)',
+  })
   noShow(@Param('id', ParseIntPipe) id: number) {
     return this.appointmentsService.noShow(BigInt(id));
   }
 
   @Patch(':id/cancel')
-  @ApiOperation({ summary: 'Doctor or patient cancels an appointment (frees the slot)' })
+  @ApiOperation({
+    summary: 'Doctor or patient cancels an appointment (frees the slot)',
+  })
   cancel(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: CancelAppointmentDto,

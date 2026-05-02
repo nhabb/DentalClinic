@@ -62,17 +62,39 @@ export class PatientsService {
             OR: [
               {
                 AND: [
-                  { first_name: { contains: words[0], mode: 'insensitive' as const } },
-                  { last_name: { contains: words.slice(1).join(' '), mode: 'insensitive' as const } },
+                  {
+                    first_name: {
+                      contains: words[0],
+                      mode: 'insensitive' as const,
+                    },
+                  },
+                  {
+                    last_name: {
+                      contains: words.slice(1).join(' '),
+                      mode: 'insensitive' as const,
+                    },
+                  },
                 ],
               },
               {
                 AND: [
-                  { first_name: { contains: words[words.length - 1], mode: 'insensitive' as const } },
-                  { last_name: { contains: words.slice(0, -1).join(' '), mode: 'insensitive' as const } },
+                  {
+                    first_name: {
+                      contains: words[words.length - 1],
+                      mode: 'insensitive' as const,
+                    },
+                  },
+                  {
+                    last_name: {
+                      contains: words.slice(0, -1).join(' '),
+                      mode: 'insensitive' as const,
+                    },
+                  },
                 ],
               },
-              ...words.map((w) => ({ email: { contains: w, mode: 'insensitive' as const } })),
+              ...words.map((w) => ({
+                email: { contains: w, mode: 'insensitive' as const },
+              })),
             ],
           },
         };
@@ -80,7 +102,9 @@ export class PatientsService {
         where = {
           users: {
             OR: [
-              { first_name: { contains: search, mode: 'insensitive' as const } },
+              {
+                first_name: { contains: search, mode: 'insensitive' as const },
+              },
               { last_name: { contains: search, mode: 'insensitive' as const } },
               { email: { contains: search, mode: 'insensitive' as const } },
             ],
@@ -139,24 +163,34 @@ export class PatientsService {
 
   async updatePhoto(id: bigint, file: Express.Multer.File) {
     if (!ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
-      throw new BadRequestException('Only JPEG, PNG, and WebP images are allowed');
+      throw new BadRequestException(
+        'Only JPEG, PNG, and WebP images are allowed',
+      );
     }
     if (file.size > MAX_SIZE) {
       throw new BadRequestException('Image must be under 5 MB');
     }
 
-    const profile = await this.prisma.patient_profiles.findUnique({ where: { id } });
+    const profile = await this.prisma.patient_profiles.findUnique({
+      where: { id },
+    });
     if (!profile) throw new NotFoundException('Patient profile not found');
 
     // Delete old photo if one exists
     if (profile.photo_url) {
       const oldPath = this.extractPath(profile.photo_url);
-      if (oldPath) await this.storage.delete(PROFILE_BUCKET, oldPath).catch(() => null);
+      if (oldPath)
+        await this.storage.delete(PROFILE_BUCKET, oldPath).catch(() => null);
     }
 
     const ext = file.mimetype.split('/')[1];
     const storagePath = `patients/${id}/${Date.now()}.${ext}`;
-    const publicUrl = await this.storage.upload(PROFILE_BUCKET, storagePath, file.buffer, file.mimetype);
+    const publicUrl = await this.storage.upload(
+      PROFILE_BUCKET,
+      storagePath,
+      file.buffer,
+      file.mimetype,
+    );
 
     return this.prisma.patient_profiles.update({
       where: { id },
@@ -180,7 +214,9 @@ export class PatientsService {
   }
 
   async setStatus(id: bigint, isActive: boolean) {
-    const profile = await this.prisma.patient_profiles.findUnique({ where: { id } });
+    const profile = await this.prisma.patient_profiles.findUnique({
+      where: { id },
+    });
     if (!profile) throw new NotFoundException('Patient profile not found');
     await this.prisma.users.update({
       where: { id: profile.user_id },
@@ -190,21 +226,47 @@ export class PatientsService {
   }
 
   async remove(id: bigint) {
-    const profile = await this.prisma.patient_profiles.findUnique({ where: { id } });
+    const profile = await this.prisma.patient_profiles.findUnique({
+      where: { id },
+    });
     if (!profile) throw new NotFoundException('Patient profile not found');
     const userId = profile.user_id;
 
     // Nullify all nullable FKs that reference this user but have no onDelete cascade,
     // so the subsequent user deletion doesn't hit FK constraint violations.
     await this.prisma.$transaction([
-      this.prisma.audit_logs.updateMany({ where: { user_id: userId }, data: { user_id: null } }),
-      this.prisma.inventory_movements.updateMany({ where: { performed_by: userId }, data: { performed_by: null } }),
-      this.prisma.appointments.updateMany({ where: { created_by: userId }, data: { created_by: null } }),
-      this.prisma.patient_documents.updateMany({ where: { uploaded_by: userId }, data: { uploaded_by: null } }),
-      this.prisma.patient_records.updateMany({ where: { created_by: userId }, data: { created_by: null } }),
-      this.prisma.expenses.updateMany({ where: { created_by: userId }, data: { created_by: null } }),
-      this.prisma.treatment_invoices.updateMany({ where: { created_by: userId }, data: { created_by: null } }),
-      this.prisma.invoice_payments.updateMany({ where: { created_by: userId }, data: { created_by: null } }),
+      this.prisma.audit_logs.updateMany({
+        where: { user_id: userId },
+        data: { user_id: null },
+      }),
+      this.prisma.inventory_movements.updateMany({
+        where: { performed_by: userId },
+        data: { performed_by: null },
+      }),
+      this.prisma.appointments.updateMany({
+        where: { created_by: userId },
+        data: { created_by: null },
+      }),
+      this.prisma.patient_documents.updateMany({
+        where: { uploaded_by: userId },
+        data: { uploaded_by: null },
+      }),
+      this.prisma.patient_records.updateMany({
+        where: { created_by: userId },
+        data: { created_by: null },
+      }),
+      this.prisma.expenses.updateMany({
+        where: { created_by: userId },
+        data: { created_by: null },
+      }),
+      this.prisma.treatment_invoices.updateMany({
+        where: { created_by: userId },
+        data: { created_by: null },
+      }),
+      this.prisma.invoice_payments.updateMany({
+        where: { created_by: userId },
+        data: { created_by: null },
+      }),
       // Delete the user — cascades to: patient_profiles → appointments, records, docs, invoices, payments
       this.prisma.users.delete({ where: { id: userId } }),
     ]);

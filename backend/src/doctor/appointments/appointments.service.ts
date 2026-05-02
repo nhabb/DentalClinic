@@ -6,15 +6,24 @@ import {
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import { NotificationsService } from '../../shared/notifications/notifications.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
-import { CancelAppointmentDto, UpdateAppointmentNotesDto } from './dto/update-appointment.dto';
-
-const VALID_STATUSES = ['scheduled', 'confirmed', 'completed', 'cancelled', 'no_show'];
+import {
+  CancelAppointmentDto,
+  UpdateAppointmentNotesDto,
+} from './dto/update-appointment.dto';
 
 const appointmentInclude = {
   patient_profiles: {
     select: {
       id: true,
-      users: { select: { id: true, first_name: true, last_name: true, email: true, phone: true } },
+      users: {
+        select: {
+          id: true,
+          first_name: true,
+          last_name: true,
+          email: true,
+          phone: true,
+        },
+      },
     },
   },
   users_appointments_doctor_idTousers: {
@@ -44,13 +53,21 @@ export class AppointmentsService {
       // ── Slot-based booking ──────────────────────────────────────
       slot = await this.prisma.appointment_slots.findUnique({
         where: { id: BigInt(dto.slot_id) },
-        include: { users: { select: { id: true, first_name: true, last_name: true } } },
+        include: {
+          users: { select: { id: true, first_name: true, last_name: true } },
+        },
       });
       if (!slot) throw new NotFoundException('Appointment slot not found');
-      if (slot.is_booked) throw new BadRequestException('This slot is already booked');
+      if (slot.is_booked)
+        throw new BadRequestException('This slot is already booked');
     } else {
       // ── Direct booking (no pre-existing slot) ───────────────────
-      if (!dto.doctor_id || !dto.appointment_date || !dto.start_time || !dto.end_time) {
+      if (
+        !dto.doctor_id ||
+        !dto.appointment_date ||
+        !dto.start_time ||
+        !dto.end_time
+      ) {
         throw new BadRequestException(
           'Provide either slot_id or doctor_id + appointment_date + start_time + end_time',
         );
@@ -70,17 +87,32 @@ export class AppointmentsService {
 
       // Reuse an existing free slot at that time, or create one on-the-fly
       const existing = await this.prisma.appointment_slots.findFirst({
-        where: { doctor_id: BigInt(dto.doctor_id), slot_date: slotDate, start_time: startTime, is_booked: false },
-        include: { users: { select: { id: true, first_name: true, last_name: true } } },
+        where: {
+          doctor_id: BigInt(dto.doctor_id),
+          slot_date: slotDate,
+          start_time: startTime,
+          is_booked: false,
+        },
+        include: {
+          users: { select: { id: true, first_name: true, last_name: true } },
+        },
       });
 
       if (existing) {
         slot = existing;
       } else {
         const conflict = await this.prisma.appointment_slots.findFirst({
-          where: { doctor_id: BigInt(dto.doctor_id), slot_date: slotDate, start_time: startTime, is_booked: true },
+          where: {
+            doctor_id: BigInt(dto.doctor_id),
+            slot_date: slotDate,
+            start_time: startTime,
+            is_booked: true,
+          },
         });
-        if (conflict) throw new BadRequestException('This time slot is already booked for this doctor');
+        if (conflict)
+          throw new BadRequestException(
+            'This time slot is already booked for this doctor',
+          );
 
         slot = await this.prisma.appointment_slots.create({
           data: {
@@ -90,7 +122,9 @@ export class AppointmentsService {
             end_time: endTime,
             is_booked: false,
           },
-          include: { users: { select: { id: true, first_name: true, last_name: true } } },
+          include: {
+            users: { select: { id: true, first_name: true, last_name: true } },
+          },
         });
       }
     }
@@ -98,7 +132,9 @@ export class AppointmentsService {
     // Validate that the slot is long enough for the requested procedure
     if (dto.duration_minutes) {
       const slotMinutes = Math.round(
-        (new Date(slot.end_time).getTime() - new Date(slot.start_time).getTime()) / 60000,
+        (new Date(slot.end_time).getTime() -
+          new Date(slot.start_time).getTime()) /
+          60000,
       );
       if (slotMinutes < dto.duration_minutes) {
         throw new BadRequestException(
@@ -110,7 +146,9 @@ export class AppointmentsService {
     // Validate patient profile
     const patient = await this.prisma.patient_profiles.findUnique({
       where: { id: BigInt(dto.patient_id) },
-      include: { users: { select: { id: true, first_name: true, last_name: true } } },
+      include: {
+        users: { select: { id: true, first_name: true, last_name: true } },
+      },
     });
     if (!patient) throw new NotFoundException('Patient profile not found');
 
@@ -155,7 +193,15 @@ export class AppointmentsService {
     limit?: number;
     order?: 'asc' | 'desc';
   }) {
-    const { doctor_id, patient_id, status, date, page = 1, limit = 20, order = 'asc' } = filters;
+    const {
+      doctor_id,
+      patient_id,
+      status,
+      date,
+      page = 1,
+      limit = 20,
+      order = 'asc',
+    } = filters;
     const skip = (page - 1) * limit;
 
     const where: any = {};
@@ -199,7 +245,9 @@ export class AppointmentsService {
   async confirm(id: bigint) {
     const appointment = await this.findOne(id);
     if (appointment.status !== 'scheduled') {
-      throw new BadRequestException(`Cannot confirm an appointment with status '${appointment.status}'`);
+      throw new BadRequestException(
+        `Cannot confirm an appointment with status '${appointment.status}'`,
+      );
     }
 
     const updated = await this.prisma.appointments.update({
@@ -222,7 +270,9 @@ export class AppointmentsService {
   async complete(id: bigint) {
     const appointment = await this.findOne(id);
     if (!['scheduled', 'confirmed'].includes(appointment.status)) {
-      throw new BadRequestException(`Cannot complete an appointment with status '${appointment.status}'`);
+      throw new BadRequestException(
+        `Cannot complete an appointment with status '${appointment.status}'`,
+      );
     }
 
     const updated = await this.prisma.appointments.update({
@@ -244,7 +294,9 @@ export class AppointmentsService {
   async noShow(id: bigint) {
     const appointment = await this.findOne(id);
     if (!['scheduled', 'confirmed'].includes(appointment.status)) {
-      throw new BadRequestException(`Cannot mark an appointment as no-show with status '${appointment.status}'`);
+      throw new BadRequestException(
+        `Cannot mark an appointment as no-show with status '${appointment.status}'`,
+      );
     }
 
     const updated = await this.prisma.appointments.update({
@@ -267,7 +319,9 @@ export class AppointmentsService {
     const appointment = await this.findOne(id);
 
     if (['completed', 'cancelled'].includes(appointment.status)) {
-      throw new BadRequestException(`Cannot cancel an appointment with status '${appointment.status}'`);
+      throw new BadRequestException(
+        `Cannot cancel an appointment with status '${appointment.status}'`,
+      );
     }
 
     const updated = await this.prisma.appointments.update({
@@ -276,7 +330,7 @@ export class AppointmentsService {
         status: 'cancelled',
         notes: dto.reason
           ? `Cancelled: ${dto.reason}`
-          : appointment.notes ?? undefined,
+          : (appointment.notes ?? undefined),
         updated_at: new Date(),
       },
       include: appointmentInclude,

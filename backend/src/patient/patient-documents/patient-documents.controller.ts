@@ -69,7 +69,9 @@ export class PatientDocumentsController {
   }
 
   @Post('bulk')
-  @ApiOperation({ summary: 'Upload multiple patient documents in one request (max 10 files)' })
+  @ApiOperation({
+    summary: 'Upload multiple patient documents in one request (max 10 files)',
+  })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -98,7 +100,8 @@ export class PatientDocumentsController {
     @Body('record_id') record_id?: string,
     @Body('document_type') document_type?: string,
   ) {
-    if (!files || files.length === 0) throw new BadRequestException('At least one file is required');
+    if (!files || files.length === 0)
+      throw new BadRequestException('At least one file is required');
 
     const results = await Promise.all(
       files.map((file) =>
@@ -159,12 +162,16 @@ export class PatientDocumentsController {
     if (!Array.isArray(ids) || ids.length === 0) {
       throw new BadRequestException('ids must be a non-empty array');
     }
-    const results = await Promise.all(ids.map((id) => this.patientDocumentsService.remove(BigInt(id))));
+    const results = await Promise.all(
+      ids.map((id) => this.patientDocumentsService.remove(BigInt(id))),
+    );
     return { deleted: results.length };
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete a single document from storage and database' })
+  @ApiOperation({
+    summary: 'Delete a single document from storage and database',
+  })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.patientDocumentsService.remove(BigInt(id));
   }

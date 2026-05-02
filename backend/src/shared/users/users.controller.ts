@@ -1,4 +1,5 @@
-import { UseGuards,
+import {
+  UseGuards,
   Controller,
   Get,
   Post,
@@ -14,7 +15,14 @@ import { UseGuards,
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { ApiBearerAuth, ApiTags, ApiOperation, ApiQuery, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiTags,
+  ApiOperation,
+  ApiQuery,
+  ApiConsumes,
+  ApiBody,
+} from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { UpdateUserDto, ChangePasswordDto } from './dto/update-user.dto';
 
@@ -25,12 +33,23 @@ export class UsersController {
 
   @Post('register')
   @ApiOperation({ summary: 'Create user in DB after Supabase signup (public)' })
-  register(@Body() body: { email: string; first_name: string; last_name: string; phone?: string; role?: string }) {
+  register(
+    @Body()
+    body: {
+      email: string;
+      first_name: string;
+      last_name: string;
+      phone?: string;
+      role?: string;
+    },
+  ) {
     return this.usersService.create(body);
   }
 
   @Get('by-email')
-  @ApiOperation({ summary: 'Look up a user id by email (public, for demo login)' })
+  @ApiOperation({
+    summary: 'Look up a user id by email (public, for demo login)',
+  })
   @ApiQuery({ name: 'email', required: true })
   findByEmail(@Query('email') email: string) {
     return this.usersService.findByEmail(email);
@@ -47,7 +66,14 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Create a staff member (doctor, secretary, admin)' })
   createStaff(
-    @Body() body: { email: string; first_name: string; last_name: string; phone?: string; role: string },
+    @Body()
+    body: {
+      email: string;
+      first_name: string;
+      last_name: string;
+      phone?: string;
+      role: string;
+    },
   ) {
     const allowed = ['doctor', 'secretary', 'admin', 'superadmin'];
     if (!allowed.includes(body.role)) {
@@ -85,10 +111,7 @@ export class UsersController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Update user profile fields' })
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateUserDto,
-  ) {
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateUserDto) {
     return this.usersService.update(BigInt(id), dto);
   }
 
@@ -97,7 +120,12 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Upload or replace a user avatar photo' })
   @ApiConsumes('multipart/form-data')
-  @ApiBody({ schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' } } } })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: { file: { type: 'string', format: 'binary' } },
+    },
+  })
   @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
   updateAvatar(
     @Param('id', ParseIntPipe) id: number,

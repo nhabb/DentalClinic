@@ -21,7 +21,9 @@ export class ExpensesService {
         status: dto.status ?? 'pending',
         amount: dto.amount,
         description: dto.description,
-        expense_date: new Date(`${dto.expense_date.split('T')[0]}T12:00:00.000Z`),
+        expense_date: new Date(
+          `${dto.expense_date.split('T')[0]}T12:00:00.000Z`,
+        ),
         created_by: dto.created_by ? BigInt(dto.created_by) : null,
       },
       include: expenseInclude,
@@ -85,7 +87,8 @@ export class ExpensesService {
       const dateOnly = dto.expense_date.split('T')[0];
       data.expense_date = new Date(`${dateOnly}T12:00:00.000Z`);
     }
-    if (dto.created_by !== undefined) data.created_by = dto.created_by ? BigInt(dto.created_by) : null;
+    if (dto.created_by !== undefined)
+      data.created_by = dto.created_by ? BigInt(dto.created_by) : null;
 
     return this.prisma.expenses.update({
       where: { id },
@@ -127,7 +130,8 @@ export class ExpensesService {
     // By category
     const byCategory: Record<string, { total: number; count: number }> = {};
     for (const e of expenses) {
-      if (!byCategory[e.category]) byCategory[e.category] = { total: 0, count: 0 };
+      if (!byCategory[e.category])
+        byCategory[e.category] = { total: 0, count: 0 };
       byCategory[e.category].total += Number(e.amount);
       byCategory[e.category].count++;
     }
@@ -137,8 +141,12 @@ export class ExpensesService {
     return {
       period_months: months,
       total,
-      monthly: Object.entries(monthlyMap).map(([month, amount]) => ({ month, amount })),
-      by_category: Object.entries(byCategory).map(([category, v]) => ({ category, ...v }))
+      monthly: Object.entries(monthlyMap).map(([month, amount]) => ({
+        month,
+        amount,
+      })),
+      by_category: Object.entries(byCategory)
+        .map(([category, v]) => ({ category, ...v }))
         .sort((a, b) => b.total - a.total),
     };
   }

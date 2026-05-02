@@ -1,4 +1,5 @@
-import { UseGuards,
+import {
+  UseGuards,
   Controller,
   Get,
   Post,
@@ -15,7 +16,14 @@ import { UseGuards,
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { JwtAuthGuard } from '../../shared/common/guards/jwt-auth.guard';
-import { ApiBearerAuth, ApiTags, ApiOperation, ApiQuery, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiTags,
+  ApiOperation,
+  ApiQuery,
+  ApiConsumes,
+  ApiBody,
+} from '@nestjs/swagger';
 import { InventoryService } from './inventory.service';
 import { CreateInventoryItemDto } from './dto/create-item.dto';
 import { UpdateInventoryItemDto } from './dto/update-item.dto';
@@ -87,7 +95,12 @@ export class InventoryController {
   @Post(':id/image')
   @ApiOperation({ summary: 'Upload or replace an inventory item photo' })
   @ApiConsumes('multipart/form-data')
-  @ApiBody({ schema: { type: 'object', properties: { image: { type: 'string', format: 'binary' } } } })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: { image: { type: 'string', format: 'binary' } },
+    },
+  })
   @UseInterceptors(FileInterceptor('image', { storage: memoryStorage() }))
   uploadImage(
     @Param('id', ParseIntPipe) id: number,

@@ -22,7 +22,9 @@ export class InventoryService {
 
   async uploadImage(id: bigint, file: Express.Multer.File) {
     if (!ALLOWED_IMAGE_TYPES.includes(file.mimetype))
-      throw new BadRequestException('Only JPEG, PNG, and WebP images are allowed');
+      throw new BadRequestException(
+        'Only JPEG, PNG, and WebP images are allowed',
+      );
     if (file.size > MAX_SIZE)
       throw new BadRequestException('Image must be under 5 MB');
 
@@ -30,12 +32,18 @@ export class InventoryService {
 
     if (item.image_url) {
       const oldPath = item.image_url.split(`/${INVENTORY_BUCKET}/`)[1];
-      if (oldPath) await this.storage.delete(INVENTORY_BUCKET, oldPath).catch(() => null);
+      if (oldPath)
+        await this.storage.delete(INVENTORY_BUCKET, oldPath).catch(() => null);
     }
 
     const ext = file.mimetype.split('/')[1];
     const storagePath = `items/${id}/${Date.now()}.${ext}`;
-    const publicUrl = await this.storage.upload(INVENTORY_BUCKET, storagePath, file.buffer, file.mimetype);
+    const publicUrl = await this.storage.upload(
+      INVENTORY_BUCKET,
+      storagePath,
+      file.buffer,
+      file.mimetype,
+    );
 
     return this.prisma.inventory_items.update({
       where: { id },
@@ -87,7 +95,11 @@ export class InventoryService {
     if (low_stock_only) {
       where.AND = [
         ...(where.AND ?? []),
-        { quantity: { lte: this.prisma.inventory_items.fields.minimum_quantity } },
+        {
+          quantity: {
+            lte: this.prisma.inventory_items.fields.minimum_quantity,
+          },
+        },
       ];
     }
 
@@ -119,12 +131,16 @@ export class InventoryService {
 
   async findLowStock() {
     const all = await this.prisma.inventory_items.findMany();
-    const lowStock = all.filter((item) => item.quantity <= item.minimum_quantity);
+    const lowStock = all.filter(
+      (item) => item.quantity <= item.minimum_quantity,
+    );
     return { data: lowStock, total: lowStock.length };
   }
 
   async findOne(id: bigint) {
-    const item = await this.prisma.inventory_items.findUnique({ where: { id } });
+    const item = await this.prisma.inventory_items.findUnique({
+      where: { id },
+    });
     if (!item) throw new NotFoundException('Inventory item not found');
     return item;
   }
@@ -204,10 +220,18 @@ export class InventoryService {
       this.prisma.inventory_movements.count({ where: { item_id: itemId } }),
     ]);
 
-    return { data, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } };
+    return {
+      data,
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    };
   }
 
-  async listMovements(filters: { item_id?: bigint; movement_type?: string; page?: number; limit?: number }) {
+  async listMovements(filters: {
+    item_id?: bigint;
+    movement_type?: string;
+    page?: number;
+    limit?: number;
+  }) {
     const { item_id, movement_type, page = 1, limit = 20 } = filters;
     const skip = (page - 1) * limit;
     const where: any = {};
@@ -228,6 +252,9 @@ export class InventoryService {
       this.prisma.inventory_movements.count({ where }),
     ]);
 
-    return { data, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } };
+    return {
+      data,
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    };
   }
 }

@@ -1,4 +1,5 @@
-import { UseGuards,
+import {
+  UseGuards,
   Controller,
   Get,
   Patch,
@@ -8,7 +9,12 @@ import { UseGuards,
   DefaultValuePipe,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { ApiBearerAuth, ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiTags,
+  ApiOperation,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { NotificationsService } from './notifications.service';
 
 @ApiBearerAuth()

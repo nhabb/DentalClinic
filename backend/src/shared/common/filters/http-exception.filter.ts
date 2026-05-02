@@ -36,7 +36,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     if (exception instanceof Prisma.PrismaClientValidationError) {
       return response.status(HttpStatus.BAD_REQUEST).json({
         statusCode: HttpStatus.BAD_REQUEST,
-        message: 'Invalid value provided. Check that all fields are within the allowed range.',
+        message:
+          'Invalid value provided. Check that all fields are within the allowed range.',
         path: request.url,
         timestamp: new Date().toISOString(),
       });
@@ -50,7 +51,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const exceptionResponse =
       exception instanceof HttpException ? exception.getResponse() : null;
 
-    if (status === HttpStatus.INTERNAL_SERVER_ERROR) {
+    if ((status as HttpStatus) === HttpStatus.INTERNAL_SERVER_ERROR) {
       console.error('[GlobalExceptionFilter]', exception);
     }
 

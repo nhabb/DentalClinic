@@ -10,7 +10,13 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
-import { ApiBearerAuth, ApiTags, ApiOperation, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiTags,
+  ApiOperation,
+  ApiConsumes,
+  ApiBody,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../shared/common/guards/jwt-auth.guard';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import { SupabaseStorageService } from '../../shared/storage/supabase-storage.service';
@@ -30,7 +36,10 @@ export class ClinicProfileController {
   ) {}
 
   @Get()
-  @ApiOperation({ summary: 'Get clinic information (name, address, phone, opening hours, logo)' })
+  @ApiOperation({
+    summary:
+      'Get clinic information (name, address, phone, opening hours, logo)',
+  })
   async getClinicProfile() {
     const profile = await this.prisma.clinic_profile.findFirst();
     if (!profile) throw new NotFoundException('Clinic profile not found');
@@ -40,12 +49,19 @@ export class ClinicProfileController {
   @Patch('logo')
   @ApiOperation({ summary: 'Upload or replace the clinic logo' })
   @ApiConsumes('multipart/form-data')
-  @ApiBody({ schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' } } } })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: { file: { type: 'string', format: 'binary' } },
+    },
+  })
   @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
   async updateLogo(@UploadedFile() file: Express.Multer.File) {
     if (!file) throw new BadRequestException('No file uploaded');
     if (!ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
-      throw new BadRequestException('Only JPEG, PNG, and WebP images are allowed');
+      throw new BadRequestException(
+        'Only JPEG, PNG, and WebP images are allowed',
+      );
     }
     if (file.size > MAX_SIZE) {
       throw new BadRequestException('Image must be under 5 MB');
@@ -57,12 +73,18 @@ export class ClinicProfileController {
     // Delete old logo if one exists
     if (clinic.logo_url) {
       const oldPath = this.extractPath(clinic.logo_url);
-      if (oldPath) await this.storage.delete(PROFILE_BUCKET, oldPath).catch(() => null);
+      if (oldPath)
+        await this.storage.delete(PROFILE_BUCKET, oldPath).catch(() => null);
     }
 
     const ext = file.mimetype.split('/')[1];
     const storagePath = `clinic/logo.${ext}`;
-    const publicUrl = await this.storage.upload(PROFILE_BUCKET, storagePath, file.buffer, file.mimetype);
+    const publicUrl = await this.storage.upload(
+      PROFILE_BUCKET,
+      storagePath,
+      file.buffer,
+      file.mimetype,
+    );
 
     return this.prisma.clinic_profile.update({
       where: { id: clinic.id },

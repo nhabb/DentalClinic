@@ -53,10 +53,18 @@ export class PatientDocumentsService {
     const ext = file.originalname.split('.').pop();
     const storagePath = `patients/${patient_id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
-    const publicUrl = await this.storage.upload(BUCKET, storagePath, file.buffer, file.mimetype);
+    const publicUrl = await this.storage.upload(
+      BUCKET,
+      storagePath,
+      file.buffer,
+      file.mimetype,
+    );
 
     const uploaderExists = uploaded_by
-      ? await this.prisma.users.findUnique({ where: { id: BigInt(uploaded_by) }, select: { id: true } })
+      ? await this.prisma.users.findUnique({
+          where: { id: BigInt(uploaded_by) },
+          select: { id: true },
+        })
       : null;
 
     const doc = await this.prisma.patient_documents.create({
@@ -108,7 +116,9 @@ export class PatientDocumentsService {
   }
 
   async findOne(id: bigint) {
-    const doc = await this.prisma.patient_documents.findUnique({ where: { id } });
+    const doc = await this.prisma.patient_documents.findUnique({
+      where: { id },
+    });
     if (!doc) throw new NotFoundException('Document not found');
     return { ...doc, url: this.storage.getPublicUrl(BUCKET, doc.file_path) };
   }

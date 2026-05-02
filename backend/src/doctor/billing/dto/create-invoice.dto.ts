@@ -36,7 +36,10 @@ export class CreateLineItemDto {
   procedure_name: string;
 
   @ApiProperty({ example: 150 })
-  @Transform(({ value }) => { const n = Number(value); return isNaN(n) ? value : parseFloat(n.toFixed(2)); })
+  @Transform(({ value }) => {
+    const n = Number(value);
+    return isNaN(n) ? value : parseFloat(n.toFixed(2));
+  })
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
   @Max(9_999_999_999_999, { message: 'Amount is too large' })
@@ -52,7 +55,9 @@ export class CreateInvoiceDto {
   @IsDateString()
   procedure_date: string;
 
-  @ApiPropertyOptional({ example: 'Patient requested whitening after cleaning.' })
+  @ApiPropertyOptional({
+    example: 'Patient requested whitening after cleaning.',
+  })
   @IsOptional()
   @IsString()
   notes?: string;

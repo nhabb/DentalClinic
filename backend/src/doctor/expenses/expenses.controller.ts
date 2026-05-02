@@ -11,7 +11,12 @@ import {
   DefaultValuePipe,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../shared/common/guards/jwt-auth.guard';
 import { ExpensesService } from './expenses.service';
 import { CreateExpenseDto } from './dto/create-expense.dto';
@@ -32,8 +37,15 @@ export class ExpensesController {
 
   @Get('analytics')
   @ApiOperation({ summary: 'Monthly expense trends and breakdown by category' })
-  @ApiQuery({ name: 'months', required: false, type: Number, description: 'Number of past months (default 12)' })
-  getAnalytics(@Query('months', new DefaultValuePipe(12), ParseIntPipe) months: number) {
+  @ApiQuery({
+    name: 'months',
+    required: false,
+    type: Number,
+    description: 'Number of past months (default 12)',
+  })
+  getAnalytics(
+    @Query('months', new DefaultValuePipe(12), ParseIntPipe) months: number,
+  ) {
     return this.expensesService.getAnalytics(months);
   }
 
@@ -42,9 +54,20 @@ export class ExpensesController {
   @ApiQuery({
     name: 'category',
     required: false,
-    enum: ['utilities', 'rent', 'equipment', 'supplies', 'maintenance', 'other'],
+    enum: [
+      'utilities',
+      'rent',
+      'equipment',
+      'supplies',
+      'maintenance',
+      'other',
+    ],
   })
-  @ApiQuery({ name: 'from', required: false, description: 'Start date YYYY-MM-DD' })
+  @ApiQuery({
+    name: 'from',
+    required: false,
+    description: 'Start date YYYY-MM-DD',
+  })
   @ApiQuery({ name: 'to', required: false, description: 'End date YYYY-MM-DD' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
@@ -66,10 +89,7 @@ export class ExpensesController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update an expense record' })
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateExpenseDto,
-  ) {
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateExpenseDto) {
     return this.expensesService.update(BigInt(id), dto);
   }
 

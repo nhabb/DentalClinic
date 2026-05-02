@@ -9,7 +9,12 @@ import {
   DefaultValuePipe,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiTags,
+  ApiOperation,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../shared/common/guards/jwt-auth.guard';
 import { PatientAppointmentsService } from './patient-appointments.service';
 import { CancelAppointmentDto } from '../../doctor/appointments/dto/update-appointment.dto';
@@ -22,7 +27,10 @@ export class PatientAppointmentsController {
   constructor(private readonly service: PatientAppointmentsService) {}
 
   @Get('upcoming')
-  @ApiOperation({ summary: 'Get upcoming appointments for a patient (pending / scheduled / confirmed)' })
+  @ApiOperation({
+    summary:
+      'Get upcoming appointments for a patient (pending / scheduled / confirmed)',
+  })
   @ApiQuery({ name: 'user_id', required: true, type: Number })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
@@ -35,7 +43,10 @@ export class PatientAppointmentsController {
   }
 
   @Get('history')
-  @ApiOperation({ summary: 'Get past appointments for a patient (completed / cancelled / no_show)' })
+  @ApiOperation({
+    summary:
+      'Get past appointments for a patient (completed / cancelled / no_show)',
+  })
   @ApiQuery({ name: 'user_id', required: true, type: Number })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })

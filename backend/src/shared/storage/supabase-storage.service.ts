@@ -27,7 +27,9 @@ export class SupabaseStorageService {
       .upload(filePath, buffer, { contentType: mimeType, upsert: true });
 
     if (error) {
-      throw new InternalServerErrorException(`File upload failed: ${error.message}`);
+      throw new InternalServerErrorException(
+        `File upload failed: ${error.message}`,
+      );
     }
 
     return this.getPublicUrl(bucket, filePath);
@@ -36,7 +38,9 @@ export class SupabaseStorageService {
   async delete(bucket: string, filePath: string): Promise<void> {
     const { error } = await this.client.storage.from(bucket).remove([filePath]);
     if (error) {
-      throw new InternalServerErrorException(`File deletion failed: ${error.message}`);
+      throw new InternalServerErrorException(
+        `File deletion failed: ${error.message}`,
+      );
     }
   }
 

@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { FaTooth, FaUser, FaUserMd } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { toast } from 'sonner';
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslation } from "@/lib/i18n";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { supabase } from "@/lib/supabase/client";
@@ -27,11 +27,19 @@ const DEMO_ACCOUNTS = [
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t } = useTranslation();
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError]       = useState("");
+
+  useEffect(() => {
+    const oauthError = searchParams.get("error");
+    if (oauthError === "bad_oauth_state") {
+      toast.error("Your sign-in session expired. Please try again.");
+    }
+  }, [searchParams]);
 
   const fillDemo = (acc: typeof DEMO_ACCOUNTS[0]) => {
     setEmail(acc.email);

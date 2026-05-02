@@ -6,7 +6,12 @@ import {
   DefaultValuePipe,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiTags,
+  ApiOperation,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../shared/common/guards/jwt-auth.guard';
 import { AppointmentSlotsService } from '../../doctor/appointment-slots/appointment-slots.service';
 
@@ -20,7 +25,12 @@ export class AvailableSlotsController {
   @Get()
   @ApiOperation({ summary: 'Browse available (unbooked) appointment slots' })
   @ApiQuery({ name: 'doctor_id', required: false, type: Number })
-  @ApiQuery({ name: 'date', required: false, type: String, description: 'YYYY-MM-DD' })
+  @ApiQuery({
+    name: 'date',
+    required: false,
+    type: String,
+    description: 'YYYY-MM-DD',
+  })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   findAvailable(

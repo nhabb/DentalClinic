@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';//JwtModule — handles everything related to JWT tokens creating validating, signing, etc.
+import { JwtModule } from '@nestjs/jwt'; //JwtModule — handles everything related to JWT tokens creating validating, signing, etc.
 import { PassportModule } from '@nestjs/passport';
 //Without Passport you'd have to write all this yourself:
 //// manually check JWT
@@ -12,7 +12,7 @@ import { PassportModule } from '@nestjs/passport';
 import { PrismaModule } from '../shared/prisma/prisma.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { JwtStrategy } from './jwt.strategy';// defines HOW to validate a JWT token when a protected route is accessed
+import { JwtStrategy } from './jwt.strategy'; // defines HOW to validate a JWT token when a protected route is accessed
 
 @Module({
   imports: [
@@ -24,6 +24,6 @@ import { JwtStrategy } from './jwt.strategy';// defines HOW to validate a JWT to
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],//each route needs to check for strategy,Without it in providers → Passport doesn't know how to validate tokens → every protected route breaks ❌
-})//AuthModule doesn't need exports — nobody needs its services, they just import the guard file directly. ✅ so they can import @UseGuards(JwtAuthGuard) without needing to import the entire AuthModule just for the service. This keeps our module dependencies clean and focused, allowing other modules to use the authentication guard without being tightly coupled to the AuthModule itself.
+  providers: [AuthService, JwtStrategy], //each route needs to check for strategy,Without it in providers → Passport doesn't know how to validate tokens → every protected route breaks ❌
+}) //AuthModule doesn't need exports — nobody needs its services, they just import the guard file directly. ✅ so they can import @UseGuards(JwtAuthGuard) without needing to import the entire AuthModule just for the service. This keeps our module dependencies clean and focused, allowing other modules to use the authentication guard without being tightly coupled to the AuthModule itself.
 export class AuthModule {}

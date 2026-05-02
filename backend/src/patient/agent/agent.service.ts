@@ -15,7 +15,7 @@ import { AGENT_TOOLS } from './agent.tools';
 
 export interface ChatMessage {
   role: 'user' | 'assistant';
-  content: string;//it can be other than string, it can be an object with image_url or other properties, but for simplicity we will keep it as string and we can stringify the objects before sending them to the chat function and parse them back when we receive them in the tool calls.
+  content: string; //it can be other than string, it can be an object with image_url or other properties, but for simplicity we will keep it as string and we can stringify the objects before sending them to the chat function and parse them back when we receive them in the tool calls.
 }
 
 /** Safely serialize Prisma results to a JSON string for the OpenAI API.
@@ -26,38 +26,59 @@ export interface ChatMessage {
  *  - Buffer (binary)      → base64 string
  */
 function serialize(data: any): string {
-  return JSON.stringify(data, (_, v) => {
-    if (typeof v === 'bigint') return Number(v);
-    if (v instanceof Date) return v.toISOString();
-    // Fallback for date-like objects Prisma may return that aren't native Date instances
-    if (v && typeof v === 'object' && typeof v.toISOString === 'function') return v.toISOString();
-    // Prisma Decimal (used for NUMERIC/DECIMAL columns like invoice amounts)
-    if (v && typeof v === 'object' && v.constructor?.name === 'Decimal') return Number(v);
-    // Buffer (used for BYTEA columns like stored files)
-    if (Buffer.isBuffer(v)) return v.toString('base64');
-    return v;
-  }, 2);
+  return JSON.stringify(
+    data,
+    (_, v) => {
+      if (typeof v === 'bigint') return Number(v);
+      if (v instanceof Date) return v.toISOString();
+      // Fallback for date-like objects Prisma may return that aren't native Date instances
+      if (v && typeof v === 'object' && typeof v.toISOString === 'function')
+        return v.toISOString();
+      // Prisma Decimal (used for NUMERIC/DECIMAL columns like invoice amounts)
+      if (v && typeof v === 'object' && v.constructor?.name === 'Decimal')
+        return Number(v);
+      // Buffer (used for BYTEA columns like stored files)
+      if (Buffer.isBuffer(v)) return v.toString('base64');
+      return v;
+    },
+    2,
+  );
 }
 
 // SQL mutation guard — only SELECT allowed through MCP and query_database
-const SQL_WRITE_PATTERN = /^\s*(INSERT|UPDATE|DELETE|DROP|ALTER|TRUNCATE|CREATE|REPLACE|MERGE)\b/i;
+const SQL_WRITE_PATTERN =
+  /^\s*(INSERT|UPDATE|DELETE|DROP|ALTER|TRUNCATE|CREATE|REPLACE|MERGE)\b/i;
 
 // Sensitive columns that must never be returned in any query result
 const SENSITIVE_COLUMNS = new Set([
-  'password', 'password_hash', 'hashed_password', 'encrypted_password',
-  'token', 'refresh_token', 'access_token', 'secret', 'api_key',
-  'private_key', 'encryption_key', 'otp', 'otp_secret', 'recovery_codes',
+  'password',
+  'password_hash',
+  'hashed_password',
+  'encrypted_password',
+  'token',
+  'refresh_token',
+  'access_token',
+  'secret',
+  'api_key',
+  'private_key',
+  'encryption_key',
+  'otp',
+  'otp_secret',
+  'recovery_codes',
 ]);
 
 // Block queries that reference sensitive columns or auth schema
-const SQL_SENSITIVE_PATTERN = /\b(password|password_hash|hashed_password|encrypted_password|refresh_token|access_token|api_key|private_key|otp_secret|recovery_codes)\b|auth\.(users|sessions|identities)/i;
+const SQL_SENSITIVE_PATTERN =
+  /\b(password|password_hash|hashed_password|encrypted_password|refresh_token|access_token|api_key|private_key|otp_secret|recovery_codes)\b|auth\.(users|sessions|identities)/i;
 
 function redactSensitiveFields(data: any): any {
   if (Array.isArray(data)) return data.map(redactSensitiveFields);
   if (data && typeof data === 'object') {
     return Object.fromEntries(
       Object.entries(data).map(([k, v]) =>
-        SENSITIVE_COLUMNS.has(k.toLowerCase()) ? [k, '[REDACTED]'] : [k, redactSensitiveFields(v)],
+        SENSITIVE_COLUMNS.has(k.toLowerCase())
+          ? [k, '[REDACTED]']
+          : [k, redactSensitiveFields(v)],
       ),
     );
   }
@@ -86,13 +107,22 @@ export class AgentService implements OnModuleInit, OnModuleDestroy {
   async onModuleInit() {
     try {
       const [columns, fkeys] = await Promise.all([
-        this.prisma.$queryRaw<{ table_name: string; column_name: string; data_type: string }[]>`
+        this.prisma.$queryRaw<
+          { table_name: string; column_name: string; data_type: string }[]
+        >`
           SELECT table_name, column_name, data_type
           FROM information_schema.columns
           WHERE table_schema = 'public'
           ORDER BY table_name, ordinal_position
         `,
-        this.prisma.$queryRaw<{ table_name: string; column_name: string; foreign_table: string; foreign_column: string }[]>`
+        this.prisma.$queryRaw<
+          {
+            table_name: string;
+            column_name: string;
+            foreign_table: string;
+            foreign_column: string;
+          }[]
+        >`
           SELECT
             kcu.table_name,
             kcu.column_name,
@@ -115,7 +145,8 @@ export class AgentService implements OnModuleInit, OnModuleDestroy {
 
       // Build FK map: "table.column → foreign_table.foreign_column"
       const fkLines: string[] = fkeys.map(
-        (fk) => `  ${fk.table_name}.${fk.column_name} → ${fk.foreign_table}.${fk.foreign_column}`,
+        (fk) =>
+          `  ${fk.table_name}.${fk.column_name} → ${fk.foreign_table}.${fk.foreign_column}`,
       );
 
       const tableSchema = Object.entries(tables)
@@ -123,7 +154,8 @@ export class AgentService implements OnModuleInit, OnModuleDestroy {
         .join('\n');
 
       const fkSchema = fkLines.length
-        ? '\nForeign key relationships (use these for JOINs):\n' + fkLines.join('\n')
+        ? '\nForeign key relationships (use these for JOINs):\n' +
+          fkLines.join('\n')
         : '';
 
       const businessContext = `
@@ -151,18 +183,26 @@ Business context (what each table means):
 
     try {
       // Extract project ref from SUPABASE_URL (https://<ref>.supabase.co)
-      const projectRef = process.env.SUPABASE_URL?.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1];
-      const transport = new StdioClientTransport({ //what is stdio transport? The StdioClientTransport is a communication mechanism that allows the AgentService to interact with an external MCP (Model Context Protocol) server process using standard input and output streams. When the AgentService starts, it spawns a child process that runs the MCP server (in this case, the @supabase/mcp-server-supabase) and communicates with it through these streams. The transport handles sending requests to the MCP server and receiving responses, allowing the AgentService to call tools defined in the MCP server as if they were local functions. This setup enables the AgentService to leverage additional tools and capabilities provided by the MCP server while keeping the communication efficient and straightforward through standard I/O.
+      const projectRef = process.env.SUPABASE_URL?.match(
+        /https:\/\/([^.]+)\.supabase\.co/,
+      )?.[1];
+      const transport = new StdioClientTransport({
+        //what is stdio transport? The StdioClientTransport is a communication mechanism that allows the AgentService to interact with an external MCP (Model Context Protocol) server process using standard input and output streams. When the AgentService starts, it spawns a child process that runs the MCP server (in this case, the @supabase/mcp-server-supabase) and communicates with it through these streams. The transport handles sending requests to the MCP server and receiving responses, allowing the AgentService to call tools defined in the MCP server as if they were local functions. This setup enables the AgentService to leverage additional tools and capabilities provided by the MCP server while keeping the communication efficient and straightforward through standard I/O.
         command: 'mcp-server-supabase',
         args: [
-          '--access-token', process.env.SUPABASE_ACCESS_TOKEN!,
+          '--access-token',
+          process.env.SUPABASE_ACCESS_TOKEN!,
           '--read-only',
-          '--features', 'database',
+          '--features',
+          'database',
           ...(projectRef ? ['--project-ref', projectRef] : []),
         ],
       });
 
-      this.mcpClient = new McpClient({ name: 'brightsmile-agent', version: '1.0.0' }, {});
+      this.mcpClient = new McpClient(
+        { name: 'brightsmile-agent', version: '1.0.0' },
+        {},
+      );
       await this.mcpClient.connect(transport);
 
       const { tools } = await this.mcpClient.listTools();
@@ -176,10 +216,14 @@ Business context (what each table means):
       }));
 
       console.log(`[MCP] Connected — ${this.mcpTools.length} tools loaded:`);
-      this.mcpTools.forEach((t) => console.log(`  • ${(t as any).function.name}`));
-
+      this.mcpTools.forEach((t) =>
+        console.log(`  • ${(t as any).function.name}`),
+      );
     } catch (err: any) {
-      console.warn('[MCP] Server unavailable, falling back to query_database only:', err.message);
+      console.warn(
+        '[MCP] Server unavailable, falling back to query_database only:',
+        err.message,
+      );
       this.mcpClient = null;
       this.mcpTools = [];
     }
@@ -189,16 +233,22 @@ Business context (what each table means):
     await this.mcpClient?.close();
   }
 
-  async chat(messages: ChatMessage[], context: { userId: number }): Promise<string> {
+  async chat(
+    messages: ChatMessage[],
+    context: { userId: number },
+  ): Promise<string> {
     const today = new Date().toLocaleDateString('en-CA');
 
     let resolvedName: string | null = null;
     let resolvedRole: string | null = null;
     try {
       const user = await this.users.findById(BigInt(context.userId));
-      if (user?.first_name) resolvedName = `${user.first_name} ${user.last_name}`.trim();
+      if (user?.first_name)
+        resolvedName = `${user.first_name} ${user.last_name}`.trim();
       if (user?.role) resolvedRole = user.role;
-    } catch {}
+    } catch {
+      /* user lookup is best-effort; proceed with defaults */
+    }
 
     const identityLine = resolvedName
       ? `Name: ${resolvedName} | Role: ${resolvedRole} | ID: ${context.userId}`
@@ -501,8 +551,14 @@ Expense query patterns:
 
     let openaiMessages: OpenAI.ChatCompletionMessageParam[] = [
       { role: 'system', content: systemPrompt },
-      ...messages.map((m) => ({ role: m.role, content: m.content }) as OpenAI.ChatCompletionMessageParam),//what is that? This line is mapping the incoming messages (which are of type ChatMessage) to the format expected by the OpenAI API (OpenAI.ChatCompletionMessageParam). The ChatMessage type has a role of 'user' or 'assistant' and a content string. The OpenAI.ChatCompletionMessageParam type also has a role and content, but it may have additional properties for tool calls. By mapping our internal ChatMessage format to the OpenAI format, we can ensure that the messages are correctly structured when we send them to the OpenAI API for generating responses. This allows us to maintain a consistent message format within our application while still being compatible with the requirements of the OpenAI API.
-    ];//is theer any other syntax? Yes, we could also write this mapping using a for loop or using the Array.prototype.reduce method, but using Array.prototype.map is a concise and readable way to transform the array of messages from one format to another. It allows us to easily create a new array of OpenAI.ChatCompletionMessageParam objects based on the original ChatMessage objects without mutating the original array, which is a common functional programming pattern in JavaScript and TypeScript.
+      ...messages.map(
+        (m) =>
+          ({
+            role: m.role,
+            content: m.content,
+          }) as OpenAI.ChatCompletionMessageParam,
+      ), //what is that? This line is mapping the incoming messages (which are of type ChatMessage) to the format expected by the OpenAI API (OpenAI.ChatCompletionMessageParam). The ChatMessage type has a role of 'user' or 'assistant' and a content string. The OpenAI.ChatCompletionMessageParam type also has a role and content, but it may have additional properties for tool calls. By mapping our internal ChatMessage format to the OpenAI format, we can ensure that the messages are correctly structured when we send them to the OpenAI API for generating responses. This allows us to maintain a consistent message format within our application while still being compatible with the requirements of the OpenAI API.
+    ]; //is theer any other syntax? Yes, we could also write this mapping using a for loop or using the Array.prototype.reduce method, but using Array.prototype.map is a concise and readable way to transform the array of messages from one format to another. It allows us to easily create a new array of OpenAI.ChatCompletionMessageParam objects based on the original ChatMessage objects without mutating the original array, which is a common functional programming pattern in JavaScript and TypeScript.
 
     const allTools = [...AGENT_TOOLS, ...this.mcpTools];
 
@@ -524,14 +580,20 @@ Expense query patterns:
           const fn = (call as any).function;
           const input = JSON.parse(fn.arguments);
 
-          const toolType = this.mcpTools.some((t) => (t as any).function?.name === fn.name)
+          const toolType = this.mcpTools.some(
+            (t) => (t as any).function?.name === fn.name,
+          )
             ? 'MCP'
-            : fn.name === 'query_database' ? 'SQL' : 'API';
+            : fn.name === 'query_database'
+              ? 'SQL'
+              : 'API';
 
           totalToolCalls++;
           const toolStart = Date.now();
 
-          console.log(`\n[TOOL CALL #${totalToolCalls}][${toolType}] ${fn.name}`);
+          console.log(
+            `\n[TOOL CALL #${totalToolCalls}][${toolType}] ${fn.name}`,
+          );
           console.log(`[TOOL INPUT]`, JSON.stringify(input, null, 2));
 
           const result = await this.executeTool(fn.name, input);
@@ -539,7 +601,11 @@ Expense query patterns:
 
           console.log(`[TOOL RESULT] (${toolMs}ms)`, result.slice(0, 500));
 
-          return { role: 'tool' as const, tool_call_id: call.id, content: result };
+          return {
+            role: 'tool' as const,
+            tool_call_id: call.id,
+            content: result,
+          };
         }),
       );
 
@@ -552,7 +618,8 @@ Expense query patterns:
       });
     }
 
-    let finalAnswer = response.choices[0].message.content ?? 'No response generated.';
+    let finalAnswer =
+      response.choices[0].message.content ?? 'No response generated.';
 
     // ── Self-verification loop ─────────────────────────────────────
     const MAX_VERIFY_ROUNDS = 2;
@@ -583,15 +650,29 @@ IMPORTANT OUTPUT RULES:
           (assistantMsg.tool_calls ?? []).map(async (call) => {
             const fn = (call as any).function;
             const input = JSON.parse(fn.arguments);
-            const toolType = this.mcpTools.some((t) => (t as any).function?.name === fn.name)
-              ? 'MCP' : fn.name === 'query_database' ? 'SQL' : 'API';
+            const toolType = this.mcpTools.some(
+              (t) => (t as any).function?.name === fn.name,
+            )
+              ? 'MCP'
+              : fn.name === 'query_database'
+                ? 'SQL'
+                : 'API';
             totalToolCalls++;
             const toolStart = Date.now();
-            console.log(`\n[VERIFY r${round}][TOOL #${totalToolCalls}][${toolType}] ${fn.name}`);
+            console.log(
+              `\n[VERIFY r${round}][TOOL #${totalToolCalls}][${toolType}] ${fn.name}`,
+            );
             console.log(`[TOOL INPUT]`, JSON.stringify(input, null, 2));
             const result = await this.executeTool(fn.name, input);
-            console.log(`[TOOL RESULT] (${Date.now() - toolStart}ms)`, result.slice(0, 300));
-            return { role: 'tool' as const, tool_call_id: call.id, content: result };
+            console.log(
+              `[TOOL RESULT] (${Date.now() - toolStart}ms)`,
+              result.slice(0, 300),
+            );
+            return {
+              role: 'tool' as const,
+              tool_call_id: call.id,
+              content: result,
+            };
           }),
         );
         openaiMessages = [...openaiMessages, ...toolResults];
@@ -616,12 +697,17 @@ IMPORTANT OUTPUT RULES:
     }
 
     const totalMs = Date.now() - agentStart;
-    console.log(`\n[AGENT DONE] tools called: ${totalToolCalls} | total time: ${totalMs}ms`);
+    console.log(
+      `\n[AGENT DONE] tools called: ${totalToolCalls} | total time: ${totalMs}ms`,
+    );
 
     return finalAnswer;
   }
 
-  async *chatStream(messages: ChatMessage[], context: { userId: number }): AsyncGenerator<string> {
+  async *chatStream(
+    messages: ChatMessage[],
+    context: { userId: number },
+  ): AsyncGenerator<string> {
     const fullReply = await this.chat(messages, context);
     const words = fullReply.split(' ');
     for (const word of words) {
@@ -630,36 +716,57 @@ IMPORTANT OUTPUT RULES:
     }
   }
 
-  private async executeTool(name: string, input: Record<string, any>): Promise<string> {
+  private async executeTool(
+    name: string,
+    input: Record<string, any>,
+  ): Promise<string> {
     const isMcp = this.mcpTools.some((t) => (t as any).function?.name === name);
-    const source = isMcp ? '[MCP]' : name === 'query_database' ? '[SQL]' : '[API]';
+    const source = isMcp
+      ? '[MCP]'
+      : name === 'query_database'
+        ? '[SQL]'
+        : '[API]';
     console.log(`${source} routing → ${name}`);
 
     try {
       switch (name) {
         // ── Appointments ───────────────────────────────────────────
         case 'list_appointments':
-          return serialize(await this.appointments.findAll({
-            doctor_id: input.doctor_id,
-            patient_id: input.patient_id,
-            status: input.status,
-            date: input.date,
-            page: input.page ?? 1,
-            limit: input.limit ?? 10,
-            order: input.order ?? 'asc',
-          }));
+          return serialize(
+            await this.appointments.findAll({
+              doctor_id: input.doctor_id,
+              patient_id: input.patient_id,
+              status: input.status,
+              date: input.date,
+              page: input.page ?? 1,
+              limit: input.limit ?? 10,
+              order: input.order ?? 'asc',
+            }),
+          );
 
         case 'get_appointment':
           return serialize(await this.appointments.findOne(BigInt(input.id))); // here we pass the id from the input that have the exracted id from the ai response and we convert it to bigint because our database uses bigint for ids and then we serialize the result to a string that can be sent back to the ai as a tool response.
 
-
         // ── Slots ──────────────────────────────────────────────────
         case 'list_slots':
-          return serialize(await this.slots.findAll({ doctor_id: input.doctor_id, date: input.date, available_only: input.available_only, limit: 50 }));
+          return serialize(
+            await this.slots.findAll({
+              doctor_id: input.doctor_id,
+              date: input.date,
+              available_only: input.available_only,
+              limit: 50,
+            }),
+          );
 
         // ── Patients ───────────────────────────────────────────────
         case 'list_patients':
-          return serialize(await this.patients.findAll(input.page ?? 1, input.limit ?? 10, input.search));
+          return serialize(
+            await this.patients.findAll(
+              input.page ?? 1,
+              input.limit ?? 10,
+              input.search,
+            ),
+          );
 
         case 'get_patient':
           return serialize(await this.patients.findById(BigInt(input.id)));
@@ -671,27 +778,43 @@ IMPORTANT OUTPUT RULES:
           const where = { patient_id: BigInt(input.patient_id) };
           const [docs, total] = await Promise.all([
             this.prisma.patient_documents.findMany({
-              where, orderBy: { uploaded_at: 'desc' }, skip, take: limit,
+              where,
+              orderBy: { uploaded_at: 'desc' },
+              skip,
+              take: limit,
             }),
             this.prisma.patient_documents.count({ where }),
           ]);
-          return serialize({ data: docs, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } });
+          return serialize({
+            data: docs,
+            meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+          });
         }
 
         // ── Inventory ──────────────────────────────────────────────
         case 'list_inventory':
-          return serialize(await this.inventory.findAll({ search: input.search, category: input.category, low_stock_only: input.low_stock_only, page: 1, limit: 20 }));
+          return serialize(
+            await this.inventory.findAll({
+              search: input.search,
+              category: input.category,
+              low_stock_only: input.low_stock_only,
+              page: 1,
+              limit: 20,
+            }),
+          );
 
         case 'get_low_stock_items':
           return serialize(await this.inventory.findLowStock());
 
         case 'list_inventory_movements':
-          return serialize(await this.inventory.listMovements({
-            item_id: input.item_id ? BigInt(input.item_id) : undefined,
-            movement_type: input.movement_type,
-            page: input.page ?? 1,
-            limit: input.limit ?? 20,
-          }));
+          return serialize(
+            await this.inventory.listMovements({
+              item_id: input.item_id ? BigInt(input.item_id) : undefined,
+              movement_type: input.movement_type,
+              page: input.page ?? 1,
+              limit: input.limit ?? 20,
+            }),
+          );
 
         // ── Users ──────────────────────────────────────────────────
         case 'list_doctors':
@@ -702,10 +825,14 @@ IMPORTANT OUTPUT RULES:
           return serialize(await this.billing.getKpis());
 
         case 'get_financial_summary':
-          return serialize(await this.billing.getSummary({ from: input.from, to: input.to }));
+          return serialize(
+            await this.billing.getSummary({ from: input.from, to: input.to }),
+          );
 
         case 'get_payments_analytics':
-          return serialize(await this.billing.getPaymentsAnalytics(input.months ?? 12));
+          return serialize(
+            await this.billing.getPaymentsAnalytics(input.months ?? 12),
+          );
 
         case 'get_outstanding_payments':
           return serialize(await this.billing.getOutstandingPayments());
@@ -714,57 +841,81 @@ IMPORTANT OUTPUT RULES:
           return serialize(await this.billing.getAgingReport());
 
         case 'get_patient_financials':
-          return serialize(await this.billing.getPatientFinancials(input.patient_id));
+          return serialize(
+            await this.billing.getPatientFinancials(input.patient_id),
+          );
 
         // ── Treatment Billing ──────────────────────────────────────
         case 'list_invoices':
         case 'list_payments': // alias — old tool name, same data source
-          return serialize(await this.billing.findAll({
-            patient_id: input.patient_id,
-            status: input.status,
-            from: input.from,
-            to: input.to,
-            page: input.page ?? 1,
-            limit: input.limit ?? 200,
-          }));
+          return serialize(
+            await this.billing.findAll({
+              patient_id: input.patient_id,
+              status: input.status,
+              from: input.from,
+              to: input.to,
+              page: input.page ?? 1,
+              limit: input.limit ?? 200,
+            }),
+          );
 
         case 'get_invoice':
           return serialize(await this.billing.findOne(BigInt(input.id)));
 
-
         // ── Expenses ───────────────────────────────────────────────
         case 'list_expenses':
-          return serialize(await this.expenses.findAll({
-            category: input.category,
-            from: input.from,
-            to: input.to,
-            page: input.page ?? 1,
-            limit: input.limit ?? 20,
-          }));
-
-        
+          return serialize(
+            await this.expenses.findAll({
+              category: input.category,
+              from: input.from,
+              to: input.to,
+              page: input.page ?? 1,
+              limit: input.limit ?? 20,
+            }),
+          );
 
         case 'get_expenses_analytics':
-          return serialize(await this.expenses.getAnalytics(input.months ?? 12));
+          return serialize(
+            await this.expenses.getAnalytics(input.months ?? 12),
+          );
 
         // ── Raw Database Query ─────────────────────────────────────
         case 'query_database': {
           const sql: string = input.sql ?? '';
-          if (!/^\s*SELECT\b/i.test(sql)) { 
-            return JSON.stringify({ error: 'Only SELECT queries are allowed.' });
+          if (!/^\s*SELECT\b/i.test(sql)) {
+            return JSON.stringify({
+              error: 'Only SELECT queries are allowed.',
+            });
           }
           if (SQL_SENSITIVE_PATTERN.test(sql)) {
-            return JSON.stringify({ error: 'Query references restricted columns or schemas.' });
+            return JSON.stringify({
+              error: 'Query references restricted columns or schemas.',
+            });
           }
           const rows = await this.prisma.$queryRawUnsafe(sql);
           const normalized = (rows as any[]).map((row) =>
             Object.fromEntries(
               Object.entries(row as Record<string, any>).map(([k, v]) => {
                 if (v instanceof Date) return [k, v.toISOString()];
-                if (v && typeof v === 'object' && typeof (v as any).toISOString === 'function') return [k, (v as any).toISOString()];
+                if (
+                  v &&
+                  typeof v === 'object' &&
+                  typeof v.toISOString === 'function'
+                )
+                  return [k, v.toISOString()];
                 if (typeof v === 'bigint') return [k, Number(v)];
-                if (v && typeof v === 'object' && v.constructor?.name === 'Decimal') return [k, Number(v)];
-                if (v && typeof v === 'object' && typeof (v as any).toNumber === 'function') return [k, (v as any).toNumber()];
+                if (
+                  v &&
+                  typeof v === 'object' &&
+                  v.constructor?.name === 'Decimal'
+                )
+                  return [k, Number(v)];
+                if (
+                  v &&
+                  typeof v === 'object' &&
+                  typeof v.toNumber === 'function'
+                )
+                  return [k, v.toNumber()];
                 return [k, v];
               }),
             ),
@@ -774,16 +925,25 @@ IMPORTANT OUTPUT RULES:
 
         default: {
           if (!this.mcpClient) {
-            return JSON.stringify({ error: `Unknown tool: ${name}. MCP server is not connected.` });
+            return JSON.stringify({
+              error: `Unknown tool: ${name}. MCP server is not connected.`,
+            });
           }
           const sqlArg = input.query ?? input.sql ?? '';
           if (sqlArg && SQL_WRITE_PATTERN.test(sqlArg)) {
-            return JSON.stringify({ error: 'Only SELECT queries are allowed.' });
+            return JSON.stringify({
+              error: 'Only SELECT queries are allowed.',
+            });
           }
           if (sqlArg && SQL_SENSITIVE_PATTERN.test(sqlArg)) {
-            return JSON.stringify({ error: 'Query references restricted columns or schemas.' });
+            return JSON.stringify({
+              error: 'Query references restricted columns or schemas.',
+            });
           }
-          const mcpResult = await this.mcpClient.callTool({ name, arguments: input });
+          const mcpResult = await this.mcpClient.callTool({
+            name,
+            arguments: input,
+          });
           return serialize(redactSensitiveFields(mcpResult));
         }
       }
@@ -792,4 +952,3 @@ IMPORTANT OUTPUT RULES:
     }
   }
 }
-

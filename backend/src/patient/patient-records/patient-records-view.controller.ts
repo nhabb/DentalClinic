@@ -8,7 +8,12 @@ import {
   UseGuards,
   ForbiddenException,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiTags,
+  ApiOperation,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../shared/common/guards/jwt-auth.guard';
 import { PatientRecordsService } from '../../doctor/patient-records/patient-records.service';
 import { PatientsService } from '../patients/patients.service';
@@ -24,7 +29,9 @@ export class PatientRecordsViewController {
   ) {}
 
   @Get()
-  @ApiOperation({ summary: 'Get all clinical records for a patient (read-only)' })
+  @ApiOperation({
+    summary: 'Get all clinical records for a patient (read-only)',
+  })
   @ApiQuery({ name: 'user_id', required: true, type: Number })
   @ApiQuery({ name: 'record_type', required: false, type: String })
   @ApiQuery({ name: 'page', required: false, type: Number })
@@ -45,7 +52,9 @@ export class PatientRecordsViewController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get a single clinical record (must belong to the patient)' })
+  @ApiOperation({
+    summary: 'Get a single clinical record (must belong to the patient)',
+  })
   @ApiQuery({ name: 'user_id', required: true, type: Number })
   async findOne(
     @Param('id', ParseIntPipe) id: number,

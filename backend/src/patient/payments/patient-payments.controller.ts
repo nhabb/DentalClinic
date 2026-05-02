@@ -7,7 +7,12 @@ import {
   DefaultValuePipe,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiTags,
+  ApiOperation,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../shared/common/guards/jwt-auth.guard';
 import { BillingService } from '../../doctor/billing/billing.service';
 import { PatientsService } from '../patients/patients.service';
@@ -25,7 +30,11 @@ export class PatientPaymentsController {
   @Get()
   @ApiOperation({ summary: 'Get all treatment invoices for a patient' })
   @ApiQuery({ name: 'user_id', required: true, type: Number })
-  @ApiQuery({ name: 'status', required: false, enum: ['open', 'partial', 'paid'] })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: ['open', 'partial', 'paid'],
+  })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   async findAll(

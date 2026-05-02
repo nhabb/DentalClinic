@@ -1,4 +1,8 @@
-import { Injectable, ConflictException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { createClient } from '@supabase/supabase-js';
@@ -14,7 +18,9 @@ export class AuthService {
   ) {}
 
   async signup(dto: SignupDto) {
-    const existing = await this.prisma.users.findUnique({ where: { email: dto.email } });
+    const existing = await this.prisma.users.findUnique({
+      where: { email: dto.email },
+    });
     if (existing) {
       throw new ConflictException('Email already in use');
     }
@@ -28,7 +34,9 @@ export class AuthService {
         first_name: dto.first_name,
         last_name: dto.last_name,
         phone: dto.phone,
-        date_of_birth: dto.date_of_birth ? new Date(dto.date_of_birth) : undefined,
+        date_of_birth: dto.date_of_birth
+          ? new Date(dto.date_of_birth)
+          : undefined,
         gender: dto.gender,
         address: dto.address,
         role: 'patient',
@@ -48,25 +56,38 @@ export class AuthService {
       data: { user_id: user.id },
     });
 
-    const token = this.jwtService.sign({ sub: user.id.toString(), email: user.email, role: user.role });
+    const token = this.jwtService.sign({
+      sub: user.id.toString(),
+      email: user.email,
+      role: user.role,
+    });
 
     return { user, token };
   }
 
   async login(dto: LoginDto) {
-    const user = await this.prisma.users.findUnique({ where: { email: dto.email } });
+    const user = await this.prisma.users.findUnique({
+      where: { email: dto.email },
+    });
     if (!user || !user.is_active) {
       return { success: false, message: 'Invalid credentials' };
     }
 
-    const passwordMatch = await bcrypt.compare(dto.password, user.password_hash);
+    const passwordMatch = await bcrypt.compare(
+      dto.password,
+      user.password_hash,
+    );
     if (!passwordMatch) {
       return { success: false, message: 'Invalid credentials' };
     }
 
-    const token = this.jwtService.sign({ sub: user.id.toString(), email: user.email, role: user.role });
+    const token = this.jwtService.sign({
+      sub: user.id.toString(),
+      email: user.email,
+      role: user.role,
+    });
 
-    const { password_hash, ...userWithoutPassword } = user;
+    const { password_hash: _pw, ...userWithoutPassword } = user;
 
     return { success: true, user: userWithoutPassword, token };
   }
@@ -78,7 +99,10 @@ export class AuthService {
     );
 
     // Verify the Supabase token and get the user's profile data
-    const { data: { user: sbUser }, error } = await supabase.auth.getUser(accessToken);
+    const {
+      data: { user: sbUser },
+      error,
+    } = await supabase.auth.getUser(accessToken);
     if (error || !sbUser?.email) {
       throw new UnauthorizedException('Invalid Supabase token');
     }
@@ -132,7 +156,10 @@ export class AuthService {
         // Race condition: a concurrent request already created the user between
         // our findUnique and create — just look them up and treat as existing
         if (err?.code === 'P2002') {
-          user = await this.prisma.users.findUnique({ where: { email }, select });
+          user = await this.prisma.users.findUnique({
+            where: { email },
+            select,
+          });
           if (!user) throw err;
         } else {
           throw err;

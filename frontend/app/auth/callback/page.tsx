@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 const ROLE_REDIRECTS: Record<string, string> = {
@@ -15,13 +16,7 @@ const ROLE_REDIRECTS: Record<string, string> = {
 
 const ADMIN_ROLES = new Set(["doctor", "admin", "secretary", "superadmin"]);
 
-// Replace the callback entry in history with /login so the back button
-// always lands on the login page instead of a stale Google/Supabase OAuth URL.
-function cleanNavigate(target: string) {
-  window.location.replace(target);
-}
-
-async function provisionAndPersist(supabaseToken: string): Promise<{ redirect: string; userId: string; isNew: boolean }> {
+async function provisionAndPersist(supabaseToken: string): Promise<{ redirect: string; isNew: boolean }> {
   const res = await fetch(`${API_URL}/api/auth/provision`, {
     method: "POST",
     headers: { Authorization: `Bearer ${supabaseToken}` },
@@ -46,29 +41,43 @@ async function provisionAndPersist(supabaseToken: string): Promise<{ redirect: s
 
   return {
     redirect: ROLE_REDIRECTS[role] ?? "/patient-dashboard",
-    userId: user.id.toString(),
     isNew: !!is_new_user,
-};
-
+  };
 }
-
 
 export default function AuthCallbackPage() {
   const router = useRouter();
 
   useEffect(() => {
+    // Save PKCE code before stripping URL params
+    const code = new URLSearchParams(window.location.search).get("code");
+
+    // Immediately strip hash (access_token) and search params from the URL so
+    // they don't linger in browser history. Supabase already read the hash
+    // during client initialization, so this is safe to do before getSession().
+    if (window.location.hash || window.location.search) {
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+
     const handle = async () => {
+      // Back-button guard: if the user already has a valid session in
+      // sessionStorage (e.g. they pressed back from the dashboard), skip
+      // re-provisioning and send them straight to their page.
+      const existingToken = sessionStorage.getItem("authToken");
+      const existingRole = sessionStorage.getItem("userRole");
+      if (existingToken && existingRole) {
+        router.replace(ROLE_REDIRECTS[existingRole] ?? "/patient-dashboard");
+        return;
+      }
+
       let accessToken: string | null = null;
 
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         accessToken = session.access_token;
-      } else {
-        const code = new URLSearchParams(window.location.search).get("code");
-        if (code) {
-          const { data } = await supabase.auth.exchangeCodeForSession(code);
-          accessToken = data.session?.access_token ?? null;
-        }
+      } else if (code) {
+        const { data } = await supabase.auth.exchangeCodeForSession(code);
+        accessToken = data.session?.access_token ?? null;
       }
 
       if (!accessToken) {
@@ -78,11 +87,9 @@ export default function AuthCallbackPage() {
 
       try {
         const { redirect, isNew } = await provisionAndPersist(accessToken);
-        cleanNavigate(isNew ? "/complete-profile" : redirect);
+        router.replace(isNew ? "/complete-profile" : redirect);
       } catch {
-        sessionStorage.setItem("authToken", accessToken);
-        sessionStorage.setItem("userRole", "patient");
-        cleanNavigate("/patient-dashboard");
+        router.replace("/login");
       }
     };
 

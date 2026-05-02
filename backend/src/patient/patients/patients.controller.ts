@@ -1,4 +1,5 @@
-import { UseGuards,
+import {
+  UseGuards,
   Controller,
   Get,
   Patch,
@@ -14,7 +15,14 @@ import { UseGuards,
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { JwtAuthGuard } from '../../shared/common/guards/jwt-auth.guard';
-import { ApiBearerAuth, ApiTags, ApiOperation, ApiQuery, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiTags,
+  ApiOperation,
+  ApiQuery,
+  ApiConsumes,
+  ApiBody,
+} from '@nestjs/swagger';
 import { PatientsService } from './patients.service';
 import { UpdatePatientProfileDto } from './dto/update-patient-profile.dto';
 import { SetPatientStatusDto } from './dto/set-patient-status.dto';
@@ -63,7 +71,12 @@ export class PatientsController {
   @Patch(':id/photo')
   @ApiOperation({ summary: 'Upload or replace a patient profile photo' })
   @ApiConsumes('multipart/form-data')
-  @ApiBody({ schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' } } } })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: { file: { type: 'string', format: 'binary' } },
+    },
+  })
   @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
   updatePhoto(
     @Param('id', ParseIntPipe) id: number,
@@ -91,7 +104,9 @@ export class PatientsController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete a patient (removes user account and all associated data)' })
+  @ApiOperation({
+    summary: 'Delete a patient (removes user account and all associated data)',
+  })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.patientsService.remove(BigInt(id));
   }

@@ -22,10 +22,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/lib/i18n";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
+import { supabase } from "@/lib/supabase/client";
+import { toast } from "sonner";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
 import { ar, fr, enUS } from "date-fns/locale";
 import { FaTooth } from "react-icons/fa";
+import { FcGoogle } from "react-icons/fc";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -62,6 +65,23 @@ export default function SignupPage() {
     allergies: "",
     currentMedications: "",
   });
+
+  const handleGoogleSignup = async () => {
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? window.location.origin}/auth/callback` },
+      });
+      if (error) {
+        toast.error(error.message);
+        setIsLoading(false);
+      }
+    } catch {
+      toast.error("Failed to start Google sign-up. Please try again.");
+      setIsLoading(false);
+    }
+  };
 
   const PHONE_FIELDS = ["phone", "emergencyPhone"];
 
@@ -175,6 +195,24 @@ export default function SignupPage() {
           <p className="mt-2 text-base text-white/90 font-light">
             {t("signup.joinToday")}
           </p>
+        </div>
+
+        {/* Google OAuth */}
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full py-6 flex items-center gap-3 justify-center bg-white hover:bg-gray-50"
+          onClick={handleGoogleSignup}
+          disabled={isLoading}
+        >
+          <FcGoogle className="text-xl" />
+          Continue with Google
+        </Button>
+
+        <div className="relative flex items-center gap-3">
+          <div className="flex-1 border-t border-white/30" />
+          <span className="text-sm text-white/70">or sign up with email</span>
+          <div className="flex-1 border-t border-white/30" />
         </div>
 
         <form className="space-y-6" onSubmit={handleSubmit}>

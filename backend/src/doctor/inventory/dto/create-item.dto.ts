@@ -2,7 +2,6 @@ import {
   IsString,
   IsOptional,
   IsNumber,
-  IsPositive,
   Min,
   MaxLength,
   MinLength,
@@ -39,7 +38,10 @@ export class CreateInventoryItemDto {
   @Min(0)
   quantity?: number;
 
-  @ApiPropertyOptional({ default: 0, description: 'Threshold for low-stock alert' })
+  @ApiPropertyOptional({
+    default: 0,
+    description: 'Threshold for low-stock alert',
+  })
   @IsOptional()
   @IsNumber()
   @Min(0)

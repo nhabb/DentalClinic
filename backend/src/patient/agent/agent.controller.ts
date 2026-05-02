@@ -27,16 +27,24 @@ export class AgentController {
 
   @Post('chat')
   @ApiOperation({ summary: 'Send a message to the clinic AI assistant' })
-  async chat(@Body() dto: ChatRequestDto, @Req() req: any): Promise<{ reply: string }> {
+  async chat(
+    @Body() dto: ChatRequestDto,
+    @Req() req: any,
+  ): Promise<{ reply: string }> {
     const userId = parseInt(req.user.id, 10);
     const reply = await this.agentService.chat(dto.messages, { userId });
     return { reply };
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   @Post('chat/stream')
-  @ApiOperation({ summary: 'Stream a response from the clinic AI assistant (SSE)' })
-  async chatStream(@Body() dto: ChatRequestDto, @Req() req: any, @Res() res: Response) {
+  @ApiOperation({
+    summary: 'Stream a response from the clinic AI assistant (SSE)',
+  })
+  async chatStream(
+    @Body() dto: ChatRequestDto,
+    @Req() req: any,
+    @Res() res: Response,
+  ) {
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
@@ -44,11 +52,15 @@ export class AgentController {
 
     const userId = parseInt(req.user.id, 10);
     try {
-      for await (const token of this.agentService.chatStream(dto.messages, { userId })) {
+      for await (const token of this.agentService.chatStream(dto.messages, {
+        userId,
+      })) {
         res.write(`data: ${JSON.stringify({ token })}\n\n`);
       }
     } catch (err: any) {
-      res.write(`data: ${JSON.stringify({ error: err.message ?? 'Unknown error' })}\n\n`);
+      res.write(
+        `data: ${JSON.stringify({ error: err.message ?? 'Unknown error' })}\n\n`,
+      );
     } finally {
       res.write('data: [DONE]\n\n');
       res.end();

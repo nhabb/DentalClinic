@@ -26,7 +26,9 @@ export class UpdatePatientProfileDto {
   @MaxLength(30)
   emergency_contact_phone?: string;
 
-  @ApiPropertyOptional({ enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] })
+  @ApiPropertyOptional({
+    enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
+  })
   @IsOptional()
   @IsString()
   blood_type?: string;

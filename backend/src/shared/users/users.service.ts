@@ -26,7 +26,9 @@ export class UsersService {
     phone?: string;
     role?: string;
   }) {
-    const existing = await this.prisma.users.findUnique({ where: { email: data.email } });
+    const existing = await this.prisma.users.findUnique({
+      where: { email: data.email },
+    });
     if (existing) return existing;
 
     const password_hash = await bcrypt.hash(Math.random().toString(36), 10);
@@ -79,7 +81,13 @@ export class UsersService {
   async findByEmail(email: string) {
     const user = await this.prisma.users.findUnique({
       where: { email },
-      select: { id: true, email: true, role: true, first_name: true, last_name: true },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        first_name: true,
+        last_name: true,
+      },
     });
     if (!user) throw new NotFoundException('User not found');
     return user;
@@ -154,7 +162,9 @@ export class UsersService {
 
   async updateAvatar(id: bigint, file: Express.Multer.File) {
     if (!ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
-      throw new BadRequestException('Only JPEG, PNG, and WebP images are allowed');
+      throw new BadRequestException(
+        'Only JPEG, PNG, and WebP images are allowed',
+      );
     }
     if (file.size > MAX_SIZE) {
       throw new BadRequestException('Image must be under 5 MB');
@@ -166,12 +176,18 @@ export class UsersService {
     // Delete old avatar if one exists
     if (user.avatar_url) {
       const oldPath = this.extractPath(user.avatar_url);
-      if (oldPath) await this.storage.delete(PROFILE_BUCKET, oldPath).catch(() => null);
+      if (oldPath)
+        await this.storage.delete(PROFILE_BUCKET, oldPath).catch(() => null);
     }
 
     const ext = file.mimetype.split('/')[1];
     const storagePath = `users/${id}/${Date.now()}.${ext}`;
-    const publicUrl = await this.storage.upload(PROFILE_BUCKET, storagePath, file.buffer, file.mimetype);
+    const publicUrl = await this.storage.upload(
+      PROFILE_BUCKET,
+      storagePath,
+      file.buffer,
+      file.mimetype,
+    );
 
     return this.prisma.users.update({
       where: { id },
@@ -195,7 +211,8 @@ export class UsersService {
     const isOAuthAccount = user.password_hash === 'oauth';
 
     if (!isOAuthAccount) {
-      if (!dto.old_password) throw new BadRequestException('Old password is required');
+      if (!dto.old_password)
+        throw new BadRequestException('Old password is required');
       const valid = await bcrypt.compare(dto.old_password, user.password_hash);
       if (!valid) throw new BadRequestException('Old password is incorrect');
     }

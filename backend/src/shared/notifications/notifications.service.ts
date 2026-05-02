@@ -46,7 +46,13 @@ export class NotificationsService {
 
     return {
       data,
-      meta: { total, page, limit, totalPages: Math.ceil(total / limit), unreadCount },
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+        unreadCount,
+      },
     };
   }
 
