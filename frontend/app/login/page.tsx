@@ -5,11 +5,21 @@ import { Button } from "@/components/ui/button";
 import { FaTooth, FaUser, FaUserMd } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { toast } from 'sonner';
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslation } from "@/lib/i18n";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { supabase } from "@/lib/supabase/client";
+
+function OAuthErrorHandler() {
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    if (searchParams.get("error") === "bad_oauth_state") {
+      toast.error("Your sign-in session expired. Please try again.");
+    }
+  }, [searchParams]);
+  return null;
+}
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
 
 const ROLE_REDIRECTS: Record<string, string> = {
@@ -27,19 +37,11 @@ const DEMO_ACCOUNTS = [
 
 export default function LoginPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { t } = useTranslation();
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError]       = useState("");
-
-  useEffect(() => {
-    const oauthError = searchParams.get("error");
-    if (oauthError === "bad_oauth_state") {
-      toast.error("Your sign-in session expired. Please try again.");
-    }
-  }, [searchParams]);
 
   const fillDemo = (acc: typeof DEMO_ACCOUNTS[0]) => {
     setEmail(acc.email);
@@ -126,6 +128,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 gradient-auth-bg">
+      <Suspense><OAuthErrorHandler /></Suspense>
       <div className="max-w-md w-full">
         <div className="bg-white rounded-2xl shadow-2xl p-8 md:p-10 space-y-7">
           {/* Logo */}
