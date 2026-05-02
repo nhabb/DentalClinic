@@ -9,7 +9,7 @@ const prisma = new PrismaClient({ adapter } as any);
 async function main() {
   console.log('🌱 Seeding database...');
 
-  const demoHash = await bcrypt.hash('demo123', 10);
+  const demoHash = await bcrypt.hash('Demo123456', 10);
 
   // ─── Main accounts (use demo emails that exist in Supabase auth) ────────────
   const doctor = await prisma.users.upsert({
@@ -487,7 +487,7 @@ async function main() {
 
   console.log('\n🎉 Seed complete!');
   console.log('─────────────────────────────────────────');
-  console.log('  doctor@demo.com   /  demo123  (admin)');
+  console.log('  doctor@demo.com   /  Demo123456  (admin)');
   console.log('  patient@demo.com  /  demo123  (patient)');
   console.log('─────────────────────────────────────────');
 }

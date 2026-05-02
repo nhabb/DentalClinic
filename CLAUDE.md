@@ -94,7 +94,7 @@ Schema at `backend/prisma/schema.prisma`. Key tables: `users`, `patient_profiles
 ## Demo Accounts (for testing)
 ```
 patient@demo.com    / demo123  → /patient-dashboard
-doctor@demo.com     / demo123  → /admin
+doctor@demo.com     / Demo123456  → /admin
 secretary@demo.com  / demo123  → /admin
 super@demo.com      / demo123  → /superadmin
 ```

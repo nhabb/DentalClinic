@@ -583,7 +583,12 @@ export default function BillingPage() {
               {t("common.cancel")}
             </Button>
             <Button onClick={handleCreate} disabled={creating}>
-              {creating ? t("billing.creating") : t("billing.createInvoiceBtn")}
+              {creating ? (
+                <span className="flex items-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  {t("billing.creating")}
+                </span>
+              ) : t("billing.createInvoiceBtn")}
             </Button>
           </div>
         </div>
@@ -719,7 +724,12 @@ export default function BillingPage() {
                     </p>
                   )}
                   <Button onClick={handleRecordPayment} disabled={recordingPayment} className="w-full">
-                    {recordingPayment ? t("billing.recording") : t("billing.recordPayment")}
+                    {recordingPayment ? (
+                      <span className="flex items-center gap-2">
+                        <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                        {t("billing.recording")}
+                      </span>
+                    ) : t("billing.recordPayment")}
                   </Button>
                 </div>
               </div>

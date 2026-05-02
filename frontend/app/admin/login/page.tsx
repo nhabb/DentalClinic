@@ -70,8 +70,8 @@ export default function AdminLogin() {
       safeStorage.setItem("adminUser", JSON.stringify({ email: credentials.email }));
     }
     safeStorage.setItem("userRole", role);
-    router.push("/admin");
     setIsLoading(false);
+    router.push("/admin");
   };
 
   return (

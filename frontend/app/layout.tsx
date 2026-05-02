@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { Providers } from './providers'
 import { Toaster } from 'sonner'
+import ConsoleSilencer from '@/components/ui/ConsoleSilencer'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -25,7 +26,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}><Providers>{children}</Providers><Toaster richColors position="top-right" /></body>
+      <body className={inter.className}><ConsoleSilencer /><Providers>{children}</Providers><Toaster richColors position="top-right" /></body>
     </html>
   )
 }

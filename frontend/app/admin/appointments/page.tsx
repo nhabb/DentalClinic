@@ -219,7 +219,7 @@ export default function AppointmentsManagement() {
           const patientUser = a.patient_profiles?.users;
           const doctorId = a.doctor_id || a.created_by;
           const doctor = users.find((u) => u.id === doctorId || u.id === String(doctorId));
-          const time = a.start_time ? new Date(a.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "UTC" }) : "";
+          const time = a.start_time ? (() => { const d = new Date(a.start_time); return `${String(d.getUTCHours()).padStart(2,"0")}:${String(d.getUTCMinutes()).padStart(2,"0")}`; })() : "";
           return {
             id: Number(a.id),
             date: a.appointment_date ? String(a.appointment_date).slice(0, 10) : "",
@@ -346,8 +346,7 @@ export default function AppointmentsManagement() {
   const fetchMonthSlots = async (doctorId: number, targetMonth?: Date) => {
     setLoadingMonthSlots(true);
     try {
-      const toTime = (raw: string) =>
-        new Date(raw).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "UTC" });
+      const toTime = (raw: string) => { const d = new Date(raw); return `${String(d.getUTCHours()).padStart(2,"0")}:${String(d.getUTCMinutes()).padStart(2,"0")}`; };
 
       const month = targetMonth ?? calendarMonth;
       const year = month.getFullYear();
@@ -443,7 +442,7 @@ export default function AppointmentsManagement() {
       setExistingSlots(
         (data.data || []).map((s: any) => ({
           id: Number(s.id),
-          time: new Date(s.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "UTC" }),
+          time: (() => { const d = new Date(s.start_time); return `${String(d.getUTCHours()).padStart(2,"0")}:${String(d.getUTCMinutes()).padStart(2,"0")}`; })(),
           isBooked: s.is_booked,
         }))
       );
@@ -851,7 +850,7 @@ export default function AppointmentsManagement() {
                             {/* Time */}
                             <div className="text-center min-w-[80px]">
                               <p className="text-xl font-bold text-gray-900">
-                                {apt.time}
+                                {apt.time ? (() => { const [h,m] = apt.time.split(":").map(Number); return `${h%12||12}:${String(m).padStart(2,"0")} ${h>=12?"PM":"AM"}`; })() : ""}
                               </p>
                               <p className="text-xs text-gray-500">
                                 {apt.duration} min

@@ -75,6 +75,7 @@ export default function AdminSidebar({ activePage, sidebarOpen, onToggle, onLogo
   }, []);
 
   return (
+    <>
     <aside
       className={`${
         sidebarOpen ? "w-64" : "w-20"
@@ -155,11 +156,12 @@ export default function AdminSidebar({ activePage, sidebarOpen, onToggle, onLogo
         </button>
       </div>
 
-      {showChangePassword && (
-        <ChangePasswordModal
-          onClose={() => setShowChangePassword(false)}
-        />
-      )}
     </aside>
+    {showChangePassword && (
+      <ChangePasswordModal
+        onClose={() => setShowChangePassword(false)}
+      />
+    )}
+    </>
   );
 }

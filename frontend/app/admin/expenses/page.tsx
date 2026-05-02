@@ -74,6 +74,8 @@ export default function ExpensesPage() {
   const [form, setForm] = useState(emptyForm);
   const [isLoading, setIsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [addSaving, setAddSaving] = useState(false);
+  const [editSaving, setEditSaving] = useState(false);
 
   const fetchExpenses = async () => {
     setIsLoading(true);
@@ -139,6 +141,7 @@ export default function ExpensesPage() {
   };
 
   const handleAdd = async () => {
+    setAddSaving(true);
     try {
       await apiFetch("/api/expenses", {
         method: "POST",
@@ -159,12 +162,15 @@ export default function ExpensesPage() {
         { id: Date.now(), ...form, amount: parseFloat(form.amount) || 0 },
       ]);
       toast.success("Expense added.");
+    } finally {
+      setAddSaving(false);
     }
     setShowAddModal(false);
   };
 
   const handleEditSave = async () => {
     if (!selectedExpense) return;
+    setEditSaving(true);
     try {
       await apiFetch(`/api/expenses/${selectedExpense.id}`, {
         method: "PATCH",
@@ -188,6 +194,8 @@ export default function ExpensesPage() {
         )
       );
       toast.success("Expense updated.");
+    } finally {
+      setEditSaving(false);
     }
     setShowEditModal(false);
   };
@@ -435,8 +443,13 @@ export default function ExpensesPage() {
           <Button variant="outline" className="flex-1" onClick={() => setShowAddModal(false)}>
             {t("common.cancel")}
           </Button>
-          <Button className="flex-1 bg-dental-blue hover:bg-dental-blue/90" onClick={handleAdd}>
-            {t("expenses.addExpense")}
+          <Button className="flex-1 bg-dental-blue hover:bg-dental-blue/90" onClick={handleAdd} disabled={addSaving}>
+            {addSaving ? (
+              <span className="flex items-center gap-2">
+                <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                {t("common.saving")}
+              </span>
+            ) : t("expenses.addExpense")}
           </Button>
         </div>
       </Modal>
@@ -504,8 +517,13 @@ export default function ExpensesPage() {
               <Button variant="outline" className="flex-1" onClick={() => setShowEditModal(false)}>
                 {t("common.cancel")}
               </Button>
-              <Button className="flex-1 bg-dental-blue hover:bg-dental-blue/90" onClick={handleEditSave}>
-                {t("expenses.saveChanges")}
+              <Button className="flex-1 bg-dental-blue hover:bg-dental-blue/90" onClick={handleEditSave} disabled={editSaving}>
+                {editSaving ? (
+                  <span className="flex items-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                    {t("common.saving")}
+                  </span>
+                ) : t("expenses.saveChanges")}
               </Button>
             </div>
           </>

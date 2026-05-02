@@ -78,8 +78,8 @@ export default function ChangePasswordModal({ onClose }: Props) {
     }
   };
 
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
+  const modal = (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-lg font-bold text-gray-900">Change Password</h2>
@@ -184,4 +184,6 @@ export default function ChangePasswordModal({ onClose }: Props) {
       </div>
     </div>
   );
+
+  return modal;
 }

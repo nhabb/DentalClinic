@@ -22,7 +22,7 @@ const ROLE_REDIRECTS: Record<string, string> = {
 
 const DEMO_ACCOUNTS = [
   { role: "Patient",   email: "patient@demo.com",   password: "demo123", icon: FaUser,   color: "text-blue-500" },
-  { role: "Doctor",    email: "doctor@demo.com",     password: "demo123", icon: FaUserMd, color: "text-teal-500" },
+  { role: "Doctor",    email: "doctor@demo.com",     password: "Demo123456", icon: FaUserMd, color: "text-teal-500" },
 ];
 
 export default function LoginPage() {
@@ -44,13 +44,15 @@ export default function LoginPage() {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: `${window.location.origin}/auth/callback` },
+        options: { redirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? window.location.origin}/auth/callback` },
       });
       if (error) {
         toast.error(error.message);
         setIsLoading(false);
       }
-      // No error → browser redirects to Google — nothing more to do here
+      // No error → Supabase navigates to Google via location.assign.
+      // The 302 chain (Supabase→Google→callback) replaces those history entries,
+      // so back from dashboard lands on /login.
     } catch {
       toast.error("Failed to start Google sign-in. Please try again.");
       setIsLoading(false);
@@ -69,15 +71,15 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       });
 
-      // Parse JSON safely — error responses might not be JSON (e.g. HTML gateway errors)
+      // Parse JSON safely — gateway errors may return HTML
       let data: Record<string, unknown> = {};
       try {
         data = await res.json();
       } catch {
-        // Non-JSON response
+        // Non-JSON response (e.g. nginx 502)
       }
 
-      if (!res.ok) {
+      if (!res.ok || data.success === false) {
         setError((data.message as string) || "Invalid email or password.");
         return;
       }
@@ -236,7 +238,7 @@ export default function LoginPage() {
               ))}
             </div>
             <p className="text-[10px] text-gray-400 text-center">
-              {t("login.passwordForAll")} <span className="font-mono font-semibold">demo123</span>
+              {t("login.passwordForAll")} <span className="font-mono font-semibold">Demo123456</span>
             </p>
           </div>
 

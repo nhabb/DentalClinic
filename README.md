@@ -112,7 +112,7 @@ docker system prune -a --volumes
 
 | Email | Password | Role / Dashboard |
 |-------|----------|-----------------|
-| doctor@demo.com | demo123 | Admin panel |
+| doctor@demo.com | Demo123456 | Admin panel |
 
 ---
 

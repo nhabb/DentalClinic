@@ -132,7 +132,7 @@ export default function AdminDashboard() {
           await Promise.all([
             email ? fetch(`${API_URL}/api/users/by-email?email=${encodeURIComponent(email)}`) : Promise.resolve(null),
             apiFetch(`/api/patients`),
-            apiFetch(`/api/appointments`),
+            apiFetch(`/api/appointments?limit=500`),
             apiFetch(`/api/inventory/low-stock`),
             apiFetch(`/api/billing/summary`),
             apiFetch(`/api/billing/invoice-payments?limit=500`),
@@ -165,7 +165,7 @@ export default function AdminDashboard() {
         setTodayAppointments(
           todayAppts.map((a: any) => {
             const patientUser = (a.patient_profiles ?? a.patient_profile)?.users;
-            const time = a.start_time ? new Date(a.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+            const time = a.start_time ? (() => { const d = new Date(a.start_time); return `${String(d.getUTCHours()).padStart(2,"0")}:${String(d.getUTCMinutes()).padStart(2,"0")}`; })() : "";
             return { id: Number(a.id), time, patient: patientUser ? `${patientUser.first_name} ${patientUser.last_name}` : `Patient #${a.patient_id}`, type: a.reason || "Checkup", status: a.status, doctorId: Number(a.doctor_id || 0), patientId: Number(a.patient_id || 0), date: a.appointment_date?.split("T")[0] || today };
           })
         );
@@ -307,10 +307,8 @@ export default function AdminDashboard() {
       // 1. Find existing slots for that doctor/date
       const slotsRes = await apiFetch(`/api/appointment-slots?doctor_id=${appt.doctorId}&date=${postponeDate}&limit=100`);
       const slotsData = slotsRes.ok ? await slotsRes.json() : { data: [] };
-      let slot = (slotsData.data || []).find((s: any) => {
-        const t = new Date(s.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "UTC" });
-        return t === postponeTime && !s.is_booked;
-      });
+      const toHHMM = (raw: string) => { const d = new Date(raw); return `${String(d.getUTCHours()).padStart(2,"0")}:${String(d.getUTCMinutes()).padStart(2,"0")}`; };
+      let slot = (slotsData.data || []).find((s: any) => toHHMM(s.start_time) === postponeTime && !s.is_booked);
 
       // 2. If no matching open slot, create one (30-min block)
       if (!slot) {
@@ -327,10 +325,7 @@ export default function AdminDashboard() {
         // Fetch the newly created slot
         const refetchRes = await apiFetch(`/api/appointment-slots?doctor_id=${appt.doctorId}&date=${postponeDate}&limit=100`);
         const refetchData = refetchRes.ok ? await refetchRes.json() : { data: [] };
-        slot = (refetchData.data || []).find((s: any) => {
-          const t = new Date(s.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "UTC" });
-          return t === postponeTime && !s.is_booked;
-        });
+        slot = (refetchData.data || []).find((s: any) => toHHMM(s.start_time) === postponeTime && !s.is_booked);
         if (!slot) { toast.error("Could not find the new slot after creation."); return; }
       }
 
@@ -616,7 +611,7 @@ export default function AdminDashboard() {
                     >
                       <div className="flex items-center gap-4">
                         <div className="text-center">
-                          <p className="text-sm font-bold text-gray-900">{apt.time}</p>
+                          <p className="text-sm font-bold text-gray-900">{apt.time ? (() => { const [h,m] = apt.time.split(":").map(Number); const ampm = h >= 12 ? "PM" : "AM"; return `${h % 12 || 12}:${String(m).padStart(2,"0")} ${ampm}`; })() : ""}</p>
                         </div>
                         <div className="w-px h-10 bg-gray-200"></div>
                         <div>

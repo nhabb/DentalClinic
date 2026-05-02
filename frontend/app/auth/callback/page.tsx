@@ -15,6 +15,12 @@ const ROLE_REDIRECTS: Record<string, string> = {
 
 const ADMIN_ROLES = new Set(["doctor", "admin", "secretary", "superadmin"]);
 
+// Replace the callback entry in history with /login so the back button
+// always lands on the login page instead of a stale Google/Supabase OAuth URL.
+function cleanNavigate(target: string) {
+  window.location.replace(target);
+}
+
 async function provisionAndPersist(supabaseToken: string): Promise<{ redirect: string; userId: string; isNew: boolean }> {
   const res = await fetch(`${API_URL}/api/auth/provision`, {
     method: "POST",
@@ -42,7 +48,8 @@ async function provisionAndPersist(supabaseToken: string): Promise<{ redirect: s
     redirect: ROLE_REDIRECTS[role] ?? "/patient-dashboard",
     userId: user.id.toString(),
     isNew: !!is_new_user,
-  };
+};
+
 }
 
 
@@ -71,17 +78,11 @@ export default function AuthCallbackPage() {
 
       try {
         const { redirect, isNew } = await provisionAndPersist(accessToken);
-
-        if (isNew) {
-          // New Google user — send them to complete their profile (form is pre-filled from sessionStorage)
-          router.replace("/complete-profile");
-        } else {
-          router.replace(redirect);
-        }
+        cleanNavigate(isNew ? "/complete-profile" : redirect);
       } catch {
         sessionStorage.setItem("authToken", accessToken);
         sessionStorage.setItem("userRole", "patient");
-        router.replace("/patient-dashboard");
+        cleanNavigate("/patient-dashboard");
       }
     };
 
