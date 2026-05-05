@@ -1208,6 +1208,7 @@ export default function PatientsPage() {
                   src={previewDoc.url}
                   alt={previewDoc.file_name || "document"}
                   className="max-w-full max-h-[75vh] mx-auto rounded-lg object-contain"
+                  crossOrigin="anonymous"
                 />
               ) : (
                 <iframe

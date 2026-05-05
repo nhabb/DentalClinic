@@ -463,6 +463,7 @@ export default function InventoryManagement() {
                                 src={item.image_url}
                                 alt={item.name}
                                 className="w-full h-full object-cover"
+                                crossOrigin="anonymous"
                               />
                             ) : (
                               getCategoryIcon(item.category)

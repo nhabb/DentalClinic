@@ -7,6 +7,13 @@ const nextConfig: NextConfig = {
     removeConsole: process.env.NODE_ENV === "production",
   },
 
+  experimental: {
+    // Disable CSS chunking — merges all CSS into one bundle so Next.js never
+    // emits separate CSS chunk preloads that time out with "preloaded but not
+    // used within a few seconds from the window's load event".
+    cssChunking: false,
+  },
+
   // Headers for better browser compatibility
   async headers() {
     return [

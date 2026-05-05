@@ -46,7 +46,7 @@ export function Avatar({ name, size = "lg", src, onUpload }: AvatarProps) {
   const baseClass = `${sizeClasses[size]} rounded-full overflow-hidden flex items-center justify-center text-white font-bold flex-shrink-0`;
 
   const content = src ? (
-    <img src={src} alt={name} className="w-full h-full object-cover" />
+    <img src={src} alt={name} className="w-full h-full object-cover" crossOrigin="anonymous" />
   ) : (
     <span>{getInitials(name)}</span>
   );
