@@ -19,6 +19,10 @@ const MUTED_PATTERNS = [
   "ERR_BLOCKED_BY_CLIENT",
   "net::ERR",
   "Failed to load resource",
+  "preloaded with link preload was not used",
+  "was not used within a few seconds",
+  "make sure all attributes of the preload tag",
+  "api/users/by-email",
 ];
 
 export default function ConsoleSilencer() {

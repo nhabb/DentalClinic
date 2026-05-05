@@ -89,8 +89,7 @@ export class UsersService {
         last_name: true,
       },
     });
-    if (!user) throw new NotFoundException('User not found');
-    return user;
+    return user ?? null;
   }
 
   async findAll(role?: string) {

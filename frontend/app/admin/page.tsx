@@ -142,14 +142,16 @@ export default function AdminDashboard() {
         // ── User ──────────────────────────────────────────────────────────────
         if (userRes?.ok) {
           const u = await userRes.json();
-          setUser({ id: Number(u.id), firstName: u.first_name || "", lastName: u.last_name || "", email: u.email, role: u.role });
-          if (u.id) {
-            safeStorage.setItem("doctorDbId", String(u.id));
-            // Load avatar from backend (persists across devices)
-            const detailRes = await apiFetch(`/api/users/${u.id}`);
-            if (detailRes.ok) {
-              const detail = await detailRes.json();
-              if (detail.avatar_url) setPhotoUrl(detail.avatar_url);
+          if (u) {
+            setUser({ id: Number(u.id), firstName: u.first_name || "", lastName: u.last_name || "", email: u.email, role: u.role });
+            if (u.id) {
+              safeStorage.setItem("doctorDbId", String(u.id));
+              // Load avatar from backend (persists across devices)
+              const detailRes = await apiFetch(`/api/users/${u.id}`);
+              if (detailRes.ok) {
+                const detail = await detailRes.json();
+                if (detail.avatar_url) setPhotoUrl(detail.avatar_url);
+              }
             }
           }
         } else if (storedUser) {

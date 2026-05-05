@@ -141,63 +141,71 @@ export default function ExpensesPage() {
   };
 
   const handleAdd = async () => {
+    const amount = Math.round(parseFloat(form.amount) * 100) / 100;
+    if (!form.description.trim() || isNaN(amount) || amount < 0) {
+      toast.error("Please fill in all required fields with valid values.");
+      return;
+    }
     setAddSaving(true);
     try {
-      await apiFetch("/api/expenses", {
+      const res = await apiFetch("/api/expenses", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: form.description,
           expense_date: form.date,
           category: form.category.toLowerCase(),
-          amount: parseFloat(form.amount),
+          amount,
         }),
       });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        toast.error(Array.isArray(err.message) ? err.message.join(", ") : (err.message || "Failed to add expense."));
+        return;
+      }
       await fetchExpenses();
+      setShowAddModal(false);
       toast.success("Expense added.");
     } catch {
-      // optimistic add
-      setExpenses((prev) => [
-        ...prev,
-        { id: Date.now(), ...form, amount: parseFloat(form.amount) || 0 },
-      ]);
-      toast.success("Expense added.");
+      toast.error("Failed to add expense. Please try again.");
     } finally {
       setAddSaving(false);
     }
-    setShowAddModal(false);
   };
 
   const handleEditSave = async () => {
     if (!selectedExpense) return;
+    const amount = Math.round(parseFloat(form.amount) * 100) / 100;
+    if (!form.description.trim() || isNaN(amount) || amount < 0) {
+      toast.error("Please fill in all required fields with valid values.");
+      return;
+    }
     setEditSaving(true);
     try {
-      await apiFetch(`/api/expenses/${selectedExpense.id}`, {
+      const res = await apiFetch(`/api/expenses/${selectedExpense.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: form.description,
           expense_date: form.date,
           category: form.category.toLowerCase(),
-          amount: parseFloat(form.amount),
+          amount,
           status: form.status,
         }),
       });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        toast.error(Array.isArray(err.message) ? err.message.join(", ") : (err.message || "Failed to update expense."));
+        return;
+      }
       await fetchExpenses();
+      setShowEditModal(false);
       toast.success("Expense updated.");
     } catch {
-      setExpenses((prev) =>
-        prev.map((e) =>
-          e.id === selectedExpense.id
-            ? { ...e, ...form, amount: parseFloat(form.amount) || e.amount }
-            : e
-        )
-      );
-      toast.success("Expense updated.");
+      toast.error("Failed to update expense. Please try again.");
     } finally {
       setEditSaving(false);
     }
-    setShowEditModal(false);
   };
 
   const handleDelete = async (id: number) => {

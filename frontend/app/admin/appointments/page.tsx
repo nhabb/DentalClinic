@@ -207,7 +207,9 @@ export default function AppointmentsManagement() {
         const users: any[] = usersRes.ok ? await usersRes.json() : [];
         const doctorsList: any[] = doctorsRes.ok ? await doctorsRes.json() : [];
 
-        const doctors = doctorsList.map((u, i) => ({
+        const doctors = doctorsList
+          .filter((u) => u.first_name === "Ahmed" && u.last_name === "Hassan")
+          .map((u, i) => ({
           id: Number(u.id),
           name: `${u.first_name} ${u.last_name}`,
           specialty: "Dentist",

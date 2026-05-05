@@ -261,7 +261,7 @@ export default function PatientsPage() {
       const res = await apiFetch(`/api/users`);
       const data = await res.json();
       const list: any[] = Array.isArray(data) ? data : (data.data ?? []);
-      setDoctors(list.filter((u: any) => u.role === 'doctor' || u.role === 'admin'));
+      setDoctors(list.filter((u: any) => (u.role === 'doctor' || u.role === 'admin') && u.first_name === 'Ahmed' && u.last_name === 'Hassan'));
     } catch {}
   };
 

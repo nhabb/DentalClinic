@@ -303,10 +303,14 @@ export default function InventoryManagement() {
           ...addForm,
           quantity: Number(addForm.quantity) || 0,
           minimum_quantity: Number(addForm.minimum_quantity) || 0,
-          cost_price: Number(addForm.cost_price) || 0,
+          cost_price: Math.round((Number(addForm.cost_price) || 0) * 100) / 100,
         }),
       });
-      if (!res.ok) { toast.error("Failed to add item."); return; }
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        toast.error(Array.isArray(err.message) ? err.message.join(", ") : (err.message || "Failed to add item."));
+        return;
+      }
       const newItem = await res.json();
       const newId = Number(newItem.id);
       if (addImageFile) await uploadItemImage(newId, addImageFile);
@@ -335,35 +339,43 @@ export default function InventoryManagement() {
 
   const handleEditSave = async () => {
     if (!selectedItem) return;
+    const costPrice = Math.round((Number(editForm.cost_price) || 0) * 100) / 100;
     setEditSaving(true);
     try {
-      await apiFetch(`/api/inventory/${selectedItem.id}`, {
+      const res = await apiFetch(`/api/inventory/${selectedItem.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...editForm,
+          name: editForm.name,
           minimum_quantity: Number(editForm.minimum_quantity) || 0,
-          cost_price: Number(editForm.cost_price) || 0,
+          cost_price: costPrice,
         }),
       });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        toast.error(Array.isArray(err.message) ? err.message.join(", ") : (err.message || "Failed to update item."));
+        return;
+      }
       if (editImageFile) await uploadItemImage(selectedItem.id, editImageFile);
       if (stockQty > 0) {
-        const res = await apiFetch(`/api/inventory/${selectedItem.id}/movements`, {
+        const stockRes = await apiFetch(`/api/inventory/${selectedItem.id}/movements`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ movement_type: stockType, quantity: stockQty, note: stockNote || undefined, performed_by: currentUserId }),
         });
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
+        if (!stockRes.ok) {
+          const err = await stockRes.json().catch(() => ({}));
           toast.error(err.message || "Failed to adjust stock.");
           return;
         }
       }
       await fetchInventory();
       toast.success("Item updated.");
+      setShowEditModal(false);
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to update item.");
     } finally {
       setEditSaving(false);
-      setShowEditModal(false);
       setEditImageFile(null);
       setEditImagePreview(null);
     }

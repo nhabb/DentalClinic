@@ -5,7 +5,7 @@ import { Providers } from './providers'
 import { Toaster } from 'sonner'
 import ConsoleSilencer from '@/components/ui/ConsoleSilencer'
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ subsets: ['latin'], preload: false })
 
 export const metadata: Metadata = {
   title: 'BrightSmile Dental Clinic - Comprehensive Family Dental Care',

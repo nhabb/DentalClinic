@@ -184,7 +184,7 @@ export default function BookAppointment() {
       const json = await res.json();
       const users: any[] = Array.isArray(json) ? json : (json.data ?? []);
       const mapped = users
-        .filter((u) => u.role === "admin" || u.role === "doctor")
+        .filter((u) => (u.role === "admin" || u.role === "doctor") && u.first_name === "Ahmed" && u.last_name === "Hassan")
         .map((u) => ({
           id: Number(u.id),
           name: `Dr. ${u.first_name} ${u.last_name}`,
