@@ -194,7 +194,6 @@ export default function BookAppointment() {
         }));
       setDoctors(mapped);
     } catch (e) {
-      console.error("Failed to fetch doctors", e);
     } finally {
       setLoadingDoctors(false);
     }

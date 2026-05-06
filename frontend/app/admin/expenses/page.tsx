@@ -126,7 +126,7 @@ export default function ExpensesPage() {
   const handleOpenEdit = (expense: Expense) => {
     setSelectedExpense(expense);
     setForm({
-      description: expense.description,
+      description: expense.description ?? "",
       category: expense.category.toLowerCase(),
       amount: String(expense.amount),
       status: expense.status,
@@ -142,7 +142,7 @@ export default function ExpensesPage() {
 
   const handleAdd = async () => {
     const amount = Math.round(parseFloat(form.amount) * 100) / 100;
-    if (!form.description.trim() || isNaN(amount) || amount < 0) {
+    if (!form.description?.trim() || isNaN(amount) || amount < 0) {
       toast.error("Please fill in all required fields with valid values.");
       return;
     }
@@ -176,7 +176,7 @@ export default function ExpensesPage() {
   const handleEditSave = async () => {
     if (!selectedExpense) return;
     const amount = Math.round(parseFloat(form.amount) * 100) / 100;
-    if (!form.description.trim() || isNaN(amount) || amount < 0) {
+    if (!form.description?.trim() || isNaN(amount) || amount < 0) {
       toast.error("Please fill in all required fields with valid values.");
       return;
     }
@@ -252,10 +252,9 @@ export default function ExpensesPage() {
                 const res = await apiFetch("/api/expenses", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
                 if (res.ok) { ok++; } else {
                   const err = await res.text().catch(() => res.status.toString());
-                  console.error("Expense import row failed:", res.status, err, payload);
                   fail++;
                 }
-              } catch (e) { console.error("Expense import exception:", e); fail++; }
+              } catch (e) { fail++; }
             }
             await fetchExpenses();
             if (ok > 0) toast.success(`${ok} expense${ok > 1 ? "s" : ""} imported.`);

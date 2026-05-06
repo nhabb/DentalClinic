@@ -7,8 +7,6 @@ const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter } as any);
 
 async function main() {
-  console.log('🌱 Seeding database...');
-
   const demoHash = await bcrypt.hash('Demo123456', 10);
 
   // ─── Main accounts (use demo emails that exist in Supabase auth) ────────────
@@ -25,7 +23,6 @@ async function main() {
       gender: 'male',
     },
   });
-  console.log(`✅ Doctor: ${doctor.email} (ID ${doctor.id})`);
 
   await prisma.users.upsert({
     where: { email: 'secretary@demo.com' },
@@ -47,7 +44,6 @@ async function main() {
       date_of_birth: new Date('1992-06-15'),
     },
   });
-  console.log(`✅ Patient: ${patientUser.email} (ID ${patientUser.id})`);
 
   // ─── Patient profile ────────────────────────────────────────────────────────
   const patientProfile = await prisma.patient_profiles.upsert({
@@ -68,7 +64,6 @@ async function main() {
       profile_complete: true,
     },
   });
-  console.log(`✅ Patient profile (ID ${patientProfile.id})`);
 
   // ─── Clinic profile ─────────────────────────────────────────────────────────
   const existingClinic = await prisma.clinic_profile.findFirst();
@@ -84,7 +79,6 @@ async function main() {
         opening_hours: 'Mon-Fri 8:00-18:00, Sat 9:00-14:00',
       },
     });
-    console.log('✅ Clinic profile created');
   }
 
   // ─── Appointment slots ──────────────────────────────────────────────────────
@@ -112,7 +106,6 @@ async function main() {
     });
     slots.push(slot);
   }
-  console.log(`✅ ${slots.length} appointment slots created`);
 
   // ─── Appointments ───────────────────────────────────────────────────────────
   // Past completed appointment
@@ -194,8 +187,6 @@ async function main() {
     },
   });
 
-  console.log('✅ 5 appointments created');
-
   // ─── Patient records ─────────────────────────────────────────────────────────
   await prisma.patient_records.createMany({
     data: [
@@ -238,7 +229,6 @@ async function main() {
       },
     ],
   });
-  console.log('✅ Patient records created');
 
   // ─── Inventory items ─────────────────────────────────────────────────────────
   const inventoryData = [
@@ -263,7 +253,6 @@ async function main() {
     });
     inventoryItems.push(inv);
   }
-  console.log(`✅ ${inventoryItems.length} inventory items created`);
 
   // ─── Inventory movements ──────────────────────────────────────────────────────
   const movementsData = [
@@ -289,7 +278,6 @@ async function main() {
       },
     });
   }
-  console.log('✅ Inventory movements created');
 
   // ─── Notifications ────────────────────────────────────────────────────────────
   await prisma.notifications.createMany({
@@ -331,7 +319,6 @@ async function main() {
       },
     ],
   });
-  console.log('✅ Notifications created');
 
   // ─── Payments ─────────────────────────────────────────────────────────────────
   await prisma.payments.createMany({
@@ -384,7 +371,6 @@ async function main() {
       },
     ],
   });
-  console.log('✅ Payments created');
 
   // ─── Expenses ─────────────────────────────────────────────────────────────────
   await prisma.expenses.createMany({
@@ -454,7 +440,6 @@ async function main() {
       },
     ],
   });
-  console.log('✅ Expenses created');
 
   // ─── Audit log ────────────────────────────────────────────────────────────────
   await prisma.audit_logs.createMany({
@@ -483,18 +468,10 @@ async function main() {
       },
     ],
   });
-  console.log('✅ Audit logs created');
-
-  console.log('\n🎉 Seed complete!');
-  console.log('─────────────────────────────────────────');
-  console.log('  doctor@demo.com   /  Demo123456  (admin)');
-  console.log('  patient@demo.com  /  demo123  (patient)');
-  console.log('─────────────────────────────────────────');
 }
 
 main()
-  .catch((e) => {
-    console.error('❌ Seed failed:', e);
+  .catch(() => {
     process.exit(1);
   })
   .finally(() => prisma.$disconnect());

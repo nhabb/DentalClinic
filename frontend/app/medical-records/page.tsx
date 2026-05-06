@@ -190,7 +190,6 @@ export default function MedicalRecords() {
           }
         }
       } catch (e) {
-        console.error("Failed to fetch medical records", e);
       } finally {
         setLoading(false);
       }

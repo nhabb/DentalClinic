@@ -80,7 +80,6 @@ export default function PatientDashboard() {
         setUpcomingAppointments((upcomingData.data || []).map(mapAppt));
         setRecentVisits((historyData.data || []).map(mapAppt));
       } catch (e) {
-        console.error("Failed to fetch patient data", e);
       }
     };
     fetchData();

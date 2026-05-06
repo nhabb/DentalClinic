@@ -52,7 +52,6 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       exception instanceof HttpException ? exception.getResponse() : null;
 
     if ((status as HttpStatus) === HttpStatus.INTERNAL_SERVER_ERROR) {
-      console.error('[GlobalExceptionFilter]', exception);
     }
 
     let message: string | string[] = 'Internal server error';

@@ -242,7 +242,6 @@ export default function AppointmentsManagement() {
         });
         setAppointments(mapped);
       } catch (e) {
-        console.error("Failed to fetch appointments", e);
       } finally {
         setIsLoading(false);
       }
@@ -367,7 +366,7 @@ export default function AppointmentsManagement() {
           dayDates.map((date) =>
             apiFetch(`/api/appointment-slots?doctor_id=${doctorId}&date=${date}&limit=100`)
               .then((r) => (r.ok ? r.json() : { data: [] }))
-              .catch((e) => { console.error("[MySlots] fetch error:", e); return { data: [] }; })
+              .catch(() => { return { data: [] }; })
           )
         ),
         apiFetch(`/api/appointments?limit=1000`),

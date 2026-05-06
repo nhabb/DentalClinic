@@ -68,7 +68,7 @@ function ImageUploadBox({
     >
       {preview ? (
         <>
-          <img src={preview} alt="preview" className="w-full h-full object-cover" />
+          <img src={preview} alt="preview" className="w-full h-full object-cover" crossOrigin="anonymous" />
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
             <span className="text-white text-sm font-medium flex items-center gap-2">
               <FaCamera /> Change photo
@@ -177,7 +177,6 @@ export default function InventoryManagement() {
       }));
       setInventoryItems(mapped);
     } catch (e) {
-      console.error("Failed to fetch inventory", e);
     }
   };
 
@@ -407,10 +406,9 @@ export default function InventoryManagement() {
                 const res = await apiFetch("/api/inventory", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
                 if (res.ok) { ok++; } else {
                   const err = await res.text().catch(() => res.status.toString());
-                  console.error("Inventory import row failed:", res.status, err, payload);
                   fail++;
                 }
-              } catch (e) { console.error("Inventory import exception:", e); fail++; }
+              } catch (e) { fail++; }
             }
             await fetchInventory();
             if (ok > 0) toast.success(`${ok} item${ok > 1 ? "s" : ""} imported.`);

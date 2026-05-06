@@ -178,7 +178,6 @@ Business context (what each table means):
 
       this.dbSchema = tableSchema + fkSchema + businessContext;
     } catch (err: any) {
-      console.warn('[Schema] Could not load DB schema:', err.message);
     }
 
     try {
@@ -215,15 +214,7 @@ Business context (what each table means):
         },
       }));
 
-      console.log(`[MCP] Connected — ${this.mcpTools.length} tools loaded:`);
-      this.mcpTools.forEach((t) =>
-        console.log(`  • ${(t as any).function.name}`),
-      );
     } catch (err: any) {
-      console.warn(
-        '[MCP] Server unavailable, falling back to query_database only:',
-        err.message,
-      );
       this.mcpClient = null;
       this.mcpTools = [];
     }
@@ -562,9 +553,6 @@ Expense query patterns:
 
     const allTools = [...AGENT_TOOLS, ...this.mcpTools];
 
-    const agentStart = Date.now();
-    let totalToolCalls = 0;
-
     let response = await this.openai.chat.completions.create({
       model: 'gpt-4o-mini',
       tools: allTools,
@@ -580,26 +568,7 @@ Expense query patterns:
           const fn = (call as any).function;
           const input = JSON.parse(fn.arguments);
 
-          const toolType = this.mcpTools.some(
-            (t) => (t as any).function?.name === fn.name,
-          )
-            ? 'MCP'
-            : fn.name === 'query_database'
-              ? 'SQL'
-              : 'API';
-
-          totalToolCalls++;
-          const toolStart = Date.now();
-
-          console.log(
-            `\n[TOOL CALL #${totalToolCalls}][${toolType}] ${fn.name}`,
-          );
-          console.log(`[TOOL INPUT]`, JSON.stringify(input, null, 2));
-
           const result = await this.executeTool(fn.name, input);
-          const toolMs = Date.now() - toolStart;
-
-          console.log(`[TOOL RESULT] (${toolMs}ms)`, result.slice(0, 500));
 
           return {
             role: 'tool' as const,
@@ -650,24 +619,7 @@ IMPORTANT OUTPUT RULES:
           (assistantMsg.tool_calls ?? []).map(async (call) => {
             const fn = (call as any).function;
             const input = JSON.parse(fn.arguments);
-            const toolType = this.mcpTools.some(
-              (t) => (t as any).function?.name === fn.name,
-            )
-              ? 'MCP'
-              : fn.name === 'query_database'
-                ? 'SQL'
-                : 'API';
-            totalToolCalls++;
-            const toolStart = Date.now();
-            console.log(
-              `\n[VERIFY r${round}][TOOL #${totalToolCalls}][${toolType}] ${fn.name}`,
-            );
-            console.log(`[TOOL INPUT]`, JSON.stringify(input, null, 2));
             const result = await this.executeTool(fn.name, input);
-            console.log(
-              `[TOOL RESULT] (${Date.now() - toolStart}ms)`,
-              result.slice(0, 300),
-            );
             return {
               role: 'tool' as const,
               tool_call_id: call.id,
@@ -684,10 +636,8 @@ IMPORTANT OUTPUT RULES:
       }
 
       const verifyContent = verifyResp.choices[0].message.content ?? '';
-      console.log(`\n[VERIFY r${round}] ${verifyContent.slice(0, 150)}`);
 
       if (verifyContent.trim().toUpperCase().startsWith('VERIFIED')) {
-        console.log(`[VERIFY] Confirmed on round ${round}`);
         break;
       }
 
@@ -695,11 +645,6 @@ IMPORTANT OUTPUT RULES:
       finalAnswer = verifyContent;
       openaiMessages.push({ role: 'assistant', content: finalAnswer });
     }
-
-    const totalMs = Date.now() - agentStart;
-    console.log(
-      `\n[AGENT DONE] tools called: ${totalToolCalls} | total time: ${totalMs}ms`,
-    );
 
     return finalAnswer;
   }
@@ -720,14 +665,6 @@ IMPORTANT OUTPUT RULES:
     name: string,
     input: Record<string, any>,
   ): Promise<string> {
-    const isMcp = this.mcpTools.some((t) => (t as any).function?.name === name);
-    const source = isMcp
-      ? '[MCP]'
-      : name === 'query_database'
-        ? '[SQL]'
-        : '[API]';
-    console.log(`${source} routing → ${name}`);
-
     try {
       switch (name) {
         // ── Appointments ───────────────────────────────────────────

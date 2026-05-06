@@ -230,7 +230,6 @@ export default function AdminDashboard() {
         }));
         setAnalyticsData(formatted);
       } catch (e) {
-        console.error("Failed to fetch dashboard data", e);
       } finally {
         setLoading(false);
       }
@@ -735,21 +734,21 @@ export default function AdminDashboard() {
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                     <XAxis
                       dataKey="month"
-                      tick={{ fontSize: 12, fill: "#9ca3af" }}
+                      tick={{ fontSize: "12px", fill: "#9ca3af" }}
                       tickLine={false}
                       axisLine={false}
                     />
                     <YAxis
-                      tick={{ fontSize: 12, fill: "#9ca3af" }}
+                      tick={{ fontSize: "12px", fill: "#9ca3af" }}
                       tickLine={false}
                       axisLine={false}
                       tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
                     />
                     <Tooltip
                       formatter={(value: any, name: any) => [`$${Number(value).toLocaleString()}`, name]}
-                      contentStyle={{ borderRadius: "12px", border: "1px solid #e5e7eb", fontSize: 13 }}
+                      contentStyle={{ borderRadius: "12px", border: "1px solid #e5e7eb", fontSize: "13px" }}
                     />
-                    <Legend wrapperStyle={{ fontSize: 13 }} />
+                    <Legend wrapperStyle={{ fontSize: "13px" }} />
                     <Line type="monotone" dataKey="Income" stroke="#3b82f6" strokeWidth={2.5} dot={{ r: 4 }} activeDot={{ r: 6 }} />
                     <Line type="monotone" dataKey="Expenses" stroke="#f97316" strokeWidth={2.5} dot={{ r: 4 }} activeDot={{ r: 6 }} />
                     <Line type="monotone" dataKey="Net" stroke="#10b981" strokeWidth={2.5} strokeDasharray="5 5" dot={{ r: 4 }} activeDot={{ r: 6 }} />

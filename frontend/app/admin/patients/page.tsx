@@ -205,7 +205,6 @@ export default function PatientsPage() {
       });
       setPatients(mapped);
     } catch (e) {
-      console.error("Failed to fetch patients", e);
     } finally {
       setIsLoading(false);
     }
@@ -251,7 +250,6 @@ export default function PatientsPage() {
 
       setPatientHistory({ appointments, treatments });
     } catch (e) {
-      console.error("Failed to fetch patient history", e);
       setPatientHistory(null);
     }
   };

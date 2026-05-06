@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 
-// Patterns that are noise from third-party services (Supabase, Cloudflare, browser internals)
 const MUTED_PATTERNS = [
   "__cf_bm",
   "require-trusted-types-for",
