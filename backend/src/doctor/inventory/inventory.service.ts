@@ -80,8 +80,8 @@ export class InventoryService {
     page?: number;
     limit?: number;
   }) {
-    const { category, search, low_stock_only, page = 1, limit = 20 } = filters;
-    const skip = (page - 1) * limit;
+    const { category, search, low_stock_only, page = 1, limit } = filters;
+    const skip = limit ? (page - 1) * limit : 0;
 
     const where: any = {};
     if (category) where.category = { equals: category, mode: 'insensitive' };
@@ -115,17 +115,17 @@ export class InventoryService {
     if (low_stock_only) {
       data = data.filter((item) => item.quantity <= item.minimum_quantity);
       const total = data.length;
-      const paginated = data.slice(skip, skip + limit);
+      const paginated = limit ? data.slice(skip, skip + limit) : data;
       return {
         data: paginated,
-        meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+        meta: { total, page, limit, totalPages: limit ? Math.ceil(total / limit) : 1 },
       };
     }
 
     const total = await this.prisma.inventory_items.count({ where });
     return {
       data,
-      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+      meta: { total, page, limit, totalPages: limit ? Math.ceil(total / limit) : 1 },
     };
   }
 
@@ -202,9 +202,9 @@ export class InventoryService {
     return movement;
   }
 
-  async getMovements(itemId: bigint, page = 1, limit = 20) {
+  async getMovements(itemId: bigint, page = 1, limit?: number) {
     await this.findOne(itemId);
-    const skip = (page - 1) * limit;
+    const skip = limit ? (page - 1) * limit : 0;
 
     const [data, total] = await Promise.all([
       this.prisma.inventory_movements.findMany({
@@ -222,7 +222,7 @@ export class InventoryService {
 
     return {
       data,
-      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+      meta: { total, page, limit, totalPages: limit ? Math.ceil(total / limit) : 1 },
     };
   }
 
@@ -232,8 +232,8 @@ export class InventoryService {
     page?: number;
     limit?: number;
   }) {
-    const { item_id, movement_type, page = 1, limit = 20 } = filters;
-    const skip = (page - 1) * limit;
+    const { item_id, movement_type, page = 1, limit } = filters;
+    const skip = limit ? (page - 1) * limit : 0;
     const where: any = {};
     if (item_id) where.item_id = item_id;
     if (movement_type) where.movement_type = movement_type;
@@ -254,7 +254,7 @@ export class InventoryService {
 
     return {
       data,
-      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+      meta: { total, page, limit, totalPages: limit ? Math.ceil(total / limit) : 1 },
     };
   }
 }

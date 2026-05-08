@@ -87,8 +87,8 @@ export class PatientDocumentsService {
     page?: number;
     limit?: number;
   }) {
-    const { patient_id, record_id, page = 1, limit = 20 } = filters;
-    const skip = (page - 1) * limit;
+    const { patient_id, record_id, page = 1, limit } = filters;
+    const skip = limit ? (page - 1) * limit : 0;
 
     const where: any = {};
     if (patient_id) where.patient_id = BigInt(patient_id);
@@ -111,7 +111,7 @@ export class PatientDocumentsService {
 
     return {
       data: dataWithUrls,
-      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+      meta: { total, page, limit, totalPages: limit ? Math.ceil(total / limit) : 1 },
     };
   }
 

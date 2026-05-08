@@ -42,7 +42,7 @@ export class PatientBillingController {
     @Query('user_id', ParseIntPipe) userId: number,
     @Query('status') status?: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
-    @Query('limit', new DefaultValuePipe(50), ParseIntPipe) limit?: number,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
   ) {
     const profile = await this.patientsService.findByUserId(BigInt(userId));
     return this.billingService.findAll({

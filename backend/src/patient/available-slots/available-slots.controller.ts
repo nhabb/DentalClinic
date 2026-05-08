@@ -37,7 +37,7 @@ export class AvailableSlotsController {
     @Query('doctor_id') doctorId?: string,
     @Query('date') date?: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
-    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit?: number,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
   ) {
     return this.slotsService.findAll({
       doctor_id: doctorId ? Number(doctorId) : undefined,

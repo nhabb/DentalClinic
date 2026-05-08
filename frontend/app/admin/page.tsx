@@ -132,11 +132,11 @@ export default function AdminDashboard() {
           await Promise.all([
             email ? fetch(`${API_URL}/api/users/by-email?email=${encodeURIComponent(email)}`) : Promise.resolve(null),
             apiFetch(`/api/patients`),
-            apiFetch(`/api/appointments?limit=500`),
+            apiFetch(`/api/appointments`),
             apiFetch(`/api/inventory/low-stock`),
             apiFetch(`/api/billing/summary`),
-            apiFetch(`/api/billing/invoice-payments?limit=500`),
-            apiFetch(`/api/expenses?limit=500`),
+            apiFetch(`/api/billing/invoice-payments`),
+            apiFetch(`/api/expenses`),
           ]);
 
         // ── User ──────────────────────────────────────────────────────────────
@@ -306,7 +306,7 @@ export default function AdminDashboard() {
     setPostponeLoading(true);
     try {
       // 1. Find existing slots for that doctor/date
-      const slotsRes = await apiFetch(`/api/appointment-slots?doctor_id=${appt.doctorId}&date=${postponeDate}&limit=100`);
+      const slotsRes = await apiFetch(`/api/appointment-slots?doctor_id=${appt.doctorId}&date=${postponeDate}`);
       const slotsData = slotsRes.ok ? await slotsRes.json() : { data: [] };
       const toHHMM = (raw: string) => { const d = new Date(raw); return `${String(d.getUTCHours()).padStart(2,"0")}:${String(d.getUTCMinutes()).padStart(2,"0")}`; };
       let slot = (slotsData.data || []).find((s: any) => toHHMM(s.start_time) === postponeTime && !s.is_booked);
@@ -324,7 +324,7 @@ export default function AdminDashboard() {
         });
         if (!createRes.ok) { toast.error("Failed to create slot for new date."); return; }
         // Fetch the newly created slot
-        const refetchRes = await apiFetch(`/api/appointment-slots?doctor_id=${appt.doctorId}&date=${postponeDate}&limit=100`);
+        const refetchRes = await apiFetch(`/api/appointment-slots?doctor_id=${appt.doctorId}&date=${postponeDate}`);
         const refetchData = refetchRes.ok ? await refetchRes.json() : { data: [] };
         slot = (refetchData.data || []).find((s: any) => toHHMM(s.start_time) === postponeTime && !s.is_booked);
         if (!slot) { toast.error("Could not find the new slot after creation."); return; }

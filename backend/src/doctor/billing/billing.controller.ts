@@ -51,7 +51,7 @@ export class BillingController {
   @ApiOperation({ summary: 'List raw invoice payment records (for charts)' })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   listInvoicePayments(
-    @Query('limit', new DefaultValuePipe(500), ParseIntPipe) limit: number,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
   ) {
     return this.billingService.listInvoicePayments(limit);
   }
@@ -87,7 +87,7 @@ export class BillingController {
     @Query('from') from?: string,
     @Query('to') to?: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
-    @Query('limit', new DefaultValuePipe(50), ParseIntPipe) limit?: number,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
   ) {
     return this.billingService.findAll({
       patient_id: patient_id || undefined,

@@ -199,10 +199,10 @@ export class AppointmentsService {
       status,
       date,
       page = 1,
-      limit = 20,
+      limit,
       order = 'asc',
     } = filters;
-    const skip = (page - 1) * limit;
+    const skip = limit ? (page - 1) * limit : 0;
 
     const where: any = {};
     if (doctor_id) where.doctor_id = BigInt(doctor_id);
@@ -229,7 +229,7 @@ export class AppointmentsService {
 
     return {
       data,
-      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+      meta: { total, page, limit, totalPages: limit ? Math.ceil(total / limit) : 1 },
     };
   }
 

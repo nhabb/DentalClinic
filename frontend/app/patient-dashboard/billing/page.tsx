@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { apiFetch } from "@/lib/api/client";
+import { safeStorage } from "@/lib/browser-compat";
 import { useTranslation } from "@/lib/i18n";
 import { PatientPageHeader } from "@/components/ui/PatientPageHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
@@ -74,10 +75,17 @@ export default function PatientBillingPage() {
     const fetchData = async () => {
       try {
         const meRes = await apiFetch("/api/auth/me");
-        if (!meRes.ok) { router.push("/login"); return; }
+        if (!meRes.ok) {
+          safeStorage.removeItem("patientAuth");
+          safeStorage.removeItem("authToken");
+          safeStorage.removeItem("userRole");
+          safeStorage.removeItem("authProvider");
+          router.push("/login");
+          return;
+        }
         const dbUser = await meRes.json();
 
-        const res = await apiFetch(`/api/patient/billing/invoices?user_id=${dbUser.id}&limit=100`);
+        const res = await apiFetch(`/api/patient/billing/invoices?user_id=${dbUser.id}`);
         if (!res.ok) { setIsLoading(false); return; }
         const json = await res.json();
         const raw: any[] = Array.isArray(json.data) ? json.data : [];

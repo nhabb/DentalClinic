@@ -49,6 +49,7 @@ export default function SignupPage() {
     lastName: "",
     phone: "",
     dateOfBirth: null as string | null,
+    gender: "",
     // Address
     address: "",
     city: "",
@@ -121,6 +122,7 @@ export default function SignupPage() {
           phone: form.phone || undefined,
           date_of_birth: form.dateOfBirth || undefined,
           address: address || undefined,
+          gender: form.gender || undefined,
         }),
       });
 
@@ -341,6 +343,26 @@ export default function SignupPage() {
                   </Popover>
                 </Field>
               </div>
+              <Field>
+                <FieldLabel
+                  htmlFor="gender"
+                  className="text-gray-900 font-semibold text-sm tracking-wide"
+                >
+                  {t("continueLogin.gender")}
+                </FieldLabel>
+                <select
+                  id="gender"
+                  name="gender"
+                  value={form.gender}
+                  onChange={(e) => setForm({ ...form, gender: e.target.value })}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-dental-blue focus:border-dental-blue"
+                >
+                  <option value="">{t("continueLogin.selectGender")}</option>
+                  <option value="male">{t("continueLogin.male")}</option>
+                  <option value="female">{t("continueLogin.female")}</option>
+                  {/* <option value="other">{t("continueLogin.other")}</option> */}
+                </select>
+              </Field>
             </FieldGroup>
           </FieldSet>
 

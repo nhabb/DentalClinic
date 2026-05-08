@@ -39,6 +39,14 @@ export default function PatientDashboard() {
 
         // Resolve current user from backend JWT
         const meRes = await apiFetch(`/api/auth/me`);
+        if (meRes.status === 401) {
+          safeStorage.removeItem("patientAuth");
+          safeStorage.removeItem("authToken");
+          safeStorage.removeItem("userRole");
+          safeStorage.removeItem("authProvider");
+          router.push("/login");
+          return;
+        }
         const dbUser = meRes.ok ? await meRes.json() : null;
 
         if (dbUser) {
@@ -59,7 +67,7 @@ export default function PatientDashboard() {
 
         const [upcomingRes, historyRes] = await Promise.all([
           apiFetch(`/api/patient/appointments/upcoming?user_id=${dbUser.id}`),
-          apiFetch(`/api/patient/appointments/history?user_id=${dbUser.id}&limit=3`),
+          apiFetch(`/api/patient/appointments/history?user_id=${dbUser.id}`),
         ]);
         const upcomingData = await upcomingRes.json();
         const historyData = await historyRes.json();

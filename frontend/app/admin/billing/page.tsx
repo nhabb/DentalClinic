@@ -132,7 +132,7 @@ export default function BillingPage() {
 
   const fetchInvoices = async () => {
     try {
-      const res = await apiFetch("/api/billing/invoices?limit=200");
+      const res = await apiFetch("/api/billing/invoices");
       const json = await res.json();
       setInvoices((Array.isArray(json.data) ? json.data : []).map(normalizeInvoice));
     } catch { /* silent */ }

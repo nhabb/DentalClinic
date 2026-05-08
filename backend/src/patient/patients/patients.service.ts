@@ -50,8 +50,8 @@ export class PatientsService {
     },
   };
 
-  async findAll(page = 1, limit = 20, search?: string) {
-    const skip = (page - 1) * limit;
+  async findAll(page = 1, limit?: number, search?: string) {
+    const skip = limit ? (page - 1) * limit : 0;
 
     let where: any = undefined;
     if (search) {
@@ -126,7 +126,7 @@ export class PatientsService {
 
     return {
       data,
-      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+      meta: { total, page, limit, totalPages: limit ? Math.ceil(total / limit) : 1 },
     };
   }
 

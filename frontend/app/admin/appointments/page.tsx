@@ -199,7 +199,7 @@ export default function AppointmentsManagement() {
       try {
         const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
         const [appointmentsRes, usersRes, doctorsRes] = await Promise.all([
-          apiFetch(`/api/appointments?limit=1000`),
+          apiFetch(`/api/appointments`),
           apiFetch(`/api/users`),
           fetch(`${API_URL}/api/users/doctors`),
         ]);
@@ -364,12 +364,12 @@ export default function AppointmentsManagement() {
       const [daySlotResults, apptRes] = await Promise.all([
         Promise.all(
           dayDates.map((date) =>
-            apiFetch(`/api/appointment-slots?doctor_id=${doctorId}&date=${date}&limit=100`)
+            apiFetch(`/api/appointment-slots?doctor_id=${doctorId}&date=${date}`)
               .then((r) => (r.ok ? r.json() : { data: [] }))
               .catch(() => { return { data: [] }; })
           )
         ),
-        apiFetch(`/api/appointments?limit=1000`),
+        apiFetch(`/api/appointments`),
       ]);
 
       const apptData = apptRes.ok ? await apptRes.json() : { data: [] };
@@ -438,7 +438,7 @@ export default function AppointmentsManagement() {
     if (!doctorId || !date) return;
     setLoadingExistingSlots(true);
     try {
-      const res = await apiFetch(`/api/appointment-slots?doctor_id=${doctorId}&date=${date}&limit=100`);
+      const res = await apiFetch(`/api/appointment-slots?doctor_id=${doctorId}&date=${date}`);
       const data = await res.json();
       setExistingSlots(
         (data.data || []).map((s: any) => ({

@@ -37,8 +37,8 @@ export class ExpensesService {
     page?: number;
     limit?: number;
   }) {
-    const { category, from, to, page = 1, limit = 20 } = filters;
-    const skip = (page - 1) * limit;
+    const { category, from, to, page = 1, limit } = filters;
+    const skip = limit ? (page - 1) * limit : 0;
 
     const where: any = {};
     if (category) where.category = category;
@@ -61,7 +61,7 @@ export class ExpensesService {
 
     return {
       data,
-      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+      meta: { total, page, limit, totalPages: limit ? Math.ceil(total / limit) : 1 },
     };
   }
 

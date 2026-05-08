@@ -25,9 +25,9 @@ export class PatientAppointmentsService {
     return profile.id;
   }
 
-  async getUpcoming(userId: number, page = 1, limit = 20) {
+  async getUpcoming(userId: number, page = 1, limit?: number) {
     const patientId = await this.getPatientProfileId(userId);
-    const skip = (page - 1) * limit;
+    const skip = limit ? (page - 1) * limit : 0;
     const where = {
       patient_id: patientId,
       status: { in: ['pending', 'scheduled', 'confirmed'] },
@@ -46,13 +46,13 @@ export class PatientAppointmentsService {
 
     return {
       data,
-      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+      meta: { total, page, limit, totalPages: limit ? Math.ceil(total / limit) : 1 },
     };
   }
 
-  async getHistory(userId: number, page = 1, limit = 20) {
+  async getHistory(userId: number, page = 1, limit?: number) {
     const patientId = await this.getPatientProfileId(userId);
-    const skip = (page - 1) * limit;
+    const skip = limit ? (page - 1) * limit : 0;
     const where = {
       patient_id: patientId,
       status: { in: ['completed', 'cancelled', 'no_show'] },
@@ -71,7 +71,7 @@ export class PatientAppointmentsService {
 
     return {
       data,
-      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+      meta: { total, page, limit, totalPages: limit ? Math.ceil(total / limit) : 1 },
     };
   }
 

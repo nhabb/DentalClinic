@@ -187,7 +187,7 @@ export default function CompleteProfilePage() {
                   <option value="">Select…</option>
                   <option value="male">Male</option>
                   <option value="female">Female</option>
-                  <option value="other">Other</option>
+                  {/* <option value="other">Other</option> */}
                 </select>
               </Field>
               <Field label="Blood Type">

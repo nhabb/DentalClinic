@@ -152,8 +152,8 @@ export class AppointmentSlotsService {
     page?: number;
     limit?: number;
   }) {
-    const { doctor_id, date, available_only, page = 1, limit = 20 } = filters;
-    const skip = (page - 1) * limit; //this calculates the number of records to skip based on the current page and the limit of records per page. For example, if page is 1, skip will be 0 (no records skipped), if page is 2, skip will be 20 (the first 20 records are skipped), if page is 3, skip will be 40 (the first 40 records are skipped), and so on. This is used for pagination when retrieving appointment slots from the database, allowing us to fetch a specific subset of records based on the requested page and limit.
+    const { doctor_id, date, available_only, page = 1, limit } = filters;
+    const skip = limit ? (page - 1) * limit : 0; //this calculates the number of records to skip based on the current page and the limit of records per page. For example, if page is 1, skip will be 0 (no records skipped), if page is 2, skip will be 20 (the first 20 records are skipped), if page is 3, skip will be 40 (the first 40 records are skipped), and so on. This is used for pagination when retrieving appointment slots from the database, allowing us to fetch a specific subset of records based on the requested page and limit.
 
     const where: any = {}; //start with an empty where object and conditionally add filters based on the presence of doctor_id, date, and available_only parameters. This allows us to build a dynamic query for retrieving appointment slots from the database based on the provided filters, ensuring that we only fetch the relevant records that match the specified criteria.
     if (doctor_id) where.doctor_id = BigInt(doctor_id); //if doctor_id is provided in the filters, we add a condition to the where object to filter appointment slots by the specified doctor_id. This allows us to retrieve only the appointment slots that belong to the specified doctor when fetching data from the database.
@@ -184,7 +184,7 @@ export class AppointmentSlotsService {
 
     return {
       data,
-      meta: { total, page, limit, totalPages: Math.ceil(total / limit) }, //the meta object in the returned response includes pagination information such as the total number of matching appointment slots (total), the current page number (page), the number of records per page (limit), and the total number of pages (totalPages) calculated based on the total count and the limit. This metadata is useful for the frontend to implement pagination controls and display relevant information about the dataset being retrieved.
+      meta: { total, page, limit, totalPages: limit ? Math.ceil(total / limit) : 1 }, //the meta object in the returned response includes pagination information such as the total number of matching appointment slots (total), the current page number (page), the number of records per page (limit), and the total number of pages (totalPages) calculated based on the total count and the limit. This metadata is useful for the frontend to implement pagination controls and display relevant information about the dataset being retrieved.
     };
   }
 

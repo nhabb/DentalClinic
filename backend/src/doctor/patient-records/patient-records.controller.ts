@@ -58,7 +58,7 @@ export class PatientRecordsController {
     @Query('patient_id') patient_id?: string,
     @Query('record_type') record_type?: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
-    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit?: number,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
   ) {
     return this.patientRecordsService.findAll({
       patient_id: patient_id ? Number(patient_id) : undefined,

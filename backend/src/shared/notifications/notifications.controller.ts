@@ -32,7 +32,7 @@ export class NotificationsController {
   findAll(
     @Query('user_id', ParseIntPipe) userId: number,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
   ) {
     return this.notificationsService.findAll(BigInt(userId), page, limit);
   }

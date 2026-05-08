@@ -47,6 +47,7 @@ interface Patient {
   phone: string;
   dateOfBirth: string;
   address: string;
+  gender: string;
   bloodType: string;
   allergies: string[];
   insurance: string;
@@ -125,6 +126,7 @@ export default function PatientsPage() {
   const [editPatientForm, setEditPatientForm] = useState({
     phone: "",
     dateOfBirth: "",
+    gender: "",
     bloodType: "",
     allergies: "",
     insurance: "",
@@ -158,7 +160,7 @@ export default function PatientsPage() {
       const [patientsRes, usersRes, apptRes] = await Promise.all([
         apiFetch(`/api/patients`),
         apiFetch(`/api/users`),
-        apiFetch(`/api/appointments?limit=2000`),
+        apiFetch(`/api/appointments`),
       ]);
       const patientsData = await patientsRes.json();
       const users: any[] = usersRes.ok ? await usersRes.json() : [];
@@ -192,6 +194,7 @@ export default function PatientsPage() {
           phone: userEmbed?.phone || user?.phone || "",
           dateOfBirth: dobStr,
           address: `${p.city || ""}, ${p.governate || ""}`.trim().replace(/^,\s*|,\s*$/, ""),
+          gender: userEmbed?.gender || user?.gender || "",
           bloodType: p.blood_type || "",
           allergies: p.allergies ? p.allergies.split(",").map((a: string) => a.trim()).filter(Boolean) : [],
           insurance: p.insurance_provider || "",
@@ -312,7 +315,7 @@ export default function PatientsPage() {
   const fetchDocuments = async (patientId: number) => {
     setDocsLoading(true);
     try {
-      const res = await apiFetch(`/api/patient-documents?patient_id=${patientId}&limit=50`);
+      const res = await apiFetch(`/api/patient-documents?patient_id=${patientId}`);
       const data = await res.json();
       setDocuments(data.data || []);
     } catch {
@@ -398,6 +401,7 @@ export default function PatientsPage() {
     setEditPatientForm({
       phone: patient.phone,
       dateOfBirth: patient.dateOfBirth,
+      gender: patient.gender,
       bloodType: patient.bloodType,
       allergies: patient.allergies.join(", "),
       insurance: patient.insurance,
@@ -432,6 +436,7 @@ export default function PatientsPage() {
           body: JSON.stringify({
             phone: editPatientForm.phone || undefined,
             date_of_birth: editPatientForm.dateOfBirth || undefined,
+            gender: editPatientForm.gender || undefined,
           }),
         });
       }
@@ -439,6 +444,7 @@ export default function PatientsPage() {
         ...selectedPatient,
         phone: editPatientForm.phone,
         dateOfBirth: editPatientForm.dateOfBirth,
+        gender: editPatientForm.gender,
         bloodType: editPatientForm.bloodType,
         allergies: editPatientForm.allergies.split(",").map((a) => a.trim()).filter(Boolean),
         insurance: editPatientForm.insurance,
@@ -773,6 +779,14 @@ export default function PatientsPage() {
                             {calculateAge(selectedPatient.dateOfBirth) !== null && ` (${calculateAge(selectedPatient.dateOfBirth)} years)`}
                           </span>
                         </div>
+                        {selectedPatient.gender && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">{t("patients.gender")}</span>
+                            <span className="font-medium text-gray-900 capitalize">
+                              {selectedPatient.gender}
+                            </span>
+                          </div>
+                        )}
                         <div className="flex justify-between">
                           <span className="text-gray-500">{t("patients.bloodType")}</span>
                           <span className="font-medium text-gray-900">
@@ -1114,7 +1128,20 @@ export default function PatientsPage() {
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t("patients.gender")}</label>
+                  <select
+                    value={editPatientForm.gender}
+                    onChange={(e) => setEditPatientForm((f) => ({ ...f, gender: e.target.value }))}
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                  >
+                    <option value="">Unknown</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">{t("patients.bloodType")}</label>
                   <select

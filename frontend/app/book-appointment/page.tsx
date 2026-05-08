@@ -204,7 +204,6 @@ export default function BookAppointment() {
     try {
       const params = new URLSearchParams({
         doctor_id: String(doctorId),
-        limit: "500",
       });
       const res = await apiFetch(`/api/patient/available-slots?${params}`);
       const data = await res.json();
@@ -229,7 +228,6 @@ export default function BookAppointment() {
       const params = new URLSearchParams({
         doctor_id: String(doctorId),
         date: dateStr,
-        limit: "100",
       });
       const res = await apiFetch(`/api/patient/available-slots?${params}`);
       const data = await res.json();
@@ -259,7 +257,14 @@ export default function BookAppointment() {
     try {
       // Resolve current user via backend JWT
       const meRes = await apiFetch(`/api/auth/me`);
-      if (!meRes.ok) throw new Error("Could not resolve your account. Please log in again.");
+      if (!meRes.ok) {
+        safeStorage.removeItem("patientAuth");
+        safeStorage.removeItem("authToken");
+        safeStorage.removeItem("userRole");
+        safeStorage.removeItem("authProvider");
+        router.push("/login");
+        return;
+      }
       const dbUser = await meRes.json();
 
       // Resolve patient profile ID
@@ -273,7 +278,7 @@ export default function BookAppointment() {
       const dateStr = `${selectedDate.getFullYear()}-${pad2(selectedDate.getMonth() + 1)}-${pad2(selectedDate.getDate())}`;
 
       const slotsRes = await apiFetch(
-        `/api/patient/available-slots?doctor_id=${selectedDoctor}&date=${dateStr}&limit=100`
+        `/api/patient/available-slots?doctor_id=${selectedDoctor}&date=${dateStr}`
       );
       const slotsData = await slotsRes.json();
 

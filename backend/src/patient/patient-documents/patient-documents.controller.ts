@@ -131,7 +131,7 @@ export class PatientDocumentsController {
     @Query('patient_id') patient_id?: string,
     @Query('record_id') record_id?: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
-    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit?: number,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
   ) {
     return this.patientDocumentsService.findAll({
       patient_id: patient_id ? Number(patient_id) : undefined,

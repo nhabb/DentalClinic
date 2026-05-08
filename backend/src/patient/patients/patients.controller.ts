@@ -41,7 +41,7 @@ export class PatientsController {
   @ApiQuery({ name: 'search', required: false, type: String })
   findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
     @Query('search') search?: string,
   ) {
     return this.patientsService.findAll(page, limit, search);

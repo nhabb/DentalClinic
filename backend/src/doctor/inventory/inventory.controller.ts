@@ -54,7 +54,7 @@ export class InventoryController {
     @Query('search') search?: string,
     @Query('low_stock_only') low_stock_only?: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
-    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit?: number,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
   ) {
     return this.inventoryService.findAll({
       category,
@@ -125,7 +125,7 @@ export class InventoryController {
   getMovements(
     @Param('id', ParseIntPipe) id: number,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
-    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit?: number,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
   ) {
     return this.inventoryService.getMovements(BigInt(id), page, limit);
   }

@@ -28,8 +28,8 @@ export class NotificationsService {
     });
   }
 
-  async findAll(userId: bigint, page = 1, limit = 20) {
-    const skip = (page - 1) * limit;
+  async findAll(userId: bigint, page = 1, limit?: number) {
+    const skip = limit ? (page - 1) * limit : 0;
 
     const [data, total, unreadCount] = await Promise.all([
       this.prisma.notifications.findMany({
@@ -50,7 +50,7 @@ export class NotificationsService {
         total,
         page,
         limit,
-        totalPages: Math.ceil(total / limit),
+        totalPages: limit ? Math.ceil(total / limit) : 1,
         unreadCount,
       },
     };

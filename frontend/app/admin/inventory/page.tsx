@@ -171,7 +171,7 @@ export default function InventoryManagement() {
         unit: item.unit,
         supplier: item.description || "",
         lastRestocked: item.updated_at?.split("T")[0] || "",
-        status: item.quantity <= item.minimum_quantity ? "low" : "ok",
+        status: item.quantity === 0 ? "out" : item.quantity <= item.minimum_quantity ? "low" : "ok",
         image_url: item.image_url ?? undefined,
         cost_price: item.cost_price ? Number(item.cost_price) : 0,
       }));
@@ -196,6 +196,7 @@ export default function InventoryManagement() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedStatus, setSelectedStatus] = useState("all");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
@@ -205,10 +206,12 @@ export default function InventoryManagement() {
       item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.supplier.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === "All" || item.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+    const matchesStatus = selectedStatus === "all" || item.status === selectedStatus;
+    return matchesSearch && matchesCategory && matchesStatus;
   });
 
   const lowStockCount = inventoryItems.filter((item) => item.status === "low").length;
+  const outOfStockCount = inventoryItems.filter((item) => item.status === "out").length;
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
@@ -422,7 +425,8 @@ export default function InventoryManagement() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <StatsCard icon={FaBoxes} iconBgClass="bg-blue-100" iconColorClass="text-blue-600" value={inventoryItems.length} label={t("inventory.totalItems")} />
             <StatsCard icon={FaExclamationTriangle} iconBgClass="bg-red-100" iconColorClass="text-red-600" value={lowStockCount} label={t("inventory.lowStock")} />
-            <StatsCard icon={FaCheckCircle} iconBgClass="bg-green-100" iconColorClass="text-green-600" value={inventoryItems.length - lowStockCount} label={t("inventory.wellStocked")} />
+            <StatsCard icon={FaBoxOpen} iconBgClass="bg-orange-100" iconColorClass="text-orange-600" value={outOfStockCount} label={t("inventory.outOfStock")} />
+            <StatsCard icon={FaCheckCircle} iconBgClass="bg-green-100" iconColorClass="text-green-600" value={inventoryItems.length - lowStockCount - outOfStockCount} label={t("inventory.wellStocked")} />
           </div>
 
           <FilterBar
@@ -436,6 +440,36 @@ export default function InventoryManagement() {
             activeFilter={selectedCategory}
             onFilterChange={setSelectedCategory}
           />
+
+          <div className="flex gap-2 mb-6 flex-wrap">
+            {(["all", "ok", "low", "out"] as const).map((s) => {
+              const labels: Record<string, string> = {
+                all: t("inventory.statusAll"),
+                ok: t("inventory.statusOk"),
+                low: t("inventory.statusLow"),
+                out: t("inventory.statusOut"),
+              };
+              const activeClasses: Record<string, string> = {
+                all: "bg-dental-blue text-white",
+                ok: "bg-green-500 text-white",
+                low: "bg-yellow-500 text-white",
+                out: "bg-red-500 text-white",
+              };
+              return (
+                <button
+                  key={s}
+                  onClick={() => setSelectedStatus(s)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    selectedStatus === s
+                      ? activeClasses[s]
+                      : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  {labels[s]}
+                </button>
+              );
+            })}
+          </div>
 
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="overflow-x-auto">
@@ -490,8 +524,12 @@ export default function InventoryManagement() {
                         <p className="text-gray-700 text-sm">{item.supplier}</p>
                       </td>
                       <td className="py-4 px-6 text-center">
-                        {item.status === "low" ? (
+                        {item.status === "out" ? (
                           <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">
+                            <FaBoxOpen className="text-xs" /> {t("inventory.outOfStockBadge")}
+                          </span>
+                        ) : item.status === "low" ? (
+                          <span className="inline-flex items-center gap-1 px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-full">
                             <FaExclamationTriangle className="text-xs" /> {t("inventory.lowStockBadge")}
                           </span>
                         ) : (

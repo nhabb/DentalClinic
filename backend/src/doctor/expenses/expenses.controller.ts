@@ -76,7 +76,7 @@ export class ExpensesController {
     @Query('from') from?: string,
     @Query('to') to?: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
-    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit?: number,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
   ) {
     return this.expensesService.findAll({ category, from, to, page, limit });
   }

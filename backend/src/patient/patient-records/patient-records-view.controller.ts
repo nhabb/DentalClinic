@@ -40,7 +40,7 @@ export class PatientRecordsViewController {
     @Query('user_id', ParseIntPipe) userId: number,
     @Query('record_type') recordType?: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
-    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit?: number,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
   ) {
     const profile = await this.patientsService.findByUserId(BigInt(userId));
     return this.patientRecordsService.findAll({

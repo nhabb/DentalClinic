@@ -78,7 +78,14 @@ export default function MedicalRecords() {
     const fetchAll = async () => {
       try {
         const meRes = await apiFetch(`/api/auth/me`);
-        if (!meRes.ok) { router.push("/login"); return; }
+        if (!meRes.ok) {
+          safeStorage.removeItem("patientAuth");
+          safeStorage.removeItem("authToken");
+          safeStorage.removeItem("userRole");
+          safeStorage.removeItem("authProvider");
+          router.push("/login");
+          return;
+        }
         const me = await meRes.json();
 
         setPhotoUrl(getStoredPhoto(me.email));
@@ -92,10 +99,10 @@ export default function MedicalRecords() {
         }));
 
         const [recordsRes, profileRes, historyRes, invoicesRes] = await Promise.all([
-          apiFetch(`/api/patient/patient-records?user_id=${me.id}&limit=50`),
+          apiFetch(`/api/patient/patient-records?user_id=${me.id}`),
           apiFetch(`/api/patients/by-user/${me.id}`),
-          apiFetch(`/api/patient/appointments/history?user_id=${me.id}&limit=50`),
-          apiFetch(`/api/patient/billing/invoices?user_id=${me.id}&limit=100`),
+          apiFetch(`/api/patient/appointments/history?user_id=${me.id}`),
+          apiFetch(`/api/patient/billing/invoices?user_id=${me.id}`),
         ]);
 
         // Match invoice to a visit only when date + procedure name + patient
@@ -174,7 +181,7 @@ export default function MedicalRecords() {
               ? profile.current_medications.split(",").map((s: string) => s.trim()).filter(Boolean)
               : prev.medications,
           }));
-          const docsRes = await apiFetch(`/api/patient-documents?patient_id=${profile.id}&limit=50`);
+          const docsRes = await apiFetch(`/api/patient-documents?patient_id=${profile.id}`);
           if (docsRes.ok) {
             const docsData = await docsRes.json();
             setDocuments(

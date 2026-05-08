@@ -62,7 +62,7 @@ export class AppointmentsController {
     @Query('status') status?: string,
     @Query('date') date?: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
-    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit?: number,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
   ) {
     return this.appointmentsService.findAll({
       doctor_id: doctor_id ? Number(doctor_id) : undefined,

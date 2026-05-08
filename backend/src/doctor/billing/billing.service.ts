@@ -81,8 +81,8 @@ export class BillingService {
     page?: number;
     limit?: number;
   }) {
-    const { patient_id, status, from, to, page = 1, limit = 20 } = filters;
-    const skip = (page - 1) * limit;
+    const { patient_id, status, from, to, page = 1, limit } = filters;
+    const skip = limit ? (page - 1) * limit : 0;
 
     const where: any = {};
     if (patient_id) where.patient_id = BigInt(patient_id);
@@ -106,7 +106,7 @@ export class BillingService {
 
     return {
       data,
-      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+      meta: { total, page, limit, totalPages: limit ? Math.ceil(total / limit) : 1 },
     };
   }
 
@@ -472,7 +472,7 @@ export class BillingService {
   }
 
   // ── Raw invoice payments list for charts ─────────────────────────────────
-  async listInvoicePayments(limit = 500) {
+  async listInvoicePayments(limit?: number) {
     const rows = await this.prisma.invoice_payments.findMany({
       take: limit,
       orderBy: { created_at: 'desc' },

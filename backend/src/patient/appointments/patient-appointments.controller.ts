@@ -37,7 +37,7 @@ export class PatientAppointmentsController {
   getUpcoming(
     @Query('user_id', ParseIntPipe) userId: number,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
   ) {
     return this.service.getUpcoming(userId, page, limit);
   }
@@ -53,7 +53,7 @@ export class PatientAppointmentsController {
   getHistory(
     @Query('user_id', ParseIntPipe) userId: number,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
   ) {
     return this.service.getHistory(userId, page, limit);
   }

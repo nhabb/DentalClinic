@@ -70,7 +70,7 @@ export class AppointmentSlotsController {
     @Query('date') date?: string,
     @Query('available_only') available_only?: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
-    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit?: number, //matches the name not the position, so we can pass the parameters in any order and also have optional parameters with default values. This allows us to easily handle pagination and filtering of appointment slots based on the provided query parameters in the request URL, making it flexible for clients to retrieve the desired data according to their needs.
+    @Query('limit', new ParseIntPipe({ optional: true })) limit?: number, //matches the name not the position, so we can pass the parameters in any order and also have optional parameters with default values. This allows us to easily handle pagination and filtering of appointment slots based on the provided query parameters in the request URL, making it flexible for clients to retrieve the desired data according to their needs.
   ) {
     return this.slotsService.findAll({
       doctor_id: doctor_id ? Number(doctor_id) : undefined,
