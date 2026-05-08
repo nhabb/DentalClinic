@@ -39,7 +39,8 @@ export default function PatientDashboard() {
 
         // Resolve current user from backend JWT
         const meRes = await apiFetch(`/api/auth/me`);
-        if (meRes.status === 401) {
+        const meData = meRes.ok ? await meRes.json() : null;
+        if (!meData || meData.ok === false) {
           safeStorage.removeItem("patientAuth");
           safeStorage.removeItem("authToken");
           safeStorage.removeItem("userRole");
@@ -47,7 +48,7 @@ export default function PatientDashboard() {
           router.push("/login");
           return;
         }
-        const dbUser = meRes.ok ? await meRes.json() : null;
+        const dbUser = meData;
 
         if (dbUser) {
           setUserId(dbUser.id);

@@ -78,7 +78,8 @@ export default function MedicalRecords() {
     const fetchAll = async () => {
       try {
         const meRes = await apiFetch(`/api/auth/me`);
-        if (!meRes.ok) {
+        const meData = meRes.ok ? await meRes.json() : null;
+        if (!meData || meData.ok === false) {
           safeStorage.removeItem("patientAuth");
           safeStorage.removeItem("authToken");
           safeStorage.removeItem("userRole");
@@ -86,7 +87,7 @@ export default function MedicalRecords() {
           router.push("/login");
           return;
         }
-        const me = await meRes.json();
+        const me = meData;
 
         setPhotoUrl(getStoredPhoto(me.email));
 

@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { safeStorage } from "@/lib/browser-compat";
+import { apiFetch } from "@/lib/api/client";
 import { useTranslation } from "@/lib/i18n";
 import {
   FaTooth,
@@ -50,8 +51,8 @@ export default function AdminLogin() {
 
     // Resolve DB user id at login time so availability works without re-lookup
     try {
-      const res = await fetch(
-        `${API_URL}/api/users/by-email?email=${encodeURIComponent(credentials.email)}`
+      const res = await apiFetch(
+        `/api/users/by-email?email=${encodeURIComponent(credentials.email)}`
       );
       if (res.ok) {
         const user = await res.json();

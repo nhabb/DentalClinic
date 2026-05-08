@@ -75,7 +75,8 @@ export default function PatientBillingPage() {
     const fetchData = async () => {
       try {
         const meRes = await apiFetch("/api/auth/me");
-        if (!meRes.ok) {
+        const meData = meRes.ok ? await meRes.json() : null;
+        if (!meData || meData.ok === false) {
           safeStorage.removeItem("patientAuth");
           safeStorage.removeItem("authToken");
           safeStorage.removeItem("userRole");
@@ -83,7 +84,7 @@ export default function PatientBillingPage() {
           router.push("/login");
           return;
         }
-        const dbUser = await meRes.json();
+        const dbUser = meData;
 
         const res = await apiFetch(`/api/patient/billing/invoices?user_id=${dbUser.id}`);
         if (!res.ok) { setIsLoading(false); return; }

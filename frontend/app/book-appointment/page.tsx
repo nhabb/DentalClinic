@@ -257,7 +257,8 @@ export default function BookAppointment() {
     try {
       // Resolve current user via backend JWT
       const meRes = await apiFetch(`/api/auth/me`);
-      if (!meRes.ok) {
+      const meData = meRes.ok ? await meRes.json() : null;
+      if (!meData || meData.ok === false) {
         safeStorage.removeItem("patientAuth");
         safeStorage.removeItem("authToken");
         safeStorage.removeItem("userRole");
@@ -265,7 +266,7 @@ export default function BookAppointment() {
         router.push("/login");
         return;
       }
-      const dbUser = await meRes.json();
+      const dbUser = meData;
 
       // Resolve patient profile ID
       const profileRes = await apiFetch(`/api/patients/by-user/${dbUser.id}`);

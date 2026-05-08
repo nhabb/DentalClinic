@@ -10,6 +10,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslation } from "@/lib/i18n";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { supabase } from "@/lib/supabase/client";
+import { apiFetch } from "@/lib/api/client";
 
 function OAuthErrorHandler() {
   const searchParams = useSearchParams();
@@ -75,9 +76,8 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const res = await fetch(`${API_URL}/api/auth/login`, {
+      const res = await apiFetch(`/api/auth/login`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
 

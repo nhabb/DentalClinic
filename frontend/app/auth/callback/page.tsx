@@ -3,8 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
+import { apiFetch } from "@/lib/api/client";
 
 const ROLE_REDIRECTS: Record<string, string> = {
   patient: "/patient-dashboard",
@@ -17,7 +16,7 @@ const ROLE_REDIRECTS: Record<string, string> = {
 const ADMIN_ROLES = new Set(["doctor", "admin", "secretary", "superadmin"]);
 
 async function provisionAndPersist(supabaseToken: string): Promise<{ redirect: string; isNew: boolean }> {
-  const res = await fetch(`${API_URL}/api/auth/provision`, {
+  const res = await apiFetch(`/api/auth/provision`, {
     method: "POST",
     headers: { Authorization: `Bearer ${supabaseToken}` },
   });

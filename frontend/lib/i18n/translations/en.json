@@ -130,7 +130,7 @@
     "emailAddress": "Email address",
     "password": "Password",
     "confirmPassword": "Confirm Password",
-    "createPassword": "Create a password",
+    "createPassword": "Min 8 chars, upper + lower + number",
     "repeatPassword": "Repeat your password",
     "creatingAccount": "Creating account...",
     "createPatientAccount": "Create Patient Account",

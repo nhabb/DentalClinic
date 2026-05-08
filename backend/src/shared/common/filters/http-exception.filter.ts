@@ -24,7 +24,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         P2006: 'The provided value is invalid for this field.',
       };
       const msg = prismaMessages[exception.code] ?? 'Database error.';
-      return response.status(HttpStatus.BAD_REQUEST).json({
+      return response.status(HttpStatus.OK).json({
+        ok: false,
         statusCode: HttpStatus.BAD_REQUEST,
         message: msg,
         path: request.url,
@@ -34,7 +35,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
     // ── Prisma validation errors (e.g. value too large for column type) ───────
     if (exception instanceof Prisma.PrismaClientValidationError) {
-      return response.status(HttpStatus.BAD_REQUEST).json({
+      return response.status(HttpStatus.OK).json({
+        ok: false,
         statusCode: HttpStatus.BAD_REQUEST,
         message:
           'Invalid value provided. Check that all fields are within the allowed range.',
@@ -51,9 +53,6 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const exceptionResponse =
       exception instanceof HttpException ? exception.getResponse() : null;
 
-    if ((status as HttpStatus) === HttpStatus.INTERNAL_SERVER_ERROR) {
-    }
-
     let message: string | string[] = 'Internal server error';
     if (exceptionResponse) {
       if (typeof exceptionResponse === 'string') {
@@ -66,7 +65,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       }
     }
 
-    response.status(status).json({
+    response.status(HttpStatus.OK).json({
+      ok: false,
       statusCode: status,
       message,
       path: request.url,

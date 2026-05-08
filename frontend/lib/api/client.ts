@@ -17,11 +17,43 @@ export async function apiFetch(
   options: RequestInit = {}
 ): Promise<Response> {
   const headers = getAuthHeaders(options);
-  return fetch(`${API_URL}${path}`, {
+  const raw = await fetch(`${API_URL}${path}`, {
     ...options,
     headers: {
       ...headers,
       ...(options.headers || {}),
     },
   });
+
+  const contentType = raw.headers.get("content-type") || "";
+  if (!contentType.includes("application/json")) return raw;
+
+  const text = await raw.text();
+  let parsed: any = null;
+  try {
+    parsed = JSON.parse(text);
+  } catch {}
+
+  // Backend returns { ok: false } for all errors (HTTP 200 wrapper).
+  // Reconstruct a Response-like object so callers' `res.ok` checks still work.
+  const isErrorBody = parsed !== null && parsed.ok === false;
+  const effectiveOk = !isErrorBody && raw.ok;
+  const effectiveStatus = isErrorBody ? (parsed.statusCode ?? 400) : raw.status;
+
+  return {
+    ok: effectiveOk,
+    status: effectiveStatus,
+    statusText: raw.statusText,
+    headers: raw.headers,
+    url: raw.url,
+    redirected: raw.redirected,
+    type: raw.type,
+    bodyUsed: true,
+    json: () => Promise.resolve(parsed ?? {}),
+    text: () => Promise.resolve(text),
+    clone: () => { throw new Error("Cannot clone buffered response"); },
+    arrayBuffer: async () => new TextEncoder().encode(text).buffer as ArrayBuffer,
+    blob: async () => new Blob([text]),
+    formData: () => Promise.reject(new Error("Not supported")),
+  } as unknown as Response;
 }

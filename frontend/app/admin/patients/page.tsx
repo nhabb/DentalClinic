@@ -39,6 +39,16 @@ import {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
 
+const PROCEDURE_DURATIONS: Record<string, number> = {
+  "Regular Checkup": 30,
+  "Teeth Cleaning": 60,
+  "Cavity Filling": 60,
+  "Root Canal": 90,
+  "Teeth Whitening": 60,
+  "Crown Fitting": 90,
+  "Extraction": 45,
+};
+
 interface Patient {
   id: number;
   userId: number;
@@ -102,13 +112,15 @@ export default function PatientsPage() {
   // Book appointment state
   const [showBookModal, setShowBookModal] = useState(false);
   const [bookDate, setBookDate] = useState(new Date().toISOString().split("T")[0]);
-  const [bookStartTime, setBookStartTime] = useState("09:00");
-  const [bookEndTime, setBookEndTime] = useState("10:00");
+  const [bookStartTime, setBookStartTime] = useState("");
+  const [bookEndTime, setBookEndTime] = useState("");
   const [bookDoctorId, setBookDoctorId] = useState<number | null>(null);
   const [doctors, setDoctors] = useState<any[]>([]);
-  const [bookReason, setBookReason] = useState("");
+  const [bookReason, setBookReason] = useState("Regular Checkup");
   const [bookLoading, setBookLoading] = useState(false);
   const [bookError, setBookError] = useState("");
+  const [bookSlots, setBookSlots] = useState<{ id: number; start: string; end: string; durationMinutes: number }[]>([]);
+  const [bookSlotsLoading, setBookSlotsLoading] = useState(false);
 
   // Documents state
   const [documents, setDocuments] = useState<any[]>([]);
@@ -266,11 +278,41 @@ export default function PatientsPage() {
     } catch {}
   };
 
+  const fetchBookSlots = async (dId: number | null, date: string) => {
+    if (!dId || !date) { setBookSlots([]); return; }
+    setBookSlotsLoading(true);
+    try {
+      const res = await apiFetch(`/api/appointment-slots?doctor_id=${dId}&date=${date}`);
+      const data = res.ok ? await res.json() : { data: [] };
+      const toHHMM = (raw: string) => { const d = new Date(raw); return `${String(d.getUTCHours()).padStart(2,"0")}:${String(d.getUTCMinutes()).padStart(2,"0")}`; };
+      setBookSlots(
+        (data.data || [])
+          .filter((s: any) => !s.is_booked)
+          .map((s: any) => ({
+            id: Number(s.id),
+            start: toHHMM(s.start_time),
+            end: toHHMM(s.end_time),
+            durationMinutes: Math.round((new Date(s.end_time).getTime() - new Date(s.start_time).getTime()) / 60000),
+          }))
+      );
+      setBookStartTime("");
+      setBookEndTime("");
+    } catch {
+      setBookSlots([]);
+    } finally {
+      setBookSlotsLoading(false);
+    }
+  };
+
   const handleBookAppointment = async () => {
     if (!selectedPatient) return;
     const effectiveDoctorId = bookDoctorId ?? doctorId;
     if (!effectiveDoctorId) {
       setBookError("Please select a doctor.");
+      return;
+    }
+    if (!bookStartTime || !bookEndTime) {
+      setBookError("Please select a time slot.");
       return;
     }
     if (bookStartTime >= bookEndTime) {
@@ -696,7 +738,7 @@ export default function PatientsPage() {
                 <Button
                   size="sm"
                   className="bg-dental-blue hover:bg-dental-blue/90"
-                  onClick={() => { setBookDate(new Date().toISOString().split("T")[0]); setBookStartTime("09:00"); setBookEndTime("10:00"); setBookDoctorId(doctorId); setBookError(""); fetchDoctors(); setShowBookModal(true); }}
+                  onClick={() => { const today = new Date().toISOString().split("T")[0]; setBookDate(today); setBookStartTime(""); setBookEndTime(""); setBookReason("Regular Checkup"); setBookSlots([]); setBookDoctorId(doctorId); setBookError(""); fetchDoctors(); if (doctorId) fetchBookSlots(doctorId, today); setShowBookModal(true); }}
                 >
                   <FaCalendarPlus className="mr-2 rtl:mr-0 rtl:ml-2" /> {t("patients.bookAppointment")}
                 </Button>
@@ -1015,7 +1057,7 @@ export default function PatientsPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Doctor</label>
                   <select
                     value={bookDoctorId ?? ""}
-                    onChange={(e) => { setBookDoctorId(Number(e.target.value) || null); setBookError(""); }}
+                    onChange={(e) => { const id = Number(e.target.value) || null; setBookDoctorId(id); setBookStartTime(""); setBookEndTime(""); setBookError(""); fetchBookSlots(id, bookDate); }}
                     className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
                   >
                     <option value="">Select a doctor…</option>
@@ -1027,46 +1069,65 @@ export default function PatientsPage() {
               )}
 
               <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Procedure</label>
+                <select
+                  value={bookReason}
+                  onChange={(e) => { setBookReason(e.target.value); setBookStartTime(""); setBookEndTime(""); setBookError(""); }}
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                >
+                  {Object.entries(PROCEDURE_DURATIONS).map(([name, mins]) => (
+                    <option key={name} value={name}>{name} ({mins} min)</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
                 <input
                   type="date"
                   value={bookDate}
                   min={new Date().toISOString().split("T")[0]}
-                  onChange={(e) => { setBookDate(e.target.value); setBookError(""); }}
+                  onChange={(e) => { const v = e.target.value; setBookDate(v); setBookError(""); fetchBookSlots(bookDoctorId ?? doctorId ?? null, v); }}
                   className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
                 />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
-                  <input
-                    type="time"
-                    value={bookStartTime}
-                    onChange={(e) => { setBookStartTime(e.target.value); setBookError(""); }}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
-                  <input
-                    type="time"
-                    value={bookEndTime}
-                    onChange={(e) => { setBookEndTime(e.target.value); setBookError(""); }}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
-                  />
-                </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Reason (optional)</label>
-                <input
-                  type="text"
-                  value={bookReason}
-                  onChange={(e) => setBookReason(e.target.value)}
-                  placeholder="e.g. Routine checkup, tooth pain..."
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-2">Available Slots</label>
+                {bookSlotsLoading ? (
+                  <p className="text-sm text-gray-500">Loading slots…</p>
+                ) : !(bookDoctorId ?? doctorId) || !bookDate ? (
+                  <p className="text-sm text-gray-400">Select a doctor and date to see slots.</p>
+                ) : bookSlots.length === 0 ? (
+                  <p className="text-sm text-gray-400">No available slots for this day.</p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {bookSlots.map((slot) => {
+                      const required = PROCEDURE_DURATIONS[bookReason] ?? 30;
+                      const tooShort = slot.durationMinutes < required;
+                      const selected = bookStartTime === slot.start && bookEndTime === slot.end;
+                      return (
+                        <button
+                          key={slot.id}
+                          type="button"
+                          disabled={tooShort}
+                          title={tooShort ? `Slot is ${slot.durationMinutes} min — ${bookReason} needs ${required} min` : `${slot.start} – ${slot.end} (${slot.durationMinutes} min)`}
+                          onClick={() => { setBookStartTime(slot.start); setBookEndTime(slot.end); setBookError(""); }}
+                          className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${
+                            tooShort
+                              ? "opacity-40 cursor-not-allowed bg-gray-50 border-gray-200 text-gray-400"
+                              : selected
+                              ? "bg-dental-blue text-white border-dental-blue shadow"
+                              : "bg-white border-gray-200 text-gray-700 hover:border-dental-blue hover:text-dental-blue"
+                          }`}
+                        >
+                          {slot.start}
+                          <span className="ml-1 text-xs opacity-70">({slot.durationMinutes}m)</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               {bookError && (

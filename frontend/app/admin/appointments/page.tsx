@@ -97,6 +97,8 @@ export default function AppointmentsManagement() {
   const [addError, setAddError] = useState("");
   const [addLoading, setAddLoading] = useState(false);
   const [availableSlots, setAvailableSlots] = useState<{ id: number; label: string }[]>([]);
+  const [addModalSlots, setAddModalSlots] = useState<{ id: number; start: string; end: string; durationMinutes: number }[]>([]);
+  const [addModalSlotsLoading, setAddModalSlotsLoading] = useState(false);
   const [patients, setPatients] = useState<{ id: number; name: string }[]>([]);
   const [showAvailabilityModal, setShowAvailabilityModal] = useState(false);
   const [availabilityDate, setAvailabilityDate] = useState("");
@@ -183,8 +185,7 @@ export default function AppointmentsManagement() {
       if (!email) return;
 
       try {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
-        const res = await fetch(`${API_URL}/api/users/by-email?email=${encodeURIComponent(email)}`);
+        const res = await apiFetch(`/api/users/by-email?email=${encodeURIComponent(email)}`);
         if (!res.ok) return;
         const user = await res.json();
         if (user?.id) setCurrentDoctorDbId(Number(user.id));
@@ -197,11 +198,10 @@ export default function AppointmentsManagement() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
         const [appointmentsRes, usersRes, doctorsRes] = await Promise.all([
           apiFetch(`/api/appointments`),
           apiFetch(`/api/users`),
-          fetch(`${API_URL}/api/users/doctors`),
+          apiFetch(`/api/users/doctors`),
         ]);
         const appointmentsData = await appointmentsRes.json();
         const users: any[] = usersRes.ok ? await usersRes.json() : [];
@@ -509,8 +509,33 @@ export default function AppointmentsManagement() {
     }
   };
 
+  const fetchAddModalSlots = async (doctorId: string, date: string) => {
+    if (!doctorId || !date) { setAddModalSlots([]); return; }
+    setAddModalSlotsLoading(true);
+    try {
+      const res = await apiFetch(`/api/appointment-slots?doctor_id=${doctorId}&date=${date}`);
+      const data = res.ok ? await res.json() : { data: [] };
+      const toHHMM = (raw: string) => { const d = new Date(raw); return `${String(d.getUTCHours()).padStart(2,"0")}:${String(d.getUTCMinutes()).padStart(2,"0")}`; };
+      const slots = (data.data || [])
+        .filter((s: any) => !s.is_booked)
+        .map((s: any) => ({
+          id: Number(s.id),
+          start: toHHMM(s.start_time),
+          end: toHHMM(s.end_time),
+          durationMinutes: Math.round((new Date(s.end_time).getTime() - new Date(s.start_time).getTime()) / 60000),
+        }));
+      setAddModalSlots(slots);
+      setNewAppt((prev) => ({ ...prev, startTime: "", endTime: "" }));
+    } catch {
+      setAddModalSlots([]);
+    } finally {
+      setAddModalSlotsLoading(false);
+    }
+  };
+
   const openAddModal = async () => {
     setAddError("");
+    setAddModalSlots([]);
     setNewAppt({ patientId: "", doctorId: "", date: "", startTime: "09:00", endTime: "10:00", reason: "Regular Checkup" });
     setShowAddModal(true);
     try {
@@ -527,8 +552,12 @@ export default function AppointmentsManagement() {
   };
 
   const handleAddAppointment = async () => {
-    if (!newAppt.patientId || !newAppt.doctorId || !newAppt.date || !newAppt.startTime || !newAppt.endTime) {
+    if (!newAppt.patientId || !newAppt.doctorId || !newAppt.date) {
       setAddError("Please fill in all required fields.");
+      return;
+    }
+    if (!newAppt.startTime || !newAppt.endTime) {
+      setAddError("Please select a time slot.");
       return;
     }
     if (newAppt.startTime >= newAppt.endTime) {
@@ -986,51 +1015,67 @@ export default function AppointmentsManagement() {
           </FormField>
 
           <FormField label={t("appointments.doctor")}>
-            <select className={inputClass} value={newAppt.doctorId} onChange={(e) => setNewAppt({ ...newAppt, doctorId: e.target.value })}>
+            <select className={inputClass} value={newAppt.doctorId} onChange={(e) => { const v = e.target.value; setNewAppt((p) => ({ ...p, doctorId: v, startTime: "", endTime: "" })); fetchAddModalSlots(v, newAppt.date); }}>
               <option value="">{t("appointments.allDoctors")}</option>
               {doctors.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
             </select>
           </FormField>
 
-          <div className="grid grid-cols-2 gap-4">
-            <FormField label={t("appointments.date")}>
-              <input
-                type="date"
-                className={inputClass}
-                value={newAppt.date}
-                min={new Date().toLocaleDateString("en-CA")}
-                onChange={(e) => setNewAppt({ ...newAppt, date: e.target.value })}
-              />
-            </FormField>
-            <FormField label="Start Time">
-              <input
-                type="time"
-                className={inputClass}
-                value={newAppt.startTime}
-                onChange={(e) => setNewAppt({ ...newAppt, startTime: e.target.value })}
-              />
-            </FormField>
-            <FormField label="End Time">
-              <input
-                type="time"
-                className={inputClass}
-                value={newAppt.endTime}
-                onChange={(e) => setNewAppt({ ...newAppt, endTime: e.target.value })}
-              />
-            </FormField>
-          </div>
-
           <FormField label={t("appointments.appointmentType")}>
-            <select className={inputClass} value={newAppt.reason} onChange={(e) => setNewAppt({ ...newAppt, reason: e.target.value })}>
-              <option>Regular Checkup</option>
-              <option>Teeth Cleaning</option>
-              <option>Cavity Filling</option>
-              <option>Root Canal</option>
-              <option>Teeth Whitening</option>
-              <option>Crown Fitting</option>
-              <option>Extraction</option>
+            <select className={inputClass} value={newAppt.reason} onChange={(e) => setNewAppt((p) => ({ ...p, reason: e.target.value, startTime: "", endTime: "" }))}>
+              {Object.entries(PROCEDURE_DURATIONS).map(([name, mins]) => (
+                <option key={name} value={name}>{name} ({mins} min)</option>
+              ))}
             </select>
           </FormField>
+
+          <FormField label={t("appointments.date")}>
+            <input
+              type="date"
+              className={inputClass}
+              value={newAppt.date}
+              min={new Date().toLocaleDateString("en-CA")}
+              onChange={(e) => { const v = e.target.value; setNewAppt((p) => ({ ...p, date: v, startTime: "", endTime: "" })); fetchAddModalSlots(newAppt.doctorId, v); }}
+            />
+          </FormField>
+
+          <div>
+            <p className="text-sm font-medium text-gray-700 mb-2">Available Slots</p>
+            {addModalSlotsLoading ? (
+              <p className="text-sm text-gray-500">Loading slots…</p>
+            ) : !newAppt.doctorId || !newAppt.date ? (
+              <p className="text-sm text-gray-400">Select a doctor and date to see slots.</p>
+            ) : addModalSlots.length === 0 ? (
+              <p className="text-sm text-gray-400">No available slots for this day.</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {addModalSlots.map((slot) => {
+                  const required = PROCEDURE_DURATIONS[newAppt.reason] ?? 30;
+                  const tooShort = slot.durationMinutes < required;
+                  const selected = newAppt.startTime === slot.start && newAppt.endTime === slot.end;
+                  return (
+                    <button
+                      key={slot.id}
+                      type="button"
+                      disabled={tooShort}
+                      title={tooShort ? `Slot is ${slot.durationMinutes} min — ${newAppt.reason} needs ${required} min` : `${slot.start} – ${slot.end} (${slot.durationMinutes} min)`}
+                      onClick={() => setNewAppt((p) => ({ ...p, startTime: slot.start, endTime: slot.end }))}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${
+                        tooShort
+                          ? "opacity-40 cursor-not-allowed bg-gray-50 border-gray-200 text-gray-400"
+                          : selected
+                          ? "bg-dental-blue text-white border-dental-blue shadow"
+                          : "bg-white border-gray-200 text-gray-700 hover:border-dental-blue hover:text-dental-blue"
+                      }`}
+                    >
+                      {slot.start}
+                      <span className="ml-1 text-xs opacity-70">({slot.durationMinutes}m)</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="flex gap-3 mt-6">
