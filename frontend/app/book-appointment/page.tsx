@@ -693,7 +693,7 @@ export default function BookAppointment() {
                   disabled={(date) => {
                     const today = new Date();
                     today.setHours(0, 0, 0, 0);
-                    if (date < today || date.getDay() === 0) return true;
+                    if (date < today) return true;
                     if (availableDates.size > 0) {
                       const pad = (n: number) => String(n).padStart(2, "0");
                       const key = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
