@@ -25,6 +25,7 @@ import {
   FaEye,
   FaPlus,
   FaTrash,
+  FaEdit,
   FaChartLine,
 } from "react-icons/fa";
 
@@ -117,6 +118,17 @@ export default function BillingPage() {
   const [paymentForm, setPaymentForm] = useState({ amount: "", payment_method: "cash", notes: "" });
   const [recordingPayment, setRecordingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState("");
+
+  // Edit modal
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editInvoice, setEditInvoice] = useState<TreatmentInvoice | null>(null);
+  const [editForm, setEditForm] = useState({ procedure_date: "", notes: "" });
+  const [editLineItems, setEditLineItems] = useState<LineItemForm[]>([]);
+  const [editing, setEditing] = useState(false);
+  const [editError, setEditError] = useState("");
+
+  // Delete
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   // ── Fetch helpers ────────────────────────────────────────────────────────────
 
@@ -268,6 +280,68 @@ export default function BillingPage() {
     setSelectedInvoice(invoice);
     resetPaymentForm();
     setShowViewModal(true);
+  };
+
+  const openEditModal = (invoice: TreatmentInvoice) => {
+    setEditInvoice(invoice);
+    setEditForm({
+      procedure_date: new Date(invoice.procedure_date).toLocaleDateString("en-CA"),
+      notes: invoice.notes ?? "",
+    });
+    setEditLineItems(invoice.line_items.map((li) => ({ procedure_name: li.procedure_name, amount: String(li.amount) })));
+    setEditError("");
+    setShowEditModal(true);
+  };
+
+  const handleEdit = async () => {
+    if (!editInvoice) return;
+    setEditError("");
+    if (!editForm.procedure_date) { setEditError("Please select a procedure date."); return; }
+    for (const item of editLineItems) {
+      if (!item.procedure_name) { setEditError("Please select a procedure for all line items."); return; }
+      if (!item.amount || parseFloat(item.amount) <= 0) { setEditError("Please enter a valid amount for all line items."); return; }
+    }
+    setEditing(true);
+    try {
+      const res = await apiFetch(`/api/billing/invoices/${editInvoice.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          procedure_date: editForm.procedure_date,
+          notes: editForm.notes || undefined,
+          line_items: editLineItems.map((item) => ({ procedure_name: item.procedure_name, amount: parseFloat(item.amount) })),
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(Array.isArray(err.message) ? err.message.join(", ") : (err.message ?? "Failed to update invoice"));
+      }
+      await fetchInvoices();
+      toast.success("Invoice updated.");
+      setShowEditModal(false);
+      setEditInvoice(null);
+    } catch (e: any) {
+      setEditError(e.message ?? "Something went wrong.");
+    } finally {
+      setEditing(false);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("Delete this invoice and all its payments? This cannot be undone.")) return;
+    setDeletingId(id);
+    try {
+      const res = await apiFetch(`/api/billing/invoices/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message ?? "Failed to delete invoice");
+      }
+      setInvoices((prev) => prev.filter((inv) => inv.id !== id));
+      toast.success("Invoice deleted.");
+    } catch (e: any) {
+      toast.error(e.message ?? "Failed to delete invoice.");
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   // ── Export / Import data ─────────────────────────────────────────────────────
@@ -459,13 +533,30 @@ export default function BillingPage() {
                             <td className="px-4 py-3 font-medium text-red-600">${inv.remaining_amount.toFixed(2)}</td>
                             <td className="px-4 py-3"><StatusBadge status={inv.status} /></td>
                             <td className="px-4 py-3">
-                              <button
-                                onClick={() => openViewModal(inv)}
-                                className="p-2 text-dental-blue hover:bg-blue-50 rounded-lg transition-colors"
-                                title={t("billing.viewInvoice")}
-                              >
-                                <FaEye />
-                              </button>
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => openViewModal(inv)}
+                                  className="p-2 text-dental-blue hover:bg-blue-50 rounded-lg transition-colors"
+                                  title={t("billing.viewInvoice")}
+                                >
+                                  <FaEye />
+                                </button>
+                                <button
+                                  onClick={() => openEditModal(inv)}
+                                  className="p-2 text-amber-500 hover:bg-amber-50 rounded-lg transition-colors"
+                                  title="Edit invoice"
+                                >
+                                  <FaEdit />
+                                </button>
+                                <button
+                                  onClick={() => handleDelete(inv.id)}
+                                  disabled={deletingId === inv.id}
+                                  className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-40"
+                                  title="Delete invoice"
+                                >
+                                  <FaTrash />
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -478,6 +569,105 @@ export default function BillingPage() {
           )}
         </main>
       </div>
+
+      {/* ── Edit Invoice Modal ────────────────────────────────────────────────── */}
+      {editInvoice && (
+        <Modal
+          isOpen={showEditModal}
+          onClose={() => { setShowEditModal(false); setEditInvoice(null); }}
+          title={`Edit Invoice #${editInvoice.id}`}
+          maxWidth="max-w-2xl"
+        >
+          <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+            <FormField label={t("billing.procedureDateRequired")}>
+              <input
+                type="date"
+                value={editForm.procedure_date}
+                onChange={(e) => setEditForm((f) => ({ ...f, procedure_date: e.target.value }))}
+                className={inputClass}
+              />
+            </FormField>
+
+            <FormField label={t("billing.notesOptional")}>
+              <textarea
+                value={editForm.notes}
+                onChange={(e) => setEditForm((f) => ({ ...f, notes: e.target.value }))}
+                rows={2}
+                placeholder={t("billing.additionalNotes")}
+                className={`${inputClass} resize-none`}
+              />
+            </FormField>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">{t("billing.proceduresRequired")}</label>
+              <div className="space-y-2">
+                {editLineItems.map((item, idx) => (
+                  <div key={idx} className="flex gap-2 items-center">
+                    <select
+                      value={item.procedure_name}
+                      onChange={(e) => setEditLineItems((p) => p.map((li, i) => i === idx ? { ...li, procedure_name: e.target.value } : li))}
+                      className="flex-1 min-w-0 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue text-gray-900 bg-white"
+                    >
+                      <option value="">{t("billing.selectProcedure")}</option>
+                      {PROCEDURES.map((p) => <option key={p} value={p}>{p}</option>)}
+                    </select>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      placeholder={t("billing.amountCol")}
+                      value={item.amount}
+                      onChange={(e) => {
+                        const v = e.target.value.replace(/[^0-9.]/g, "");
+                        if ((v.match(/\./g) || []).length <= 1)
+                          setEditLineItems((p) => p.map((li, i) => i === idx ? { ...li, amount: v } : li));
+                      }}
+                      className="w-32 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue text-gray-900 bg-white"
+                    />
+                    {editLineItems.length > 1 && (
+                      <button
+                        onClick={() => setEditLineItems((p) => p.filter((_, i) => i !== idx))}
+                        className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
+                      >
+                        <FaTrash className="text-sm" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditLineItems((p) => [...p, { procedure_name: "", amount: "" }])}
+                className="mt-2 flex items-center gap-1 text-sm text-dental-blue hover:text-dental-teal font-medium"
+              >
+                <FaPlus className="text-xs" /> {t("billing.addLineItem")}
+              </button>
+              <div className="mt-3 text-right text-sm font-semibold text-gray-800">
+                {t("billing.total")}: <span className="text-dental-blue text-base">
+                  ${editLineItems.reduce((s, i) => s + (parseFloat(i.amount) || 0), 0).toFixed(2)}
+                </span>
+              </div>
+            </div>
+
+            {editError && (
+              <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{editError}</p>
+            )}
+
+            <div className="flex gap-3 justify-end pt-2">
+              <Button variant="outline" onClick={() => { setShowEditModal(false); setEditInvoice(null); }}>
+                {t("common.cancel")}
+              </Button>
+              <Button onClick={handleEdit} disabled={editing}>
+                {editing ? (
+                  <span className="flex items-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                    Saving…
+                  </span>
+                ) : "Save Changes"}
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
 
       {/* ── Create Invoice Modal ───────────────────────────────────────────────── */}
       <Modal

@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
+import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 import { RecordPaymentDto } from './dto/record-payment.dto';
 
 const invoiceInclude = {
@@ -485,6 +486,52 @@ export class BillingService {
       },
     });
     return rows;
+  }
+
+  async update(id: bigint, dto: UpdateInvoiceDto) {
+    const existing = await this.findOne(id);
+    const updates: any = { updated_at: new Date() };
+
+    if (dto.procedure_date) updates.procedure_date = new Date(dto.procedure_date);
+    if (dto.notes !== undefined) updates.notes = dto.notes;
+
+    if (dto.line_items && dto.line_items.length > 0) {
+      const total_amount = dto.line_items.reduce((s, i) => s + i.amount, 0);
+      const amount_paid = Number(existing.amount_paid);
+      if (total_amount < amount_paid) {
+        throw new BadRequestException(
+          `New total ($${total_amount.toFixed(2)}) cannot be less than amount already paid ($${amount_paid.toFixed(2)})`,
+        );
+      }
+      const remaining_amount = total_amount - amount_paid;
+      updates.total_amount = total_amount;
+      updates.remaining_amount = remaining_amount;
+      updates.status =
+        remaining_amount <= 0 ? 'paid' : amount_paid > 0 ? 'partial' : 'open';
+      await this.prisma.invoice_line_items.deleteMany({ where: { invoice_id: id } });
+      updates.line_items = {
+        create: dto.line_items.map((item) => ({
+          procedure_name: item.procedure_name,
+          amount: item.amount,
+        })),
+      };
+    }
+
+    return this.prisma.treatment_invoices.update({
+      where: { id },
+      data: updates,
+      include: invoiceInclude,
+    });
+  }
+
+  async remove(id: bigint) {
+    await this.findOne(id);
+    await this.prisma.$transaction([
+      this.prisma.invoice_payments.deleteMany({ where: { invoice_id: id } }),
+      this.prisma.invoice_line_items.deleteMany({ where: { invoice_id: id } }),
+      this.prisma.treatment_invoices.delete({ where: { id } }),
+    ]);
+    return { deleted: true };
   }
 
   async recordPayment(invoiceId: bigint, dto: RecordPaymentDto) {

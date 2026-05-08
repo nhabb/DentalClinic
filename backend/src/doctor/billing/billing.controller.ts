@@ -2,6 +2,8 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
+  Delete,
   Param,
   Body,
   Query,
@@ -18,6 +20,7 @@ import {
 import { JwtAuthGuard } from '../../shared/common/guards/jwt-auth.guard';
 import { BillingService } from './billing.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
+import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 import { RecordPaymentDto } from './dto/record-payment.dto';
 
 @ApiBearerAuth()
@@ -103,6 +106,21 @@ export class BillingController {
   @ApiOperation({ summary: 'Get a single treatment invoice by ID' })
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.billingService.findOne(BigInt(id));
+  }
+
+  @Patch('invoices/:id')
+  @ApiOperation({ summary: 'Update a treatment invoice (date, notes, line items)' })
+  updateInvoice(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateInvoiceDto,
+  ) {
+    return this.billingService.update(BigInt(id), dto);
+  }
+
+  @Delete('invoices/:id')
+  @ApiOperation({ summary: 'Delete a treatment invoice and all its payments' })
+  deleteInvoice(@Param('id', ParseIntPipe) id: number) {
+    return this.billingService.remove(BigInt(id));
   }
 
   @Post('invoices/:id/payments')
