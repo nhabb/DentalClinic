@@ -13,6 +13,8 @@ const RECORD_TYPES = [
   'general_note',
   'diagnosis',
   'treatment',
+  'treatment_plan',
+  'missing_tooth',
   'prescription',
   'xray',
   'lab_result',

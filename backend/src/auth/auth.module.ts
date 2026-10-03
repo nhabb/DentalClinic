@@ -13,10 +13,12 @@ import { PrismaModule } from '../shared/prisma/prisma.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';// defines HOW to validate a JWT token when a protected route is accessed
+import { AccountSetupModule } from '../shared/account-setup/account-setup.module';
 
 @Module({
   imports: [
     PrismaModule,
+    AccountSetupModule,
     PassportModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'changeme',

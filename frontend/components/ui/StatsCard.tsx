@@ -1,7 +1,7 @@
-import { ElementType } from "react";
+import { ComponentType } from "react";
 
 interface StatsCardProps {
-  icon: ElementType;
+  icon: ComponentType<{ className?: string }>;
   iconBgClass: string;
   iconColorClass: string;
   value: React.ReactNode;

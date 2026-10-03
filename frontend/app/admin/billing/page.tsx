@@ -51,7 +51,7 @@ const PROCEDURES = [
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type LineItemForm = { procedure_name: string; amount: string };
-type LineItem = { id: number; procedure_name: string; amount: number };
+type LineItem = { id: number; procedure_name: string; amount: number; tooth_number?: string | null };
 
 type InvoicePayment = {
   id: number;
@@ -614,7 +614,14 @@ export default function BillingPage() {
                 <tbody className="divide-y divide-gray-100">
                   {selectedInvoice.line_items.map((li) => (
                     <tr key={li.id}>
-                      <td className="px-3 py-2 text-gray-800">{li.procedure_name}</td>
+                      <td className="px-3 py-2 text-gray-800">
+                        {li.procedure_name}
+                        {li.tooth_number && (
+                          <span className="ml-2 rtl:ml-0 rtl:mr-2 inline-block px-1.5 py-0.5 rounded bg-blue-50 text-dental-blue text-xs font-semibold">
+                            {t("dentalChart.toothCol")} {li.tooth_number}
+                          </span>
+                        )}
+                      </td>
                       <td className="px-3 py-2 text-right text-gray-800">${li.amount.toFixed(2)}</td>
                     </tr>
                   ))}

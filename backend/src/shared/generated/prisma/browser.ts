@@ -78,6 +78,11 @@ export type users = Prisma.usersModel
  */
 export type expenses = Prisma.expensesModel
 /**
+ * Model expense_payments
+ * 
+ */
+export type expense_payments = Prisma.expense_paymentsModel
+/**
  * Model treatment_invoices
  * 
  */

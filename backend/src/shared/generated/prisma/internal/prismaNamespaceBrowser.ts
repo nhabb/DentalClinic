@@ -63,6 +63,7 @@ export const ModelName = {
   patient_records: 'patient_records',
   users: 'users',
   expenses: 'expenses',
+  expense_payments: 'expense_payments',
   treatment_invoices: 'treatment_invoices',
   invoice_line_items: 'invoice_line_items',
   invoice_payments: 'invoice_payments'
@@ -238,6 +239,7 @@ export const Patient_recordsScalarFieldEnum = {
   tooth_number: 'tooth_number',
   treatment_date: 'treatment_date',
   created_by: 'created_by',
+  invoice_id: 'invoice_id',
   created_at: 'created_at',
   updated_at: 'updated_at'
 } as const
@@ -258,6 +260,10 @@ export const UsersScalarFieldEnum = {
   role: 'role',
   is_active: 'is_active',
   avatar_url: 'avatar_url',
+  must_set_password: 'must_set_password',
+  password_setup_token_hash: 'password_setup_token_hash',
+  password_setup_expires_at: 'password_setup_expires_at',
+  password_setup_sent_at: 'password_setup_sent_at',
   created_at: 'created_at',
   updated_at: 'updated_at'
 } as const
@@ -271,6 +277,7 @@ export const ExpensesScalarFieldEnum = {
   category: 'category',
   status: 'status',
   amount: 'amount',
+  amount_paid: 'amount_paid',
   description: 'description',
   expense_date: 'expense_date',
   created_by: 'created_by',
@@ -279,6 +286,20 @@ export const ExpensesScalarFieldEnum = {
 } as const
 
 export type ExpensesScalarFieldEnum = (typeof ExpensesScalarFieldEnum)[keyof typeof ExpensesScalarFieldEnum]
+
+
+export const Expense_paymentsScalarFieldEnum = {
+  id: 'id',
+  expense_id: 'expense_id',
+  amount: 'amount',
+  payment_method: 'payment_method',
+  notes: 'notes',
+  payment_date: 'payment_date',
+  created_by: 'created_by',
+  created_at: 'created_at'
+} as const
+
+export type Expense_paymentsScalarFieldEnum = (typeof Expense_paymentsScalarFieldEnum)[keyof typeof Expense_paymentsScalarFieldEnum]
 
 
 export const Treatment_invoicesScalarFieldEnum = {
@@ -303,6 +324,7 @@ export const Invoice_line_itemsScalarFieldEnum = {
   invoice_id: 'invoice_id',
   procedure_name: 'procedure_name',
   amount: 'amount',
+  tooth_number: 'tooth_number',
   created_at: 'created_at'
 } as const
 

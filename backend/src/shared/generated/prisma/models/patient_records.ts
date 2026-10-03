@@ -31,6 +31,7 @@ export type Patient_recordsAvgAggregateOutputType = {
   patient_id: number | null
   appointment_id: number | null
   created_by: number | null
+  invoice_id: number | null
 }
 
 export type Patient_recordsSumAggregateOutputType = {
@@ -38,6 +39,7 @@ export type Patient_recordsSumAggregateOutputType = {
   patient_id: bigint | null
   appointment_id: bigint | null
   created_by: bigint | null
+  invoice_id: bigint | null
 }
 
 export type Patient_recordsMinAggregateOutputType = {
@@ -50,6 +52,7 @@ export type Patient_recordsMinAggregateOutputType = {
   tooth_number: string | null
   treatment_date: Date | null
   created_by: bigint | null
+  invoice_id: bigint | null
   created_at: Date | null
   updated_at: Date | null
 }
@@ -64,6 +67,7 @@ export type Patient_recordsMaxAggregateOutputType = {
   tooth_number: string | null
   treatment_date: Date | null
   created_by: bigint | null
+  invoice_id: bigint | null
   created_at: Date | null
   updated_at: Date | null
 }
@@ -78,6 +82,7 @@ export type Patient_recordsCountAggregateOutputType = {
   tooth_number: number
   treatment_date: number
   created_by: number
+  invoice_id: number
   created_at: number
   updated_at: number
   _all: number
@@ -89,6 +94,7 @@ export type Patient_recordsAvgAggregateInputType = {
   patient_id?: true
   appointment_id?: true
   created_by?: true
+  invoice_id?: true
 }
 
 export type Patient_recordsSumAggregateInputType = {
@@ -96,6 +102,7 @@ export type Patient_recordsSumAggregateInputType = {
   patient_id?: true
   appointment_id?: true
   created_by?: true
+  invoice_id?: true
 }
 
 export type Patient_recordsMinAggregateInputType = {
@@ -108,6 +115,7 @@ export type Patient_recordsMinAggregateInputType = {
   tooth_number?: true
   treatment_date?: true
   created_by?: true
+  invoice_id?: true
   created_at?: true
   updated_at?: true
 }
@@ -122,6 +130,7 @@ export type Patient_recordsMaxAggregateInputType = {
   tooth_number?: true
   treatment_date?: true
   created_by?: true
+  invoice_id?: true
   created_at?: true
   updated_at?: true
 }
@@ -136,6 +145,7 @@ export type Patient_recordsCountAggregateInputType = {
   tooth_number?: true
   treatment_date?: true
   created_by?: true
+  invoice_id?: true
   created_at?: true
   updated_at?: true
   _all?: true
@@ -237,6 +247,7 @@ export type Patient_recordsGroupByOutputType = {
   tooth_number: string | null
   treatment_date: Date | null
   created_by: bigint | null
+  invoice_id: bigint | null
   created_at: Date
   updated_at: Date
   _count: Patient_recordsCountAggregateOutputType | null
@@ -274,9 +285,11 @@ export type patient_recordsWhereInput = {
   tooth_number?: Prisma.StringNullableFilter<"patient_records"> | string | null
   treatment_date?: Prisma.DateTimeNullableFilter<"patient_records"> | Date | string | null
   created_by?: Prisma.BigIntNullableFilter<"patient_records"> | bigint | number | null
+  invoice_id?: Prisma.BigIntNullableFilter<"patient_records"> | bigint | number | null
   created_at?: Prisma.DateTimeFilter<"patient_records"> | Date | string
   updated_at?: Prisma.DateTimeFilter<"patient_records"> | Date | string
   patient_documents?: Prisma.Patient_documentsListRelationFilter
+  invoice?: Prisma.XOR<Prisma.Treatment_invoicesNullableScalarRelationFilter, Prisma.treatment_invoicesWhereInput> | null
   appointments?: Prisma.XOR<Prisma.AppointmentsNullableScalarRelationFilter, Prisma.appointmentsWhereInput> | null
   users?: Prisma.XOR<Prisma.UsersNullableScalarRelationFilter, Prisma.usersWhereInput> | null
   patient_profiles?: Prisma.XOR<Prisma.Patient_profilesScalarRelationFilter, Prisma.patient_profilesWhereInput>
@@ -292,9 +305,11 @@ export type patient_recordsOrderByWithRelationInput = {
   tooth_number?: Prisma.SortOrderInput | Prisma.SortOrder
   treatment_date?: Prisma.SortOrderInput | Prisma.SortOrder
   created_by?: Prisma.SortOrderInput | Prisma.SortOrder
+  invoice_id?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
   patient_documents?: Prisma.patient_documentsOrderByRelationAggregateInput
+  invoice?: Prisma.treatment_invoicesOrderByWithRelationInput
   appointments?: Prisma.appointmentsOrderByWithRelationInput
   users?: Prisma.usersOrderByWithRelationInput
   patient_profiles?: Prisma.patient_profilesOrderByWithRelationInput
@@ -313,9 +328,11 @@ export type patient_recordsWhereUniqueInput = Prisma.AtLeast<{
   tooth_number?: Prisma.StringNullableFilter<"patient_records"> | string | null
   treatment_date?: Prisma.DateTimeNullableFilter<"patient_records"> | Date | string | null
   created_by?: Prisma.BigIntNullableFilter<"patient_records"> | bigint | number | null
+  invoice_id?: Prisma.BigIntNullableFilter<"patient_records"> | bigint | number | null
   created_at?: Prisma.DateTimeFilter<"patient_records"> | Date | string
   updated_at?: Prisma.DateTimeFilter<"patient_records"> | Date | string
   patient_documents?: Prisma.Patient_documentsListRelationFilter
+  invoice?: Prisma.XOR<Prisma.Treatment_invoicesNullableScalarRelationFilter, Prisma.treatment_invoicesWhereInput> | null
   appointments?: Prisma.XOR<Prisma.AppointmentsNullableScalarRelationFilter, Prisma.appointmentsWhereInput> | null
   users?: Prisma.XOR<Prisma.UsersNullableScalarRelationFilter, Prisma.usersWhereInput> | null
   patient_profiles?: Prisma.XOR<Prisma.Patient_profilesScalarRelationFilter, Prisma.patient_profilesWhereInput>
@@ -331,6 +348,7 @@ export type patient_recordsOrderByWithAggregationInput = {
   tooth_number?: Prisma.SortOrderInput | Prisma.SortOrder
   treatment_date?: Prisma.SortOrderInput | Prisma.SortOrder
   created_by?: Prisma.SortOrderInput | Prisma.SortOrder
+  invoice_id?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
   _count?: Prisma.patient_recordsCountOrderByAggregateInput
@@ -353,6 +371,7 @@ export type patient_recordsScalarWhereWithAggregatesInput = {
   tooth_number?: Prisma.StringNullableWithAggregatesFilter<"patient_records"> | string | null
   treatment_date?: Prisma.DateTimeNullableWithAggregatesFilter<"patient_records"> | Date | string | null
   created_by?: Prisma.BigIntNullableWithAggregatesFilter<"patient_records"> | bigint | number | null
+  invoice_id?: Prisma.BigIntNullableWithAggregatesFilter<"patient_records"> | bigint | number | null
   created_at?: Prisma.DateTimeWithAggregatesFilter<"patient_records"> | Date | string
   updated_at?: Prisma.DateTimeWithAggregatesFilter<"patient_records"> | Date | string
 }
@@ -367,6 +386,7 @@ export type patient_recordsCreateInput = {
   created_at?: Date | string
   updated_at?: Date | string
   patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutPatient_recordsInput
+  invoice?: Prisma.treatment_invoicesCreateNestedOneWithoutPatient_recordsInput
   appointments?: Prisma.appointmentsCreateNestedOneWithoutPatient_recordsInput
   users?: Prisma.usersCreateNestedOneWithoutPatient_recordsInput
   patient_profiles: Prisma.patient_profilesCreateNestedOneWithoutPatient_recordsInput
@@ -382,6 +402,7 @@ export type patient_recordsUncheckedCreateInput = {
   tooth_number?: string | null
   treatment_date?: Date | string | null
   created_by?: bigint | number | null
+  invoice_id?: bigint | number | null
   created_at?: Date | string
   updated_at?: Date | string
   patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutPatient_recordsInput
@@ -397,6 +418,7 @@ export type patient_recordsUpdateInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   patient_documents?: Prisma.patient_documentsUpdateManyWithoutPatient_recordsNestedInput
+  invoice?: Prisma.treatment_invoicesUpdateOneWithoutPatient_recordsNestedInput
   appointments?: Prisma.appointmentsUpdateOneWithoutPatient_recordsNestedInput
   users?: Prisma.usersUpdateOneWithoutPatient_recordsNestedInput
   patient_profiles?: Prisma.patient_profilesUpdateOneRequiredWithoutPatient_recordsNestedInput
@@ -412,6 +434,7 @@ export type patient_recordsUncheckedUpdateInput = {
   tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  invoice_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutPatient_recordsNestedInput
@@ -427,6 +450,7 @@ export type patient_recordsCreateManyInput = {
   tooth_number?: string | null
   treatment_date?: Date | string | null
   created_by?: bigint | number | null
+  invoice_id?: bigint | number | null
   created_at?: Date | string
   updated_at?: Date | string
 }
@@ -452,6 +476,7 @@ export type patient_recordsUncheckedUpdateManyInput = {
   tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  invoice_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -481,6 +506,7 @@ export type patient_recordsCountOrderByAggregateInput = {
   tooth_number?: Prisma.SortOrder
   treatment_date?: Prisma.SortOrder
   created_by?: Prisma.SortOrder
+  invoice_id?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
 }
@@ -490,6 +516,7 @@ export type patient_recordsAvgOrderByAggregateInput = {
   patient_id?: Prisma.SortOrder
   appointment_id?: Prisma.SortOrder
   created_by?: Prisma.SortOrder
+  invoice_id?: Prisma.SortOrder
 }
 
 export type patient_recordsMaxOrderByAggregateInput = {
@@ -502,6 +529,7 @@ export type patient_recordsMaxOrderByAggregateInput = {
   tooth_number?: Prisma.SortOrder
   treatment_date?: Prisma.SortOrder
   created_by?: Prisma.SortOrder
+  invoice_id?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
 }
@@ -516,6 +544,7 @@ export type patient_recordsMinOrderByAggregateInput = {
   tooth_number?: Prisma.SortOrder
   treatment_date?: Prisma.SortOrder
   created_by?: Prisma.SortOrder
+  invoice_id?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
 }
@@ -525,6 +554,7 @@ export type patient_recordsSumOrderByAggregateInput = {
   patient_id?: Prisma.SortOrder
   appointment_id?: Prisma.SortOrder
   created_by?: Prisma.SortOrder
+  invoice_id?: Prisma.SortOrder
 }
 
 export type patient_recordsCreateNestedManyWithoutAppointmentsInput = {
@@ -673,6 +703,48 @@ export type patient_recordsUncheckedUpdateManyWithoutUsersNestedInput = {
   deleteMany?: Prisma.patient_recordsScalarWhereInput | Prisma.patient_recordsScalarWhereInput[]
 }
 
+export type patient_recordsCreateNestedManyWithoutInvoiceInput = {
+  create?: Prisma.XOR<Prisma.patient_recordsCreateWithoutInvoiceInput, Prisma.patient_recordsUncheckedCreateWithoutInvoiceInput> | Prisma.patient_recordsCreateWithoutInvoiceInput[] | Prisma.patient_recordsUncheckedCreateWithoutInvoiceInput[]
+  connectOrCreate?: Prisma.patient_recordsCreateOrConnectWithoutInvoiceInput | Prisma.patient_recordsCreateOrConnectWithoutInvoiceInput[]
+  createMany?: Prisma.patient_recordsCreateManyInvoiceInputEnvelope
+  connect?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
+}
+
+export type patient_recordsUncheckedCreateNestedManyWithoutInvoiceInput = {
+  create?: Prisma.XOR<Prisma.patient_recordsCreateWithoutInvoiceInput, Prisma.patient_recordsUncheckedCreateWithoutInvoiceInput> | Prisma.patient_recordsCreateWithoutInvoiceInput[] | Prisma.patient_recordsUncheckedCreateWithoutInvoiceInput[]
+  connectOrCreate?: Prisma.patient_recordsCreateOrConnectWithoutInvoiceInput | Prisma.patient_recordsCreateOrConnectWithoutInvoiceInput[]
+  createMany?: Prisma.patient_recordsCreateManyInvoiceInputEnvelope
+  connect?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
+}
+
+export type patient_recordsUpdateManyWithoutInvoiceNestedInput = {
+  create?: Prisma.XOR<Prisma.patient_recordsCreateWithoutInvoiceInput, Prisma.patient_recordsUncheckedCreateWithoutInvoiceInput> | Prisma.patient_recordsCreateWithoutInvoiceInput[] | Prisma.patient_recordsUncheckedCreateWithoutInvoiceInput[]
+  connectOrCreate?: Prisma.patient_recordsCreateOrConnectWithoutInvoiceInput | Prisma.patient_recordsCreateOrConnectWithoutInvoiceInput[]
+  upsert?: Prisma.patient_recordsUpsertWithWhereUniqueWithoutInvoiceInput | Prisma.patient_recordsUpsertWithWhereUniqueWithoutInvoiceInput[]
+  createMany?: Prisma.patient_recordsCreateManyInvoiceInputEnvelope
+  set?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
+  disconnect?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
+  delete?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
+  connect?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
+  update?: Prisma.patient_recordsUpdateWithWhereUniqueWithoutInvoiceInput | Prisma.patient_recordsUpdateWithWhereUniqueWithoutInvoiceInput[]
+  updateMany?: Prisma.patient_recordsUpdateManyWithWhereWithoutInvoiceInput | Prisma.patient_recordsUpdateManyWithWhereWithoutInvoiceInput[]
+  deleteMany?: Prisma.patient_recordsScalarWhereInput | Prisma.patient_recordsScalarWhereInput[]
+}
+
+export type patient_recordsUncheckedUpdateManyWithoutInvoiceNestedInput = {
+  create?: Prisma.XOR<Prisma.patient_recordsCreateWithoutInvoiceInput, Prisma.patient_recordsUncheckedCreateWithoutInvoiceInput> | Prisma.patient_recordsCreateWithoutInvoiceInput[] | Prisma.patient_recordsUncheckedCreateWithoutInvoiceInput[]
+  connectOrCreate?: Prisma.patient_recordsCreateOrConnectWithoutInvoiceInput | Prisma.patient_recordsCreateOrConnectWithoutInvoiceInput[]
+  upsert?: Prisma.patient_recordsUpsertWithWhereUniqueWithoutInvoiceInput | Prisma.patient_recordsUpsertWithWhereUniqueWithoutInvoiceInput[]
+  createMany?: Prisma.patient_recordsCreateManyInvoiceInputEnvelope
+  set?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
+  disconnect?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
+  delete?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
+  connect?: Prisma.patient_recordsWhereUniqueInput | Prisma.patient_recordsWhereUniqueInput[]
+  update?: Prisma.patient_recordsUpdateWithWhereUniqueWithoutInvoiceInput | Prisma.patient_recordsUpdateWithWhereUniqueWithoutInvoiceInput[]
+  updateMany?: Prisma.patient_recordsUpdateManyWithWhereWithoutInvoiceInput | Prisma.patient_recordsUpdateManyWithWhereWithoutInvoiceInput[]
+  deleteMany?: Prisma.patient_recordsScalarWhereInput | Prisma.patient_recordsScalarWhereInput[]
+}
+
 export type patient_recordsCreateWithoutAppointmentsInput = {
   id?: bigint | number
   record_type?: string
@@ -683,6 +755,7 @@ export type patient_recordsCreateWithoutAppointmentsInput = {
   created_at?: Date | string
   updated_at?: Date | string
   patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutPatient_recordsInput
+  invoice?: Prisma.treatment_invoicesCreateNestedOneWithoutPatient_recordsInput
   users?: Prisma.usersCreateNestedOneWithoutPatient_recordsInput
   patient_profiles: Prisma.patient_profilesCreateNestedOneWithoutPatient_recordsInput
 }
@@ -696,6 +769,7 @@ export type patient_recordsUncheckedCreateWithoutAppointmentsInput = {
   tooth_number?: string | null
   treatment_date?: Date | string | null
   created_by?: bigint | number | null
+  invoice_id?: bigint | number | null
   created_at?: Date | string
   updated_at?: Date | string
   patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutPatient_recordsInput
@@ -740,6 +814,7 @@ export type patient_recordsScalarWhereInput = {
   tooth_number?: Prisma.StringNullableFilter<"patient_records"> | string | null
   treatment_date?: Prisma.DateTimeNullableFilter<"patient_records"> | Date | string | null
   created_by?: Prisma.BigIntNullableFilter<"patient_records"> | bigint | number | null
+  invoice_id?: Prisma.BigIntNullableFilter<"patient_records"> | bigint | number | null
   created_at?: Prisma.DateTimeFilter<"patient_records"> | Date | string
   updated_at?: Prisma.DateTimeFilter<"patient_records"> | Date | string
 }
@@ -753,6 +828,7 @@ export type patient_recordsCreateWithoutPatient_documentsInput = {
   treatment_date?: Date | string | null
   created_at?: Date | string
   updated_at?: Date | string
+  invoice?: Prisma.treatment_invoicesCreateNestedOneWithoutPatient_recordsInput
   appointments?: Prisma.appointmentsCreateNestedOneWithoutPatient_recordsInput
   users?: Prisma.usersCreateNestedOneWithoutPatient_recordsInput
   patient_profiles: Prisma.patient_profilesCreateNestedOneWithoutPatient_recordsInput
@@ -768,6 +844,7 @@ export type patient_recordsUncheckedCreateWithoutPatient_documentsInput = {
   tooth_number?: string | null
   treatment_date?: Date | string | null
   created_by?: bigint | number | null
+  invoice_id?: bigint | number | null
   created_at?: Date | string
   updated_at?: Date | string
 }
@@ -797,6 +874,7 @@ export type patient_recordsUpdateWithoutPatient_documentsInput = {
   treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  invoice?: Prisma.treatment_invoicesUpdateOneWithoutPatient_recordsNestedInput
   appointments?: Prisma.appointmentsUpdateOneWithoutPatient_recordsNestedInput
   users?: Prisma.usersUpdateOneWithoutPatient_recordsNestedInput
   patient_profiles?: Prisma.patient_profilesUpdateOneRequiredWithoutPatient_recordsNestedInput
@@ -812,6 +890,7 @@ export type patient_recordsUncheckedUpdateWithoutPatient_documentsInput = {
   tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  invoice_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -826,6 +905,7 @@ export type patient_recordsCreateWithoutPatient_profilesInput = {
   created_at?: Date | string
   updated_at?: Date | string
   patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutPatient_recordsInput
+  invoice?: Prisma.treatment_invoicesCreateNestedOneWithoutPatient_recordsInput
   appointments?: Prisma.appointmentsCreateNestedOneWithoutPatient_recordsInput
   users?: Prisma.usersCreateNestedOneWithoutPatient_recordsInput
 }
@@ -839,6 +919,7 @@ export type patient_recordsUncheckedCreateWithoutPatient_profilesInput = {
   tooth_number?: string | null
   treatment_date?: Date | string | null
   created_by?: bigint | number | null
+  invoice_id?: bigint | number | null
   created_at?: Date | string
   updated_at?: Date | string
   patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutPatient_recordsInput
@@ -880,6 +961,7 @@ export type patient_recordsCreateWithoutUsersInput = {
   created_at?: Date | string
   updated_at?: Date | string
   patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutPatient_recordsInput
+  invoice?: Prisma.treatment_invoicesCreateNestedOneWithoutPatient_recordsInput
   appointments?: Prisma.appointmentsCreateNestedOneWithoutPatient_recordsInput
   patient_profiles: Prisma.patient_profilesCreateNestedOneWithoutPatient_recordsInput
 }
@@ -893,6 +975,7 @@ export type patient_recordsUncheckedCreateWithoutUsersInput = {
   description: string
   tooth_number?: string | null
   treatment_date?: Date | string | null
+  invoice_id?: bigint | number | null
   created_at?: Date | string
   updated_at?: Date | string
   patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutPatient_recordsInput
@@ -924,6 +1007,62 @@ export type patient_recordsUpdateManyWithWhereWithoutUsersInput = {
   data: Prisma.XOR<Prisma.patient_recordsUpdateManyMutationInput, Prisma.patient_recordsUncheckedUpdateManyWithoutUsersInput>
 }
 
+export type patient_recordsCreateWithoutInvoiceInput = {
+  id?: bigint | number
+  record_type?: string
+  title: string
+  description: string
+  tooth_number?: string | null
+  treatment_date?: Date | string | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutPatient_recordsInput
+  appointments?: Prisma.appointmentsCreateNestedOneWithoutPatient_recordsInput
+  users?: Prisma.usersCreateNestedOneWithoutPatient_recordsInput
+  patient_profiles: Prisma.patient_profilesCreateNestedOneWithoutPatient_recordsInput
+}
+
+export type patient_recordsUncheckedCreateWithoutInvoiceInput = {
+  id?: bigint | number
+  patient_id: bigint | number
+  appointment_id?: bigint | number | null
+  record_type?: string
+  title: string
+  description: string
+  tooth_number?: string | null
+  treatment_date?: Date | string | null
+  created_by?: bigint | number | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutPatient_recordsInput
+}
+
+export type patient_recordsCreateOrConnectWithoutInvoiceInput = {
+  where: Prisma.patient_recordsWhereUniqueInput
+  create: Prisma.XOR<Prisma.patient_recordsCreateWithoutInvoiceInput, Prisma.patient_recordsUncheckedCreateWithoutInvoiceInput>
+}
+
+export type patient_recordsCreateManyInvoiceInputEnvelope = {
+  data: Prisma.patient_recordsCreateManyInvoiceInput | Prisma.patient_recordsCreateManyInvoiceInput[]
+  skipDuplicates?: boolean
+}
+
+export type patient_recordsUpsertWithWhereUniqueWithoutInvoiceInput = {
+  where: Prisma.patient_recordsWhereUniqueInput
+  update: Prisma.XOR<Prisma.patient_recordsUpdateWithoutInvoiceInput, Prisma.patient_recordsUncheckedUpdateWithoutInvoiceInput>
+  create: Prisma.XOR<Prisma.patient_recordsCreateWithoutInvoiceInput, Prisma.patient_recordsUncheckedCreateWithoutInvoiceInput>
+}
+
+export type patient_recordsUpdateWithWhereUniqueWithoutInvoiceInput = {
+  where: Prisma.patient_recordsWhereUniqueInput
+  data: Prisma.XOR<Prisma.patient_recordsUpdateWithoutInvoiceInput, Prisma.patient_recordsUncheckedUpdateWithoutInvoiceInput>
+}
+
+export type patient_recordsUpdateManyWithWhereWithoutInvoiceInput = {
+  where: Prisma.patient_recordsScalarWhereInput
+  data: Prisma.XOR<Prisma.patient_recordsUpdateManyMutationInput, Prisma.patient_recordsUncheckedUpdateManyWithoutInvoiceInput>
+}
+
 export type patient_recordsCreateManyAppointmentsInput = {
   id?: bigint | number
   patient_id: bigint | number
@@ -933,6 +1072,7 @@ export type patient_recordsCreateManyAppointmentsInput = {
   tooth_number?: string | null
   treatment_date?: Date | string | null
   created_by?: bigint | number | null
+  invoice_id?: bigint | number | null
   created_at?: Date | string
   updated_at?: Date | string
 }
@@ -947,6 +1087,7 @@ export type patient_recordsUpdateWithoutAppointmentsInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   patient_documents?: Prisma.patient_documentsUpdateManyWithoutPatient_recordsNestedInput
+  invoice?: Prisma.treatment_invoicesUpdateOneWithoutPatient_recordsNestedInput
   users?: Prisma.usersUpdateOneWithoutPatient_recordsNestedInput
   patient_profiles?: Prisma.patient_profilesUpdateOneRequiredWithoutPatient_recordsNestedInput
 }
@@ -960,6 +1101,7 @@ export type patient_recordsUncheckedUpdateWithoutAppointmentsInput = {
   tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  invoice_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutPatient_recordsNestedInput
@@ -974,6 +1116,7 @@ export type patient_recordsUncheckedUpdateManyWithoutAppointmentsInput = {
   tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  invoice_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -987,6 +1130,7 @@ export type patient_recordsCreateManyPatient_profilesInput = {
   tooth_number?: string | null
   treatment_date?: Date | string | null
   created_by?: bigint | number | null
+  invoice_id?: bigint | number | null
   created_at?: Date | string
   updated_at?: Date | string
 }
@@ -1001,6 +1145,7 @@ export type patient_recordsUpdateWithoutPatient_profilesInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   patient_documents?: Prisma.patient_documentsUpdateManyWithoutPatient_recordsNestedInput
+  invoice?: Prisma.treatment_invoicesUpdateOneWithoutPatient_recordsNestedInput
   appointments?: Prisma.appointmentsUpdateOneWithoutPatient_recordsNestedInput
   users?: Prisma.usersUpdateOneWithoutPatient_recordsNestedInput
 }
@@ -1014,6 +1159,7 @@ export type patient_recordsUncheckedUpdateWithoutPatient_profilesInput = {
   tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  invoice_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutPatient_recordsNestedInput
@@ -1028,6 +1174,7 @@ export type patient_recordsUncheckedUpdateManyWithoutPatient_profilesInput = {
   tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  invoice_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1041,6 +1188,7 @@ export type patient_recordsCreateManyUsersInput = {
   description: string
   tooth_number?: string | null
   treatment_date?: Date | string | null
+  invoice_id?: bigint | number | null
   created_at?: Date | string
   updated_at?: Date | string
 }
@@ -1055,6 +1203,7 @@ export type patient_recordsUpdateWithoutUsersInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   patient_documents?: Prisma.patient_documentsUpdateManyWithoutPatient_recordsNestedInput
+  invoice?: Prisma.treatment_invoicesUpdateOneWithoutPatient_recordsNestedInput
   appointments?: Prisma.appointmentsUpdateOneWithoutPatient_recordsNestedInput
   patient_profiles?: Prisma.patient_profilesUpdateOneRequiredWithoutPatient_recordsNestedInput
 }
@@ -1068,6 +1217,7 @@ export type patient_recordsUncheckedUpdateWithoutUsersInput = {
   description?: Prisma.StringFieldUpdateOperationsInput | string
   tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  invoice_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutPatient_recordsNestedInput
@@ -1082,6 +1232,65 @@ export type patient_recordsUncheckedUpdateManyWithoutUsersInput = {
   description?: Prisma.StringFieldUpdateOperationsInput | string
   tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  invoice_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type patient_recordsCreateManyInvoiceInput = {
+  id?: bigint | number
+  patient_id: bigint | number
+  appointment_id?: bigint | number | null
+  record_type?: string
+  title: string
+  description: string
+  tooth_number?: string | null
+  treatment_date?: Date | string | null
+  created_by?: bigint | number | null
+  created_at?: Date | string
+  updated_at?: Date | string
+}
+
+export type patient_recordsUpdateWithoutInvoiceInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  record_type?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  patient_documents?: Prisma.patient_documentsUpdateManyWithoutPatient_recordsNestedInput
+  appointments?: Prisma.appointmentsUpdateOneWithoutPatient_recordsNestedInput
+  users?: Prisma.usersUpdateOneWithoutPatient_recordsNestedInput
+  patient_profiles?: Prisma.patient_profilesUpdateOneRequiredWithoutPatient_recordsNestedInput
+}
+
+export type patient_recordsUncheckedUpdateWithoutInvoiceInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  appointment_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  record_type?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutPatient_recordsNestedInput
+}
+
+export type patient_recordsUncheckedUpdateManyWithoutInvoiceInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  appointment_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  record_type?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1127,9 +1336,11 @@ export type patient_recordsSelect<ExtArgs extends runtime.Types.Extensions.Inter
   tooth_number?: boolean
   treatment_date?: boolean
   created_by?: boolean
+  invoice_id?: boolean
   created_at?: boolean
   updated_at?: boolean
   patient_documents?: boolean | Prisma.patient_records$patient_documentsArgs<ExtArgs>
+  invoice?: boolean | Prisma.patient_records$invoiceArgs<ExtArgs>
   appointments?: boolean | Prisma.patient_records$appointmentsArgs<ExtArgs>
   users?: boolean | Prisma.patient_records$usersArgs<ExtArgs>
   patient_profiles?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
@@ -1146,8 +1357,10 @@ export type patient_recordsSelectCreateManyAndReturn<ExtArgs extends runtime.Typ
   tooth_number?: boolean
   treatment_date?: boolean
   created_by?: boolean
+  invoice_id?: boolean
   created_at?: boolean
   updated_at?: boolean
+  invoice?: boolean | Prisma.patient_records$invoiceArgs<ExtArgs>
   appointments?: boolean | Prisma.patient_records$appointmentsArgs<ExtArgs>
   users?: boolean | Prisma.patient_records$usersArgs<ExtArgs>
   patient_profiles?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
@@ -1163,8 +1376,10 @@ export type patient_recordsSelectUpdateManyAndReturn<ExtArgs extends runtime.Typ
   tooth_number?: boolean
   treatment_date?: boolean
   created_by?: boolean
+  invoice_id?: boolean
   created_at?: boolean
   updated_at?: boolean
+  invoice?: boolean | Prisma.patient_records$invoiceArgs<ExtArgs>
   appointments?: boolean | Prisma.patient_records$appointmentsArgs<ExtArgs>
   users?: boolean | Prisma.patient_records$usersArgs<ExtArgs>
   patient_profiles?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
@@ -1180,24 +1395,28 @@ export type patient_recordsSelectScalar = {
   tooth_number?: boolean
   treatment_date?: boolean
   created_by?: boolean
+  invoice_id?: boolean
   created_at?: boolean
   updated_at?: boolean
 }
 
-export type patient_recordsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "patient_id" | "appointment_id" | "record_type" | "title" | "description" | "tooth_number" | "treatment_date" | "created_by" | "created_at" | "updated_at", ExtArgs["result"]["patient_records"]>
+export type patient_recordsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "patient_id" | "appointment_id" | "record_type" | "title" | "description" | "tooth_number" | "treatment_date" | "created_by" | "invoice_id" | "created_at" | "updated_at", ExtArgs["result"]["patient_records"]>
 export type patient_recordsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   patient_documents?: boolean | Prisma.patient_records$patient_documentsArgs<ExtArgs>
+  invoice?: boolean | Prisma.patient_records$invoiceArgs<ExtArgs>
   appointments?: boolean | Prisma.patient_records$appointmentsArgs<ExtArgs>
   users?: boolean | Prisma.patient_records$usersArgs<ExtArgs>
   patient_profiles?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
   _count?: boolean | Prisma.Patient_recordsCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type patient_recordsIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  invoice?: boolean | Prisma.patient_records$invoiceArgs<ExtArgs>
   appointments?: boolean | Prisma.patient_records$appointmentsArgs<ExtArgs>
   users?: boolean | Prisma.patient_records$usersArgs<ExtArgs>
   patient_profiles?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
 }
 export type patient_recordsIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  invoice?: boolean | Prisma.patient_records$invoiceArgs<ExtArgs>
   appointments?: boolean | Prisma.patient_records$appointmentsArgs<ExtArgs>
   users?: boolean | Prisma.patient_records$usersArgs<ExtArgs>
   patient_profiles?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
@@ -1207,6 +1426,7 @@ export type $patient_recordsPayload<ExtArgs extends runtime.Types.Extensions.Int
   name: "patient_records"
   objects: {
     patient_documents: Prisma.$patient_documentsPayload<ExtArgs>[]
+    invoice: Prisma.$treatment_invoicesPayload<ExtArgs> | null
     appointments: Prisma.$appointmentsPayload<ExtArgs> | null
     users: Prisma.$usersPayload<ExtArgs> | null
     patient_profiles: Prisma.$patient_profilesPayload<ExtArgs>
@@ -1221,6 +1441,7 @@ export type $patient_recordsPayload<ExtArgs extends runtime.Types.Extensions.Int
     tooth_number: string | null
     treatment_date: Date | null
     created_by: bigint | null
+    invoice_id: bigint | null
     created_at: Date
     updated_at: Date
   }, ExtArgs["result"]["patient_records"]>
@@ -1618,6 +1839,7 @@ readonly fields: patient_recordsFieldRefs;
 export interface Prisma__patient_recordsClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   patient_documents<T extends Prisma.patient_records$patient_documentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.patient_records$patient_documentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$patient_documentsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  invoice<T extends Prisma.patient_records$invoiceArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.patient_records$invoiceArgs<ExtArgs>>): Prisma.Prisma__treatment_invoicesClient<runtime.Types.Result.GetResult<Prisma.$treatment_invoicesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   appointments<T extends Prisma.patient_records$appointmentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.patient_records$appointmentsArgs<ExtArgs>>): Prisma.Prisma__appointmentsClient<runtime.Types.Result.GetResult<Prisma.$appointmentsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   users<T extends Prisma.patient_records$usersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.patient_records$usersArgs<ExtArgs>>): Prisma.Prisma__usersClient<runtime.Types.Result.GetResult<Prisma.$usersPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   patient_profiles<T extends Prisma.patient_profilesDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.patient_profilesDefaultArgs<ExtArgs>>): Prisma.Prisma__patient_profilesClient<runtime.Types.Result.GetResult<Prisma.$patient_profilesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
@@ -1659,6 +1881,7 @@ export interface patient_recordsFieldRefs {
   readonly tooth_number: Prisma.FieldRef<"patient_records", 'String'>
   readonly treatment_date: Prisma.FieldRef<"patient_records", 'DateTime'>
   readonly created_by: Prisma.FieldRef<"patient_records", 'BigInt'>
+  readonly invoice_id: Prisma.FieldRef<"patient_records", 'BigInt'>
   readonly created_at: Prisma.FieldRef<"patient_records", 'DateTime'>
   readonly updated_at: Prisma.FieldRef<"patient_records", 'DateTime'>
 }
@@ -2083,6 +2306,25 @@ export type patient_records$patient_documentsArgs<ExtArgs extends runtime.Types.
   take?: number
   skip?: number
   distinct?: Prisma.Patient_documentsScalarFieldEnum | Prisma.Patient_documentsScalarFieldEnum[]
+}
+
+/**
+ * patient_records.invoice
+ */
+export type patient_records$invoiceArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the treatment_invoices
+   */
+  select?: Prisma.treatment_invoicesSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the treatment_invoices
+   */
+  omit?: Prisma.treatment_invoicesOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.treatment_invoicesInclude<ExtArgs> | null
+  where?: Prisma.treatment_invoicesWhereInput
 }
 
 /**

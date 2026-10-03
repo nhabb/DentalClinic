@@ -1,7 +1,8 @@
-import { Controller, Post, Get, Body, Headers, HttpCode, HttpStatus, UseGuards, Request, UnauthorizedException } from '@nestjs/common';
+import { Controller, Post, Get, Body, Headers, Query, HttpCode, HttpStatus, UseGuards, Request, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
+import { SetPasswordDto } from './dto/set-password.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
 @Controller('auth')
@@ -11,6 +12,19 @@ export class AuthController {
   @Post('signup')
   async signup(@Body() dto: SignupDto) {
     return this.authService.signup(dto);
+  }
+
+  /** Public: check whether a password setup link is still valid. */
+  @Get('set-password/validate')
+  async validateSetupToken(@Query('token') token: string) {
+    return this.authService.validateSetupToken(token ?? '');
+  }
+
+  /** Public: complete a password setup link sent to a clinic-created patient. */
+  @Post('set-password')
+  @HttpCode(HttpStatus.OK)
+  async setPassword(@Body() dto: SetPasswordDto) {
+    return this.authService.setPassword(dto);
   }
 
   @Post('login')

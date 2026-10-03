@@ -396,6 +396,7 @@ export const ModelName = {
   patient_records: 'patient_records',
   users: 'users',
   expenses: 'expenses',
+  expense_payments: 'expense_payments',
   treatment_invoices: 'treatment_invoices',
   invoice_line_items: 'invoice_line_items',
   invoice_payments: 'invoice_payments'
@@ -414,7 +415,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "appointment_slots" | "appointments" | "audit_logs" | "clinic_profile" | "inventory_items" | "inventory_movements" | "notifications" | "patient_documents" | "patient_profiles" | "patient_records" | "users" | "expenses" | "treatment_invoices" | "invoice_line_items" | "invoice_payments"
+    modelProps: "appointment_slots" | "appointments" | "audit_logs" | "clinic_profile" | "inventory_items" | "inventory_movements" | "notifications" | "patient_documents" | "patient_profiles" | "patient_records" | "users" | "expenses" | "expense_payments" | "treatment_invoices" | "invoice_line_items" | "invoice_payments"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1306,6 +1307,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    expense_payments: {
+      payload: Prisma.$expense_paymentsPayload<ExtArgs>
+      fields: Prisma.expense_paymentsFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.expense_paymentsFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$expense_paymentsPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.expense_paymentsFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$expense_paymentsPayload>
+        }
+        findFirst: {
+          args: Prisma.expense_paymentsFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$expense_paymentsPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.expense_paymentsFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$expense_paymentsPayload>
+        }
+        findMany: {
+          args: Prisma.expense_paymentsFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$expense_paymentsPayload>[]
+        }
+        create: {
+          args: Prisma.expense_paymentsCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$expense_paymentsPayload>
+        }
+        createMany: {
+          args: Prisma.expense_paymentsCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.expense_paymentsCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$expense_paymentsPayload>[]
+        }
+        delete: {
+          args: Prisma.expense_paymentsDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$expense_paymentsPayload>
+        }
+        update: {
+          args: Prisma.expense_paymentsUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$expense_paymentsPayload>
+        }
+        deleteMany: {
+          args: Prisma.expense_paymentsDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.expense_paymentsUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.expense_paymentsUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$expense_paymentsPayload>[]
+        }
+        upsert: {
+          args: Prisma.expense_paymentsUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$expense_paymentsPayload>
+        }
+        aggregate: {
+          args: Prisma.Expense_paymentsAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateExpense_payments>
+        }
+        groupBy: {
+          args: Prisma.expense_paymentsGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Expense_paymentsGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.expense_paymentsCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Expense_paymentsCountAggregateOutputType> | number
+        }
+      }
+    }
     treatment_invoices: {
       payload: Prisma.$treatment_invoicesPayload<ExtArgs>
       fields: Prisma.treatment_invoicesFieldRefs
@@ -1721,6 +1796,7 @@ export const Patient_recordsScalarFieldEnum = {
   tooth_number: 'tooth_number',
   treatment_date: 'treatment_date',
   created_by: 'created_by',
+  invoice_id: 'invoice_id',
   created_at: 'created_at',
   updated_at: 'updated_at'
 } as const
@@ -1741,6 +1817,10 @@ export const UsersScalarFieldEnum = {
   role: 'role',
   is_active: 'is_active',
   avatar_url: 'avatar_url',
+  must_set_password: 'must_set_password',
+  password_setup_token_hash: 'password_setup_token_hash',
+  password_setup_expires_at: 'password_setup_expires_at',
+  password_setup_sent_at: 'password_setup_sent_at',
   created_at: 'created_at',
   updated_at: 'updated_at'
 } as const
@@ -1754,6 +1834,7 @@ export const ExpensesScalarFieldEnum = {
   category: 'category',
   status: 'status',
   amount: 'amount',
+  amount_paid: 'amount_paid',
   description: 'description',
   expense_date: 'expense_date',
   created_by: 'created_by',
@@ -1762,6 +1843,20 @@ export const ExpensesScalarFieldEnum = {
 } as const
 
 export type ExpensesScalarFieldEnum = (typeof ExpensesScalarFieldEnum)[keyof typeof ExpensesScalarFieldEnum]
+
+
+export const Expense_paymentsScalarFieldEnum = {
+  id: 'id',
+  expense_id: 'expense_id',
+  amount: 'amount',
+  payment_method: 'payment_method',
+  notes: 'notes',
+  payment_date: 'payment_date',
+  created_by: 'created_by',
+  created_at: 'created_at'
+} as const
+
+export type Expense_paymentsScalarFieldEnum = (typeof Expense_paymentsScalarFieldEnum)[keyof typeof Expense_paymentsScalarFieldEnum]
 
 
 export const Treatment_invoicesScalarFieldEnum = {
@@ -1786,6 +1881,7 @@ export const Invoice_line_itemsScalarFieldEnum = {
   invoice_id: 'invoice_id',
   procedure_name: 'procedure_name',
   amount: 'amount',
+  tooth_number: 'tooth_number',
   created_at: 'created_at'
 } as const
 
@@ -2063,6 +2159,7 @@ export type GlobalOmitConfig = {
   patient_records?: Prisma.patient_recordsOmit
   users?: Prisma.usersOmit
   expenses?: Prisma.expensesOmit
+  expense_payments?: Prisma.expense_paymentsOmit
   treatment_invoices?: Prisma.treatment_invoicesOmit
   invoice_line_items?: Prisma.invoice_line_itemsOmit
   invoice_payments?: Prisma.invoice_paymentsOmit

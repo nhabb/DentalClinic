@@ -1,7 +1,7 @@
-import { ElementType, ReactNode } from "react";
+import { ComponentType, ReactNode } from "react";
 
 interface BadgeProps {
-  icon?: ElementType;
+  icon?: ComponentType<{ className?: string }>;
   bgClass: string;
   textClass: string;
   children: ReactNode;

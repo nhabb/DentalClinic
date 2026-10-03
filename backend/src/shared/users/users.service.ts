@@ -26,7 +26,10 @@ export class UsersService {
     phone?: string;
     role?: string;
   }) {
-    const existing = await this.prisma.users.findUnique({ where: { email: data.email } });
+    // Email is optional for clinic-created patients, so only look up when present.
+    const existing = data.email
+      ? await this.prisma.users.findUnique({ where: { email: data.email } })
+      : null;
     if (existing) return existing;
 
     const password_hash = await bcrypt.hash(Math.random().toString(36), 10);

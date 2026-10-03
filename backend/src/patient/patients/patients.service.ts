@@ -2,10 +2,15 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ConflictException,
 } from '@nestjs/common';
+import { randomBytes } from 'crypto';
+import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import { SupabaseStorageService } from '../../shared/storage/supabase-storage.service';
 import { UpdatePatientProfileDto } from './dto/update-patient-profile.dto';
+import { CreatePatientDto } from './dto/create-patient.dto';
+import { AccountSetupService } from '../../shared/account-setup/account-setup.service';
 
 const PROFILE_BUCKET = 'profile-photos';
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -16,7 +21,94 @@ export class PatientsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly storage: SupabaseStorageService,
+    private readonly accountSetup: AccountSetupService,
   ) {}
+
+  /**
+   * Admin-side creation. Creates the user row and its patient profile in one
+   * nested write. The account starts with an unusable random password and
+   * `must_set_password = true`. If an email was given, a one-time password
+   * setup link is emailed to the patient (and returned to staff as `invite`).
+   */
+  async create(dto: CreatePatientDto) {
+    const clean = (v?: string) => (v && v.trim() ? v.trim() : null);
+    const email = dto.email ? dto.email.trim().toLowerCase() : null;
+    const phone = clean(dto.phone);
+
+    if (!email && !phone) {
+      throw new BadRequestException('Provide an email address or a phone number for the patient');
+    }
+    if (email) {
+      const existing = await this.prisma.users.findUnique({ where: { email } });
+      if (existing) {
+        throw new ConflictException('A user with this email already exists');
+      }
+    }
+
+    const password_hash = await bcrypt.hash(randomBytes(24).toString('hex'), 10);
+
+    let user: { id: bigint; first_name: string; patient_profiles: { id: bigint } | null };
+    try {
+      user = await this.prisma.users.create({
+        data: {
+          email,
+          first_name: dto.first_name.trim(),
+          last_name: dto.last_name.trim(),
+          phone,
+          date_of_birth: dto.date_of_birth
+            ? new Date(`${dto.date_of_birth.split('T')[0]}T12:00:00.000Z`)
+            : null,
+          gender: dto.gender ?? null,
+          address: clean(dto.address),
+          role: 'patient',
+          password_hash,
+          is_active: true,
+          must_set_password: true,
+          patient_profiles: {
+            create: {
+              blood_type: dto.blood_type ?? null,
+              allergies: clean(dto.allergies),
+              insurance_provider: clean(dto.insurance_provider),
+              medical_notes: clean(dto.medical_notes),
+            },
+          },
+        },
+        select: { id: true, first_name: true, patient_profiles: { select: { id: true } } },
+      });
+    } catch (err: any) {
+      // Unique violation if two requests race on the same email.
+      if (err?.code === 'P2002') {
+        throw new ConflictException('A user with this email already exists');
+      }
+      throw err;
+    }
+
+    const profile = await this.findById(user.patient_profiles!.id);
+    const invite = email
+      ? await this.accountSetup.issueAndSend({ id: user.id, email, first_name: user.first_name })
+      : null;
+    return { ...profile, invite };
+  }
+
+  /**
+   * (Re)send the password setup link to a patient. Also works as a staff-triggered
+   * password reset for patients who already have a password.
+   */
+  async sendInvite(profileId: bigint) {
+    const profile = await this.prisma.patient_profiles.findUnique({
+      where: { id: profileId },
+      select: { users: { select: { id: true, email: true, first_name: true, is_active: true } } },
+    });
+    if (!profile) throw new NotFoundException('Patient profile not found');
+    const user = profile.users;
+    if (!user.email) {
+      throw new BadRequestException('This patient has no email address. Add one first, then send the link.');
+    }
+    if (!user.is_active) {
+      throw new BadRequestException('This patient account is inactive');
+    }
+    return this.accountSetup.issueAndSend({ id: user.id, email: user.email, first_name: user.first_name });
+  }
 
   private patientSelect = {
     id: true,
@@ -45,6 +137,10 @@ export class PatientsService {
         date_of_birth: true,
         gender: true,
         address: true,
+        is_active: true,
+        must_set_password: true,
+        password_setup_sent_at: true,
+        created_at: true,
       },
     },
   };

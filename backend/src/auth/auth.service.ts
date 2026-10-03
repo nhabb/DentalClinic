@@ -5,18 +5,38 @@ import { createClient } from '@supabase/supabase-js';
 import { PrismaService } from '../shared/prisma/prisma.service';
 import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
+import { SetPasswordDto } from './dto/set-password.dto';
+import { AccountSetupService } from '../shared/account-setup/account-setup.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
+    private readonly accountSetup: AccountSetupService,
   ) {}
+
+  /** Check a password setup link before showing the form. */
+  async validateSetupToken(token: string) {
+    const user = await this.accountSetup.findValid(token);
+    if (!user) return { valid: false };
+    return { valid: true, first_name: user.first_name, email: user.email };
+  }
+
+  /** Complete a password setup link: sets the password and burns the token. */
+  async setPassword(dto: SetPasswordDto) {
+    const user = await this.accountSetup.consume(dto.token, dto.password);
+    return { message: 'Password set. You can now log in.', email: user.email };
+  }
 
   async signup(dto: SignupDto) {
     const existing = await this.prisma.users.findUnique({ where: { email: dto.email } });
     if (existing) {
-      throw new ConflictException('Email already in use');
+      throw new ConflictException(
+        existing.must_set_password
+          ? 'This email is already registered by the clinic. Use the password setup link you were sent, or ask the clinic to resend it.'
+          : 'Email already in use',
+      );
     }
 
     const password_hash = await bcrypt.hash(dto.password, 10);

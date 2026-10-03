@@ -1,7 +1,7 @@
-import { ElementType } from "react";
+import { ComponentType } from "react";
 
 interface EmptyStateProps {
-  icon: ElementType;
+  icon: ComponentType<{ className?: string }>;
   title: string;
   description?: string;
 }

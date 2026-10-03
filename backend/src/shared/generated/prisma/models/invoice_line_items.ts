@@ -43,6 +43,7 @@ export type Invoice_line_itemsMinAggregateOutputType = {
   invoice_id: bigint | null
   procedure_name: string | null
   amount: runtime.Decimal | null
+  tooth_number: string | null
   created_at: Date | null
 }
 
@@ -51,6 +52,7 @@ export type Invoice_line_itemsMaxAggregateOutputType = {
   invoice_id: bigint | null
   procedure_name: string | null
   amount: runtime.Decimal | null
+  tooth_number: string | null
   created_at: Date | null
 }
 
@@ -59,6 +61,7 @@ export type Invoice_line_itemsCountAggregateOutputType = {
   invoice_id: number
   procedure_name: number
   amount: number
+  tooth_number: number
   created_at: number
   _all: number
 }
@@ -81,6 +84,7 @@ export type Invoice_line_itemsMinAggregateInputType = {
   invoice_id?: true
   procedure_name?: true
   amount?: true
+  tooth_number?: true
   created_at?: true
 }
 
@@ -89,6 +93,7 @@ export type Invoice_line_itemsMaxAggregateInputType = {
   invoice_id?: true
   procedure_name?: true
   amount?: true
+  tooth_number?: true
   created_at?: true
 }
 
@@ -97,6 +102,7 @@ export type Invoice_line_itemsCountAggregateInputType = {
   invoice_id?: true
   procedure_name?: true
   amount?: true
+  tooth_number?: true
   created_at?: true
   _all?: true
 }
@@ -192,6 +198,7 @@ export type Invoice_line_itemsGroupByOutputType = {
   invoice_id: bigint
   procedure_name: string
   amount: runtime.Decimal
+  tooth_number: string | null
   created_at: Date
   _count: Invoice_line_itemsCountAggregateOutputType | null
   _avg: Invoice_line_itemsAvgAggregateOutputType | null
@@ -223,6 +230,7 @@ export type invoice_line_itemsWhereInput = {
   invoice_id?: Prisma.BigIntFilter<"invoice_line_items"> | bigint | number
   procedure_name?: Prisma.StringFilter<"invoice_line_items"> | string
   amount?: Prisma.DecimalFilter<"invoice_line_items"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  tooth_number?: Prisma.StringNullableFilter<"invoice_line_items"> | string | null
   created_at?: Prisma.DateTimeFilter<"invoice_line_items"> | Date | string
   invoice?: Prisma.XOR<Prisma.Treatment_invoicesScalarRelationFilter, Prisma.treatment_invoicesWhereInput>
 }
@@ -232,6 +240,7 @@ export type invoice_line_itemsOrderByWithRelationInput = {
   invoice_id?: Prisma.SortOrder
   procedure_name?: Prisma.SortOrder
   amount?: Prisma.SortOrder
+  tooth_number?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrder
   invoice?: Prisma.treatment_invoicesOrderByWithRelationInput
 }
@@ -244,6 +253,7 @@ export type invoice_line_itemsWhereUniqueInput = Prisma.AtLeast<{
   invoice_id?: Prisma.BigIntFilter<"invoice_line_items"> | bigint | number
   procedure_name?: Prisma.StringFilter<"invoice_line_items"> | string
   amount?: Prisma.DecimalFilter<"invoice_line_items"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  tooth_number?: Prisma.StringNullableFilter<"invoice_line_items"> | string | null
   created_at?: Prisma.DateTimeFilter<"invoice_line_items"> | Date | string
   invoice?: Prisma.XOR<Prisma.Treatment_invoicesScalarRelationFilter, Prisma.treatment_invoicesWhereInput>
 }, "id">
@@ -253,6 +263,7 @@ export type invoice_line_itemsOrderByWithAggregationInput = {
   invoice_id?: Prisma.SortOrder
   procedure_name?: Prisma.SortOrder
   amount?: Prisma.SortOrder
+  tooth_number?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrder
   _count?: Prisma.invoice_line_itemsCountOrderByAggregateInput
   _avg?: Prisma.invoice_line_itemsAvgOrderByAggregateInput
@@ -269,6 +280,7 @@ export type invoice_line_itemsScalarWhereWithAggregatesInput = {
   invoice_id?: Prisma.BigIntWithAggregatesFilter<"invoice_line_items"> | bigint | number
   procedure_name?: Prisma.StringWithAggregatesFilter<"invoice_line_items"> | string
   amount?: Prisma.DecimalWithAggregatesFilter<"invoice_line_items"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  tooth_number?: Prisma.StringNullableWithAggregatesFilter<"invoice_line_items"> | string | null
   created_at?: Prisma.DateTimeWithAggregatesFilter<"invoice_line_items"> | Date | string
 }
 
@@ -276,6 +288,7 @@ export type invoice_line_itemsCreateInput = {
   id?: bigint | number
   procedure_name: string
   amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  tooth_number?: string | null
   created_at?: Date | string
   invoice: Prisma.treatment_invoicesCreateNestedOneWithoutLine_itemsInput
 }
@@ -285,6 +298,7 @@ export type invoice_line_itemsUncheckedCreateInput = {
   invoice_id: bigint | number
   procedure_name: string
   amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  tooth_number?: string | null
   created_at?: Date | string
 }
 
@@ -292,6 +306,7 @@ export type invoice_line_itemsUpdateInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   procedure_name?: Prisma.StringFieldUpdateOperationsInput | string
   amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   invoice?: Prisma.treatment_invoicesUpdateOneRequiredWithoutLine_itemsNestedInput
 }
@@ -301,6 +316,7 @@ export type invoice_line_itemsUncheckedUpdateInput = {
   invoice_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   procedure_name?: Prisma.StringFieldUpdateOperationsInput | string
   amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -309,6 +325,7 @@ export type invoice_line_itemsCreateManyInput = {
   invoice_id: bigint | number
   procedure_name: string
   amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  tooth_number?: string | null
   created_at?: Date | string
 }
 
@@ -316,6 +333,7 @@ export type invoice_line_itemsUpdateManyMutationInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   procedure_name?: Prisma.StringFieldUpdateOperationsInput | string
   amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -324,6 +342,7 @@ export type invoice_line_itemsUncheckedUpdateManyInput = {
   invoice_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   procedure_name?: Prisma.StringFieldUpdateOperationsInput | string
   amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -342,6 +361,7 @@ export type invoice_line_itemsCountOrderByAggregateInput = {
   invoice_id?: Prisma.SortOrder
   procedure_name?: Prisma.SortOrder
   amount?: Prisma.SortOrder
+  tooth_number?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
 }
 
@@ -356,6 +376,7 @@ export type invoice_line_itemsMaxOrderByAggregateInput = {
   invoice_id?: Prisma.SortOrder
   procedure_name?: Prisma.SortOrder
   amount?: Prisma.SortOrder
+  tooth_number?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
 }
 
@@ -364,6 +385,7 @@ export type invoice_line_itemsMinOrderByAggregateInput = {
   invoice_id?: Prisma.SortOrder
   procedure_name?: Prisma.SortOrder
   amount?: Prisma.SortOrder
+  tooth_number?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
 }
 
@@ -419,6 +441,7 @@ export type invoice_line_itemsCreateWithoutInvoiceInput = {
   id?: bigint | number
   procedure_name: string
   amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  tooth_number?: string | null
   created_at?: Date | string
 }
 
@@ -426,6 +449,7 @@ export type invoice_line_itemsUncheckedCreateWithoutInvoiceInput = {
   id?: bigint | number
   procedure_name: string
   amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  tooth_number?: string | null
   created_at?: Date | string
 }
 
@@ -463,6 +487,7 @@ export type invoice_line_itemsScalarWhereInput = {
   invoice_id?: Prisma.BigIntFilter<"invoice_line_items"> | bigint | number
   procedure_name?: Prisma.StringFilter<"invoice_line_items"> | string
   amount?: Prisma.DecimalFilter<"invoice_line_items"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  tooth_number?: Prisma.StringNullableFilter<"invoice_line_items"> | string | null
   created_at?: Prisma.DateTimeFilter<"invoice_line_items"> | Date | string
 }
 
@@ -470,6 +495,7 @@ export type invoice_line_itemsCreateManyInvoiceInput = {
   id?: bigint | number
   procedure_name: string
   amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  tooth_number?: string | null
   created_at?: Date | string
 }
 
@@ -477,6 +503,7 @@ export type invoice_line_itemsUpdateWithoutInvoiceInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   procedure_name?: Prisma.StringFieldUpdateOperationsInput | string
   amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -484,6 +511,7 @@ export type invoice_line_itemsUncheckedUpdateWithoutInvoiceInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   procedure_name?: Prisma.StringFieldUpdateOperationsInput | string
   amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -491,6 +519,7 @@ export type invoice_line_itemsUncheckedUpdateManyWithoutInvoiceInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   procedure_name?: Prisma.StringFieldUpdateOperationsInput | string
   amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -501,6 +530,7 @@ export type invoice_line_itemsSelect<ExtArgs extends runtime.Types.Extensions.In
   invoice_id?: boolean
   procedure_name?: boolean
   amount?: boolean
+  tooth_number?: boolean
   created_at?: boolean
   invoice?: boolean | Prisma.treatment_invoicesDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["invoice_line_items"]>
@@ -510,6 +540,7 @@ export type invoice_line_itemsSelectCreateManyAndReturn<ExtArgs extends runtime.
   invoice_id?: boolean
   procedure_name?: boolean
   amount?: boolean
+  tooth_number?: boolean
   created_at?: boolean
   invoice?: boolean | Prisma.treatment_invoicesDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["invoice_line_items"]>
@@ -519,6 +550,7 @@ export type invoice_line_itemsSelectUpdateManyAndReturn<ExtArgs extends runtime.
   invoice_id?: boolean
   procedure_name?: boolean
   amount?: boolean
+  tooth_number?: boolean
   created_at?: boolean
   invoice?: boolean | Prisma.treatment_invoicesDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["invoice_line_items"]>
@@ -528,10 +560,11 @@ export type invoice_line_itemsSelectScalar = {
   invoice_id?: boolean
   procedure_name?: boolean
   amount?: boolean
+  tooth_number?: boolean
   created_at?: boolean
 }
 
-export type invoice_line_itemsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "invoice_id" | "procedure_name" | "amount" | "created_at", ExtArgs["result"]["invoice_line_items"]>
+export type invoice_line_itemsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "invoice_id" | "procedure_name" | "amount" | "tooth_number" | "created_at", ExtArgs["result"]["invoice_line_items"]>
 export type invoice_line_itemsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   invoice?: boolean | Prisma.treatment_invoicesDefaultArgs<ExtArgs>
 }
@@ -552,6 +585,7 @@ export type $invoice_line_itemsPayload<ExtArgs extends runtime.Types.Extensions.
     invoice_id: bigint
     procedure_name: string
     amount: runtime.Decimal
+    tooth_number: string | null
     created_at: Date
   }, ExtArgs["result"]["invoice_line_items"]>
   composites: {}
@@ -981,6 +1015,7 @@ export interface invoice_line_itemsFieldRefs {
   readonly invoice_id: Prisma.FieldRef<"invoice_line_items", 'BigInt'>
   readonly procedure_name: Prisma.FieldRef<"invoice_line_items", 'String'>
   readonly amount: Prisma.FieldRef<"invoice_line_items", 'Decimal'>
+  readonly tooth_number: Prisma.FieldRef<"invoice_line_items", 'String'>
   readonly created_at: Prisma.FieldRef<"invoice_line_items", 'DateTime'>
 }
     

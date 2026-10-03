@@ -1,6 +1,7 @@
 import { UseGuards,
   Controller,
   Get,
+  Post,
   Patch,
   Delete,
   Param,
@@ -18,6 +19,7 @@ import { ApiBearerAuth, ApiTags, ApiOperation, ApiQuery, ApiConsumes, ApiBody } 
 import { PatientsService } from './patients.service';
 import { UpdatePatientProfileDto } from './dto/update-patient-profile.dto';
 import { SetPatientStatusDto } from './dto/set-patient-status.dto';
+import { CreatePatientDto } from './dto/create-patient.dto';
 
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
@@ -25,6 +27,22 @@ import { SetPatientStatusDto } from './dto/set-patient-status.dto';
 @Controller('patients')
 export class PatientsController {
   constructor(private readonly patientsService: PatientsService) {}
+
+  @Post()
+  @ApiOperation({
+    summary: 'Create a patient (user account + profile) from the admin panel',
+    description:
+      'Email is optional but email or phone is required. When an email is given, a password setup link is emailed and returned as `invite`.',
+  })
+  create(@Body() dto: CreatePatientDto) {
+    return this.patientsService.create(dto);
+  }
+
+  @Post(':id/invite')
+  @ApiOperation({ summary: 'Send (or resend) the password setup link to a patient by email' })
+  sendInvite(@Param('id', ParseIntPipe) id: number) {
+    return this.patientsService.sendInvite(BigInt(id));
+  }
 
   @Get()
   @ApiOperation({ summary: 'List all patient profiles (doctor view)' })

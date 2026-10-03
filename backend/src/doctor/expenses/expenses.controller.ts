@@ -16,6 +16,7 @@ import { JwtAuthGuard } from '../../shared/common/guards/jwt-auth.guard';
 import { ExpensesService } from './expenses.service';
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
+import { RecordExpensePaymentDto } from './dto/record-expense-payment.dto';
 
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
@@ -65,12 +66,40 @@ export class ExpensesController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Update an expense record' })
+  @ApiOperation({
+    summary: 'Update an expense record',
+    description:
+      'Status is derived from recorded payments. Sending status "paid" records a payment for the remaining balance.',
+  })
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateExpenseDto,
   ) {
     return this.expensesService.update(BigInt(id), dto);
+  }
+
+  @Get(':id/payments')
+  @ApiOperation({ summary: 'List payments recorded against an expense' })
+  listPayments(@Param('id', ParseIntPipe) id: number) {
+    return this.expensesService.listPayments(BigInt(id));
+  }
+
+  @Post(':id/payments')
+  @ApiOperation({ summary: 'Record a payment (partial or full) against an expense' })
+  recordPayment(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: RecordExpensePaymentDto,
+  ) {
+    return this.expensesService.recordPayment(BigInt(id), dto);
+  }
+
+  @Delete(':id/payments/:paymentId')
+  @ApiOperation({ summary: 'Remove a recorded expense payment and recalculate the balance' })
+  deletePayment(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('paymentId', ParseIntPipe) paymentId: number,
+  ) {
+    return this.expensesService.deletePayment(BigInt(id), BigInt(paymentId));
   }
 
   @Delete(':id')

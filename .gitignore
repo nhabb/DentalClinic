@@ -34,3 +34,5 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+# Raw 3D source assets (FBX + textures); only the converted GLB in frontend/public is served
+frontend/assets-src/

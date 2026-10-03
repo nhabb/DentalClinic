@@ -1,0 +1,7 @@
+Permanent Dentition - 3D model
+Author:  University of Dundee, School of Dentistry (https://sketchfab.com/DundeeDental)
+Source:  https://sketchfab.com/3d-models/permanent-dentition-2f69d7b59c3e4a6a8bcae041bd8e591b
+License: Creative Commons Attribution 4.0 (CC BY 4.0) https://creativecommons.org/licenses/by/4.0/
+Changes: converted from FBX to glTF binary (GLB) with FBX2glTF; original textures omitted,
+         teeth are shaded by the app according to treatment status.
+Original FBX and textures are kept in frontend/assets-src/permanent-dentition (not served).
