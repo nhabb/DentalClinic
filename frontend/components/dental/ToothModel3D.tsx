@@ -11,7 +11,7 @@
 // height fallback, side from the sign of x (patient's left = +x), and position
 // within the quadrant by ranking z (front teeth have the largest z).
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useThree, type ThreeEvent } from "@react-three/fiber";
 import { OrbitControls, useGLTF, useCursor } from "@react-three/drei";
 import * as THREE from "three";
@@ -237,13 +237,49 @@ export default function ToothModel3D({
   const selectedSet = useMemo(() => new Set(selected), [selected]);
   const interactive = !readOnly && typeof onToggle === "function";
 
+  // Click history so a right-click can undo the last select/unselect.
+  // Each entry records the tooth and whether it ended up selected after the click.
+  const history = useRef<{ fdi: string; selectedAfter: boolean }[]>([]);
+  const selectedRef = useRef(selectedSet);
+  selectedRef.current = selectedSet;
+
+  const handleToggle = useCallback(
+    (fdi: string) => {
+      history.current.push({ fdi, selectedAfter: !selectedRef.current.has(fdi) });
+      if (history.current.length > 100) history.current.shift();
+      onToggle?.(fdi);
+    },
+    [onToggle],
+  );
+
+  const undoLastClick = useCallback(() => {
+    if (!interactive) return;
+    // Skip entries the parent has since changed (e.g. "clear selection"), so
+    // undo never re-selects a tooth the user already cleared another way.
+    while (history.current.length > 0) {
+      const last = history.current.pop()!;
+      if (selectedRef.current.has(last.fdi) === last.selectedAfter) {
+        onToggle?.(last.fdi);
+        return;
+      }
+    }
+  }, [interactive, onToggle]);
+
   const hoveredState = hovered ? teeth[hovered] : undefined;
   const hoveredStatus: ToothStatus = hoveredState?.status ?? "healthy";
+  const hoveredTreatments = hoveredState?.treatments ?? [];
 
   const presets: ViewPreset[] = ["front", "upper", "lower"];
 
   return (
-    <div className={`relative rounded-xl overflow-hidden bg-gradient-to-b from-slate-100 to-slate-200 ${className}`} style={{ height }}>
+    <div
+      className={`relative rounded-xl overflow-hidden bg-gradient-to-b from-slate-100 to-slate-200 ${className}`}
+      style={{ height }}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        undoLastClick();
+      }}
+    >
       <Canvas
         dpr={[1, 2]}
         camera={{ fov: 30, position: [0, 10, 120], near: 1, far: 2000 }}
@@ -260,7 +296,7 @@ export default function ToothModel3D({
             teeth={teeth}
             selected={selectedSet}
             interactive={interactive}
-            onToggle={onToggle}
+            onToggle={handleToggle}
             onHover={setHovered}
             view={view}
             onReady={setRadius}
@@ -269,6 +305,7 @@ export default function ToothModel3D({
         <OrbitControls
           makeDefault
           enablePan={false}
+          mouseButtons={{ LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY }}
           minDistance={radius * 0.8}
           maxDistance={radius * 4}
           rotateSpeed={0.7}
@@ -293,17 +330,32 @@ export default function ToothModel3D({
       </div>
 
       {/* Hover badge */}
-      <div className="absolute top-3 right-3 min-w-[120px] rounded-lg bg-white/90 backdrop-blur px-3 py-2 shadow-sm text-xs">
+      <div className="absolute top-3 right-3 min-w-[120px] max-w-[260px] rounded-lg bg-white/90 backdrop-blur px-3 py-2 shadow-sm text-xs">
         {hovered ? (
           <>
-            <p className="font-bold text-gray-900 text-sm">{hovered}</p>
-            <p className="text-gray-600">
-              {labels[hoveredStatus] ?? hoveredStatus}
-              {hoveredState?.label ? <span className="block text-gray-400">{hoveredState.label}</span> : null}
+            <p className="font-bold text-gray-900 text-sm">
+              {hovered}
+              <span className="ml-2 font-medium text-gray-500 text-xs">{labels[hoveredStatus] ?? hoveredStatus}</span>
             </p>
+            {hoveredTreatments.length > 0 ? (
+              <ul className="mt-1 space-y-0.5 max-h-40 overflow-y-auto">
+                {hoveredTreatments.map((tr, i) => (
+                  <li key={i} className="flex items-center gap-1.5 text-gray-700">
+                    <span
+                      className="inline-block w-2 h-2 rounded-full shrink-0 border border-black/10"
+                      style={{ background: COLORS[tr.status === "completed" ? "treated" : tr.status] }}
+                    />
+                    <span className="truncate">{tr.procedure}</span>
+                    {tr.date ? <span className="ml-auto pl-2 text-gray-400 whitespace-nowrap">{tr.date}</span> : null}
+                  </li>
+                ))}
+              </ul>
+            ) : hoveredState?.label ? (
+              <p className="text-gray-400">{hoveredState.label}</p>
+            ) : null}
           </>
         ) : (
-          <p className="text-gray-500">{labels.hint ?? "Drag to rotate · scroll to zoom · click a tooth"}</p>
+          <p className="text-gray-500">{labels.hint ?? "Drag to rotate · scroll to zoom · click a tooth · right-click to undo"}</p>
         )}
       </div>
 

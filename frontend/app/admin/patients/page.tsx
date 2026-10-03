@@ -116,6 +116,8 @@ interface WorkItem {
   status: WorkStatus;
   amount: number;
   notes: string;
+  /** Put this item on the invoice created when saving (completed, priced items only). */
+  bill: boolean;
 }
 
 interface ChartHistoryEntry {
@@ -156,6 +158,7 @@ function mapChart(raw: any): ChartData {
         [v.last_procedure, v.last_date].filter(Boolean).join(" · ") + (count > 1 ? ` · ×${count}` : "") || undefined,
     };
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const history: ChartHistoryEntry[] = (raw?.history ?? []).map((r: any) => ({
     id: Number(r.id),
     tooth: String(r.tooth_number ?? ""),
@@ -170,6 +173,17 @@ function mapChart(raw: any): ChartData {
     invoiceTotal: Number(r.invoice?.total_amount) || 0,
     invoiceRemaining: Number(r.invoice?.remaining_amount) || 0,
   }));
+  // Every treatment per tooth (history is newest first) so hovering a tooth
+  // can list all of them, not just the latest.
+  for (const h of history) {
+    if (!h.tooth) continue;
+    const state = (teeth[h.tooth] ??= { status: "healthy" });
+    (state.treatments ??= []).push({
+      procedure: h.status === "missing" ? "Missing tooth" : h.procedure,
+      date: h.date || undefined,
+      status: h.status,
+    });
+  }
   return { teeth, history };
 }
 
@@ -267,16 +281,14 @@ export default function PatientsPage() {
   });
   const [workDate, setWorkDate] = useState(new Date().toISOString().split("T")[0]);
   const [workNotes, setWorkNotes] = useState("");
-  const [createWorkInvoice, setCreateWorkInvoice] = useState(true);
   const [savingWork, setSavingWork] = useState(false);
 
   // Completing planned work from the history, and paying its invoice
   const [completeSelection, setCompleteSelection] = useState<number[]>([]);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
-  const [completeItems, setCompleteItems] = useState<{ id: number; tooth: string; procedure: string; amount: string; status: WorkStatus }[]>([]);
+  const [completeItems, setCompleteItems] = useState<{ id: number; tooth: string; procedure: string; amount: string; status: WorkStatus; bill: boolean }[]>([]);
   const [completeDate, setCompleteDate] = useState(new Date().toISOString().split("T")[0]);
   const [completeNotes, setCompleteNotes] = useState("");
-  const [completeInvoice, setCompleteInvoice] = useState(true);
   const [completing, setCompleting] = useState(false);
   const [removingRecordId, setRemovingRecordId] = useState<number | null>(null);
   const [payInvoice, setPayInvoice] = useState<PayInvoice | null>(null);
@@ -759,6 +771,7 @@ export default function PatientsPage() {
         status: workForm.status,
         amount: safeAmount,
         notes: workForm.notes.trim(),
+        bill: workForm.status === "completed" && safeAmount > 0,
       })),
     ]);
     setSelectedTeeth([]);
@@ -787,9 +800,18 @@ export default function PatientsPage() {
     setWorkItems((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const workInvoiceTotal = workItems
-    .filter((i) => i.status === "completed" && i.amount > 0)
-    .reduce((s, i) => s + i.amount, 0);
+  // Only completed items with a price can be billed; each one can be left off
+  // the invoice and billed later from the history (so one visit can end up
+  // on several invoices, like on the billing page).
+  const isBillableWorkItem = (i: WorkItem) => i.status === "completed" && i.amount > 0;
+  const workBillableCount = workItems.filter(isBillableWorkItem).length;
+  const workBilledItems = workItems.filter((i) => isBillableWorkItem(i) && i.bill);
+  const workBilledCount = workBilledItems.length;
+  const workInvoiceTotal = workBilledItems.reduce((s, i) => s + i.amount, 0);
+
+  const handleToggleWorkItemBill = (index: number) =>
+    setWorkItems((prev) => prev.map((it, i) => (i === index ? { ...it, bill: !it.bill } : it)));
+  const setAllWorkItemsBill = (bill: boolean) => setWorkItems((prev) => prev.map((it) => ({ ...it, bill })));
 
   /** Current staff user id for created_by fields; falls back to the session's /me. */
   const resolveCreatedBy = async (): Promise<number | null> => {
@@ -823,10 +845,14 @@ export default function PatientsPage() {
           treatment_date: workDate,
           ...(workNotes.trim() ? { notes: workNotes.trim() } : {}),
           ...(createdBy ? { created_by: createdBy } : {}),
-          create_invoice: createWorkInvoice,
+          create_invoice: workBilledCount > 0,
           items: workItems.map((i) => ({
             tooth_number: i.tooth,
-            ...(i.status === "missing" ? {} : { procedure_name: i.procedure, amount: i.amount }),
+            // An unticked completed item is saved with no price, so it stays
+            // unbilled and can be put on its own invoice later from the history.
+            ...(i.status === "missing"
+              ? {}
+              : { procedure_name: i.procedure, amount: i.status === "completed" && !i.bill ? 0 : i.amount }),
             status: i.status,
             ...(i.notes ? { notes: i.notes } : {}),
           })),
@@ -865,18 +891,21 @@ export default function PatientsPage() {
     if (!chart) return;
     const items = chart.history
       .filter((h) => ids.includes(h.id) && isBillable(h))
-      .map((h) => ({ id: h.id, tooth: h.tooth, procedure: h.procedure, amount: String(DEFAULT_PRICES[h.procedure] ?? ""), status: h.status }));
+      .map((h) => ({ id: h.id, tooth: h.tooth, procedure: h.procedure, amount: String(DEFAULT_PRICES[h.procedure] ?? ""), status: h.status, bill: true }));
     if (items.length === 0) return;
     setCompleteItems(items);
     setCompleteDate(new Date().toISOString().split("T")[0]);
     setCompleteNotes("");
-    setCompleteInvoice(true);
     setShowCompleteModal(true);
   };
 
-  const completeTotal = completeInvoice
-    ? completeItems.reduce((s, i) => s + (parseFloat(i.amount) > 0 ? parseFloat(i.amount) : 0), 0)
-    : 0;
+  const completeAmount = (i: { amount: string; bill: boolean }) => {
+    const n = parseFloat(i.amount);
+    return i.bill && Number.isFinite(n) && n > 0 ? n : 0;
+  };
+  const completeBilledCount = completeItems.filter((i) => completeAmount(i) > 0).length;
+  const completeTotal = completeItems.reduce((s, i) => s + completeAmount(i), 0);
+  const setAllCompleteItemsBill = (bill: boolean) => setCompleteItems((prev) => prev.map((it) => ({ ...it, bill })));
 
   const openPayModal = (inv: PayInvoice) => {
     setPayInvoice(inv);
@@ -896,11 +925,8 @@ export default function PatientsPage() {
           treatment_date: completeDate,
           ...(completeNotes.trim() ? { notes: completeNotes.trim() } : {}),
           ...(createdBy ? { created_by: createdBy } : {}),
-          create_invoice: completeInvoice,
-          items: completeItems.map((i) => {
-            const amount = parseFloat(i.amount);
-            return { record_id: i.id, amount: Number.isFinite(amount) && amount > 0 ? amount : 0 };
-          }),
+          create_invoice: completeBilledCount > 0,
+          items: completeItems.map((i) => ({ record_id: i.id, amount: completeAmount(i) })),
         }),
       });
       if (!res.ok) {
@@ -1668,8 +1694,20 @@ export default function PatientsPage() {
                                       </p>
                                     </div>
                                     <div className="flex items-center gap-2 shrink-0">
+                                      {isBillableWorkItem(item) && (
+                                        <label className="flex items-center gap-1 text-xs text-gray-600 cursor-pointer whitespace-nowrap">
+                                          <input type="checkbox" checked={item.bill} onChange={() => handleToggleWorkItemBill(index)} />
+                                          {t("dentalChart.addToInvoice")}
+                                        </label>
+                                      )}
                                       {item.status !== "missing" && (
-                                        <span className="text-sm font-semibold text-gray-700">${item.amount.toFixed(2)}</span>
+                                        <span
+                                          className={`text-sm font-semibold ${
+                                            isBillableWorkItem(item) && !item.bill ? "text-gray-400 line-through" : "text-gray-700"
+                                          }`}
+                                        >
+                                          ${item.amount.toFixed(2)}
+                                        </span>
                                       )}
                                       <button
                                         type="button"
@@ -1702,23 +1740,38 @@ export default function PatientsPage() {
                                   />
                                 </div>
                               </div>
-                              <label className="flex items-start gap-2 text-sm text-gray-700 cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  checked={createWorkInvoice}
-                                  onChange={(e) => setCreateWorkInvoice(e.target.checked)}
-                                  className="mt-1"
-                                />
-                                <span>
-                                  {t("dentalChart.createInvoice")}
-                                  {createWorkInvoice && (
-                                    <span className="block text-xs text-gray-500">
-                                      {t("dentalChart.invoiceTotal")}: <span className="font-semibold text-gray-800">${workInvoiceTotal.toFixed(2)}</span>
-                                      {" · "}{t("dentalChart.invoiceCompletedOnly")}
-                                    </span>
-                                  )}
-                                </span>
-                              </label>
+                              {workBillableCount > 0 && (
+                                <div className="rounded-lg bg-white border border-gray-100 px-3 py-2 text-sm text-gray-700">
+                                  <div className="flex items-start justify-between gap-3">
+                                    <div>
+                                      {workBilledCount > 0 ? (
+                                        <>
+                                          <p>
+                                            {t("dentalChart.newInvoice")}: <span className="font-semibold text-gray-900">${workInvoiceTotal.toFixed(2)}</span>
+                                            <span className="text-gray-500"> · {workBilledCount}/{workBillableCount} {t("dentalChart.items")}</span>
+                                          </p>
+                                          <p className="text-xs text-gray-500">
+                                            {t("dentalChart.payAfterHint")}
+                                            {workBilledCount < workBillableCount ? ` ${t("dentalChart.unbilledLaterHint")}` : ""}
+                                          </p>
+                                        </>
+                                      ) : (
+                                        <p className="text-xs text-gray-500">{t("dentalChart.noInvoiceHint")}</p>
+                                      )}
+                                    </div>
+                                    {workBillableCount > 1 && (
+                                      <div className="flex gap-3 text-xs whitespace-nowrap shrink-0">
+                                        <button type="button" onClick={() => setAllWorkItemsBill(true)} className="font-medium text-dental-blue hover:underline">
+                                          {t("dentalChart.billAll")}
+                                        </button>
+                                        <button type="button" onClick={() => setAllWorkItemsBill(false)} className="font-medium text-gray-500 hover:underline">
+                                          {t("dentalChart.billNone")}
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
                               <Button
                                 className="w-full bg-dental-blue hover:bg-dental-blue/90"
                                 disabled={savingWork}
@@ -2101,19 +2154,40 @@ export default function PatientsPage() {
                         {item.status === "planned" ? `${t("dentalChart.plannedStatus")} → ${t("dentalChart.completed")}` : t("dentalChart.unbilled")}
                       </p>
                     </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <span className="text-sm text-gray-500">$</span>
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={item.amount}
-                        disabled={!completeInvoice}
-                        onChange={(e) =>
-                          setCompleteItems((prev) => prev.map((p) => (p.id === item.id ? { ...p, amount: e.target.value } : p)))
-                        }
-                        className="w-24 border border-gray-200 rounded-lg px-2 py-1.5 text-sm text-right focus:outline-none focus:ring-2 focus:ring-dental-blue/30 disabled:bg-gray-100 disabled:text-gray-400"
-                      />
+                    <div className="shrink-0 text-right rtl:text-left">
+                      <label className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-700 cursor-pointer whitespace-nowrap mb-1.5">
+                        <input
+                          type="checkbox"
+                          checked={item.bill}
+                          onChange={(e) =>
+                            setCompleteItems((prev) => prev.map((p) => (p.id === item.id ? { ...p, bill: e.target.checked } : p)))
+                          }
+                        />
+                        {t("dentalChart.addToInvoice")}
+                      </label>
+                      {item.bill ? (
+                        <div>
+                          <label htmlFor={`complete-price-${item.id}`} className="block text-[11px] text-gray-500 mb-0.5">
+                            {t("dentalChart.priceToBill")}
+                          </label>
+                          <div className="flex items-center justify-end gap-1">
+                            <span className="text-sm text-gray-500">$</span>
+                            <input
+                              id={`complete-price-${item.id}`}
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={item.amount}
+                              onChange={(e) =>
+                                setCompleteItems((prev) => prev.map((p) => (p.id === item.id ? { ...p, amount: e.target.value } : p)))
+                              }
+                              className="w-24 border border-gray-200 rounded-lg px-2 py-1.5 text-sm text-right focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-[11px] text-gray-400">{t("dentalChart.notBilledNow")}</p>
+                      )}
                     </div>
                   </li>
                 ))}
@@ -2139,17 +2213,36 @@ export default function PatientsPage() {
                   />
                 </div>
               </div>
-              <label className="flex items-start gap-2 text-sm text-gray-700 cursor-pointer">
-                <input type="checkbox" checked={completeInvoice} onChange={(e) => setCompleteInvoice(e.target.checked)} className="mt-1" />
-                <span>
-                  {t("dentalChart.createInvoice")}
-                  {completeInvoice && (
-                    <span className="block text-xs text-gray-500">
-                      {t("dentalChart.invoiceTotal")}: <span className="font-semibold text-gray-800">${completeTotal.toFixed(2)}</span>
-                    </span>
+              <div className="rounded-xl bg-gray-50 border border-gray-100 px-4 py-3 text-sm text-gray-700">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    {completeBilledCount > 0 ? (
+                      <>
+                        <p>
+                          {t("dentalChart.newInvoice")}: <span className="font-semibold text-gray-900">${completeTotal.toFixed(2)}</span>
+                          <span className="text-gray-500"> · {completeBilledCount}/{completeItems.length} {t("dentalChart.items")}</span>
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {t("dentalChart.payAfterHint")}
+                          {completeBilledCount < completeItems.length ? ` ${t("dentalChart.unbilledLaterHint")}` : ""}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-xs text-gray-500">{t("dentalChart.noInvoiceHint")}</p>
+                    )}
+                  </div>
+                  {completeItems.length > 1 && (
+                    <div className="flex gap-3 text-xs whitespace-nowrap shrink-0">
+                      <button type="button" onClick={() => setAllCompleteItemsBill(true)} className="font-medium text-dental-blue hover:underline">
+                        {t("dentalChart.billAll")}
+                      </button>
+                      <button type="button" onClick={() => setAllCompleteItemsBill(false)} className="font-medium text-gray-500 hover:underline">
+                        {t("dentalChart.billNone")}
+                      </button>
+                    </div>
                   )}
-                </span>
-              </label>
+                </div>
+              </div>
             </div>
             <div className="p-6 border-t border-gray-100 flex justify-end gap-3">
               <Button variant="outline" onClick={() => setShowCompleteModal(false)} disabled={completing}>

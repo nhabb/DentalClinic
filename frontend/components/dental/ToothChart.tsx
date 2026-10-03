@@ -11,10 +11,19 @@ import type { KeyboardEvent } from "react";
 
 export type ToothStatus = "healthy" | "treated" | "planned" | "missing";
 
+export interface ToothTreatment {
+  procedure: string;
+  /** YYYY-MM-DD, may be empty */
+  date?: string;
+  status: "completed" | "planned" | "missing";
+}
+
 export interface ToothState {
   status: ToothStatus;
-  /** Shown in the tooltip, e.g. "Filling · 2026-10-03" */
+  /** One-line summary shown when no treatment list is given, e.g. "Filling · 2026-10-03" */
   label?: string;
+  /** Every treatment on this tooth, newest first; shown in full on hover. */
+  treatments?: ToothTreatment[];
 }
 
 export const FDI_UPPER = ["18", "17", "16", "15", "14", "13", "12", "11", "21", "22", "23", "24", "25", "26", "27", "28"];
@@ -92,7 +101,10 @@ export default function ToothChart({
     const palette = isSelected ? SELECTED : COLORS[state.status];
     const { w, h } = toothSize(fdi);
     const missing = state.status === "missing";
-    const title = [fdi, state.label].filter(Boolean).join(" · ");
+    const title =
+      state.treatments && state.treatments.length > 0
+        ? [fdi, ...state.treatments.map((tr) => [tr.procedure, tr.date].filter(Boolean).join(" · "))].join("\n")
+        : [fdi, state.label].filter(Boolean).join(" · ");
     const isMolar = Number(fdi[1]) >= 6;
 
     const handleKey = (e: KeyboardEvent<SVGGElement>) => {
