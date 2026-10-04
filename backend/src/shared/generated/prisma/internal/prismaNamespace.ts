@@ -1797,6 +1797,7 @@ export const Patient_recordsScalarFieldEnum = {
   treatment_date: 'treatment_date',
   created_by: 'created_by',
   invoice_id: 'invoice_id',
+  quoted_amount: 'quoted_amount',
   created_at: 'created_at',
   updated_at: 'updated_at'
 } as const

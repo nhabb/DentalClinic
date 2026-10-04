@@ -32,6 +32,7 @@ export type Patient_recordsAvgAggregateOutputType = {
   appointment_id: number | null
   created_by: number | null
   invoice_id: number | null
+  quoted_amount: runtime.Decimal | null
 }
 
 export type Patient_recordsSumAggregateOutputType = {
@@ -40,6 +41,7 @@ export type Patient_recordsSumAggregateOutputType = {
   appointment_id: bigint | null
   created_by: bigint | null
   invoice_id: bigint | null
+  quoted_amount: runtime.Decimal | null
 }
 
 export type Patient_recordsMinAggregateOutputType = {
@@ -53,6 +55,7 @@ export type Patient_recordsMinAggregateOutputType = {
   treatment_date: Date | null
   created_by: bigint | null
   invoice_id: bigint | null
+  quoted_amount: runtime.Decimal | null
   created_at: Date | null
   updated_at: Date | null
 }
@@ -68,6 +71,7 @@ export type Patient_recordsMaxAggregateOutputType = {
   treatment_date: Date | null
   created_by: bigint | null
   invoice_id: bigint | null
+  quoted_amount: runtime.Decimal | null
   created_at: Date | null
   updated_at: Date | null
 }
@@ -83,6 +87,7 @@ export type Patient_recordsCountAggregateOutputType = {
   treatment_date: number
   created_by: number
   invoice_id: number
+  quoted_amount: number
   created_at: number
   updated_at: number
   _all: number
@@ -95,6 +100,7 @@ export type Patient_recordsAvgAggregateInputType = {
   appointment_id?: true
   created_by?: true
   invoice_id?: true
+  quoted_amount?: true
 }
 
 export type Patient_recordsSumAggregateInputType = {
@@ -103,6 +109,7 @@ export type Patient_recordsSumAggregateInputType = {
   appointment_id?: true
   created_by?: true
   invoice_id?: true
+  quoted_amount?: true
 }
 
 export type Patient_recordsMinAggregateInputType = {
@@ -116,6 +123,7 @@ export type Patient_recordsMinAggregateInputType = {
   treatment_date?: true
   created_by?: true
   invoice_id?: true
+  quoted_amount?: true
   created_at?: true
   updated_at?: true
 }
@@ -131,6 +139,7 @@ export type Patient_recordsMaxAggregateInputType = {
   treatment_date?: true
   created_by?: true
   invoice_id?: true
+  quoted_amount?: true
   created_at?: true
   updated_at?: true
 }
@@ -146,6 +155,7 @@ export type Patient_recordsCountAggregateInputType = {
   treatment_date?: true
   created_by?: true
   invoice_id?: true
+  quoted_amount?: true
   created_at?: true
   updated_at?: true
   _all?: true
@@ -248,6 +258,7 @@ export type Patient_recordsGroupByOutputType = {
   treatment_date: Date | null
   created_by: bigint | null
   invoice_id: bigint | null
+  quoted_amount: runtime.Decimal | null
   created_at: Date
   updated_at: Date
   _count: Patient_recordsCountAggregateOutputType | null
@@ -286,6 +297,7 @@ export type patient_recordsWhereInput = {
   treatment_date?: Prisma.DateTimeNullableFilter<"patient_records"> | Date | string | null
   created_by?: Prisma.BigIntNullableFilter<"patient_records"> | bigint | number | null
   invoice_id?: Prisma.BigIntNullableFilter<"patient_records"> | bigint | number | null
+  quoted_amount?: Prisma.DecimalNullableFilter<"patient_records"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Prisma.DateTimeFilter<"patient_records"> | Date | string
   updated_at?: Prisma.DateTimeFilter<"patient_records"> | Date | string
   patient_documents?: Prisma.Patient_documentsListRelationFilter
@@ -306,6 +318,7 @@ export type patient_recordsOrderByWithRelationInput = {
   treatment_date?: Prisma.SortOrderInput | Prisma.SortOrder
   created_by?: Prisma.SortOrderInput | Prisma.SortOrder
   invoice_id?: Prisma.SortOrderInput | Prisma.SortOrder
+  quoted_amount?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
   patient_documents?: Prisma.patient_documentsOrderByRelationAggregateInput
@@ -329,6 +342,7 @@ export type patient_recordsWhereUniqueInput = Prisma.AtLeast<{
   treatment_date?: Prisma.DateTimeNullableFilter<"patient_records"> | Date | string | null
   created_by?: Prisma.BigIntNullableFilter<"patient_records"> | bigint | number | null
   invoice_id?: Prisma.BigIntNullableFilter<"patient_records"> | bigint | number | null
+  quoted_amount?: Prisma.DecimalNullableFilter<"patient_records"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Prisma.DateTimeFilter<"patient_records"> | Date | string
   updated_at?: Prisma.DateTimeFilter<"patient_records"> | Date | string
   patient_documents?: Prisma.Patient_documentsListRelationFilter
@@ -349,6 +363,7 @@ export type patient_recordsOrderByWithAggregationInput = {
   treatment_date?: Prisma.SortOrderInput | Prisma.SortOrder
   created_by?: Prisma.SortOrderInput | Prisma.SortOrder
   invoice_id?: Prisma.SortOrderInput | Prisma.SortOrder
+  quoted_amount?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
   _count?: Prisma.patient_recordsCountOrderByAggregateInput
@@ -372,6 +387,7 @@ export type patient_recordsScalarWhereWithAggregatesInput = {
   treatment_date?: Prisma.DateTimeNullableWithAggregatesFilter<"patient_records"> | Date | string | null
   created_by?: Prisma.BigIntNullableWithAggregatesFilter<"patient_records"> | bigint | number | null
   invoice_id?: Prisma.BigIntNullableWithAggregatesFilter<"patient_records"> | bigint | number | null
+  quoted_amount?: Prisma.DecimalNullableWithAggregatesFilter<"patient_records"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Prisma.DateTimeWithAggregatesFilter<"patient_records"> | Date | string
   updated_at?: Prisma.DateTimeWithAggregatesFilter<"patient_records"> | Date | string
 }
@@ -383,6 +399,7 @@ export type patient_recordsCreateInput = {
   description: string
   tooth_number?: string | null
   treatment_date?: Date | string | null
+  quoted_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Date | string
   updated_at?: Date | string
   patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutPatient_recordsInput
@@ -403,6 +420,7 @@ export type patient_recordsUncheckedCreateInput = {
   treatment_date?: Date | string | null
   created_by?: bigint | number | null
   invoice_id?: bigint | number | null
+  quoted_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Date | string
   updated_at?: Date | string
   patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutPatient_recordsInput
@@ -415,6 +433,7 @@ export type patient_recordsUpdateInput = {
   description?: Prisma.StringFieldUpdateOperationsInput | string
   tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  quoted_amount?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   patient_documents?: Prisma.patient_documentsUpdateManyWithoutPatient_recordsNestedInput
@@ -435,6 +454,7 @@ export type patient_recordsUncheckedUpdateInput = {
   treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   invoice_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  quoted_amount?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutPatient_recordsNestedInput
@@ -451,6 +471,7 @@ export type patient_recordsCreateManyInput = {
   treatment_date?: Date | string | null
   created_by?: bigint | number | null
   invoice_id?: bigint | number | null
+  quoted_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Date | string
   updated_at?: Date | string
 }
@@ -462,6 +483,7 @@ export type patient_recordsUpdateManyMutationInput = {
   description?: Prisma.StringFieldUpdateOperationsInput | string
   tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  quoted_amount?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -477,6 +499,7 @@ export type patient_recordsUncheckedUpdateManyInput = {
   treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   invoice_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  quoted_amount?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -507,6 +530,7 @@ export type patient_recordsCountOrderByAggregateInput = {
   treatment_date?: Prisma.SortOrder
   created_by?: Prisma.SortOrder
   invoice_id?: Prisma.SortOrder
+  quoted_amount?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
 }
@@ -517,6 +541,7 @@ export type patient_recordsAvgOrderByAggregateInput = {
   appointment_id?: Prisma.SortOrder
   created_by?: Prisma.SortOrder
   invoice_id?: Prisma.SortOrder
+  quoted_amount?: Prisma.SortOrder
 }
 
 export type patient_recordsMaxOrderByAggregateInput = {
@@ -530,6 +555,7 @@ export type patient_recordsMaxOrderByAggregateInput = {
   treatment_date?: Prisma.SortOrder
   created_by?: Prisma.SortOrder
   invoice_id?: Prisma.SortOrder
+  quoted_amount?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
 }
@@ -545,6 +571,7 @@ export type patient_recordsMinOrderByAggregateInput = {
   treatment_date?: Prisma.SortOrder
   created_by?: Prisma.SortOrder
   invoice_id?: Prisma.SortOrder
+  quoted_amount?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
 }
@@ -555,6 +582,7 @@ export type patient_recordsSumOrderByAggregateInput = {
   appointment_id?: Prisma.SortOrder
   created_by?: Prisma.SortOrder
   invoice_id?: Prisma.SortOrder
+  quoted_amount?: Prisma.SortOrder
 }
 
 export type patient_recordsCreateNestedManyWithoutAppointmentsInput = {
@@ -752,6 +780,7 @@ export type patient_recordsCreateWithoutAppointmentsInput = {
   description: string
   tooth_number?: string | null
   treatment_date?: Date | string | null
+  quoted_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Date | string
   updated_at?: Date | string
   patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutPatient_recordsInput
@@ -770,6 +799,7 @@ export type patient_recordsUncheckedCreateWithoutAppointmentsInput = {
   treatment_date?: Date | string | null
   created_by?: bigint | number | null
   invoice_id?: bigint | number | null
+  quoted_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Date | string
   updated_at?: Date | string
   patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutPatient_recordsInput
@@ -815,6 +845,7 @@ export type patient_recordsScalarWhereInput = {
   treatment_date?: Prisma.DateTimeNullableFilter<"patient_records"> | Date | string | null
   created_by?: Prisma.BigIntNullableFilter<"patient_records"> | bigint | number | null
   invoice_id?: Prisma.BigIntNullableFilter<"patient_records"> | bigint | number | null
+  quoted_amount?: Prisma.DecimalNullableFilter<"patient_records"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Prisma.DateTimeFilter<"patient_records"> | Date | string
   updated_at?: Prisma.DateTimeFilter<"patient_records"> | Date | string
 }
@@ -826,6 +857,7 @@ export type patient_recordsCreateWithoutPatient_documentsInput = {
   description: string
   tooth_number?: string | null
   treatment_date?: Date | string | null
+  quoted_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Date | string
   updated_at?: Date | string
   invoice?: Prisma.treatment_invoicesCreateNestedOneWithoutPatient_recordsInput
@@ -845,6 +877,7 @@ export type patient_recordsUncheckedCreateWithoutPatient_documentsInput = {
   treatment_date?: Date | string | null
   created_by?: bigint | number | null
   invoice_id?: bigint | number | null
+  quoted_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Date | string
   updated_at?: Date | string
 }
@@ -872,6 +905,7 @@ export type patient_recordsUpdateWithoutPatient_documentsInput = {
   description?: Prisma.StringFieldUpdateOperationsInput | string
   tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  quoted_amount?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   invoice?: Prisma.treatment_invoicesUpdateOneWithoutPatient_recordsNestedInput
@@ -891,6 +925,7 @@ export type patient_recordsUncheckedUpdateWithoutPatient_documentsInput = {
   treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   invoice_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  quoted_amount?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -902,6 +937,7 @@ export type patient_recordsCreateWithoutPatient_profilesInput = {
   description: string
   tooth_number?: string | null
   treatment_date?: Date | string | null
+  quoted_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Date | string
   updated_at?: Date | string
   patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutPatient_recordsInput
@@ -920,6 +956,7 @@ export type patient_recordsUncheckedCreateWithoutPatient_profilesInput = {
   treatment_date?: Date | string | null
   created_by?: bigint | number | null
   invoice_id?: bigint | number | null
+  quoted_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Date | string
   updated_at?: Date | string
   patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutPatient_recordsInput
@@ -958,6 +995,7 @@ export type patient_recordsCreateWithoutUsersInput = {
   description: string
   tooth_number?: string | null
   treatment_date?: Date | string | null
+  quoted_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Date | string
   updated_at?: Date | string
   patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutPatient_recordsInput
@@ -976,6 +1014,7 @@ export type patient_recordsUncheckedCreateWithoutUsersInput = {
   tooth_number?: string | null
   treatment_date?: Date | string | null
   invoice_id?: bigint | number | null
+  quoted_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Date | string
   updated_at?: Date | string
   patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutPatient_recordsInput
@@ -1014,6 +1053,7 @@ export type patient_recordsCreateWithoutInvoiceInput = {
   description: string
   tooth_number?: string | null
   treatment_date?: Date | string | null
+  quoted_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Date | string
   updated_at?: Date | string
   patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutPatient_recordsInput
@@ -1032,6 +1072,7 @@ export type patient_recordsUncheckedCreateWithoutInvoiceInput = {
   tooth_number?: string | null
   treatment_date?: Date | string | null
   created_by?: bigint | number | null
+  quoted_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Date | string
   updated_at?: Date | string
   patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutPatient_recordsInput
@@ -1073,6 +1114,7 @@ export type patient_recordsCreateManyAppointmentsInput = {
   treatment_date?: Date | string | null
   created_by?: bigint | number | null
   invoice_id?: bigint | number | null
+  quoted_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Date | string
   updated_at?: Date | string
 }
@@ -1084,6 +1126,7 @@ export type patient_recordsUpdateWithoutAppointmentsInput = {
   description?: Prisma.StringFieldUpdateOperationsInput | string
   tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  quoted_amount?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   patient_documents?: Prisma.patient_documentsUpdateManyWithoutPatient_recordsNestedInput
@@ -1102,6 +1145,7 @@ export type patient_recordsUncheckedUpdateWithoutAppointmentsInput = {
   treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   invoice_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  quoted_amount?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutPatient_recordsNestedInput
@@ -1117,6 +1161,7 @@ export type patient_recordsUncheckedUpdateManyWithoutAppointmentsInput = {
   treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   invoice_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  quoted_amount?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1131,6 +1176,7 @@ export type patient_recordsCreateManyPatient_profilesInput = {
   treatment_date?: Date | string | null
   created_by?: bigint | number | null
   invoice_id?: bigint | number | null
+  quoted_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Date | string
   updated_at?: Date | string
 }
@@ -1142,6 +1188,7 @@ export type patient_recordsUpdateWithoutPatient_profilesInput = {
   description?: Prisma.StringFieldUpdateOperationsInput | string
   tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  quoted_amount?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   patient_documents?: Prisma.patient_documentsUpdateManyWithoutPatient_recordsNestedInput
@@ -1160,6 +1207,7 @@ export type patient_recordsUncheckedUpdateWithoutPatient_profilesInput = {
   treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   invoice_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  quoted_amount?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutPatient_recordsNestedInput
@@ -1175,6 +1223,7 @@ export type patient_recordsUncheckedUpdateManyWithoutPatient_profilesInput = {
   treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   invoice_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  quoted_amount?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1189,6 +1238,7 @@ export type patient_recordsCreateManyUsersInput = {
   tooth_number?: string | null
   treatment_date?: Date | string | null
   invoice_id?: bigint | number | null
+  quoted_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Date | string
   updated_at?: Date | string
 }
@@ -1200,6 +1250,7 @@ export type patient_recordsUpdateWithoutUsersInput = {
   description?: Prisma.StringFieldUpdateOperationsInput | string
   tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  quoted_amount?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   patient_documents?: Prisma.patient_documentsUpdateManyWithoutPatient_recordsNestedInput
@@ -1218,6 +1269,7 @@ export type patient_recordsUncheckedUpdateWithoutUsersInput = {
   tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   invoice_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  quoted_amount?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutPatient_recordsNestedInput
@@ -1233,6 +1285,7 @@ export type patient_recordsUncheckedUpdateManyWithoutUsersInput = {
   tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   invoice_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  quoted_amount?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1247,6 +1300,7 @@ export type patient_recordsCreateManyInvoiceInput = {
   tooth_number?: string | null
   treatment_date?: Date | string | null
   created_by?: bigint | number | null
+  quoted_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Date | string
   updated_at?: Date | string
 }
@@ -1258,6 +1312,7 @@ export type patient_recordsUpdateWithoutInvoiceInput = {
   description?: Prisma.StringFieldUpdateOperationsInput | string
   tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  quoted_amount?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   patient_documents?: Prisma.patient_documentsUpdateManyWithoutPatient_recordsNestedInput
@@ -1276,6 +1331,7 @@ export type patient_recordsUncheckedUpdateWithoutInvoiceInput = {
   tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  quoted_amount?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutPatient_recordsNestedInput
@@ -1291,6 +1347,7 @@ export type patient_recordsUncheckedUpdateManyWithoutInvoiceInput = {
   tooth_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  quoted_amount?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1337,6 +1394,7 @@ export type patient_recordsSelect<ExtArgs extends runtime.Types.Extensions.Inter
   treatment_date?: boolean
   created_by?: boolean
   invoice_id?: boolean
+  quoted_amount?: boolean
   created_at?: boolean
   updated_at?: boolean
   patient_documents?: boolean | Prisma.patient_records$patient_documentsArgs<ExtArgs>
@@ -1358,6 +1416,7 @@ export type patient_recordsSelectCreateManyAndReturn<ExtArgs extends runtime.Typ
   treatment_date?: boolean
   created_by?: boolean
   invoice_id?: boolean
+  quoted_amount?: boolean
   created_at?: boolean
   updated_at?: boolean
   invoice?: boolean | Prisma.patient_records$invoiceArgs<ExtArgs>
@@ -1377,6 +1436,7 @@ export type patient_recordsSelectUpdateManyAndReturn<ExtArgs extends runtime.Typ
   treatment_date?: boolean
   created_by?: boolean
   invoice_id?: boolean
+  quoted_amount?: boolean
   created_at?: boolean
   updated_at?: boolean
   invoice?: boolean | Prisma.patient_records$invoiceArgs<ExtArgs>
@@ -1396,11 +1456,12 @@ export type patient_recordsSelectScalar = {
   treatment_date?: boolean
   created_by?: boolean
   invoice_id?: boolean
+  quoted_amount?: boolean
   created_at?: boolean
   updated_at?: boolean
 }
 
-export type patient_recordsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "patient_id" | "appointment_id" | "record_type" | "title" | "description" | "tooth_number" | "treatment_date" | "created_by" | "invoice_id" | "created_at" | "updated_at", ExtArgs["result"]["patient_records"]>
+export type patient_recordsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "patient_id" | "appointment_id" | "record_type" | "title" | "description" | "tooth_number" | "treatment_date" | "created_by" | "invoice_id" | "quoted_amount" | "created_at" | "updated_at", ExtArgs["result"]["patient_records"]>
 export type patient_recordsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   patient_documents?: boolean | Prisma.patient_records$patient_documentsArgs<ExtArgs>
   invoice?: boolean | Prisma.patient_records$invoiceArgs<ExtArgs>
@@ -1442,6 +1503,7 @@ export type $patient_recordsPayload<ExtArgs extends runtime.Types.Extensions.Int
     treatment_date: Date | null
     created_by: bigint | null
     invoice_id: bigint | null
+    quoted_amount: runtime.Decimal | null
     created_at: Date
     updated_at: Date
   }, ExtArgs["result"]["patient_records"]>
@@ -1882,6 +1944,7 @@ export interface patient_recordsFieldRefs {
   readonly treatment_date: Prisma.FieldRef<"patient_records", 'DateTime'>
   readonly created_by: Prisma.FieldRef<"patient_records", 'BigInt'>
   readonly invoice_id: Prisma.FieldRef<"patient_records", 'BigInt'>
+  readonly quoted_amount: Prisma.FieldRef<"patient_records", 'Decimal'>
   readonly created_at: Prisma.FieldRef<"patient_records", 'DateTime'>
   readonly updated_at: Prisma.FieldRef<"patient_records", 'DateTime'>
 }
