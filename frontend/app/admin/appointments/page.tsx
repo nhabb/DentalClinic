@@ -2,7 +2,6 @@
 import { apiFetch } from '@/lib/api/client';
 import { toast } from 'sonner';
 
-import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -14,12 +13,12 @@ import { StatsCard } from "@/components/ui/StatsCard";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Badge } from "@/components/ui/Badge";
 import { AdminPageHeader } from "@/components/ui/AdminPageHeader";
+import { ListToolbar } from "@/components/ui/ListToolbar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Modal } from "@/components/ui/Modal";
 import { FormField, inputClass } from "@/components/ui/FormField";
 import {
   FaCalendarAlt,
-  FaSearch,
   FaCheckCircle,
   FaClock,
   FaTimes,
@@ -701,7 +700,7 @@ export default function AppointmentsManagement() {
       />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         <AdminPageHeader
           title={t("appointments.appointments")}
           subtitle={`${currentUser ? `${currentUser.firstName} ${currentUser.lastName}'s` : t("common.manage")} ${t("appointments.manageAppointments")}`}
@@ -712,30 +711,30 @@ export default function AppointmentsManagement() {
           }
           onAdd={openAddModal}
           addLabel={t("appointments.newAppointment")}
-          extraActions={
-            <div className="flex gap-2">
-              <button
-                onClick={() => { setAvailabilityMsg(""); setExistingSlots([]); setAvailabilityDate(""); setTimeRanges([{ fromTime: "09:00", toTime: "17:00", slotDuration: 30 }]); if (userRole === "doctor" && currentDoctorDbId) setSelectedAvailabilityDoctorId(currentDoctorDbId); setShowAvailabilityModal(true); }}
-                className="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-sm font-medium transition-colors"
-              >
-                Open Availability
-              </button>
-              <button
-                onClick={() => {
-                  const today = new Date();
-                  setCalendarMonth(today);
-                  setCalendarSelectedDay(null);
-                  const docId = currentDoctorDbId || (doctors[0]?.id ?? null);
-                  setCalendarDoctorId(docId);
-                  if (docId) fetchMonthSlots(docId, today);
-                  setShowSlotCalendar(true);
-                }}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
-              >
-                <FaCalendarAlt className="text-xs" /> My Slots
-              </button>
-            </div>
-          }
+          actions={[
+            {
+              key: "availability",
+              label: t("appointments.openAvailability"),
+              icon: <FaClock />,
+              tone: "teal",
+              onClick: () => { setAvailabilityMsg(""); setExistingSlots([]); setAvailabilityDate(""); setTimeRanges([{ fromTime: "09:00", toTime: "17:00", slotDuration: 30 }]); if (userRole === "doctor" && currentDoctorDbId) setSelectedAvailabilityDoctorId(currentDoctorDbId); setShowAvailabilityModal(true); },
+            },
+            {
+              key: "my-slots",
+              label: t("appointments.mySlots"),
+              icon: <FaCalendarAlt />,
+              tone: "blue",
+              onClick: () => {
+                const today = new Date();
+                setCalendarMonth(today);
+                setCalendarSelectedDay(null);
+                const docId = currentDoctorDbId || (doctors[0]?.id ?? null);
+                setCalendarDoctorId(docId);
+                if (docId) fetchMonthSlots(docId, today);
+                setShowSlotCalendar(true);
+              },
+            },
+          ]}
         />
 
         {/* Content */}
@@ -776,84 +775,65 @@ export default function AppointmentsManagement() {
                 />
               </div>
 
-              {/* Date Navigation & Filters */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-6">
-                <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
-                  {/* Date Navigation */}
-                  <div className="flex items-center gap-4">
+              <ListToolbar
+                leading={
+                  <div className="flex items-center gap-1 rounded-xl border border-gray-200 bg-white p-1 shadow-sm">
                     <button
+                      type="button"
                       onClick={() => navigateDate("prev")}
-                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                      aria-label="Previous day"
+                      className="rounded-lg p-2 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900"
                     >
-                      <FaChevronLeft className="text-gray-600 rtl:rotate-180" />
+                      <FaChevronLeft className="text-xs rtl:rotate-180" />
                     </button>
-                    <div className="text-center min-w-[250px]">
-                      <p className="text-lg font-bold text-gray-900">
-                        {formatDate(selectedDate)}
-                      </p>
-                    </div>
+                    <span className="min-w-[200px] px-2 text-center text-sm font-semibold text-gray-900">{formatDate(selectedDate)}</span>
                     <button
+                      type="button"
                       onClick={() => navigateDate("next")}
-                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                      aria-label="Next day"
+                      className="rounded-lg p-2 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900"
                     >
-                      <FaChevronRight className="text-gray-600 rtl:rotate-180" />
+                      <FaChevronRight className="text-xs rtl:rotate-180" />
                     </button>
-                    <Button
-                      variant="outline"
-                      size="sm"
+                    <button
+                      type="button"
                       onClick={() => setSelectedDate(new Date())}
+                      className="ms-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-dental-blue transition hover:bg-dental-blue/10"
                     >
                       {t("common.today")}
-                    </Button>
+                    </button>
                   </div>
-
-                  {/* Filters */}
-                  <div className="flex gap-4">
-                    <div className="relative">
-                      <FaSearch className="absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                      <input
-                        type="text"
-                        placeholder={t("appointments.searchPlaceholder")}
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10 rtl:pl-4 rtl:pr-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue w-64"
-                      />
-                    </div>
-                    {visibleDoctors.length > 1 && (
-                      <select
-                        value={selectedDoctor}
-                        onChange={(e) => setSelectedDoctor(e.target.value)}
-                        className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
-                      >
-                        <option value="all">
-                          {t("appointments.allDoctors")}
-                        </option>
-                        {visibleDoctors.map((doctor) => (
-                          <option key={doctor.id} value={String(doctor.id)}>
-                            {doctor.name}
-                          </option>
-                        ))}
-                      </select>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Doctor Legend */}
-              {visibleDoctors.length > 0 && (
-                <div className="flex gap-4 mb-6">
-                  {visibleDoctors.map((doctor) => (
-                    <div key={doctor.id} className="flex items-center gap-2">
-                      <div
-                        className={`w-3 h-3 rounded-full ${doctor.color || "bg-dental-blue"}`}
-                      ></div>
-                      <span className="text-sm text-gray-600">
-                        {doctor.name}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
+                }
+                search={{ value: searchQuery, onChange: setSearchQuery, placeholder: t("appointments.searchPlaceholder") }}
+                shown={filteredAppointments.length}
+                total={dateAppointments.length}
+                unitLabel={t("appointments.appointmentsCount")}
+                hasActiveFilters={!!searchQuery || selectedDoctor !== "all"}
+                onClear={() => { setSearchQuery(""); setSelectedDoctor("all"); }}
+                clearLabel={t("common.clearFilters")}
+                groups={
+                  visibleDoctors.length > 1
+                    ? [
+                        {
+                          key: "doctor",
+                          label: t("appointments.doctorsLabel"),
+                          variant: "chips",
+                          value: selectedDoctor,
+                          onChange: setSelectedDoctor,
+                          options: [
+                            { value: "all", label: t("appointments.allDoctors"), count: dateAppointments.length },
+                            ...visibleDoctors.map((doctor) => ({
+                              value: String(doctor.id),
+                              label: doctor.name,
+                              dot: doctor.color || "bg-dental-blue",
+                              count: dateAppointments.filter((a) => a.doctorId === doctor.id).length,
+                            })),
+                          ],
+                        },
+                      ]
+                    : []
+                }
+              />
 
               {/* Appointments List */}
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">

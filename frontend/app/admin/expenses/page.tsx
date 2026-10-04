@@ -16,7 +16,7 @@
 //   pending (nothing paid) | partial | paid.
 
 import { toast } from "sonner";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,8 @@ import { safeStorage } from "@/lib/browser-compat";
 import { useTranslation } from "@/lib/i18n";
 import AdminSidebar from "@/components/ui/AdminSidebar";
 import { StatsCard } from "@/components/ui/StatsCard";
-import { FilterBar } from "@/components/ui/FilterBar";
+import { ListToolbar } from "@/components/ui/ListToolbar";
+import { MonthCalendar, MonthTotalsList, ORANGE_RAMP, firstOfMonth, monthKey } from "@/components/ui/MonthCalendar";
 import { AdminPageHeader } from "@/components/ui/AdminPageHeader";
 import { Modal } from "@/components/ui/Modal";
 import { FormField, inputClass } from "@/components/ui/FormField";
@@ -145,11 +146,18 @@ async function readError(res: Response, fallback: string): Promise<string> {
 
 export default function ExpensesPage() {
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
+  const locale = language === "ar" ? "ar-LB" : language === "fr" ? "fr-FR" : "en-US";
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedExpenseStatus, setSelectedExpenseStatus] = useState<"all" | ExpenseStatus>("all");
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [calMonth, setCalMonth] = useState(() => firstOfMonth());
+  /** When on, the table shows only the month displayed in the calendar. */
+  const [monthFilterOn, setMonthFilterOn] = useState(true);
+  const tableRef = useRef<HTMLDivElement>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
@@ -199,12 +207,41 @@ export default function ExpensesPage() {
       : translated;
   };
 
-  const filteredExpenses = expenses.filter((exp) => {
-    const matchesSearch = (exp.description ?? "").toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory =
-      selectedCategory === "All" || exp.category === selectedCategory.toLowerCase();
-    return matchesSearch && matchesCategory;
-  });
+  const eq = searchQuery.trim().toLowerCase();
+  const matchesExpenseSearch = (exp: Expense) => !eq || (exp.description ?? "").toLowerCase().includes(eq);
+  const matchesExpenseCategory = (exp: Expense, cat: string = selectedCategory) => cat === "All" || exp.category === cat.toLowerCase();
+  const matchesExpenseStatus = (exp: Expense, st: "all" | ExpenseStatus = selectedExpenseStatus) => st === "all" || exp.status === st;
+  const matchesExpenseDay = (exp: Expense) =>
+    selectedDay !== null ? exp.date === selectedDay : !monthFilterOn || exp.date.slice(0, 7) === monthKey(calMonth);
+  const goToMonth = (first: Date) => { setCalMonth(first); setMonthFilterOn(true); setSelectedDay(null); };
+  const pickDay = (d: string | null) => {
+    setSelectedDay(d);
+    if (d) {
+      setCalMonth(firstOfMonth(new Date(`${d}T12:00:00`)));
+      setMonthFilterOn(true);
+      setTimeout(() => tableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
+    }
+  };
+  const filteredExpenses = expenses.filter(
+    (exp) => matchesExpenseSearch(exp) && matchesExpenseCategory(exp) && matchesExpenseStatus(exp) && matchesExpenseDay(exp),
+  );
+  /** Rows the calendar shades: every filter except the day itself. */
+  const calendarExpenses = expenses.filter((exp) => matchesExpenseSearch(exp) && matchesExpenseCategory(exp) && matchesExpenseStatus(exp));
+  const calendarItems = calendarExpenses.map((e) => ({ date: e.date, amount: e.amount }));
+  const monthRows = calendarExpenses.filter((e) => e.date.slice(0, 7) === monthKey(calMonth));
+  const monthPaid = monthRows.reduce((s, e) => s + e.amountPaid, 0);
+  const monthRemaining = monthRows.reduce((s, e) => s + e.remaining, 0);
+  const expenseCategoryCounts: Record<string, number> = Object.fromEntries(
+    categoryValues.map((c) => [c, expenses.filter((e) => matchesExpenseSearch(e) && matchesExpenseDay(e) && matchesExpenseStatus(e) && matchesExpenseCategory(e, c)).length]),
+  );
+  const expenseStatusCounts = {
+    all: expenses.filter((e) => matchesExpenseSearch(e) && matchesExpenseDay(e) && matchesExpenseCategory(e)).length,
+    pending: expenses.filter((e) => matchesExpenseSearch(e) && matchesExpenseDay(e) && matchesExpenseCategory(e) && e.status === "pending").length,
+    partial: expenses.filter((e) => matchesExpenseSearch(e) && matchesExpenseDay(e) && matchesExpenseCategory(e) && e.status === "partial").length,
+    paid: expenses.filter((e) => matchesExpenseSearch(e) && matchesExpenseDay(e) && matchesExpenseCategory(e) && e.status === "paid").length,
+  };
+  const hasExpenseFilters = !!eq || selectedCategory !== "All" || selectedExpenseStatus !== "all" || selectedDay !== null || monthFilterOn;
+  const clearExpenseFilters = () => { setSearchQuery(""); setSelectedCategory("All"); setSelectedExpenseStatus("all"); setSelectedDay(null); setMonthFilterOn(false); };
 
   const totalAmount = expenses.reduce((sum, e) => sum + e.amount, 0);
   const totalPaid = expenses.reduce((sum, e) => sum + e.amountPaid, 0);
@@ -485,7 +522,7 @@ export default function ExpensesPage() {
     <div className="min-h-screen bg-gray-50 flex">
       <AdminSidebar activePage="expenses" sidebarOpen={sidebarOpen} onToggle={() => setSidebarOpen((v) => !v)} onLogout={handleLogout} />
 
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         <AdminPageHeader
           title={t("expenses.title")}
           subtitle={t("expenses.subtitle")}
@@ -553,59 +590,159 @@ export default function ExpensesPage() {
             />
           </div>
 
-          {/* Filter */}
-          <FilterBar
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            searchPlaceholder={t("expenses.searchPlaceholder")}
-            filters={categoryValues.map((cat, idx) => ({
-              value: cat,
-              label: t(`expenses.${categoryKeys[idx]}`),
-            }))}
-            activeFilter={selectedCategory}
-            onFilterChange={setSelectedCategory}
+          <ListToolbar
+            search={{ value: searchQuery, onChange: setSearchQuery, placeholder: t("expenses.searchPlaceholder") }}
+            shown={filteredExpenses.length}
+            total={expenses.length}
+            unitLabel={t("expenses.expensesCount")}
+            hasActiveFilters={hasExpenseFilters}
+            onClear={clearExpenseFilters}
+            clearLabel={t("common.clearFilters")}
+            groups={[
+              {
+                key: "category",
+                label: t("expenses.category"),
+                variant: "chips",
+                value: selectedCategory,
+                onChange: setSelectedCategory,
+                options: categoryValues.map((cat, idx) => ({ value: cat, label: t(`expenses.${categoryKeys[idx]}`), count: expenseCategoryCounts[cat] ?? 0 })),
+              },
+              {
+                key: "status",
+                variant: "segmented",
+                value: selectedExpenseStatus,
+                onChange: (v) => setSelectedExpenseStatus(v as "all" | ExpenseStatus),
+                options: [
+                  { value: "all", label: t("common.all"), count: expenseStatusCounts.all },
+                  { value: "pending", label: t("expenses.pendingBadge"), count: expenseStatusCounts.pending, dot: "bg-amber-500" },
+                  { value: "partial", label: t("expenses.partialBadge"), count: expenseStatusCounts.partial, dot: "bg-blue-500" },
+                  { value: "paid", label: t("expenses.paidBadge"), count: expenseStatusCounts.paid, dot: "bg-emerald-500" },
+                ],
+              },
+            ]}
           />
 
+          {/* Monthly calendar */}
+          <div className="mb-6 grid gap-6 xl:grid-cols-3">
+            <MonthCalendar
+              className="xl:col-span-2"
+              month={calMonth}
+              onMonthChange={goToMonth}
+              items={calendarItems}
+              selectedDate={selectedDay}
+              onSelectDate={pickDay}
+              locale={locale}
+              ramp={ORANGE_RAMP}
+              formatter={formatAmount}
+              labels={{
+                title: t("expenses.calendarTitle"),
+                subtitle: t("expenses.calendarHint"),
+                today: t("common.today"),
+                less: t("common.less"),
+                more: t("common.more"),
+                total: t("expenses.monthTotal"),
+                biggestDay: t("expenses.biggestDay"),
+                empty: t("expenses.noExpensesMonth"),
+                count: (n) => `${n} ${t("expenses.expensesCount")}`,
+              }}
+              aside={
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-xl bg-emerald-50 px-3 py-2">
+                    <p className="text-[10px] uppercase tracking-wide text-emerald-700/70">{t("expenses.paid")}</p>
+                    <p className="text-sm font-semibold tabular-nums text-emerald-700">{formatAmount(monthPaid)}</p>
+                  </div>
+                  <div className={`rounded-xl px-3 py-2 ${monthRemaining > 0 ? "bg-red-50" : "bg-gray-50"}`}>
+                    <p className={`text-[10px] uppercase tracking-wide ${monthRemaining > 0 ? "text-red-700/70" : "text-gray-400"}`}>{t("expenses.remaining")}</p>
+                    <p className={`text-sm font-semibold tabular-nums ${monthRemaining > 0 ? "text-red-700" : "text-gray-500"}`}>{formatAmount(monthRemaining)}</p>
+                  </div>
+                  {selectedDay === null && (
+                    <div className="col-span-2">
+                      <p className="mb-1 text-[10px] uppercase tracking-wide text-gray-400">{t("expenses.tableShows")}</p>
+                      {monthFilterOn ? (
+                        <button
+                          type="button"
+                          onClick={() => setMonthFilterOn(false)}
+                          title={t("expenses.showAllMonths")}
+                          className="inline-flex items-center gap-1.5 rounded-full border border-dental-blue/30 bg-dental-blue/10 px-2.5 py-1 text-xs font-medium capitalize text-dental-blue transition hover:bg-dental-blue/15"
+                        >
+                          {calMonth.toLocaleDateString(locale, { month: "long", year: "numeric" })}
+                          <span aria-hidden>×</span>
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setMonthFilterOn(true)}
+                          className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 transition hover:border-gray-300 hover:bg-gray-50"
+                        >
+                          {t("expenses.allMonths")} · {t("expenses.onlyThisMonth")}
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              }
+            />
+            <MonthTotalsList
+              items={calendarItems}
+              month={calMonth}
+              onPick={goToMonth}
+              locale={locale}
+              title={t("expenses.monthlyTotals")}
+              subtitle={t("expenses.last12Months")}
+              color="#eb6834"
+              formatter={formatAmount}
+            />
+          </div>
+
           {/* Table */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div ref={tableRef} className="scroll-mt-28 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             {filteredExpenses.length === 0 ? (
-              <EmptyState
-                icon={FaReceipt}
-                title={t("expenses.noExpenses")}
-                description={t("expenses.noExpensesDesc")}
-              />
+              <>
+                <EmptyState
+                  icon={FaReceipt}
+                  title={t("expenses.noExpenses")}
+                  description={t("expenses.noExpensesDesc")}
+                />
+                {hasExpenseFilters && (
+                  <div className="-mt-6 pb-10 text-center">
+                    <button type="button" onClick={clearExpenseFilters} className="text-sm font-medium text-dental-blue hover:underline">
+                      {t("common.clearFilters")}
+                    </button>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-200">
+                  <thead className="bg-gray-50/80 border-b border-gray-200">
                     <tr>
-                      <th className="text-left rtl:text-right py-4 px-6 text-sm font-semibold text-gray-600">{t("expenses.date")}</th>
-                      <th className="text-left rtl:text-right py-4 px-6 text-sm font-semibold text-gray-600">{t("expenses.description")}</th>
-                      <th className="text-left rtl:text-right py-4 px-6 text-sm font-semibold text-gray-600">{t("expenses.category")}</th>
-                      <th className="text-right rtl:text-left py-4 px-6 text-sm font-semibold text-gray-600">{t("expenses.amount")}</th>
-                      <th className="text-right rtl:text-left py-4 px-6 text-sm font-semibold text-gray-600">{t("expenses.balance")}</th>
-                      <th className="text-center py-4 px-6 text-sm font-semibold text-gray-600">{t("common.status")}</th>
-                      <th className="text-center py-4 px-6 text-sm font-semibold text-gray-600">{t("common.actions")}</th>
+                      <th className="py-3 px-5 text-start text-[11px] font-semibold uppercase tracking-wide text-gray-500">{t("expenses.date")}</th>
+                      <th className="py-3 px-5 text-start text-[11px] font-semibold uppercase tracking-wide text-gray-500">{t("expenses.description")}</th>
+                      <th className="py-3 px-5 text-start text-[11px] font-semibold uppercase tracking-wide text-gray-500">{t("expenses.category")}</th>
+                      <th className="py-3 px-5 text-end text-[11px] font-semibold uppercase tracking-wide text-gray-500">{t("expenses.amount")}</th>
+                      <th className="py-3 px-5 text-end text-[11px] font-semibold uppercase tracking-wide text-gray-500">{t("expenses.balance")}</th>
+                      <th className="py-3 px-5 text-center text-[11px] font-semibold uppercase tracking-wide text-gray-500">{t("common.status")}</th>
+                      <th className="py-3 px-5 text-center text-[11px] font-semibold uppercase tracking-wide text-gray-500">{t("common.actions")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {filteredExpenses.map((expense) => (
-                      <tr key={expense.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="py-4 px-6 text-sm text-gray-600">
+                      <tr key={expense.id} className="transition-colors hover:bg-gray-50/80">
+                        <td className="py-3.5 px-5 text-sm text-gray-600">
                           {formatDate(expense.date)}
                         </td>
-                        <td className="py-4 px-6">
+                        <td className="py-3.5 px-5">
                           <p className="font-medium text-gray-900">{expense.description}</p>
                         </td>
-                        <td className="py-4 px-6">
+                        <td className="py-3.5 px-5">
                           <span className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
                             {categoryLabel(expense.category)}
                           </span>
                         </td>
-                        <td className="py-4 px-6 text-right rtl:text-left">
+                        <td className="py-3.5 px-5 text-right rtl:text-left">
                           <span className="font-semibold text-gray-900">{formatAmount(expense.amount)}</span>
                         </td>
-                        <td className="py-4 px-6 text-right rtl:text-left">
+                        <td className="py-3.5 px-5 text-right rtl:text-left">
                           <p className="text-xs text-green-700">
                             {t("expenses.amountPaid")}: {formatAmount(expense.amountPaid)}
                           </p>
@@ -613,10 +750,10 @@ export default function ExpensesPage() {
                             {t("expenses.remaining")}: {formatAmount(expense.remaining)}
                           </p>
                         </td>
-                        <td className="py-4 px-6 text-center">
+                        <td className="py-3.5 px-5 text-center">
                           <StatusBadge status={expense.status} />
                         </td>
-                        <td className="py-4 px-6">
+                        <td className="py-3.5 px-5">
                           <div className="flex justify-center gap-2">
                             <button
                               onClick={() => handleOpenPayments(expense)}

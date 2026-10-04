@@ -30,6 +30,8 @@ interface ToothModel3DProps {
   className?: string;
   /** CSS height of the viewer, default 440px */
   height?: number | string;
+  /** Fired when the pointer enters (fdi) or leaves (null) a tooth. */
+  onHover?: (fdi: string | null) => void;
 }
 
 interface ToothEntry {
@@ -230,9 +232,11 @@ export default function ToothModel3D({
   labels = {},
   className = "",
   height = 440,
+  onHover,
 }: ToothModel3DProps) {
   const [view, setView] = useState<ViewPreset>("front");
   const [hovered, setHovered] = useState<string | null>(null);
+  useEffect(() => { onHover?.(hovered); }, [hovered, onHover]);
   const [radius, setRadius] = useState(40);
   const selectedSet = useMemo(() => new Set(selected), [selected]);
   const interactive = !readOnly && typeof onToggle === "function";
@@ -279,6 +283,10 @@ export default function ToothModel3D({
         e.preventDefault();
         undoLastClick();
       }}
+      // The canvas only reports pointer-out on pointer movement, so a fast exit
+      // or a scroll under a still pointer would leave the last tooth "hovered".
+      onPointerLeave={() => setHovered(null)}
+      onMouseLeave={() => setHovered(null)}
     >
       <Canvas
         dpr={[1, 2]}

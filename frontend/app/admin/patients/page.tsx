@@ -13,7 +13,8 @@ import { StatsCard } from "@/components/ui/StatsCard";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Avatar } from "@/components/ui/Avatar";
 import { getStoredPhoto } from "@/lib/profilePhoto";
-import { FilterBar } from "@/components/ui/FilterBar";
+import { cn } from "@/lib/utils";
+import { ListToolbar, toolbarSelectClass, toolbarIconButtonClass, toolbarSegmentWrapClass } from "@/components/ui/ListToolbar";
 import { AdminPageHeader } from "@/components/ui/AdminPageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import ToothChart, { type ToothState } from "@/components/dental/ToothChart";
@@ -48,6 +49,10 @@ import {
   FaTrash,
   FaClock,
   FaMoneyBillWave,
+  FaThLarge,
+  FaList,
+  FaChevronRight,
+  FaUserClock,
 } from "react-icons/fa";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
@@ -88,7 +93,11 @@ interface PatientHistory {
     status: string;
   }[];
   treatments: {
+    /** patient_records id; matches the dental chart history row. */
+    recordId: number;
     tooth: string;
+    /** FDI tooth number, empty when the record is not tied to a tooth. */
+    toothFdi: string;
     treatment: string;
     date: string;
     doctor: string;
@@ -214,6 +223,16 @@ export default function PatientsPage() {
   const [statusFilter, setStatusFilter] = useState<
     "all" | "active" | "inactive"
   >("all");
+  const [patientsView, setPatientsView] = useState<"grid" | "list">("grid");
+  const [patientsSort, setPatientsSort] = useState<"name" | "recent" | "visits">("name");
+  useEffect(() => {
+    const v = safeStorage.getItem("patientsView");
+    if (v === "list" || v === "grid") setPatientsView(v);
+  }, []);
+  const changeView = (v: "grid" | "list") => {
+    setPatientsView(v);
+    safeStorage.setItem("patientsView", v);
+  };
 
   // Role-based state
   const [userRole, setUserRole] = useState<string>("doctor");
@@ -271,6 +290,8 @@ export default function PatientsPage() {
   const [chartPatientId, setChartPatientId] = useState<number | null>(null);
   const [chartLoading, setChartLoading] = useState(false);
   const [chartView, setChartView] = useState<"3d" | "2d">("3d");
+  /** History row to scroll to and highlight after jumping from the Treatments tab. */
+  const [focusHistoryId, setFocusHistoryId] = useState<number | null>(null);
   const [selectedTeeth, setSelectedTeeth] = useState<string[]>([]);
   const [workItems, setWorkItems] = useState<WorkItem[]>([]);
   const [workForm, setWorkForm] = useState<{ procedure: string; status: WorkStatus; amount: string; notes: string }>({
@@ -286,7 +307,7 @@ export default function PatientsPage() {
   // Completing planned work from the history, and paying its invoice
   const [completeSelection, setCompleteSelection] = useState<number[]>([]);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
-  const [completeItems, setCompleteItems] = useState<{ id: number; tooth: string; procedure: string; amount: string; status: WorkStatus; bill: boolean }[]>([]);
+  const [completeItems, setCompleteItems] = useState<{ id: number; tooth: string; procedure: string; amount: string; status: WorkStatus; bill: boolean; editPrice: boolean }[]>([]);
   const [completeDate, setCompleteDate] = useState(new Date().toISOString().split("T")[0]);
   const [completeNotes, setCompleteNotes] = useState("");
   const [completing, setCompleting] = useState(false);
@@ -410,7 +431,9 @@ export default function PatientsPage() {
         .map((r: any) => {
           const doctor = users.find((u) => u.id === r.created_by || u.id === String(r.created_by));
           return {
+            recordId: Number(r.id),
             tooth: r.tooth_number ? `Tooth ${r.tooth_number}` : "",
+            toothFdi: r.tooth_number ? String(r.tooth_number) : "",
             treatment: r.title || "",
             date: r.treatment_date?.split("T")[0] || "",
             doctor: doctor ? `Dr. ${doctor.first_name} ${doctor.last_name}` : "",
@@ -891,7 +914,7 @@ export default function PatientsPage() {
     if (!chart) return;
     const items = chart.history
       .filter((h) => ids.includes(h.id) && isBillable(h))
-      .map((h) => ({ id: h.id, tooth: h.tooth, procedure: h.procedure, amount: String(DEFAULT_PRICES[h.procedure] ?? ""), status: h.status, bill: true }));
+      .map((h) => ({ id: h.id, tooth: h.tooth, procedure: h.procedure, amount: String(DEFAULT_PRICES[h.procedure] ?? ""), status: h.status, bill: true, editPrice: false }));
     if (items.length === 0) return;
     setCompleteItems(items);
     setCompleteDate(new Date().toISOString().split("T")[0]);
@@ -1040,6 +1063,8 @@ export default function PatientsPage() {
     let age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) age--;
+    // Placeholder birth dates (today, epoch, year 0001) yield 0 or absurd ages; show those as unknown.
+    if (age <= 0 || age > 120) return null;
     return age;
   };
 
@@ -1049,15 +1074,26 @@ export default function PatientsPage() {
     return isNaN(d.getTime()) ? "—" : d.toLocaleDateString();
   };
 
-  const filteredPatients = patients.filter((patient) => {
-    const matchesSearch =
-      patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      patient.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      patient.phone.includes(searchQuery);
-    const matchesStatus =
-      statusFilter === "all" || patient.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const pq = searchQuery.trim().toLowerCase();
+  const matchesPatientSearch = (p: Patient) =>
+    !pq || p.name.toLowerCase().includes(pq) || p.email.toLowerCase().includes(pq) || p.phone.includes(pq);
+  const filteredPatients = patients
+    .filter((p) => matchesPatientSearch(p) && (statusFilter === "all" || p.status === statusFilter))
+    .sort((a, b) => {
+      if (patientsSort === "recent") return (b.lastVisit || "").localeCompare(a.lastVisit || "") || a.name.localeCompare(b.name);
+      if (patientsSort === "visits") return b.totalVisits - a.totalVisits || a.name.localeCompare(b.name);
+      return a.name.localeCompare(b.name);
+    });
+  const statusCounts: Record<"all" | "active" | "inactive", number> = {
+    all: patients.filter(matchesPatientSearch).length,
+    active: patients.filter((p) => matchesPatientSearch(p) && p.status === "active").length,
+    inactive: patients.filter((p) => matchesPatientSearch(p) && p.status !== "active").length,
+  };
+  const hasPatientFilters = !!pq || statusFilter !== "all";
+  const clearPatientFilters = () => { setSearchQuery(""); setStatusFilter("all"); };
+  const statusBadgeClass = (active: boolean) =>
+    cn("inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset",
+      active ? "bg-emerald-50 text-emerald-700 ring-emerald-200" : "bg-gray-50 text-gray-500 ring-gray-200");
 
   const openPatientDetails = (patient: Patient) => {
     setSelectedPatient(patient);
@@ -1080,6 +1116,26 @@ export default function PatientsPage() {
     }
   };
 
+  /** Jump from the Treatments tab to the same record in the Dental Chart tab. */
+  const openTreatmentInChart = (treatment: { recordId: number; toothFdi: string }) => {
+    if (!selectedPatient) return;
+    setFocusHistoryId(treatment.recordId);
+    setSelectedTeeth(treatment.toothFdi ? [treatment.toothFdi] : []);
+    setActiveTab("chart");
+    if (chartPatientId !== selectedPatient.id) {
+      setWorkItems([]);
+      fetchChart(selectedPatient.id);
+    }
+  };
+
+  useEffect(() => {
+    if (focusHistoryId === null || activeTab !== "chart" || !chart || chartLoading) return;
+    const el = document.getElementById(`history-row-${focusHistoryId}`);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    const timer = setTimeout(() => setFocusHistoryId(null), 3000);
+    return () => clearTimeout(timer);
+  }, [focusHistoryId, activeTab, chart, chartLoading]);
+
   // Calculate stats
   const totalPatients = patients.length;
   const activePatients = patients.filter((p) => p.status === "active").length;
@@ -1090,7 +1146,7 @@ export default function PatientsPage() {
       <AdminSidebar activePage="patients" sidebarOpen={sidebarOpen} onToggle={() => setSidebarOpen((v) => !v)} onLogout={handleLogout} />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         <AdminPageHeader
           title={t("patients.patients")}
           subtitle={`${currentUser ? `${currentUser.firstName} ${currentUser.lastName}'s` : t("common.manage")} ${t("patients.patientRecords")}`}
@@ -1134,90 +1190,215 @@ export default function PatientsPage() {
                 <StatsCard icon={FaCalendarAlt} iconBgClass="bg-purple-100" iconColorClass="text-purple-600" value={totalVisits} label={t("patients.totalVisits")} />
               </div>
 
-              <FilterBar
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                searchPlaceholder={t("patients.searchPlaceholder")}
-                filters={[
-                  { value: "all", label: t("patients.all") },
-                  { value: "active", label: t("patients.active"), activeClass: "bg-green-500 text-white" },
-                  { value: "inactive", label: t("patients.inactive"), activeClass: "bg-gray-500 text-white" },
+              <ListToolbar
+                search={{ value: searchQuery, onChange: setSearchQuery, placeholder: t("patients.searchPlaceholder") }}
+                shown={filteredPatients.length}
+                total={patients.length}
+                unitLabel={t("patients.patientsCount")}
+                hasActiveFilters={hasPatientFilters}
+                onClear={clearPatientFilters}
+                clearLabel={t("common.clearFilters")}
+                groups={[
+                  {
+                    key: "status",
+                    variant: "segmented",
+                    value: statusFilter,
+                    onChange: (v) => setStatusFilter(v as "all" | "active" | "inactive"),
+                    options: [
+                      { value: "all", label: t("patients.all"), count: statusCounts.all },
+                      { value: "active", label: t("patients.active"), count: statusCounts.active, dot: "bg-emerald-500" },
+                      { value: "inactive", label: t("patients.inactive"), count: statusCounts.inactive, dot: "bg-gray-400" },
+                    ],
+                  },
                 ]}
-                activeFilter={statusFilter}
-                onFilterChange={(v) => setStatusFilter(v as "all" | "active" | "inactive")}
+                trailing={
+                  <>
+                    <label className="flex items-center gap-2 text-sm text-gray-500">
+                      <span className="hidden sm:inline text-[11px] font-semibold uppercase tracking-wide text-gray-400">{t("patients.sortBy")}</span>
+                      <select
+                        value={patientsSort}
+                        onChange={(e) => setPatientsSort(e.target.value as "name" | "recent" | "visits")}
+                        className={toolbarSelectClass}
+                      >
+                        <option value="name">{t("patients.sortName")}</option>
+                        <option value="recent">{t("patients.sortRecent")}</option>
+                        <option value="visits">{t("patients.sortVisits")}</option>
+                      </select>
+                    </label>
+                    <div className={toolbarSegmentWrapClass} role="group" aria-label={t("patients.view")}>
+                      <button type="button" onClick={() => changeView("grid")} aria-pressed={patientsView === "grid"} title={t("patients.gridView")} className={toolbarIconButtonClass(patientsView === "grid")}>
+                        <FaThLarge className="text-sm" />
+                      </button>
+                      <button type="button" onClick={() => changeView("list")} aria-pressed={patientsView === "list"} title={t("patients.listView")} className={toolbarIconButtonClass(patientsView === "list")}>
+                        <FaList className="text-sm" />
+                      </button>
+                    </div>
+                  </>
+                }
               />
 
-              {/* Patients Grid */}
-              {filteredPatients.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredPatients.map((patient) => (
-                    <div
-                      key={patient.id}
-                      className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow cursor-pointer"
-                      onClick={() => openPatientDetails(patient)}
-                    >
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-center gap-4">
-                          <Avatar name={patient.name} size="lg" src={patient.photoUrl} />
-                          <div>
-                            <h3 className="font-bold text-gray-900">
-                              {patient.name}
-                            </h3>
-                            <p className="text-sm text-gray-500">
-                              {calculateAge(patient.dateOfBirth) !== null ? `${calculateAge(patient.dateOfBirth)} ${t("patients.yearsOld")}` : "—"}
-                            </p>
-                          </div>
-                        </div>
-                        <span
-                          className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            patient.status === "active"
-                              ? "bg-green-100 text-green-700"
-                              : "bg-gray-100 text-gray-500"
-                          }`}
-                        >
-                          {patient.status === "active" ? t("patients.active") : t("patients.inactive")}
-                        </span>
-                      </div>
-
-                      <div className="space-y-2 mb-4">
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <FaPhone className="text-gray-400 text-xs" />
-                          {patient.phone}
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <FaEnvelope className="text-gray-400 text-xs" />
-                          {patient.email}
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <FaIdCard className="text-gray-400 text-xs" />
-                          {patient.insurance}
-                        </div>
-                      </div>
-
-                      <div className="border-t border-gray-100 pt-4 flex justify-between text-sm">
-                        <div>
-                          <p className="text-gray-500">{t("patients.lastVisit")}</p>
-                          <p className="font-semibold text-gray-900">
-                            {formatDate(patient.lastVisit)}
-                          </p>
-                        </div>
-                        <div className="text-right rtl:text-left">
-                          <p className="text-gray-500">{t("patients.totalVisits")}</p>
-                          <p className="font-semibold text-gray-900">
-                            {patient.totalVisits}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
+              {filteredPatients.length === 0 ? (
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
                   <EmptyState
                     icon={FaUsers}
                     title={t("patients.noPatientsFound")}
                     description={t("patients.noPatientsDesc")}
                   />
+                  {hasPatientFilters && (
+                    <div className="-mt-6 pb-10 text-center">
+                      <button type="button" onClick={clearPatientFilters} className="text-sm font-medium text-dental-blue hover:underline">
+                        {t("common.clearFilters")}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : patientsView === "grid" ? (
+                /* Patient cards */
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                  {filteredPatients.map((patient) => {
+                    const age = calculateAge(patient.dateOfBirth);
+                    const isActive = patient.status === "active";
+                    return (
+                      <div
+                        key={patient.id}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => openPatientDetails(patient)}
+                        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPatientDetails(patient); } }}
+                        className="group relative cursor-pointer bg-white rounded-2xl border border-gray-100 shadow-sm p-5 transition-all hover:-translate-y-0.5 hover:shadow-md hover:border-dental-blue/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-dental-blue/40"
+                      >
+                        <div className="flex items-start gap-3.5">
+                          <div className="relative shrink-0">
+                            <Avatar name={patient.name} size="lg" src={patient.photoUrl} />
+                            <span
+                              className={cn("absolute bottom-0 end-0 h-3.5 w-3.5 rounded-full ring-2 ring-white", isActive ? "bg-emerald-500" : "bg-gray-300")}
+                              title={isActive ? t("patients.active") : t("patients.inactive")}
+                            />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-start justify-between gap-2">
+                              <h3 className="font-semibold text-gray-900 truncate">{patient.name}</h3>
+                              <span className={statusBadgeClass(isActive)}>{isActive ? t("patients.active") : t("patients.inactive")}</span>
+                            </div>
+                            <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-gray-500">
+                              {age !== null && <span>{age} {t("patients.yearsOld")}</span>}
+                              {patient.insurance && (
+                                <span className="inline-flex items-center gap-1 truncate"><FaIdCard className="text-gray-300" /> {patient.insurance}</span>
+                              )}
+                              {patient.mustSetPassword && (
+                                <span className="inline-flex items-center gap-1 text-amber-600"><FaUserClock /> {t("patients.noPortalAccess")}</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 space-y-1.5">
+                          {patient.phone && (
+                            <p className="flex items-center gap-2 text-sm text-gray-700">
+                              <FaPhone className="text-xs text-gray-300 shrink-0" />
+                              <span className="truncate" dir="ltr">{patient.phone}</span>
+                            </p>
+                          )}
+                          {patient.email && (
+                            <p className="flex items-center gap-2 text-sm text-gray-700">
+                              <FaEnvelope className="text-xs text-gray-300 shrink-0" />
+                              <span className="truncate">{patient.email}</span>
+                            </p>
+                          )}
+                          {!patient.phone && !patient.email && (
+                            <p className="text-sm italic text-gray-400">{t("patients.noContact")}</p>
+                          )}
+                        </div>
+
+                        <div className="mt-4 grid grid-cols-2 gap-2">
+                          <div className="rounded-xl bg-gray-50 px-3 py-2">
+                            <p className="text-[11px] uppercase tracking-wide text-gray-400">{t("patients.lastVisit")}</p>
+                            <p className={cn("text-sm font-semibold", patient.lastVisit ? "text-gray-900" : "text-gray-400")}>
+                              {patient.lastVisit ? formatDate(patient.lastVisit) : t("patients.noVisitsYet")}
+                            </p>
+                          </div>
+                          <div className="rounded-xl bg-gray-50 px-3 py-2">
+                            <p className="text-[11px] uppercase tracking-wide text-gray-400">{t("patients.totalVisits")}</p>
+                            <p className="text-sm font-semibold text-gray-900 tabular-nums">{patient.totalVisits}</p>
+                          </div>
+                        </div>
+
+                        <FaChevronRight className="absolute bottom-5 end-5 text-gray-300 opacity-0 transition-opacity group-hover:opacity-100 rtl:rotate-180" />
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                /* Patient list */
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full table-fixed">
+                      <colgroup>
+                        <col className="w-[30%]" />
+                        <col className="w-[28%]" />
+                        <col className="w-[12%]" />
+                        <col className="w-[14%]" />
+                        <col className="w-[8%]" />
+                        <col className="w-[8%]" />
+                      </colgroup>
+                      <thead className="bg-gray-50/80 border-b border-gray-200">
+                        <tr>
+                          <th className="py-3 px-5 text-start text-[11px] font-semibold uppercase tracking-wide text-gray-500">{t("patients.patients")}</th>
+                          <th className="py-3 px-5 text-start text-[11px] font-semibold uppercase tracking-wide text-gray-500">{t("patients.contact")}</th>
+                          <th className="py-3 px-5 text-start text-[11px] font-semibold uppercase tracking-wide text-gray-500">{t("common.status")}</th>
+                          <th className="py-3 px-5 text-start text-[11px] font-semibold uppercase tracking-wide text-gray-500">{t("patients.lastVisit")}</th>
+                          <th className="py-3 px-5 text-center text-[11px] font-semibold uppercase tracking-wide text-gray-500">{t("patients.visits")}</th>
+                          <th className="py-3 px-5"><span className="sr-only">{t("patients.view")}</span></th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {filteredPatients.map((patient) => {
+                          const age = calculateAge(patient.dateOfBirth);
+                          const isActive = patient.status === "active";
+                          return (
+                            <tr
+                              key={patient.id}
+                              onClick={() => openPatientDetails(patient)}
+                              className="group cursor-pointer transition-colors hover:bg-gray-50/80"
+                            >
+                              <td className="py-3 px-5">
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <Avatar name={patient.name} size="md" src={patient.photoUrl} />
+                                  <div className="min-w-0">
+                                    <p className="font-semibold text-gray-900 truncate">{patient.name}</p>
+                                    {(age !== null || patient.insurance) && (
+                                      <p className="text-xs text-gray-500 truncate">
+                                        {[age !== null ? `${age} ${t("patients.yearsOld")}` : null, patient.insurance || null].filter(Boolean).join(" · ")}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="py-3 px-5">
+                                <p className="text-sm text-gray-700 truncate" dir="ltr">{patient.phone || <span className="text-gray-300">—</span>}</p>
+                                <p className="text-xs text-gray-500 truncate">{patient.email}</p>
+                              </td>
+                              <td className="py-3 px-5">
+                                <span className={statusBadgeClass(isActive)}>
+                                  <span className={cn("h-1.5 w-1.5 rounded-full", isActive ? "bg-emerald-500" : "bg-gray-400")} />
+                                  {isActive ? t("patients.active") : t("patients.inactive")}
+                                </span>
+                              </td>
+                              <td className="py-3 px-5 text-sm">
+                                {patient.lastVisit ? <span className="text-gray-700">{formatDate(patient.lastVisit)}</span> : <span className="text-gray-400">{t("patients.noVisitsYet")}</span>}
+                              </td>
+                              <td className="py-3 px-5 text-center text-sm font-semibold text-gray-900 tabular-nums">{patient.totalVisits}</td>
+                              <td className="py-3 px-5 text-end">
+                                <span className="inline-flex items-center gap-1 whitespace-nowrap text-xs font-medium text-dental-blue opacity-0 transition-opacity group-hover:opacity-100">
+                                  {t("patients.view")} <FaChevronRight className="text-[10px] rtl:rotate-180" />
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </>
@@ -1492,27 +1673,36 @@ export default function PatientsPage() {
                 <div className="space-y-4">
                   {patientHistory.treatments.length > 0 ? (
                     patientHistory.treatments.map((treatment, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-4 bg-gray-50 rounded-xl"
+                      <button
+                        key={treatment.recordId || index}
+                        type="button"
+                        data-treatment-row
+                        onClick={() => openTreatmentInChart(treatment)}
+                        title={t("patients.openInChart")}
+                        className="group w-full flex items-center justify-between gap-4 p-4 bg-gray-50 rounded-xl text-start rtl:text-right border border-transparent transition-all hover:bg-white hover:border-dental-blue/30 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-dental-blue/40"
                       >
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                            <FaTooth className="text-purple-600" />
+                        <div className="flex items-center gap-4 min-w-0">
+                          <div className="w-12 h-12 shrink-0 bg-purple-100 rounded-lg flex items-center justify-center transition-colors group-hover:bg-dental-blue/10">
+                            <FaTooth className="text-purple-600 transition-colors group-hover:text-dental-blue" />
                           </div>
-                          <div>
-                            <p className="font-semibold text-gray-900">
+                          <div className="min-w-0">
+                            <p className="font-semibold text-gray-900 truncate">
                               {treatment.treatment}
                             </p>
-                            <p className="text-sm text-gray-500">
-                              {t("patients.tooth")} {treatment.tooth} • {treatment.doctor}
+                            <p className="text-sm text-gray-500 truncate">
+                              {treatment.tooth ? `${t("patients.tooth")} ${treatment.tooth}` : ""}{treatment.tooth && treatment.doctor ? " • " : ""}{treatment.doctor}
                             </p>
                           </div>
                         </div>
-                        <span className="text-gray-500">
-                          {new Date(treatment.date).toLocaleDateString()}
-                        </span>
-                      </div>
+                        <div className="flex items-center gap-3 shrink-0">
+                          <span className="text-gray-500 text-sm">
+                            {treatment.date ? new Date(`${treatment.date}T12:00:00`).toLocaleDateString() : "—"}
+                          </span>
+                          <span className="inline-flex items-center gap-1 text-xs font-medium text-dental-blue opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                            {t("patients.openInChart")} <FaChevronRight className="text-[10px] rtl:rotate-180" />
+                          </span>
+                        </div>
+                      </button>
                     ))
                   ) : (
                     <div className="text-center py-8 text-gray-500">
@@ -1841,7 +2031,11 @@ export default function PatientsPage() {
                               </thead>
                               <tbody className="divide-y divide-gray-100">
                                 {chart.history.map((h) => (
-                                  <tr key={h.id} className={`hover:bg-gray-50 ${completeSelection.includes(h.id) ? "bg-green-50/60" : ""}`}>
+                                  <tr
+                                    key={h.id}
+                                    id={`history-row-${h.id}`}
+                                    className={`transition-colors hover:bg-gray-50 ${completeSelection.includes(h.id) ? "bg-green-50/60" : ""} ${focusHistoryId === h.id ? "bg-amber-50 ring-2 ring-inset ring-amber-300" : ""}`}
+                                  >
                                     <td className="py-2.5 pl-4 pr-1">
                                       {isBillable(h) && (
                                         <input
@@ -2178,12 +2372,30 @@ export default function PatientsPage() {
                               min="0"
                               step="0.01"
                               value={item.amount}
+                              readOnly={!item.editPrice}
+                              aria-readonly={!item.editPrice}
                               onChange={(e) =>
                                 setCompleteItems((prev) => prev.map((p) => (p.id === item.id ? { ...p, amount: e.target.value } : p)))
                               }
-                              className="w-24 border border-gray-200 rounded-lg px-2 py-1.5 text-sm text-right focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                              className={`w-24 border rounded-lg px-2 py-1.5 text-sm text-right focus:outline-none ${
+                                item.editPrice
+                                  ? "border-gray-200 bg-white focus:ring-2 focus:ring-dental-blue/30"
+                                  : "border-gray-100 bg-gray-50 text-gray-600 cursor-default"
+                              }`}
                             />
                           </div>
+                          {!item.editPrice && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setCompleteItems((prev) => prev.map((p) => (p.id === item.id ? { ...p, editPrice: true } : p)));
+                                setTimeout(() => document.getElementById(`complete-price-${item.id}`)?.focus(), 0);
+                              }}
+                              className="mt-1 text-[11px] font-medium text-dental-blue hover:underline"
+                            >
+                              {t("dentalChart.editBillCost")}
+                            </button>
+                          )}
                         </div>
                       ) : (
                         <p className="text-[11px] text-gray-400">{t("dentalChart.notBilledNow")}</p>

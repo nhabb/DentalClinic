@@ -9,16 +9,7 @@ import { useRouter } from "next/navigation";
 import { safeStorage } from "@/lib/browser-compat";
 import { useTranslation } from "@/lib/i18n";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
-import {
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-} from "recharts";
+import DashboardAnalytics, { type DashboardData } from "@/components/dashboard/DashboardAnalytics";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,17 +23,11 @@ import {
   FaBoxes,
   FaUsers,
   FaChartLine,
-  FaCog,
   FaSignOutAlt,
-  FaBell,
-  FaExclamationTriangle,
   FaCheckCircle,
   FaClock,
-  FaCalendarCheck,
   FaChevronRight,
   FaBars,
-  FaDollarSign,
-  FaWallet,
   FaMoneyBillWave,
   FaFileInvoiceDollar,
   FaEllipsisV,
@@ -105,9 +90,8 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined);
 
-  // Financial state
-  const [kpis, setKpis] = useState<any>(null);
-  const [analyticsData, setAnalyticsData] = useState<any[]>([]);
+  // Normalised datasets for the analytics charts
+  const [dash, setDash] = useState<DashboardData>({ records: [], appointments: [], expenses: [], payments: [], invoices: [], inventory: [], patients: [], doctors: [] });
 
   // Single effect: fire all requests in parallel, set all state together
   useEffect(() => {
@@ -131,15 +115,17 @@ export default function AdminDashboard() {
 
       try {
         // Fire all requests simultaneously — one round-trip wave
-        const [userRes, patientsRes, appointmentsRes, inventoryRes, summaryRes, paymentsRes, expensesRes] =
+        const [userRes, patientsRes, appointmentsRes, inventoryRes, paymentsRes, expensesRes, invoicesRes, doctorsRes, recordsRes] =
           await Promise.all([
             email ? fetch(`${API_URL}/api/users/by-email?email=${encodeURIComponent(email)}`) : Promise.resolve(null),
             apiFetch(`/api/patients`),
-            apiFetch(`/api/appointments`),
-            apiFetch(`/api/inventory/low-stock`),
-            apiFetch(`/api/billing/summary`),
+            apiFetch(`/api/appointments?limit=1000`),
+            apiFetch(`/api/inventory`),
             apiFetch(`/api/billing/invoice-payments?limit=500`),
             apiFetch(`/api/expenses?limit=500`),
+            apiFetch(`/api/billing/invoices?limit=200`),
+            fetch(`${API_URL}/api/users/doctors`),
+            apiFetch(`/api/patient-records?limit=1000`),
           ]);
 
         // ── User ──────────────────────────────────────────────────────────────
@@ -168,60 +154,77 @@ export default function AdminDashboard() {
         // ── Patients + inventory stats ────────────────────────────────────────
         const patientsData = patientsRes.ok ? await patientsRes.json() : { data: [] };
         const inventoryData = inventoryRes.ok ? await inventoryRes.json() : { data: [] };
+        const inventoryRows = (inventoryData.data || []).map((item: any) => {
+          const quantity = Number(item.quantity ?? 0);
+          const minimum = Number(item.minimum_quantity ?? 0);
+          const status: "ok" | "low" | "out" = quantity === 0 ? "out" : quantity <= minimum ? "low" : "ok";
+          const rawCat = String(item.category ?? "General").trim();
+          const category = rawCat ? rawCat.charAt(0).toUpperCase() + rawCat.slice(1).toLowerCase() : "General";
+          return { id: Number(item.id), name: String(item.name ?? ""), category, quantity, minimum, status };
+        });
+        const lowRows = inventoryRows.filter((i: { status: string }) => i.status !== "ok");
         setClinicStats({
           todayAppointments: todayAppts.length,
           completedToday,
-          lowStockItems: (inventoryData.data || []).length,
+          lowStockItems: lowRows.length,
           totalPatients: (patientsData.data || []).length,
         });
-        setLowStockAlerts(
-          (inventoryData.data || []).map((item: any) => ({
-            id: Number(item.id), item: item.name, current: item.quantity, minimum: item.minimum_quantity,
-          }))
-        );
+        setLowStockAlerts(lowRows.map((i: any) => ({ id: i.id, item: i.name, current: i.quantity, minimum: i.minimum })));
 
-        // ── Financial KPIs ────────────────────────────────────────────────────
-        if (summaryRes.ok) {
-          const s = await summaryRes.json();
-          setKpis({ total_income: Number(s.total_income ?? 0), total_expenses: Number(s.total_expenses ?? 0), net: Number(s.net ?? 0), total_outstanding: Number(s.total_outstanding ?? 0), payments_count: s.payments_count ?? 0 });
-        }
-
-        // ── Chart data ────────────────────────────────────────────────────────
+        // ── Datasets for the analytics charts ─────────────────────────────
         const invoicePayments: any[] = paymentsRes.ok ? ((await paymentsRes.json()) ?? []) : [];
         const expenses: any[] = expensesRes.ok ? ((await expensesRes.json()).data ?? []) : [];
+        const invoicesJson = invoicesRes.ok ? await invoicesRes.json() : { data: [] };
+        const invoices: any[] = Array.isArray(invoicesJson?.data) ? invoicesJson.data : Array.isArray(invoicesJson) ? invoicesJson : [];
+        const doctorsList: any[] = doctorsRes?.ok ? await doctorsRes.json() : [];
+        const recordsJson = recordsRes.ok ? await recordsRes.json() : { data: [] };
+        const recordRows: any[] = Array.isArray(recordsJson?.data) ? recordsJson.data : [];
+        const day = (v: any) => (typeof v === "string" ? v.slice(0, 10) : "");
 
-        const monthKeys: string[] = [];
-        for (let i = 5; i >= 0; i--) {
-          const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - i);
-          monthKeys.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
-        }
-        const incomeByMonth: Record<string, number> = {};
-        const expensesByMonth: Record<string, number> = {};
-        monthKeys.forEach((k) => { incomeByMonth[k] = 0; expensesByMonth[k] = 0; });
-
-        invoicePayments.forEach((p: any) => {
-          const amount = Number(p.amount ?? 0);
-          if (amount <= 0) return;
-          const key = (p.created_at || "").slice(0, 7);
-          if (incomeByMonth[key] !== undefined) {
-            incomeByMonth[key] += amount;
-          }
+        setDash({
+          records: recordRows.map((r: any) => {
+            const pu = r.patient_profiles?.users;
+            return {
+              id: Number(r.id),
+              date: day(r.treatment_date || r.created_at),
+              tooth: r.tooth_number ? String(r.tooth_number) : "",
+              procedure: String(r.title || "—"),
+              status: (r.record_type === "treatment_plan" ? "planned" : r.record_type === "missing_tooth" ? "missing" : "completed") as "completed" | "planned" | "missing",
+              patientId: Number(r.patient_id || r.patient_profiles?.id || 0),
+              patientName: pu ? `${pu.first_name ?? ""} ${pu.last_name ?? ""}`.trim() : `#${r.patient_id}`,
+              doctorId: Number(r.created_by || r.users?.id || 0),
+            };
+          }),
+          appointments: (appointmentsData.data || []).map((a: any) => ({
+            id: Number(a.id),
+            date: day(a.appointment_date),
+            status: String(a.status ?? "scheduled"),
+            type: String(a.reason || "Checkup"),
+            doctorId: Number(a.doctor_id || a.created_by || 0),
+          })),
+          expenses: expenses.map((e: any) => ({
+            id: Number(e.id),
+            date: day(e.expense_date || e.created_at),
+            category: String(e.category ?? "other").toLowerCase(),
+            amount: Number(e.amount ?? 0),
+          })),
+          payments: invoicePayments
+            .filter((p: any) => Number(p.amount ?? 0) > 0)
+            .map((p: any) => ({ id: Number(p.id), date: day(p.created_at), amount: Number(p.amount), method: String(p.payment_method ?? "other") })),
+          invoices: invoices.map((i: any) => ({
+            id: Number(i.id),
+            date: day(i.procedure_date || i.created_at),
+            status: (["open", "partial", "paid"].includes(i.status) ? i.status : "open") as "open" | "partial" | "paid",
+            total: Number(i.total_amount ?? 0),
+            remaining: Number(i.remaining_amount ?? 0),
+          })),
+          inventory: inventoryRows,
+          patients: (patientsData.data || []).map((p: any) => ({
+            id: Number(p.id),
+            registeredDate: day(p.users?.created_at || p.created_at),
+          })),
+          doctors: doctorsList.map((d: any) => ({ id: Number(d.id), name: `Dr. ${d.first_name ?? ""} ${d.last_name ?? ""}`.trim() })),
         });
-
-        expenses.forEach((e: any) => {
-          const key = (e.expense_date || e.created_at || "").slice(0, 7);
-          if (expensesByMonth[key] !== undefined) {
-            expensesByMonth[key] += Number(e.amount ?? 0);
-          }
-        });
-
-        const formatted = monthKeys.map((k) => ({
-          month: k,
-          Income: incomeByMonth[k],
-          Expenses: expensesByMonth[k],
-          Net: incomeByMonth[k] - expensesByMonth[k],
-        }));
-        setAnalyticsData(formatted);
       } catch (e) {
         console.error("Failed to fetch dashboard data", e);
       } finally {
@@ -503,266 +506,90 @@ export default function AdminDashboard() {
 
         {/* Dashboard Content */}
         <main className="flex-1 p-8 overflow-auto">
-          {/* Stats Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {/* Today's Appointments */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-4">
-                <FaCalendarCheck className="text-purple-600 text-xl" />
-              </div>
-              <p className="text-2xl font-bold text-gray-900">
-                {clinicStats.completedToday}/{clinicStats.todayAppointments}
-              </p>
-              <p className="text-sm text-gray-500 mt-1">
-                {t("adminDashboard.todaysAppointments")}
-              </p>
-            </div>
-
-            {/* Total Income */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mb-4">
-                <FaDollarSign className="text-green-600 text-xl" />
-              </div>
-              <p className="text-2xl font-bold text-gray-900">
-                {kpis ? `$${kpis.total_income.toLocaleString()}` : "—"}
-              </p>
-              <p className="text-sm text-gray-500 mt-1">{t("adminDashboard.totalIncome")}</p>
-            </div>
-
-            {/* Total Expenses */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-              <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mb-4">
-                <FaWallet className="text-orange-500 text-xl" />
-              </div>
-              <p className="text-2xl font-bold text-gray-900">
-                {kpis ? `$${kpis.total_expenses.toLocaleString()}` : "—"}
-              </p>
-              <p className="text-sm text-gray-500 mt-1">{t("adminDashboard.totalExpenses")}</p>
-            </div>
-
-            {/* Net Profit */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
-                <FaChartLine className="text-blue-600 text-xl" />
-              </div>
-              <p className={`text-2xl font-bold ${kpis && kpis.net < 0 ? "text-red-600" : "text-gray-900"}`}>
-                {kpis ? `$${kpis.net.toLocaleString()}` : "—"}
-              </p>
-              <p className="text-sm text-gray-500 mt-1">{t("adminDashboard.netProfit")}</p>
-            </div>
-
-            {/* Outstanding */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-              <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center mb-4">
-                <FaWallet className="text-yellow-600 text-xl" />
-              </div>
-              <p className="text-2xl font-bold text-yellow-700">
-                {kpis ? `$${kpis.total_outstanding.toLocaleString()}` : "—"}
-              </p>
-              <p className="text-sm text-gray-500 mt-1">{t("adminDashboard.outstanding")}</p>
-            </div>
-
-            {/* Total Patients - secretary only */}
-            {userRole === "secretary" && (
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 col-span-2">
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
-                  <FaUsers className="text-blue-600 text-xl" />
-                </div>
-                <p className="text-2xl font-bold text-gray-900">
-                  {clinicStats.totalPatients}
-                </p>
-                <p className="text-sm text-gray-500 mt-1">
-                  {t("adminDashboard.totalPatients")}
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Main Grid */}
-          <div className="grid lg:grid-cols-3 gap-6">
-            {/* Today's Schedule */}
-            <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-bold text-gray-900">
-                  {t("adminDashboard.todaysSchedule")}
-                </h2>
-                <Link
-                  href="/admin/appointments"
-                  className="text-dental-blue text-sm font-medium flex items-center gap-1 hover:underline"
-                >
-                  {t("common.viewAll")}{" "}
-                  <FaChevronRight className="text-xs rtl:rotate-180" />
-                </Link>
-              </div>
-              <div className="space-y-3">
-                {todayAppointments.length > 0 ? (
-                  todayAppointments.map((apt) => (
-                    <div
-                      key={apt.id}
-                      className={`flex items-center justify-between p-4 rounded-xl border ${
-                        apt.status === "in_progress"
-                          ? "border-blue-200 bg-blue-50"
-                          : apt.status === "cancelled"
-                            ? "border-red-200 bg-red-50"
-                            : apt.status === "completed"
-                              ? "border-gray-100 bg-gray-50 opacity-60"
-                              : "border-gray-200"
-                      }`}
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="text-center">
-                          <p className="text-sm font-bold text-gray-900">{apt.time}</p>
-                        </div>
-                        <div className="w-px h-10 bg-gray-200"></div>
-                        <div>
-                          <p className="font-semibold text-gray-900">{apt.patient}</p>
-                          <p className="text-sm text-gray-500">{apt.type}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {getStatusBadge(apt.status)}
-                        {apt.status !== "completed" && apt.status !== "cancelled" && (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-gray-700">
-                                <FaEllipsisV className="text-sm" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-44">
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setPostponeApptId(apt.id);
-                                  setPostponeDate("");
-                                  setPostponeTime(apt.time);
-                                }}
-                              >
-                                <FaCalendarPlus className="text-dental-blue" /> {t("adminDashboard.postpone")}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => handleCancelAppointment(apt.id)}
-                                className="text-red-600 focus:text-red-600"
-                              >
-                                <FaBan className="text-red-500" /> Cancel
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        )}
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <FaCalendarAlt className="text-4xl mx-auto mb-2 text-gray-300" />
-                    <p>{t("adminDashboard.noAppointmentsToday")}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Right Column */}
-            <div className="space-y-6">
-              {/* Low Stock Alerts */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                <div className="flex items-center justify-between mb-4">
+          <DashboardAnalytics
+            data={dash}
+            loading={loading}
+            operations={
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200/80 p-6">
+                <div className="flex items-center justify-between mb-6">
                   <h2 className="text-lg font-bold text-gray-900">
-                    {t("adminDashboard.lowStockAlerts")}
+                    {t("adminDashboard.todaysSchedule")}
                   </h2>
                   <Link
-                    href="/admin/inventory"
+                    href="/admin/appointments"
                     className="text-dental-blue text-sm font-medium flex items-center gap-1 hover:underline"
                   >
-                    {t("common.manage")}{" "}
+                    {t("common.viewAll")}{" "}
                     <FaChevronRight className="text-xs rtl:rotate-180" />
                   </Link>
                 </div>
-                {lowStockAlerts.length > 0 ? (
-                  <div className="space-y-3">
-                    {lowStockAlerts.map((alert) => (
+                <div className="space-y-3">
+                  {todayAppointments.length > 0 ? (
+                    todayAppointments.map((apt) => (
                       <div
-                        key={alert.id}
-                        className="flex items-center justify-between p-3 bg-red-50 rounded-xl border border-red-100"
+                        key={apt.id}
+                        className={`flex items-center justify-between p-4 rounded-xl border ${
+                          apt.status === "in_progress"
+                            ? "border-blue-200 bg-blue-50"
+                            : apt.status === "cancelled"
+                              ? "border-red-200 bg-red-50"
+                              : apt.status === "completed"
+                                ? "border-gray-100 bg-gray-50 opacity-60"
+                                : "border-gray-200"
+                        }`}
                       >
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                            <FaExclamationTriangle className="text-red-500" />
+                        <div className="flex items-center gap-4">
+                          <div className="text-center">
+                            <p className="text-sm font-bold text-gray-900">{apt.time}</p>
                           </div>
+                          <div className="w-px h-10 bg-gray-200"></div>
                           <div>
-                            <p className="font-medium text-gray-900 text-sm">
-                              {alert.item}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {alert.current} left (min: {alert.minimum})
-                            </p>
+                            <p className="font-semibold text-gray-900">{apt.patient}</p>
+                            <p className="text-sm text-gray-500">{apt.type}</p>
                           </div>
                         </div>
-                        <button className="text-xs text-red-600 font-medium hover:underline">
-                          {t("adminDashboard.reorder")}
-                        </button>
+                        <div className="flex items-center gap-2">
+                          {getStatusBadge(apt.status)}
+                          {apt.status !== "completed" && apt.status !== "cancelled" && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-gray-700">
+                                  <FaEllipsisV className="text-sm" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-44">
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    setPostponeApptId(apt.id);
+                                    setPostponeDate("");
+                                    setPostponeTime(apt.time);
+                                  }}
+                                >
+                                  <FaCalendarPlus className="text-dental-blue" /> {t("adminDashboard.postpone")}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleCancelAppointment(apt.id)}
+                                  className="text-red-600 focus:text-red-600"
+                                >
+                                  <FaBan className="text-red-500" /> Cancel
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-500 text-sm">
-                    {t("adminDashboard.allItemsWellStocked")}
-                  </p>
-                )}
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <FaCalendarAlt className="text-4xl mx-auto mb-2 text-gray-300" />
+                      <p>{t("adminDashboard.noAppointmentsToday")}</p>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          </div>
 
-          {/* ── Financial Overview ── */}
-          <div className="mt-8">
-            {/* Line Chart */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h3 className="text-base font-bold text-gray-900">{t("adminDashboard.revenueVsExpenses")}</h3>
-                  <p className="text-xs text-gray-500">{t("adminDashboard.last6Months")}</p>
-                </div>
-                {kpis && (
-                  <div className="flex gap-4 text-sm">
-                    <span className="text-gray-500">
-                      {t("adminDashboard.netProfitLabel")}{" "}
-                      <span className="font-semibold text-gray-900">
-                        ${kpis.net.toLocaleString()}
-                      </span>
-                    </span>
-                  </div>
-                )}
-              </div>
-              {analyticsData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={280}>
-                  <LineChart data={analyticsData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis
-                      dataKey="month"
-                      tick={{ fontSize: 12, fill: "#9ca3af" }}
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <YAxis
-                      tick={{ fontSize: 12, fill: "#9ca3af" }}
-                      tickLine={false}
-                      axisLine={false}
-                      tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
-                    />
-                    <Tooltip
-                      formatter={(value: any, name: any) => [`$${Number(value).toLocaleString()}`, name]}
-                      contentStyle={{ borderRadius: "12px", border: "1px solid #e5e7eb", fontSize: 13 }}
-                    />
-                    <Legend wrapperStyle={{ fontSize: 13 }} />
-                    <Line type="monotone" dataKey="Income" stroke="#3b82f6" strokeWidth={2.5} dot={{ r: 4 }} activeDot={{ r: 6 }} />
-                    <Line type="monotone" dataKey="Expenses" stroke="#f97316" strokeWidth={2.5} dot={{ r: 4 }} activeDot={{ r: 6 }} />
-                    <Line type="monotone" dataKey="Net" stroke="#10b981" strokeWidth={2.5} strokeDasharray="5 5" dot={{ r: 4 }} activeDot={{ r: 6 }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="flex items-center justify-center h-[280px] text-gray-400 text-sm">
-                  {t("adminDashboard.noFinancialData")}
-                </div>
-              )}
-            </div>
-          </div>
+            }
+          />
         </main>
       </div>
 

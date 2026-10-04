@@ -3,7 +3,6 @@
 import { toast } from 'sonner';
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { apiFetch } from "@/lib/api/client";
 import { formatDateBeirut } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -12,6 +11,7 @@ import { useTranslation } from "@/lib/i18n";
 import AdminSidebar from "@/components/ui/AdminSidebar";
 import { StatsCard } from "@/components/ui/StatsCard";
 import { AdminPageHeader } from "@/components/ui/AdminPageHeader";
+import { ListToolbar } from "@/components/ui/ListToolbar";
 import { Modal } from "@/components/ui/Modal";
 import { FormField, inputClass } from "@/components/ui/FormField";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -162,13 +162,20 @@ export default function BillingPage() {
 
   // ── Filtering + stats ────────────────────────────────────────────────────────
 
-  const filtered = invoices.filter((inv) => {
-    const name = `${inv.patient.users.first_name} ${inv.patient.users.last_name}`.toLowerCase();
-    return (
-      (!searchQuery || name.includes(searchQuery.toLowerCase())) &&
-      (selectedStatus === "All" || inv.status === selectedStatus.toLowerCase())
-    );
-  });
+  const bq = searchQuery.trim().toLowerCase();
+  const matchesInvoiceSearch = (inv: TreatmentInvoice) =>
+    !bq || `${inv.patient.users.first_name} ${inv.patient.users.last_name}`.toLowerCase().includes(bq);
+  const filtered = invoices.filter(
+    (inv) => matchesInvoiceSearch(inv) && (selectedStatus === "All" || inv.status === selectedStatus.toLowerCase()),
+  );
+  const invoiceStatusCounts: Record<string, number> = {
+    All: invoices.filter(matchesInvoiceSearch).length,
+    Open: invoices.filter((i) => matchesInvoiceSearch(i) && i.status === "open").length,
+    Partial: invoices.filter((i) => matchesInvoiceSearch(i) && i.status === "partial").length,
+    Paid: invoices.filter((i) => matchesInvoiceSearch(i) && i.status === "paid").length,
+  };
+  const hasInvoiceFilters = !!bq || selectedStatus !== "All";
+  const clearInvoiceFilters = () => { setSearchQuery(""); setSelectedStatus("All"); };
 
   const totalInvoiced = invoices.reduce((s, i) => s + i.total_amount, 0);
   const totalCollected = invoices.reduce((s, i) => s + i.amount_paid, 0);
@@ -313,20 +320,13 @@ export default function BillingPage() {
     <div className="min-h-screen bg-gray-50 flex">
       <AdminSidebar activePage="billing" sidebarOpen={sidebarOpen} onToggle={() => setSidebarOpen((v) => !v)} onLogout={handleLogout} />
 
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         <AdminPageHeader
           title={t("billing.title")}
           subtitle={t("billing.subtitle")}
           onAdd={() => { resetCreateModal(); setShowCreateModal(true); }}
           addLabel={t("billing.newInvoice")}
-          extraActions={
-            <Link
-              href="/admin"
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors"
-            >
-              <FaChartLine className="text-xs" /> {t("billing.goToDashboard")}
-            </Link>
-          }
+          actions={[{ key: "dashboard", label: t("billing.goToDashboard"), icon: <FaChartLine />, href: "/admin" }]}
         />
 
         <main className="flex-1 p-8 overflow-auto">
@@ -366,36 +366,29 @@ export default function BillingPage() {
                 />
               </div>
 
-              {/* Filters */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-6 flex flex-wrap gap-3 items-center">
-                <input
-                  type="text"
-                  placeholder={t("billing.searchPlaceholder")}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className={`${inputClass} w-64`}
-                />
-                <div className="flex gap-2">
-                  {([
-                    { value: "All", label: t("billing.statusAll") },
-                    { value: "Open", label: t("billing.statusOpen") },
-                    { value: "Partial", label: t("billing.statusPartial") },
-                    { value: "Paid", label: t("billing.statusPaid") },
-                  ]).map(({ value, label }) => (
-                    <button
-                      key={value}
-                      onClick={() => setSelectedStatus(value)}
-                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                        selectedStatus === value
-                          ? "bg-dental-blue text-white"
-                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <ListToolbar
+                search={{ value: searchQuery, onChange: setSearchQuery, placeholder: t("billing.searchPlaceholder") }}
+                shown={filtered.length}
+                total={invoices.length}
+                unitLabel={t("billing.invoicesCount")}
+                hasActiveFilters={hasInvoiceFilters}
+                onClear={clearInvoiceFilters}
+                clearLabel={t("common.clearFilters")}
+                groups={[
+                  {
+                    key: "status",
+                    variant: "segmented",
+                    value: selectedStatus,
+                    onChange: setSelectedStatus,
+                    options: [
+                      { value: "All", label: t("billing.statusAll"), count: invoiceStatusCounts.All },
+                      { value: "Open", label: t("billing.statusOpen"), count: invoiceStatusCounts.Open, dot: "bg-amber-500" },
+                      { value: "Partial", label: t("billing.statusPartial"), count: invoiceStatusCounts.Partial, dot: "bg-blue-500" },
+                      { value: "Paid", label: t("billing.statusPaid"), count: invoiceStatusCounts.Paid, dot: "bg-emerald-500" },
+                    ],
+                  },
+                ]}
+              />
 
               {/* Table */}
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -408,10 +401,10 @@ export default function BillingPage() {
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
-                      <thead className="bg-gray-50 border-b border-gray-200">
+                      <thead className="bg-gray-50/80 border-b border-gray-200">
                         <tr>
                           {[t("billing.colPatient"), t("billing.colDate"), t("billing.colProcedures"), t("billing.colTotal"), t("billing.colPaid"), t("billing.colRemaining"), t("billing.colStatus"), ""].map((h) => (
-                            <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">
+                            <th key={h} className="px-5 py-3 text-start text-[11px] font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
                               {h}
                             </th>
                           ))}
