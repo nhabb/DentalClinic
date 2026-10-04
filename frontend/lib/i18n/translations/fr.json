@@ -539,6 +539,8 @@
     "noPortalAccess": "Mot de passe non défini"
   },
   "dentalChart": {
+    "quoted": "Devis",
+    "quotedHint": "Prix convenu lors de la planification ; utilisé à la réalisation",
     "tab": "Schéma dentaire",
     "healthy": "Aucun soin",
     "treated": "Traitée",

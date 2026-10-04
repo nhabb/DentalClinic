@@ -141,6 +141,8 @@ interface ChartHistoryEntry {
   invoiceStatus: "open" | "partial" | "paid" | null;
   invoiceTotal: number;
   invoiceRemaining: number;
+  /** Price agreed when the work was planned/recorded; null when none was given. */
+  quotedAmount: number | null;
 }
 
 interface PayInvoice {
@@ -181,6 +183,7 @@ function mapChart(raw: any): ChartData {
     invoiceStatus: r.invoice?.status ?? null,
     invoiceTotal: Number(r.invoice?.total_amount) || 0,
     invoiceRemaining: Number(r.invoice?.remaining_amount) || 0,
+    quotedAmount: r.quoted_amount != null && r.quoted_amount !== "" ? Number(r.quoted_amount) : null,
   }));
   // Every treatment per tooth (history is newest first) so hovering a tooth
   // can list all of them, not just the latest.
@@ -914,7 +917,7 @@ export default function PatientsPage() {
     if (!chart) return;
     const items = chart.history
       .filter((h) => ids.includes(h.id) && isBillable(h))
-      .map((h) => ({ id: h.id, tooth: h.tooth, procedure: h.procedure, amount: String(DEFAULT_PRICES[h.procedure] ?? ""), status: h.status, bill: true, editPrice: false }));
+      .map((h) => ({ id: h.id, tooth: h.tooth, procedure: h.procedure, amount: String(h.quotedAmount ?? DEFAULT_PRICES[h.procedure] ?? ""), status: h.status, bill: true, editPrice: false }));
     if (items.length === 0) return;
     setCompleteItems(items);
     setCompleteDate(new Date().toISOString().split("T")[0]);
@@ -2075,6 +2078,11 @@ export default function PatientsPage() {
                                               ${h.invoiceRemaining.toFixed(2)} {t("dentalChart.invoiceRemaining")}
                                             </span>
                                           )}
+                                        </span>
+                                      ) : h.quotedAmount != null && h.status !== "missing" ? (
+                                        <span className="inline-flex items-center gap-1 text-xs text-gray-600" title={t("dentalChart.quotedHint")}>
+                                          <span className="text-gray-400">{t("dentalChart.quoted")}</span>
+                                          <span className="font-medium text-gray-800">${h.quotedAmount.toFixed(2)}</span>
                                         </span>
                                       ) : (
                                         "—"

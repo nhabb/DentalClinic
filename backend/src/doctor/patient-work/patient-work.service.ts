@@ -111,6 +111,8 @@ export class PatientWorkService {
         tooth_number: item.tooth_number,
         treatment_date: treatmentDate,
         created_by: createdBy,
+        // Remember the agreed price so completing a plan later bills it, not the default.
+        quoted_amount: item.status !== 'missing' && item.amount != null ? round2(item.amount) : null,
       };
     };
 
@@ -222,7 +224,14 @@ export class PatientWorkService {
       );
     }
     for (const r of records) {
-      if (r.record_type !== 'treatment_plan') continue;
+      const finalAmount = amountOf.get(String(r.id));
+      if (r.record_type !== 'treatment_plan') {
+        // Unbilled completed work: keep the price used now as the record's quoted price.
+        if (finalAmount !== undefined && finalAmount > 0) {
+          ops.push(this.prisma.patient_records.update({ where: { id: r.id }, data: { quoted_amount: finalAmount, updated_at: new Date() } }));
+        }
+        continue;
+      }
       // Drop the "(planned)" suffix from the auto-generated note; keep custom notes as they are.
       const autoPlanned = `${r.title} on tooth ${r.tooth_number} (planned)`;
       ops.push(
@@ -232,6 +241,7 @@ export class PatientWorkService {
             record_type: 'treatment',
             treatment_date: treatmentDate,
             updated_at: new Date(),
+            ...(finalAmount !== undefined && finalAmount > 0 ? { quoted_amount: finalAmount } : {}),
             ...(r.description === autoPlanned ? { description: `${r.title} on tooth ${r.tooth_number}` } : {}),
           },
         }),

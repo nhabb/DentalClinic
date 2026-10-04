@@ -539,6 +539,8 @@
     "noPortalAccess": "Password not set yet"
   },
   "dentalChart": {
+    "quoted": "Quoted",
+    "quotedHint": "Price agreed when this work was planned; used when you complete it",
     "tab": "Dental Chart",
     "healthy": "No work",
     "treated": "Treated",
