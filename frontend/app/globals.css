@@ -4,189 +4,706 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* =========================================================================
+ * BrightSmile design system — "Clinic Daylight"
+ *
+ * A warm, low-glare palette built to be restful to look at over a long
+ * clinical shift: a linen canvas instead of cold white, warm greige
+ * neutrals instead of blue-grey, and a deep moss green as the brand voice
+ * with terracotta and honey as its companions. There is deliberately no
+ * blue and no purple anywhere in this system.
+ *
+ * Colours are plain hex. Every browser understands hex, so there is no
+ * need for the oklch()/@supports fallback pairs this file used to carry.
+ *
+ * NOTE ON THE BUILT-IN TAILWIND PALETTES
+ * Further down we re-point Tailwind's stock colour names (gray/slate/
+ * blue/purple/…) at this palette. That keeps the thousands of existing
+ * `text-gray-500` / `bg-blue-50` call sites rendering in-system, and it
+ * makes it impossible for a stray `bg-indigo-600` to put blue back on
+ * screen. Prefer the semantic names — brand / clay / honey / leaf /
+ * brick / ink — in new code.
+ * ======================================================================= */
+
 @theme {
-  /* Soft Professional Blue - Primary */
-  --color-primary-50: #f0f9ff;
-  --color-primary-100: #e0f2fe;
-  --color-primary-200: #bae6fd;
-  --color-primary-300: #7dd3fc;
-  --color-primary-400: #38bdf8;
-  --color-primary-500: #0ea5e9;
-  --color-primary-600: #0284c7;
-  --color-primary-700: #0369a1;
-  --color-primary-800: #075985;
-  --color-primary-900: #0c4a6e;
+  /* ---- Brand: moss, an evergreen that reads calm and clinical --------- */
+  --color-brand-50:  #eff7f2;
+  --color-brand-100: #d9ede1;
+  --color-brand-200: #b5d9c3;
+  --color-brand-300: #87bfa0;
+  --color-brand-400: #57a07a;
+  --color-brand-500: #35855d;
+  --color-brand-600: #266b49;
+  --color-brand-700: #20563c;
+  --color-brand-800: #1c4632;
+  --color-brand-900: #183a2a;
+  --color-brand-950: #0d2017;
+  --color-brand:     #266b49;
 
-  /* Soft, Professional Colors for Dental SaaS */
-  --color-dental-blue: #0891b2; /* Soft cyan-blue - calming */
-  --color-dental-lightblue: #67e8f9; /* Very light cyan - friendly */
-  --color-dental-teal: #5eead4; /* Soft teal - fresh */
-  --color-dental-purple: #a78bfa; /* Muted purple - premium */
-  --color-dental-green: #6ee7b7; /* Soft green - success */
-  --color-dental-slate: #64748b; /* Professional slate gray */
+  /* ---- Clay: terracotta, the warm counterweight to the moss ---------- */
+  --color-clay-50:  #fdf6f1;
+  --color-clay-100: #faeadf;
+  --color-clay-200: #f3d2bc;
+  --color-clay-300: #e9b291;
+  --color-clay-400: #db8b61;
+  --color-clay-500: #d2763c;
+  --color-clay-600: #b85e2f;
+  --color-clay-700: #974b28;
+  --color-clay-800: #7c3f25;
+  --color-clay-900: #673721;
+  --color-clay:     #b85e2f;
 
-  /* Professional Dark Blues for Auth Pages */
-  --color-auth-blue: #1e40af; /* Deep professional blue */
-  --color-auth-blue-dark: #1e3a8a; /* Darker blue */
-  --color-auth-blue-light: #2563eb; /* Brighter blue for accents */
+  /* ---- Honey: highlights, warnings, "needs attention" ---------------- */
+  --color-honey-50:  #fdf9ec;
+  --color-honey-100: #faf0cd;
+  --color-honey-200: #f4df9b;
+  --color-honey-300: #ebc964;
+  --color-honey-400: #deaf36;
+  --color-honey-500: #c7951c;
+  --color-honey-600: #a87817;
+  --color-honey-700: #855d16;
+  --color-honey-800: #6d4c18;
+  --color-honey-900: #5b4018;
+  --color-honey:     #c7951c;
+
+  /* ---- Leaf: success. Yellower and brighter than the brand moss so the
+   *      two never read as the same state at a glance. ----------------- */
+  --color-leaf-50:  #f3f8ec;
+  --color-leaf-100: #e3f1d3;
+  --color-leaf-200: #c7e3ab;
+  --color-leaf-300: #a2ce7c;
+  --color-leaf-400: #7db553;
+  --color-leaf-500: #619a39;
+  --color-leaf-600: #4a7c2c;
+  --color-leaf-700: #3c6327;
+  --color-leaf-800: #335024;
+  --color-leaf-900: #2c4321;
+  --color-leaf:     #4a7c2c;
+
+  /* ---- Brick: danger. Warm enough to belong, red enough to alarm ----- */
+  --color-brick-50:  #fdf4f2;
+  --color-brick-100: #fae4e0;
+  --color-brick-200: #f4cac3;
+  --color-brick-300: #eba399;
+  --color-brick-400: #dd766a;
+  --color-brick-500: #cb4a3c;
+  --color-brick-600: #b2372b;
+  --color-brick-700: #932e25;
+  --color-brick-800: #7a2a23;
+  --color-brick-900: #672821;
+  --color-brick:     #b2372b;
+
+  /* ---- Ink: warm greige neutrals. The canvas and the type ------------ */
+  --color-ink-50:  #faf8f4;
+  --color-ink-100: #f4f1ea;
+  --color-ink-200: #e9e4d9;
+  --color-ink-300: #d9d2c4;
+  --color-ink-400: #b5ac9a;
+  --color-ink-500: #8d8474;
+  --color-ink-600: #6c6457;
+  --color-ink-700: #534c42;
+  --color-ink-800: #3b362f;
+  --color-ink-900: #272420;
+  --color-ink-950: #181612;
+
+  /* ---- Accent blue: a single deliberate exception to "no blue" above —
+   *      used sparingly for small highlights in a few newer UI patterns
+   *      (command palette active row, selected-row ring, unread dot).
+   *      Never used for large surfaces; those stay white/ink/brand. ---- */
+  --color-accent-blue-50:  #eff6ff;
+  --color-accent-blue-100: #dbeafe;
+  --color-accent-blue-200: #bfdbfe;
+  --color-accent-blue-300: #93c5fd;
+  --color-accent-blue-400: #60a5fa;
+  --color-accent-blue-500: #3b82f6;
+  --color-accent-blue-600: #2563eb;
+  --color-accent-blue-700: #1d4ed8;
+  --color-accent-blue:     #3b82f6;
+
+  /* =======================================================================
+   * Re-pointed stock palettes. See the note at the top of the file.
+   * ===================================================================== */
+
+  /* Cold greys -> warm greige ----------------------------------------- */
+  --color-gray-50:  #faf8f4;  --color-slate-50:  #faf8f4;
+  --color-gray-100: #f4f1ea;  --color-slate-100: #f4f1ea;
+  --color-gray-200: #e9e4d9;  --color-slate-200: #e9e4d9;
+  --color-gray-300: #d9d2c4;  --color-slate-300: #d9d2c4;
+  --color-gray-400: #b5ac9a;  --color-slate-400: #b5ac9a;
+  --color-gray-500: #8d8474;  --color-slate-500: #8d8474;
+  --color-gray-600: #6c6457;  --color-slate-600: #6c6457;
+  --color-gray-700: #534c42;  --color-slate-700: #534c42;
+  --color-gray-800: #3b362f;  --color-slate-800: #3b362f;
+  --color-gray-900: #272420;  --color-slate-900: #272420;
+  --color-gray-950: #181612;  --color-slate-950: #181612;
+
+  --color-zinc-50:  #faf8f4;  --color-neutral-50:  #faf8f4;  --color-stone-50:  #faf8f4;
+  --color-zinc-100: #f4f1ea;  --color-neutral-100: #f4f1ea;  --color-stone-100: #f4f1ea;
+  --color-zinc-200: #e9e4d9;  --color-neutral-200: #e9e4d9;  --color-stone-200: #e9e4d9;
+  --color-zinc-300: #d9d2c4;  --color-neutral-300: #d9d2c4;  --color-stone-300: #d9d2c4;
+  --color-zinc-400: #b5ac9a;  --color-neutral-400: #b5ac9a;  --color-stone-400: #b5ac9a;
+  --color-zinc-500: #8d8474;  --color-neutral-500: #8d8474;  --color-stone-500: #8d8474;
+  --color-zinc-600: #6c6457;  --color-neutral-600: #6c6457;  --color-stone-600: #6c6457;
+  --color-zinc-700: #534c42;  --color-neutral-700: #534c42;  --color-stone-700: #534c42;
+  --color-zinc-800: #3b362f;  --color-neutral-800: #3b362f;  --color-stone-800: #3b362f;
+  --color-zinc-900: #272420;  --color-neutral-900: #272420;  --color-stone-900: #272420;
+  --color-zinc-950: #181612;  --color-neutral-950: #181612;  --color-stone-950: #181612;
+
+  /* Blues and cyans -> brand moss ------------------------------------- */
+  --color-blue-50:  #eff7f2;  --color-sky-50:  #eff7f2;  --color-cyan-50:  #eff7f2;  --color-indigo-50:  #eff7f2;
+  --color-blue-100: #d9ede1;  --color-sky-100: #d9ede1;  --color-cyan-100: #d9ede1;  --color-indigo-100: #d9ede1;
+  --color-blue-200: #b5d9c3;  --color-sky-200: #b5d9c3;  --color-cyan-200: #b5d9c3;  --color-indigo-200: #b5d9c3;
+  --color-blue-300: #87bfa0;  --color-sky-300: #87bfa0;  --color-cyan-300: #87bfa0;  --color-indigo-300: #87bfa0;
+  --color-blue-400: #57a07a;  --color-sky-400: #57a07a;  --color-cyan-400: #57a07a;  --color-indigo-400: #57a07a;
+  --color-blue-500: #35855d;  --color-sky-500: #35855d;  --color-cyan-500: #35855d;  --color-indigo-500: #35855d;
+  --color-blue-600: #266b49;  --color-sky-600: #266b49;  --color-cyan-600: #266b49;  --color-indigo-600: #266b49;
+  --color-blue-700: #20563c;  --color-sky-700: #20563c;  --color-cyan-700: #20563c;  --color-indigo-700: #20563c;
+  --color-blue-800: #1c4632;  --color-sky-800: #1c4632;  --color-cyan-800: #1c4632;  --color-indigo-800: #1c4632;
+  --color-blue-900: #183a2a;  --color-sky-900: #183a2a;  --color-cyan-900: #183a2a;  --color-indigo-900: #183a2a;
+  --color-blue-950: #0d2017;  --color-sky-950: #0d2017;  --color-cyan-950: #0d2017;  --color-indigo-950: #0d2017;
+
+  /* Teal and emerald -> brand moss too, so accents stay one family ---- */
+  --color-teal-50:  #eff7f2;  --color-emerald-50:  #eff7f2;
+  --color-teal-100: #d9ede1;  --color-emerald-100: #d9ede1;
+  --color-teal-200: #b5d9c3;  --color-emerald-200: #b5d9c3;
+  --color-teal-300: #87bfa0;  --color-emerald-300: #87bfa0;
+  --color-teal-400: #57a07a;  --color-emerald-400: #57a07a;
+  --color-teal-500: #35855d;  --color-emerald-500: #35855d;
+  --color-teal-600: #266b49;  --color-emerald-600: #266b49;
+  --color-teal-700: #20563c;  --color-emerald-700: #20563c;
+  --color-teal-800: #1c4632;  --color-emerald-800: #1c4632;
+  --color-teal-900: #183a2a;  --color-emerald-900: #183a2a;
+  --color-teal-950: #0d2017;  --color-emerald-950: #0d2017;
+
+  /* Purples, pinks and oranges -> clay terracotta --------------------- */
+  --color-violet-50:  #fdf6f1;  --color-purple-50:  #fdf6f1;  --color-fuchsia-50:  #fdf6f1;  --color-orange-50:  #fdf6f1;  --color-pink-50:  #fdf6f1;
+  --color-violet-100: #faeadf;  --color-purple-100: #faeadf;  --color-fuchsia-100: #faeadf;  --color-orange-100: #faeadf;  --color-pink-100: #faeadf;
+  --color-violet-200: #f3d2bc;  --color-purple-200: #f3d2bc;  --color-fuchsia-200: #f3d2bc;  --color-orange-200: #f3d2bc;  --color-pink-200: #f3d2bc;
+  --color-violet-300: #e9b291;  --color-purple-300: #e9b291;  --color-fuchsia-300: #e9b291;  --color-orange-300: #e9b291;  --color-pink-300: #e9b291;
+  --color-violet-400: #db8b61;  --color-purple-400: #db8b61;  --color-fuchsia-400: #db8b61;  --color-orange-400: #db8b61;  --color-pink-400: #db8b61;
+  --color-violet-500: #d2763c;  --color-purple-500: #d2763c;  --color-fuchsia-500: #d2763c;  --color-orange-500: #d2763c;  --color-pink-500: #d2763c;
+  --color-violet-600: #b85e2f;  --color-purple-600: #b85e2f;  --color-fuchsia-600: #b85e2f;  --color-orange-600: #b85e2f;  --color-pink-600: #b85e2f;
+  --color-violet-700: #974b28;  --color-purple-700: #974b28;  --color-fuchsia-700: #974b28;  --color-orange-700: #974b28;  --color-pink-700: #974b28;
+  --color-violet-800: #7c3f25;  --color-purple-800: #7c3f25;  --color-fuchsia-800: #7c3f25;  --color-orange-800: #7c3f25;  --color-pink-800: #7c3f25;
+  --color-violet-900: #673721;  --color-purple-900: #673721;  --color-fuchsia-900: #673721;  --color-orange-900: #673721;  --color-pink-900: #673721;
+
+  /* Greens and limes -> leaf (success) -------------------------------- */
+  --color-green-50:  #f3f8ec;  --color-lime-50:  #f3f8ec;
+  --color-green-100: #e3f1d3;  --color-lime-100: #e3f1d3;
+  --color-green-200: #c7e3ab;  --color-lime-200: #c7e3ab;
+  --color-green-300: #a2ce7c;  --color-lime-300: #a2ce7c;
+  --color-green-400: #7db553;  --color-lime-400: #7db553;
+  --color-green-500: #619a39;  --color-lime-500: #619a39;
+  --color-green-600: #4a7c2c;  --color-lime-600: #4a7c2c;
+  --color-green-700: #3c6327;  --color-lime-700: #3c6327;
+  --color-green-800: #335024;  --color-lime-800: #335024;
+  --color-green-900: #2c4321;  --color-lime-900: #2c4321;
+
+  /* Ambers and yellows -> honey -------------------------------------- */
+  --color-amber-50:  #fdf9ec;  --color-yellow-50:  #fdf9ec;
+  --color-amber-100: #faf0cd;  --color-yellow-100: #faf0cd;
+  --color-amber-200: #f4df9b;  --color-yellow-200: #f4df9b;
+  --color-amber-300: #ebc964;  --color-yellow-300: #ebc964;
+  --color-amber-400: #deaf36;  --color-yellow-400: #deaf36;
+  --color-amber-500: #c7951c;  --color-yellow-500: #c7951c;
+  --color-amber-600: #a87817;  --color-yellow-600: #a87817;
+  --color-amber-700: #855d16;  --color-yellow-700: #855d16;
+  --color-amber-800: #6d4c18;  --color-yellow-800: #6d4c18;
+  --color-amber-900: #5b4018;  --color-yellow-900: #5b4018;
+
+  /* Reds and roses -> brick ------------------------------------------ */
+  --color-red-50:  #fdf4f2;  --color-rose-50:  #fdf4f2;
+  --color-red-100: #fae4e0;  --color-rose-100: #fae4e0;
+  --color-red-200: #f4cac3;  --color-rose-200: #f4cac3;
+  --color-red-300: #eba399;  --color-rose-300: #eba399;
+  --color-red-400: #dd766a;  --color-rose-400: #dd766a;
+  --color-red-500: #cb4a3c;  --color-rose-500: #cb4a3c;
+  --color-red-600: #b2372b;  --color-rose-600: #b2372b;
+  --color-red-700: #932e25;  --color-rose-700: #932e25;
+  --color-red-800: #7a2a23;  --color-rose-800: #7a2a23;
+  --color-red-900: #672821;  --color-rose-900: #672821;
+
+  /* ---- Legacy aliases ------------------------------------------------
+   * Kept so any class we have not hand-migrated still resolves to the
+   * new palette. New code should not reach for these names.           */
+  --color-primary-50:  #eff7f2;
+  --color-primary-100: #d9ede1;
+  --color-primary-200: #b5d9c3;
+  --color-primary-300: #87bfa0;
+  --color-primary-400: #57a07a;
+  --color-primary-500: #35855d;
+  --color-primary-600: #266b49;
+  --color-primary-700: #20563c;
+  --color-primary-800: #1c4632;
+  --color-primary-900: #183a2a;
+  --color-dental-blue:      #266b49;
+  --color-dental-lightblue: #b5d9c3;
+  --color-dental-teal:      #57a07a;
+  --color-dental-purple:    #db8b61;
+  --color-dental-green:     #7db553;
+  --color-dental-slate:     #8d8474;
+  --color-auth-blue:        #20563c;
+  --color-auth-blue-dark:   #183a2a;
+  --color-auth-blue-light:  #35855d;
+
+  /* ---- Type --------------------------------------------------------- */
+  --font-sans: var(--font-sans-stack), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: var(--font-display-stack), Georgia, "Times New Roman", serif;
+
+  /* ---- Elevation ----------------------------------------------------
+   * Warm-tinted and shallow. A grey-black shadow on a linen surface
+   * looks like dirt; tinting it with the ink colour keeps it clean.   */
+  --shadow-2xs: 0 1px 1px rgb(39 36 32 / 0.04);
+  --shadow-xs:  0 1px 2px rgb(39 36 32 / 0.05);
+  --shadow-sm:  0 1px 2px rgb(39 36 32 / 0.04), 0 2px 6px -1px rgb(39 36 32 / 0.06);
+  --shadow-md:  0 2px 4px rgb(39 36 32 / 0.04), 0 6px 14px -3px rgb(39 36 32 / 0.08);
+  --shadow-lg:  0 2px 6px rgb(39 36 32 / 0.04), 0 12px 24px -6px rgb(39 36 32 / 0.10);
+  --shadow-xl:  0 4px 10px rgb(39 36 32 / 0.05), 0 20px 40px -10px rgb(39 36 32 / 0.12);
+  --shadow-2xl: 0 8px 20px rgb(39 36 32 / 0.06), 0 32px 64px -16px rgb(39 36 32 / 0.18);
+  --shadow-lift: 0 4px 8px rgb(39 36 32 / 0.05), 0 18px 36px -10px rgb(39 36 32 / 0.16);
+  --shadow-glow: 0 0 0 1px rgb(38 107 73 / 0.12), 0 8px 24px -6px rgb(38 107 73 / 0.22);
+
+  /* ---- Motion -------------------------------------------------------
+   * One pair of easings for everything. `smooth` for most state
+   * changes, `spring` where a control should feel physical.          */
+  --ease-smooth: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.46, 0.64, 1);
+
+  --animate-fade-in:     fade-in 0.35s var(--ease-smooth) both;
+  --animate-fade-up:     fade-up 0.45s var(--ease-smooth) both;
+  --animate-fade-down:   fade-down 0.45s var(--ease-smooth) both;
+  --animate-scale-in:    scale-in 0.22s var(--ease-spring) both;
+  --animate-slide-left:  slide-left 0.4s var(--ease-smooth) both;
+  --animate-slide-right: slide-right 0.4s var(--ease-smooth) both;
+  --animate-pop:         pop 0.3s var(--ease-spring) both;
+  --animate-shimmer:     shimmer 1.6s linear infinite;
+  --animate-float-soft:  float-soft 6s ease-in-out infinite;
+  --animate-breathe:     breathe 2.4s ease-in-out infinite;
+  --animate-ring-pulse:  ring-pulse 2s var(--ease-smooth) infinite;
+  --animate-draw-in:     draw-in 0.5s var(--ease-smooth) both;
 }
 
-/* -------------------------------------------------------------------------
- * Design-token CSS custom properties
- *
- * HSL / hex values are declared first so that every browser — including
- * Firefox, Safari, and Edge versions that pre-date oklch() support — gets
- * a usable colour.  The @supports block below overrides those values with
- * perceptually-uniform oklch() equivalents in browsers that understand them.
- *
- * oklch() support matrix:
- *   Chrome  111+  (Mar 2023)
- *   Edge    111+  (Mar 2023)
- *   Firefox 113+  (May 2023)
- *   Safari  15.4+ (Mar 2022)
- * ------------------------------------------------------------------------ */
+/* =========================================================================
+ * Semantic surface tokens (shadcn-compatible)
+ * ======================================================================= */
 :root {
-  --foreground-rgb: 15, 23, 42;
-  --background-start-rgb: 255, 255, 255;
-  --background-end-rgb: 255, 255, 255;
-  --radius: 0.625rem;
+  --radius: 0.875rem;
 
-  /* ---- HSL fallbacks (all browsers) ---- */
-  --background:                hsl(0, 0%, 100%);
-  --foreground:                hsl(0, 0%, 11%);
-  --card:                      hsl(0, 0%, 100%);
-  --card-foreground:           hsl(0, 0%, 11%);
-  --popover:                   hsl(0, 0%, 100%);
-  --popover-foreground:        hsl(0, 0%, 11%);
-  --primary:                   hsl(0, 0%, 18%);
-  --primary-foreground:        hsl(0, 0%, 98%);
-  --secondary:                 hsl(0, 0%, 96%);
-  --secondary-foreground:      hsl(0, 0%, 18%);
-  --muted:                     hsl(0, 0%, 96%);
-  --muted-foreground:          hsl(0, 0%, 53%);
-  --accent:                    hsl(0, 0%, 96%);
-  --accent-foreground:         hsl(0, 0%, 18%);
-  --destructive:               hsl(4, 72%, 51%);
-  --border:                    hsl(0, 0%, 90%);
-  --input:                     hsl(0, 0%, 90%);
-  --ring:                      hsl(0, 0%, 70%);
-  --chart-1:                   hsl(28, 65%, 52%);
-  --chart-2:                   hsl(180, 35%, 48%);
-  --chart-3:                   hsl(220, 20%, 38%);
-  --chart-4:                   hsl(68, 72%, 60%);
-  --chart-5:                   hsl(50, 65%, 55%);
-  --sidebar:                   hsl(0, 0%, 98%);
-  --sidebar-foreground:        hsl(0, 0%, 11%);
-  --sidebar-primary:           hsl(0, 0%, 18%);
-  --sidebar-primary-foreground:hsl(0, 0%, 98%);
-  --sidebar-accent:            hsl(0, 0%, 96%);
-  --sidebar-accent-foreground: hsl(0, 0%, 18%);
-  --sidebar-border:            hsl(0, 0%, 90%);
-  --sidebar-ring:              hsl(0, 0%, 70%);
+  --background:                 #faf8f4;
+  --foreground:                 #272420;
+  --card:                       #ffffff;
+  --card-foreground:            #272420;
+  --popover:                    #ffffff;
+  --popover-foreground:         #272420;
+  --primary:                    #266b49;
+  --primary-foreground:         #faf8f4;
+  --secondary:                  #f4f1ea;
+  --secondary-foreground:       #3b362f;
+  --muted:                      #f4f1ea;
+  --muted-foreground:           #6c6457;
+  --accent:                     #faeadf;
+  --accent-foreground:          #974b28;
+  --destructive:                #cb4a3c;
+  --destructive-foreground:     #ffffff;
+  --border:                     #e9e4d9;
+  --input:                      #e9e4d9;
+  --ring:                       #57a07a;
+
+  --chart-1:                    #266b49;
+  --chart-2:                    #d2763c;
+  --chart-3:                    #c7951c;
+  --chart-4:                    #619a39;
+  --chart-5:                    #8d8474;
+
+  --sidebar:                    #183a2a;
+  --sidebar-foreground:         #e9e4d9;
+  --sidebar-primary:            #57a07a;
+  --sidebar-primary-foreground: #0d2017;
+  --sidebar-accent:             #20563c;
+  --sidebar-accent-foreground:  #faf8f4;
+  --sidebar-border:             rgba(233, 228, 217, 0.12);
+  --sidebar-ring:               #57a07a;
 }
 
-/* ---- oklch overrides for browsers that support oklch() ---- */
-@supports (color: oklch(0 0 0)) {
-  :root {
-    --background:                oklch(1 0 0);
-    --foreground:                oklch(0.145 0 0);
-    --card:                      oklch(1 0 0);
-    --card-foreground:           oklch(0.145 0 0);
-    --popover:                   oklch(1 0 0);
-    --popover-foreground:        oklch(0.145 0 0);
-    --primary:                   oklch(0.205 0 0);
-    --primary-foreground:        oklch(0.985 0 0);
-    --secondary:                 oklch(0.97 0 0);
-    --secondary-foreground:      oklch(0.205 0 0);
-    --muted:                     oklch(0.97 0 0);
-    --muted-foreground:          oklch(0.556 0 0);
-    --accent:                    oklch(0.97 0 0);
-    --accent-foreground:         oklch(0.205 0 0);
-    --destructive:               oklch(0.577 0.245 27.325);
-    --border:                    oklch(0.922 0 0);
-    --input:                     oklch(0.922 0 0);
-    --ring:                      oklch(0.708 0 0);
-    --chart-1:                   oklch(0.646 0.222 41.116);
-    --chart-2:                   oklch(0.6 0.118 184.704);
-    --chart-3:                   oklch(0.398 0.07 227.392);
-    --chart-4:                   oklch(0.828 0.189 84.429);
-    --chart-5:                   oklch(0.769 0.188 70.08);
-    --sidebar:                   oklch(0.985 0 0);
-    --sidebar-foreground:        oklch(0.145 0 0);
-    --sidebar-primary:           oklch(0.205 0 0);
-    --sidebar-primary-foreground:oklch(0.985 0 0);
-    --sidebar-accent:            oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border:            oklch(0.922 0 0);
-    --sidebar-ring:              oklch(0.708 0 0);
+.dark {
+  --background:                 #181612;
+  --foreground:                 #f4f1ea;
+  --card:                       #272420;
+  --card-foreground:            #f4f1ea;
+  --popover:                    #272420;
+  --popover-foreground:         #f4f1ea;
+  --primary:                    #87bfa0;
+  --primary-foreground:         #0d2017;
+  --secondary:                  #3b362f;
+  --secondary-foreground:       #f4f1ea;
+  --muted:                      #3b362f;
+  --muted-foreground:           #b5ac9a;
+  --accent:                     #534c42;
+  --accent-foreground:          #f3d2bc;
+  --destructive:                #dd766a;
+  --destructive-foreground:     #181612;
+  --border:                     rgba(244, 241, 234, 0.12);
+  --input:                      rgba(244, 241, 234, 0.16);
+  --ring:                       #57a07a;
+
+  --sidebar:                    #0d2017;
+  --sidebar-foreground:         #e9e4d9;
+  --sidebar-primary:            #87bfa0;
+  --sidebar-primary-foreground: #0d2017;
+  --sidebar-accent:             #1c4632;
+  --sidebar-accent-foreground:  #faf8f4;
+  --sidebar-border:             rgba(233, 228, 217, 0.10);
+  --sidebar-ring:               #57a07a;
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 6px);
+  --radius-md: calc(var(--radius) - 4px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 14px);
+  --radius-4xl: calc(var(--radius) + 20px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+/* =========================================================================
+ * Base
+ * ======================================================================= */
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-overflow-scrolling: touch; /* iOS Safari momentum scroll */
+    scroll-behavior: smooth;
+    scroll-padding-top: 5rem; /* anchor links clear the fixed navbar */
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Headings carry the display face and a tighter measure. */
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.015em;
+  }
+  h4, h5, h6 {
+    letter-spacing: -0.01em;
+  }
+
+  /* One focus ring for the whole app, never removed — only restyled. */
+  :focus-visible {
+    outline: 2px solid var(--color-brand-400);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  ::selection {
+    background-color: var(--color-brand-200);
+    color: var(--color-brand-900);
+  }
+
+  /* Numbers in tables and totals should not jitter as they update. */
+  th, td, output, time {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Thin, warm scrollbars. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-ink-300) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--color-ink-300);
+    border: 3px solid transparent;
+    border-radius: 9999px;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-ink-400);
+  }
+
+  /* Native controls pick up the brand instead of the OS blue. */
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="range"],
+  progress {
+    accent-color: var(--color-brand-600);
+  }
+
+  /* Autofill in Chrome paints its own pale yellow; keep our surface. */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  textarea:-webkit-autofill,
+  select:-webkit-autofill {
+    -webkit-text-fill-color: var(--color-ink-900);
+    -webkit-box-shadow: 0 0 0 1000px var(--color-honey-50) inset;
+    caret-color: var(--color-ink-900);
   }
 }
 
-body {
-  background: #ffffff;
+/* The admin bottom bar on phones is fixed, so reserve its height on the
+ * page it belongs to. Scoped with :has() so no other layout pays for it. */
+@media (max-width: 1023px) {
+  body:has(.admin-mobile-nav) {
+    padding-bottom: calc(4.25rem + env(safe-area-inset-bottom));
+  }
 }
 
-/* Soft, Professional gradient backgrounds */
+/* =========================================================================
+ * Gradients — same class names the pages already use, new colours
+ * ======================================================================= */
 .gradient-primary {
-  background: linear-gradient(135deg, #0891b2 0%, #5eead4 100%);
+  background: linear-gradient(135deg, #266b49 0%, #57a07a 100%);
 }
 
 .gradient-soft {
-  background: linear-gradient(135deg, #f0fdfa 0%, #ecfeff 100%);
+  background:
+    radial-gradient(60rem 30rem at 85% -10%, #faeadf 0%, transparent 60%),
+    radial-gradient(45rem 28rem at 0% 0%, #eff7f2 0%, transparent 55%),
+    linear-gradient(180deg, #faf8f4 0%, #f4f1ea 100%);
 }
 
 .gradient-premium {
-  background: linear-gradient(135deg, #0891b2 0%, #a78bfa 100%);
+  background: linear-gradient(135deg, #20563c 0%, #b85e2f 100%);
 }
 
 .gradient-hero {
-  background: linear-gradient(135deg, #06b6d4 0%, #5eead4 100%);
+  background: linear-gradient(135deg, #266b49 0%, #57a07a 55%, #deaf36 100%);
 }
 
-/* Professional Dark Blue Gradients for Auth Pages */
 .gradient-auth-bg {
-  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #06b6d4 100%);
+  background:
+    radial-gradient(50rem 40rem at 15% 10%, rgba(87, 160, 122, 0.35) 0%, transparent 60%),
+    radial-gradient(45rem 35rem at 90% 85%, rgba(210, 118, 60, 0.28) 0%, transparent 60%),
+    linear-gradient(145deg, #183a2a 0%, #20563c 45%, #0d2017 100%);
 }
 
 .gradient-auth-card {
-  background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+  background: linear-gradient(140deg, #20563c 0%, #266b49 55%, #35855d 100%);
+}
+
+/* A hairline of linen texture for large flat panels — keeps big empty
+ * areas from reading as a dead screen without adding visual noise. */
+.surface-grain {
+  background-image: radial-gradient(rgb(39 36 32 / 0.022) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+
+/* =========================================================================
+ * Motion
+ * ======================================================================= */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translate3d(0, 14px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@keyframes fade-down {
+  from { opacity: 0; transform: translate3d(0, -14px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slide-left {
+  from { opacity: 0; transform: translate3d(18px, 0, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@keyframes slide-right {
+  from { opacity: 0; transform: translate3d(-18px, 0, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@keyframes pop {
+  0%   { opacity: 0; transform: scale(0.8); }
+  60%  { opacity: 1; transform: scale(1.04); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes shimmer {
+  from { background-position: -150% 0; }
+  to   { background-position: 250% 0; }
+}
+
+@keyframes float-soft {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-10px); }
+}
+
+@keyframes breathe {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.55; }
+}
+
+@keyframes ring-pulse {
+  0%   { box-shadow: 0 0 0 0 rgb(38 107 73 / 0.35); }
+  70%  { box-shadow: 0 0 0 12px rgb(38 107 73 / 0); }
+  100% { box-shadow: 0 0 0 0 rgb(38 107 73 / 0); }
+}
+
+@keyframes draw-in {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+/* Kept for the pages that still reference it by name. */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fade-up 0.5s var(--ease-smooth) both;
 }
 
 @layer utilities {
   .text-balance {
-    /* word-break is the universal fallback; text-wrap:balance is progressive */
     word-break: break-word;
     overflow-wrap: break-word;
     text-wrap: balance;
   }
-}
 
-/* -------------------------------------------------------------------------
- * Smooth scrolling
- *
- * -webkit-overflow-scrolling:touch enables momentum-based (inertial)
- * scrolling on iOS Safari — without it pages feel stiff on iPhone/iPad.
- * scroll-behavior:smooth is the standard property for anchor-link animation.
- * ------------------------------------------------------------------------ */
-html {
-  -webkit-overflow-scrolling: touch; /* iOS Safari momentum scroll */
-  scroll-behavior: smooth;
-}
-
-/* Custom animations */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
+  .text-pretty {
+    text-wrap: pretty;
   }
-  to {
-    opacity: 1;
+
+  /* Stagger a list without writing a delay per child:
+   *   <ul class="stagger"> … </ul>  */
+  .stagger > * {
+    animation: fade-up 0.45s var(--ease-smooth) both;
+  }
+  .stagger > *:nth-child(1)  { animation-delay: 0ms; }
+  .stagger > *:nth-child(2)  { animation-delay: 45ms; }
+  .stagger > *:nth-child(3)  { animation-delay: 90ms; }
+  .stagger > *:nth-child(4)  { animation-delay: 135ms; }
+  .stagger > *:nth-child(5)  { animation-delay: 180ms; }
+  .stagger > *:nth-child(6)  { animation-delay: 225ms; }
+  .stagger > *:nth-child(7)  { animation-delay: 270ms; }
+  .stagger > *:nth-child(8)  { animation-delay: 315ms; }
+  .stagger > *:nth-child(n+9) { animation-delay: 360ms; }
+
+  /* Lift on hover, settle on press. The 1px translate is deliberate —
+   * anything larger makes dense tables feel wobbly. */
+  .hover-lift {
+    transition: transform 0.2s var(--ease-smooth), box-shadow 0.2s var(--ease-smooth);
+  }
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lift);
+  }
+  .hover-lift:active {
     transform: translateY(0);
   }
+
+  .press {
+    transition: transform 0.12s var(--ease-smooth), background-color 0.2s var(--ease-smooth),
+      color 0.2s var(--ease-smooth), box-shadow 0.2s var(--ease-smooth), border-color 0.2s var(--ease-smooth);
+  }
+  .press:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
+  /* Loading placeholder that matches the linen surface. */
+  .skeleton {
+    background-image: linear-gradient(
+      90deg,
+      var(--color-ink-100) 0%,
+      var(--color-ink-200) 35%,
+      var(--color-ink-100) 70%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.6s linear infinite;
+    border-radius: var(--radius-md);
+  }
+
+  /* Fades the top/bottom edge of a scroll area so clipped content reads
+   * as "there is more", not "the list ends here". */
+  .mask-fade-y {
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 12px, #000 calc(100% - 12px), transparent);
+    mask-image: linear-gradient(to bottom, transparent, #000 12px, #000 calc(100% - 12px), transparent);
+  }
+
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
 }
 
-.animate-fadeIn {
-  animation: fadeIn 0.6s ease-out;
+/* =========================================================================
+ * Accessibility: honour the OS "reduce motion" setting everywhere.
+ * ======================================================================= */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .hover-lift:hover {
+    transform: none;
+  }
 }
 
 /* =========================================================================
@@ -362,129 +879,5 @@ html {
 @supports (-webkit-touch-callout: none) {
   .min-h-screen {
     min-height: -webkit-fill-available;
-  }
-}
-
-/* -------------------------------------------------------------------------
- * Dark mode token overrides
- * Same pattern: HSL fallbacks first, then oklch via @supports.
- * ------------------------------------------------------------------------ */
-.dark {
-  --background:                hsl(0, 0%, 11%);
-  --foreground:                hsl(0, 0%, 98%);
-  --card:                      hsl(0, 0%, 18%);
-  --card-foreground:           hsl(0, 0%, 98%);
-  --popover:                   hsl(0, 0%, 18%);
-  --popover-foreground:        hsl(0, 0%, 98%);
-  --primary:                   hsl(0, 0%, 90%);
-  --primary-foreground:        hsl(0, 0%, 18%);
-  --secondary:                 hsl(0, 0%, 25%);
-  --secondary-foreground:      hsl(0, 0%, 98%);
-  --muted:                     hsl(0, 0%, 25%);
-  --muted-foreground:          hsl(0, 0%, 70%);
-  --accent:                    hsl(0, 0%, 25%);
-  --accent-foreground:         hsl(0, 0%, 98%);
-  --destructive:               hsl(4, 72%, 64%);
-  --border:                    rgba(255, 255, 255, 0.1);
-  --input:                     rgba(255, 255, 255, 0.15);
-  --ring:                      hsl(0, 0%, 53%);
-  --chart-1:                   hsl(255, 65%, 43%);
-  --chart-2:                   hsl(159, 46%, 55%);
-  --chart-3:                   hsl(50, 65%, 55%);
-  --chart-4:                   hsl(295, 65%, 52%);
-  --chart-5:                   hsl(11, 72%, 55%);
-  --sidebar:                   hsl(0, 0%, 18%);
-  --sidebar-foreground:        hsl(0, 0%, 98%);
-  --sidebar-primary:           hsl(255, 65%, 43%);
-  --sidebar-primary-foreground:hsl(0, 0%, 98%);
-  --sidebar-accent:            hsl(0, 0%, 25%);
-  --sidebar-accent-foreground: hsl(0, 0%, 18%);
-  --sidebar-border:            rgba(255, 255, 255, 0.1);
-  --sidebar-ring:              hsl(0, 0%, 53%);
-}
-
-@supports (color: oklch(0 0 0)) {
-  .dark {
-    --background:                oklch(0.145 0 0);
-    --foreground:                oklch(0.985 0 0);
-    --card:                      oklch(0.205 0 0);
-    --card-foreground:           oklch(0.985 0 0);
-    --popover:                   oklch(0.205 0 0);
-    --popover-foreground:        oklch(0.985 0 0);
-    --primary:                   oklch(0.922 0 0);
-    --primary-foreground:        oklch(0.205 0 0);
-    --secondary:                 oklch(0.269 0 0);
-    --secondary-foreground:      oklch(0.985 0 0);
-    --muted:                     oklch(0.269 0 0);
-    --muted-foreground:          oklch(0.708 0 0);
-    --accent:                    oklch(0.269 0 0);
-    --accent-foreground:         oklch(0.985 0 0);
-    --destructive:               oklch(0.704 0.191 22.216);
-    --border:                    oklch(1 0 0 / 10%);
-    --input:                     oklch(1 0 0 / 15%);
-    --ring:                      oklch(0.556 0 0);
-    --chart-1:                   oklch(0.488 0.243 264.376);
-    --chart-2:                   oklch(0.696 0.17 162.48);
-    --chart-3:                   oklch(0.769 0.188 70.08);
-    --chart-4:                   oklch(0.627 0.265 303.9);
-    --chart-5:                   oklch(0.645 0.246 16.439);
-    --sidebar:                   oklch(0.205 0 0);
-    --sidebar-foreground:        oklch(0.985 0 0);
-    --sidebar-primary:           oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground:oklch(0.985 0 0);
-    --sidebar-accent:            oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border:            oklch(1 0 0 / 10%);
-    --sidebar-ring:              oklch(0.556 0 0);
-  }
-}
-
-@theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
-}
-
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
   }
 }

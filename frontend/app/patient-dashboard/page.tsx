@@ -96,19 +96,19 @@ export default function PatientDashboard() {
     {
       title: t("patientDashboard.bookAppointment"),
       description: t("patientDashboard.bookAppointmentDesc"),
-      icon: <FaCalendarAlt className="text-4xl text-dental-blue" />,
+      icon: <FaCalendarAlt className="text-4xl text-brand" />,
       href: "/book-appointment",
     },
     {
       title: t("patientDashboard.viewRecords"),
       description: t("patientDashboard.viewRecordsDesc"),
-      icon: <FaClipboardList className="text-4xl text-dental-blue" />,
+      icon: <FaClipboardList className="text-4xl text-brand" />,
       href: "/medical-records",
     },
     {
       title: t("patientDashboard.myInvoices"),
       description: t("patientDashboard.myInvoicesDesc"),
-      icon: <FaFileInvoiceDollar className="text-4xl text-dental-blue" />,
+      icon: <FaFileInvoiceDollar className="text-4xl text-brand" />,
       href: "/patient-dashboard/billing",
     },
   ];
@@ -121,7 +121,7 @@ export default function PatientDashboard() {
           <div className="flex justify-between items-center">
             {/* Logo */}
             <Link href="/" className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-dental-blue to-dental-teal rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-br from-brand to-brand-400 rounded-lg flex items-center justify-center">
                 <FaTooth className="text-white text-xl" />
               </div>
               <span className="text-xl font-bold text-gray-900">BrightSmile</span>
@@ -172,9 +172,9 @@ export default function PatientDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-8">
           {quickActions.map((action) => (
             <Link key={action.title} href={action.href} className="block group">
-              <div className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] border-2 border-transparent hover:border-dental-blue/20">
+              <div className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] border-2 border-transparent hover:border-brand/20">
                 <div className="mb-3">{action.icon}</div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-1 group-hover:text-dental-blue transition-colors">
+                <h3 className="text-lg font-semibold text-gray-900 mb-1 group-hover:text-brand transition-colors">
                   {action.title}
                 </h3>
                 <p className="text-sm text-gray-600">{action.description}</p>
@@ -224,7 +224,7 @@ export default function PatientDashboard() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="text-dental-blue border-dental-blue hover:bg-dental-blue/10"
+                  className="text-brand border-brand hover:bg-brand/10"
                 >
                   {t("common.viewAll")}
                 </Button>

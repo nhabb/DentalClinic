@@ -70,7 +70,7 @@ function ClinicInfo({ trustedPartner }: { trustedPartner: string }) {
   return (
     <div className="md:col-span-1">
       <div className="flex items-center space-x-2 mb-4">
-        <div className="w-8 h-8 bg-gradient-to-br from-dental-blue to-dental-teal rounded-lg flex items-center justify-center">
+        <div className="w-8 h-8 bg-gradient-to-br from-brand to-brand-400 rounded-lg flex items-center justify-center">
           <FaTooth className="text-white text-lg" />
         </div>
         <span className="text-xl font-bold text-white">BrightSmile</span>
@@ -155,7 +155,7 @@ function OfficeHoursSection({
           </li>
         ))}
         <li className="pt-2 border-t border-gray-800">
-          <span className="text-dental-teal font-semibold">
+          <span className="text-brand-400 font-semibold">
             {emergencyCare}
           </span>
         </li>

@@ -4,12 +4,12 @@ import { apiFetch } from '@/lib/api/client';
 import { toast } from 'sonner';
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { Avatar } from "@/components/ui/Avatar";
 import { useRouter } from "next/navigation";
 import { safeStorage } from "@/lib/browser-compat";
 import { useTranslation } from "@/lib/i18n";
-import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import DashboardAnalytics, { type DashboardData } from "@/components/dashboard/DashboardAnalytics";
+import AdminSidebar from "@/components/ui/AdminSidebar";
+import { AdminPageHeader } from "@/components/ui/AdminPageHeader";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -88,7 +88,6 @@ export default function AdminDashboard() {
     }[]
   >([]);
   const [loading, setLoading] = useState(true);
-  const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined);
 
   // Normalised datasets for the analytics charts
   const [dash, setDash] = useState<DashboardData>({ records: [], appointments: [], expenses: [], payments: [], invoices: [], inventory: [], patients: [], doctors: [] });
@@ -108,11 +107,6 @@ export default function AdminDashboard() {
       if (storedUser) {
         try { email = JSON.parse(storedUser).email || ""; } catch {}
       }
-      if (email) {
-        const saved = localStorage.getItem(`brightsmile_photo_${email}`);
-        if (saved) setPhotoUrl(saved);
-      }
-
       try {
         // Fire all requests simultaneously — one round-trip wave
         const [userRes, patientsRes, appointmentsRes, inventoryRes, paymentsRes, expensesRes, invoicesRes, doctorsRes, recordsRes] =
@@ -235,12 +229,6 @@ export default function AdminDashboard() {
     fetchAll();
   }, []);
 
-  const handlePhotoUpload = (dataUrl: string) => {
-    setPhotoUrl(dataUrl);
-    const email = user?.email;
-    if (email) localStorage.setItem(`brightsmile_photo_${email}`, dataUrl);
-  };
-
   const handleLogout = () => {
     toast.success("Logged out.");
     safeStorage.removeItem("adminAuth");
@@ -351,158 +339,25 @@ export default function AdminDashboard() {
   const initials = user
     ? `${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`
     : "U";
-  const specialty =
-    user?.specialty ||
-    (userRole === "secretary"
-      ? t("adminLogin.secretary")
-      : "General Dentistry");
-
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <aside
-        className={`${
-          sidebarOpen ? "w-64" : "w-20"
-        } bg-gradient-to-b from-gray-900 to-gray-800 text-white transition-all duration-300 flex flex-col`}
-      >
-        {/* Logo + Burger */}
-        <div className="p-4 border-b border-gray-700 flex items-center justify-between">
-          <Link href="/admin" className="flex items-center space-x-3 min-w-0">
-            <div className="w-10 h-10 flex-shrink-0 bg-gradient-to-br from-dental-blue to-dental-teal rounded-lg flex items-center justify-center">
-              <FaTooth className="text-white text-xl" />
-            </div>
-            {sidebarOpen && (
-              <div className="min-w-0">
-                <span className="text-lg font-bold">BrightSmile</span>
-                <p className="text-xs text-gray-400">
-                  {userRole === "doctor"
-                    ? t("nav.doctorPanel")
-                    : t("nav.staffPanel")}
-                </p>
-              </div>
-            )}
-          </Link>
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 hover:bg-gray-700/60 rounded-lg transition-colors flex-shrink-0"
-            aria-label="Toggle sidebar"
-          >
-            <FaBars className="text-gray-300 text-lg" />
-          </button>
-        </div>
-
-        {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-2">
-          <Link
-            href="/admin"
-            className="flex items-center space-x-3 px-4 py-3 bg-dental-blue/20 text-dental-lightblue rounded-xl"
-          >
-            <FaChartLine className="text-lg" />
-            {sidebarOpen && (
-              <span className="font-medium">{t("nav.dashboard")}</span>
-            )}
-          </Link>
-          <Link
-            href="/admin/appointments"
-            className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
-          >
-            <FaCalendarAlt className="text-lg" />
-            {sidebarOpen && (
-              <span className="font-medium">{t("nav.appointments")}</span>
-            )}
-          </Link>
-          <Link
-            href="/admin/inventory"
-            className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
-          >
-            <FaBoxes className="text-lg" />
-            {sidebarOpen && (
-              <span className="font-medium">{t("nav.inventory")}</span>
-            )}
-            {sidebarOpen && lowStockAlerts.length > 0 && (
-              <span className="ml-auto rtl:ml-0 rtl:mr-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
-                {lowStockAlerts.length}
-              </span>
-            )}
-          </Link>
-          <Link
-            href="/admin/patients"
-            className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
-          >
-            <FaUsers className="text-lg" />
-            {sidebarOpen && (
-              <span className="font-medium">{t("nav.patients")}</span>
-            )}
-          </Link>
-          <Link
-            href="/admin/expenses"
-            className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
-          >
-            <FaMoneyBillWave className="text-lg" />
-            {sidebarOpen && (
-              <span className="font-medium">{t("nav.expenses")}</span>
-            )}
-          </Link>
-          <Link
-            href="/admin/billing"
-            className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-700/50 hover:text-white rounded-xl transition-colors"
-          >
-            <FaFileInvoiceDollar className="text-lg" />
-            {sidebarOpen && (
-              <span className="font-medium">{t("nav.billing")}</span>
-            )}
-          </Link>
-        </nav>
-
-        {/* Bottom Section */}
-        <div className="p-4 border-t border-gray-700 space-y-2">
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-red-500/20 hover:text-red-400 rounded-xl transition-colors"
-          >
-            <FaSignOutAlt className="text-lg" />
-            {sidebarOpen && (
-              <span className="font-medium">{t("common.logout")}</span>
-            )}
-          </button>
-        </div>
-      </aside>
+    <div className="min-h-screen bg-white flex">
+      {/* The one shared sidebar — this page used to carry its own copy,
+       * which is how it drifted out of sync with the rest of /admin. */}
+      <AdminSidebar
+        activePage="dashboard"
+        sidebarOpen={sidebarOpen}
+        onToggle={() => setSidebarOpen(!sidebarOpen)}
+        onLogout={handleLogout}
+        subtitle={userRole === "doctor" ? t("nav.doctorPanel") : t("nav.staffPanel")}
+        badges={{ inventory: lowStockAlerts.length }}
+      />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        {/* Top Header */}
-        <header className="bg-white shadow-sm px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                {t("nav.dashboard")}
-              </h1>
-              <p className="text-gray-500 text-sm">
-                {t("adminDashboard.welcomeBack")},{" "}
-                {userRole === "doctor" ? `${t("adminLogin.doctor")}. ` : ""}
-                {displayName}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <LanguageSwitcher />
-            <div className="flex items-center gap-3 pl-4 rtl:pl-0 rtl:pr-4 border-l rtl:border-l-0 rtl:border-r border-gray-200">
-              <Avatar
-                name={displayName}
-                size="md"
-                src={userRole === "doctor" ? photoUrl : undefined}
-                onUpload={userRole === "doctor" ? handlePhotoUpload : undefined}
-              />
-              <div className="hidden sm:block">
-                <p className="text-sm font-medium text-gray-900">
-                  {userRole === "doctor" ? `${t("adminLogin.doctor")}. ` : ""}
-                  {displayName}
-                </p>
-                <p className="text-xs text-gray-500">{specialty}</p>
-              </div>
-            </div>
-          </div>
-        </header>
+        <AdminPageHeader
+          title={t("nav.dashboard")}
+          subtitle={`${t("adminDashboard.welcomeBack")} ${userRole === "doctor" ? `${t("adminLogin.doctor")}. ` : ""}${displayName}`}
+        />
 
         {/* Dashboard Content */}
         <main className="flex-1 p-8 overflow-auto">
@@ -517,7 +372,7 @@ export default function AdminDashboard() {
                   </h2>
                   <Link
                     href="/admin/appointments"
-                    className="text-dental-blue text-sm font-medium flex items-center gap-1 hover:underline"
+                    className="text-brand text-sm font-medium flex items-center gap-1 hover:underline"
                   >
                     {t("common.viewAll")}{" "}
                     <FaChevronRight className="text-xs rtl:rotate-180" />
@@ -565,7 +420,7 @@ export default function AdminDashboard() {
                                     setPostponeTime(apt.time);
                                   }}
                                 >
-                                  <FaCalendarPlus className="text-dental-blue" /> {t("adminDashboard.postpone")}
+                                  <FaCalendarPlus className="text-brand" /> {t("adminDashboard.postpone")}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => handleCancelAppointment(apt.id)}
@@ -606,7 +461,7 @@ export default function AdminDashboard() {
                   value={postponeDate}
                   min={new Date().toISOString().split("T")[0]}
                   onChange={(e) => setPostponeDate(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
                 />
               </div>
               <div>
@@ -615,7 +470,7 @@ export default function AdminDashboard() {
                   type="time"
                   value={postponeTime}
                   onChange={(e) => setPostponeTime(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
                 />
               </div>
               <p className="text-xs text-gray-500">{t("adminDashboard.slotAutoCreate")}</p>
@@ -630,7 +485,7 @@ export default function AdminDashboard() {
               <button
                 onClick={handlePostponeSubmit}
                 disabled={!postponeDate || !postponeTime || postponeLoading}
-                className="flex-1 px-4 py-2 bg-dental-blue text-white rounded-lg text-sm font-medium hover:bg-dental-blue/90 disabled:opacity-50 transition-colors"
+                className="flex-1 px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:bg-brand/90 disabled:opacity-50 transition-colors"
               >
                 {postponeLoading ? t("common.saving") : t("common.confirm")}
               </button>

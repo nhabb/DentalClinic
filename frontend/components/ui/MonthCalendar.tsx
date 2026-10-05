@@ -103,7 +103,7 @@ export function MonthCalendar({
           <button type="button" onClick={() => onMonthChange(new Date(month.getFullYear(), month.getMonth() + 1, 1))} aria-label="Next month" className="rounded-lg p-1.5 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900">
             <FaChevronRight className="text-[10px] rtl:rotate-180" />
           </button>
-          <button type="button" onClick={() => onMonthChange(firstOfMonth())} className="ms-1 rounded-lg px-2 py-1 text-xs font-semibold text-dental-blue transition hover:bg-dental-blue/10">
+          <button type="button" onClick={() => onMonthChange(firstOfMonth())} className="ms-1 rounded-lg px-2 py-1 text-xs font-semibold text-brand transition hover:bg-brand/10">
             {labels.today}
           </button>
         </div>
@@ -136,7 +136,7 @@ export function MonthCalendar({
                     "relative flex aspect-square flex-col items-center justify-center rounded-lg border text-xs transition",
                     bg ? "border-transparent hover:brightness-95" : "border-gray-100 bg-white hover:bg-gray-50",
                     dark ? "text-white" : "text-gray-700",
-                    selected && "ring-2 ring-dental-blue ring-offset-1",
+                    selected && "ring-2 ring-brand ring-offset-1",
                     c.date > todayKey && !bg && "text-gray-300",
                   )}
                   style={bg ? { background: bg } : undefined}
@@ -145,7 +145,7 @@ export function MonthCalendar({
                   {c.amount > 0 && (
                     <span className={cn("mt-0.5 text-[10px] font-semibold leading-none tabular-nums", dark ? "text-white/90" : "text-gray-900")}>{compact(c.amount)}</span>
                   )}
-                  {isToday && <span className={cn("absolute bottom-1 h-1 w-1 rounded-full", dark ? "bg-white" : "bg-dental-blue")} />}
+                  {isToday && <span className={cn("absolute bottom-1 h-1 w-1 rounded-full", dark ? "bg-white" : "bg-brand")} />}
                 </button>
               );
             })}
@@ -178,7 +178,7 @@ export function MonthCalendar({
             <button
               type="button"
               onClick={() => onSelectDate(null)}
-              className="mt-auto inline-flex w-fit items-center gap-1.5 rounded-full border border-dental-blue/30 bg-dental-blue/10 px-2.5 py-1 text-xs font-medium text-dental-blue transition hover:bg-dental-blue/15"
+              className="mt-auto inline-flex w-fit items-center gap-1.5 rounded-full border border-brand/30 bg-brand/10 px-2.5 py-1 text-xs font-medium text-brand transition hover:bg-brand/15"
             >
               {dayOf(selectedDate).toLocaleDateString(locale, { weekday: "short", day: "numeric", month: "short" })}
               <FaTimes className="text-[9px]" />

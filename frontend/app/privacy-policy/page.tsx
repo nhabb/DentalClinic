@@ -23,14 +23,14 @@ export default function PrivacyPolicyPage() {
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-dental-blue to-dental-teal rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-to-br from-brand to-brand-400 rounded-lg flex items-center justify-center">
               <FaTooth className="text-white text-sm" />
             </div>
             <span className="text-lg font-bold text-gray-900">BrightSmile</span>
           </Link>
           <Link
             href="/"
-            className="text-sm text-dental-blue hover:text-dental-teal transition-colors font-medium"
+            className="text-sm text-brand hover:text-brand-400 transition-colors font-medium"
           >
             {t("privacyPolicy.backHome")}
           </Link>
@@ -45,7 +45,7 @@ export default function PrivacyPolicyPage() {
             {t("privacyPolicy.title")}
           </h1>
           <p className="text-sm text-gray-500">{t("privacyPolicy.lastUpdated")}</p>
-          <div className="mt-4 h-1 w-16 bg-gradient-to-r from-dental-blue to-dental-teal rounded-full" />
+          <div className="mt-4 h-1 w-16 bg-gradient-to-r from-brand to-brand-400 rounded-full" />
         </div>
 
         {/* Intro */}
@@ -65,7 +65,7 @@ export default function PrivacyPolicyPage() {
           ))}
 
           {/* Contact */}
-          <div className="bg-gradient-to-br from-dental-blue to-dental-teal rounded-xl p-6 text-white shadow-sm">
+          <div className="bg-gradient-to-br from-brand to-brand-400 rounded-xl p-6 text-white shadow-sm">
             <h2 className="text-xl font-semibold mb-3">
               {t("privacyPolicy.contactTitle")}
             </h2>
@@ -75,10 +75,10 @@ export default function PrivacyPolicyPage() {
 
         {/* Footer link */}
         <div className="mt-12 pt-8 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-500">
-          <Link href="/" className="hover:text-dental-blue transition-colors">
+          <Link href="/" className="hover:text-brand transition-colors">
             {t("privacyPolicy.backHome")}
           </Link>
-          <Link href="/terms-of-service" className="hover:text-dental-blue transition-colors">
+          <Link href="/terms-of-service" className="hover:text-brand transition-colors">
             {t("landing.termsOfService")}
           </Link>
         </div>

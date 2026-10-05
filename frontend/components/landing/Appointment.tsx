@@ -48,7 +48,7 @@ export default function Appointment() {
             <h2 className="text-3xl md:text-4xl font-bold mb-6">
               Schedule Your Appointment
             </h2>
-            <p className="text-xl text-dental-lightblue mb-8">
+            <p className="text-xl text-brand-200 mb-8">
               Book your visit today and take the first step towards a healthier,
               brighter smile.
             </p>
@@ -93,7 +93,7 @@ function ContactInfo({
             {item.icon}
           </div>
           <div>
-            <p className="text-sm text-dental-lightblue mb-1">{item.label}</p>
+            <p className="text-sm text-brand-200 mb-1">{item.label}</p>
             <p className="font-medium whitespace-pre-line">{item.value}</p>
           </div>
         </a>
@@ -143,7 +143,7 @@ function HourRow({
       className={`flex justify-between ${!isLast ? "pb-3 border-b border-white border-opacity-20" : ""}`}
     >
       <span className="font-medium">{day}</span>
-      <span className="text-dental-lightblue">{hours}</span>
+      <span className="text-brand-200">{hours}</span>
     </div>
   );
 }
@@ -160,8 +160,8 @@ function BookingCard() {
   return (
     <div className="bg-white rounded-2xl p-8 shadow-2xl">
       <div className="text-center mb-6">
-        <div className="inline-block p-3 bg-dental-lightblue bg-opacity-20 rounded-full mb-4">
-          <Calendar className="w-12 h-12 text-dental-blue" />
+        <div className="inline-block p-3 bg-brand-200 bg-opacity-20 rounded-full mb-4">
+          <Calendar className="w-12 h-12 text-brand" />
         </div>
         <h3 className="text-2xl font-bold text-gray-900 mb-2">Book Online</h3>
         <p className="text-gray-600">
@@ -183,7 +183,7 @@ function BookingCard() {
       {/* CTA Button */}
       <Link
         href="/login"
-        className="block w-full bg-dental-blue text-white text-center px-8 py-4 rounded-lg font-semibold text-lg hover:bg-primary-700 transition-all transform hover:scale-105 shadow-lg mb-4"
+        className="block w-full bg-brand text-white text-center px-8 py-4 rounded-lg font-semibold text-lg hover:bg-primary-700 transition-all transform hover:scale-105 shadow-lg mb-4"
       >
         Access portal
       </Link>
@@ -193,7 +193,7 @@ function BookingCard() {
         Or call us at{" "}
         <a
           href="tel:+9611234567"
-          className="text-dental-blue font-semibold hover:underline"
+          className="text-brand font-semibold hover:underline"
         >
           +961 1 234 567
         </a>

@@ -17,6 +17,9 @@ import { cn } from "@/lib/utils";
 import { ListToolbar, toolbarSelectClass, toolbarIconButtonClass, toolbarSegmentWrapClass } from "@/components/ui/ListToolbar";
 import { AdminPageHeader } from "@/components/ui/AdminPageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Drawer } from "@/components/ui/Drawer";
+import { BulkActionBar } from "@/components/ui/BulkActionBar";
+import { useImportExport } from "@/components/ui/useImportExport";
 import ToothChart, { type ToothState } from "@/components/dental/ToothChart";
 import dynamic from "next/dynamic";
 
@@ -281,6 +284,8 @@ export default function PatientsPage() {
 
   // Add patient state
   const [showAddPatientModal, setShowAddPatientModal] = useState(false);
+  const [quickViewPatient, setQuickViewPatient] = useState<Patient | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [newPatient, setNewPatient] = useState(emptyNewPatient);
   const [addPatientSaving, setAddPatientSaving] = useState(false);
 
@@ -584,6 +589,32 @@ export default function PatientsPage() {
     }
   };
 
+  const openPatientQuickView = (patient: Patient) => setQuickViewPatient(patient);
+
+  const toggleSelect = (id: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleBulkDeletePatients = async () => {
+    const ids = [...selectedIds];
+    if (ids.length === 0) return;
+    if (!window.confirm(`Delete ${ids.length} patient${ids.length === 1 ? "" : "s"}? This will permanently remove their accounts and all records.`)) return;
+    try {
+      await Promise.all(ids.map((id) => apiFetch(`/api/patients/${id}`, { method: "DELETE" })));
+      setPatients((prev) => prev.filter((p) => !selectedIds.has(p.id)));
+      toast.success(`${ids.length} patient${ids.length === 1 ? "" : "s"} deleted.`);
+    } catch {
+      toast.error("Failed to delete selected patients.");
+    } finally {
+      setSelectedIds(new Set());
+    }
+  };
+
   const handleOpenEditPatient = (patient: Patient) => {
     setEditPatientForm({
       phone: patient.phone,
@@ -649,6 +680,16 @@ export default function PatientsPage() {
     setNewPatient(emptyNewPatient);
     setShowAddPatientModal(true);
   };
+
+  // Lets the command palette's "New patient" action land here and open the
+  // modal directly, e.g. navigating to /admin/patients?new=1.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("new") === "1") {
+      handleOpenAddPatient();
+      router.replace("/admin/patients");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleAddPatient = async () => {
     const firstName = newPatient.firstName.trim();
@@ -1092,6 +1133,12 @@ export default function PatientsPage() {
     active: patients.filter((p) => matchesPatientSearch(p) && p.status === "active").length,
     inactive: patients.filter((p) => matchesPatientSearch(p) && p.status !== "active").length,
   };
+  const allVisibleSelected = filteredPatients.length > 0 && filteredPatients.every((p) => selectedIds.has(p.id));
+  const toggleSelectAll = () => {
+    setSelectedIds(allVisibleSelected ? new Set() : new Set(filteredPatients.map((p) => p.id)));
+  };
+  const selectedPatientRows = patients.filter((p) => selectedIds.has(p.id));
+  const bulkExport = useImportExport({ data: selectedPatientRows, filename: "patients-selected", onImport: () => {} });
   const hasPatientFilters = !!pq || statusFilter !== "all";
   const clearPatientFilters = () => { setSearchQuery(""); setStatusFilter("all"); };
   const statusBadgeClass = (active: boolean) =>
@@ -1145,7 +1192,7 @@ export default function PatientsPage() {
   const totalVisits = patients.reduce((sum, p) => sum + p.totalVisits, 0);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-white flex">
       <AdminSidebar activePage="patients" sidebarOpen={sidebarOpen} onToggle={() => setSidebarOpen((v) => !v)} onLogout={handleLogout} />
 
       {/* Main Content */}
@@ -1249,7 +1296,7 @@ export default function PatientsPage() {
                   />
                   {hasPatientFilters && (
                     <div className="-mt-6 pb-10 text-center">
-                      <button type="button" onClick={clearPatientFilters} className="text-sm font-medium text-dental-blue hover:underline">
+                      <button type="button" onClick={clearPatientFilters} className="text-sm font-medium text-brand hover:underline">
                         {t("common.clearFilters")}
                       </button>
                     </div>
@@ -1257,7 +1304,7 @@ export default function PatientsPage() {
                 </div>
               ) : patientsView === "grid" ? (
                 /* Patient cards */
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 stagger">
                   {filteredPatients.map((patient) => {
                     const age = calculateAge(patient.dateOfBirth);
                     const isActive = patient.status === "active";
@@ -1268,7 +1315,7 @@ export default function PatientsPage() {
                         tabIndex={0}
                         onClick={() => openPatientDetails(patient)}
                         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPatientDetails(patient); } }}
-                        className="group relative cursor-pointer bg-white rounded-2xl border border-gray-100 shadow-sm p-5 transition-all hover:-translate-y-0.5 hover:shadow-md hover:border-dental-blue/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-dental-blue/40"
+                        className="group relative cursor-pointer bg-white rounded-2xl border border-gray-100 shadow-sm p-5 transition-all hover:-translate-y-0.5 hover:shadow-md hover:border-brand/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
                       >
                         <div className="flex items-start gap-3.5">
                           <div className="relative shrink-0">
@@ -1337,15 +1384,25 @@ export default function PatientsPage() {
                   <div className="overflow-x-auto">
                     <table className="w-full table-fixed">
                       <colgroup>
-                        <col className="w-[30%]" />
-                        <col className="w-[28%]" />
-                        <col className="w-[12%]" />
-                        <col className="w-[14%]" />
-                        <col className="w-[8%]" />
-                        <col className="w-[8%]" />
+                        <col className="w-[4%]" />
+                        <col className="w-[27%]" />
+                        <col className="w-[27%]" />
+                        <col className="w-[11%]" />
+                        <col className="w-[13%]" />
+                        <col className="w-[9%]" />
+                        <col className="w-[9%]" />
                       </colgroup>
                       <thead className="bg-gray-50/80 border-b border-gray-200">
                         <tr>
+                          <th className="py-3 pl-5 pr-2">
+                            <input
+                              type="checkbox"
+                              aria-label="Select all"
+                              checked={allVisibleSelected}
+                              onChange={toggleSelectAll}
+                              className="size-4 rounded border-gray-300 accent-accent-blue-500"
+                            />
+                          </th>
                           <th className="py-3 px-5 text-start text-[11px] font-semibold uppercase tracking-wide text-gray-500">{t("patients.patients")}</th>
                           <th className="py-3 px-5 text-start text-[11px] font-semibold uppercase tracking-wide text-gray-500">{t("patients.contact")}</th>
                           <th className="py-3 px-5 text-start text-[11px] font-semibold uppercase tracking-wide text-gray-500">{t("common.status")}</th>
@@ -1354,16 +1411,28 @@ export default function PatientsPage() {
                           <th className="py-3 px-5"><span className="sr-only">{t("patients.view")}</span></th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-100">
+                      <tbody className="divide-y divide-gray-100 stagger">
                         {filteredPatients.map((patient) => {
                           const age = calculateAge(patient.dateOfBirth);
                           const isActive = patient.status === "active";
                           return (
                             <tr
                               key={patient.id}
-                              onClick={() => openPatientDetails(patient)}
-                              className="group cursor-pointer transition-colors hover:bg-gray-50/80"
+                              onClick={() => openPatientQuickView(patient)}
+                              className={cn(
+                                "group cursor-pointer transition-colors hover:bg-gray-50/80",
+                                selectedIds.has(patient.id) && "bg-accent-blue-50/40 hover:bg-accent-blue-50/60",
+                              )}
                             >
+                              <td className="py-3 pl-5 pr-2" onClick={(e) => e.stopPropagation()}>
+                                <input
+                                  type="checkbox"
+                                  aria-label={`Select ${patient.name}`}
+                                  checked={selectedIds.has(patient.id)}
+                                  onChange={() => toggleSelect(patient.id)}
+                                  className="size-4 rounded border-gray-300 accent-accent-blue-500"
+                                />
+                              </td>
                               <td className="py-3 px-5">
                                 <div className="flex items-center gap-3 min-w-0">
                                   <Avatar name={patient.name} size="md" src={patient.photoUrl} />
@@ -1392,7 +1461,7 @@ export default function PatientsPage() {
                               </td>
                               <td className="py-3 px-5 text-center text-sm font-semibold text-gray-900 tabular-nums">{patient.totalVisits}</td>
                               <td className="py-3 px-5 text-end">
-                                <span className="inline-flex items-center gap-1 whitespace-nowrap text-xs font-medium text-dental-blue opacity-0 transition-opacity group-hover:opacity-100">
+                                <span className="inline-flex items-center gap-1 whitespace-nowrap text-xs font-medium text-brand opacity-0 transition-opacity group-hover:opacity-100">
                                   {t("patients.view")} <FaChevronRight className="text-[10px] rtl:rotate-180" />
                                 </span>
                               </td>
@@ -1411,8 +1480,8 @@ export default function PatientsPage() {
 
       {/* Patient Details Modal */}
       {showPatientModal && selectedPatient && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full min-h-[70vh] max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full min-h-[70vh] max-h-[90vh] overflow-hidden flex flex-col animate-scale-in">
             {/* Modal Header: identity row, then an actions row that wraps cleanly */}
             <div className="border-b border-gray-100">
               <div className="px-6 pt-5 pb-3 flex items-start justify-between gap-4">
@@ -1457,7 +1526,7 @@ export default function PatientsPage() {
               <div className="px-6 pb-4 flex flex-wrap items-center gap-2">
                 <Button
                   size="sm"
-                  className="bg-dental-blue hover:bg-dental-blue/90 whitespace-nowrap"
+                  className="bg-brand hover:bg-brand/90 whitespace-nowrap"
                   onClick={() => { setBookDate(new Date().toISOString().split("T")[0]); setBookTime("09:00"); setBookError(""); setShowBookModal(true); }}
                 >
                   <FaCalendarPlus className="mr-2 rtl:mr-0 rtl:ml-2" /> {t("patients.bookAppointment")}
@@ -1513,7 +1582,7 @@ export default function PatientsPage() {
                   key={tab}
                   onClick={() => handleTabChange(tab)}
                   className={`px-5 py-4 font-medium transition-colors relative text-sm ${
-                    activeTab === tab ? "text-dental-blue" : "text-gray-500 hover:text-gray-700"
+                    activeTab === tab ? "text-brand" : "text-gray-500 hover:text-gray-700"
                   }`}
                 >
                   {tab === "info" && <><FaIdCard className="inline mr-2" />{t("patients.info")}</>}
@@ -1521,7 +1590,7 @@ export default function PatientsPage() {
                   {tab === "treatments" && <><FaNotesMedical className="inline mr-2" />{t("patients.treatmentsTab")}</>}
                   {tab === "chart" && <><FaTooth className="inline mr-2" />{t("dentalChart.tab")}</>}
                   {tab === "documents" && <><FaFileAlt className="inline mr-2" />Documents</>}
-                  {activeTab === tab && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-dental-blue" />}
+                  {activeTab === tab && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand" />}
                 </button>
               ))}
             </div>
@@ -1538,19 +1607,19 @@ export default function PatientsPage() {
                       </h3>
                       <div className="space-y-3">
                         <div className="flex items-center gap-3">
-                          <FaPhone className="text-dental-blue" />
+                          <FaPhone className="text-brand" />
                           <span className="text-gray-700">
                             {selectedPatient.phone}
                           </span>
                         </div>
                         <div className="flex items-center gap-3">
-                          <FaEnvelope className="text-dental-blue" />
+                          <FaEnvelope className="text-brand" />
                           <span className="text-gray-700">
                             {selectedPatient.email}
                           </span>
                         </div>
                         <div className="flex items-center gap-3">
-                          <FaMapMarkerAlt className="text-dental-blue" />
+                          <FaMapMarkerAlt className="text-brand" />
                           <span className="text-gray-700">
                             {selectedPatient.address}
                           </span>
@@ -1644,7 +1713,7 @@ export default function PatientsPage() {
                       >
                         <div className="flex items-center gap-4">
                           <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center shadow-sm">
-                            <FaCalendarAlt className="text-dental-blue" />
+                            <FaCalendarAlt className="text-brand" />
                           </div>
                           <div>
                             <p className="font-semibold text-gray-900">
@@ -1682,11 +1751,11 @@ export default function PatientsPage() {
                         data-treatment-row
                         onClick={() => openTreatmentInChart(treatment)}
                         title={t("patients.openInChart")}
-                        className="group w-full flex items-center justify-between gap-4 p-4 bg-gray-50 rounded-xl text-start rtl:text-right border border-transparent transition-all hover:bg-white hover:border-dental-blue/30 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-dental-blue/40"
+                        className="group w-full flex items-center justify-between gap-4 p-4 bg-gray-50 rounded-xl text-start rtl:text-right border border-transparent transition-all hover:bg-white hover:border-brand/30 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
                       >
                         <div className="flex items-center gap-4 min-w-0">
-                          <div className="w-12 h-12 shrink-0 bg-purple-100 rounded-lg flex items-center justify-center transition-colors group-hover:bg-dental-blue/10">
-                            <FaTooth className="text-purple-600 transition-colors group-hover:text-dental-blue" />
+                          <div className="w-12 h-12 shrink-0 bg-purple-100 rounded-lg flex items-center justify-center transition-colors group-hover:bg-brand/10">
+                            <FaTooth className="text-purple-600 transition-colors group-hover:text-brand" />
                           </div>
                           <div className="min-w-0">
                             <p className="font-semibold text-gray-900 truncate">
@@ -1701,7 +1770,7 @@ export default function PatientsPage() {
                           <span className="text-gray-500 text-sm">
                             {treatment.date ? new Date(`${treatment.date}T12:00:00`).toLocaleDateString() : "—"}
                           </span>
-                          <span className="inline-flex items-center gap-1 text-xs font-medium text-dental-blue opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                          <span className="inline-flex items-center gap-1 text-xs font-medium text-brand opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
                             {t("patients.openInChart")} <FaChevronRight className="text-[10px] rtl:rotate-180" />
                           </span>
                         </div>
@@ -1733,7 +1802,7 @@ export default function PatientsPage() {
                                   type="button"
                                   onClick={() => setChartView(v)}
                                   className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
-                                    chartView === v ? "bg-dental-blue text-white shadow-sm" : "text-gray-600 hover:bg-gray-100"
+                                    chartView === v ? "bg-brand text-white shadow-sm" : "text-gray-600 hover:bg-gray-100"
                                   }`}
                                 >
                                   {v === "3d" ? t("dentalChart.view3d") : t("dentalChart.view2d")}
@@ -1797,7 +1866,7 @@ export default function PatientsPage() {
                                     key={tooth}
                                     type="button"
                                     onClick={() => toggleTooth(tooth)}
-                                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-dental-blue text-white text-xs font-semibold"
+                                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand text-white text-xs font-semibold"
                                     title={t("common.remove")}
                                   >
                                     {tooth} <FaTimes className="text-[9px]" />
@@ -1813,7 +1882,7 @@ export default function PatientsPage() {
                                 value={workForm.procedure}
                                 onChange={(e) => handleWorkProcedureChange(e.target.value)}
                                 disabled={workForm.status === "missing"}
-                                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30 disabled:bg-gray-100 disabled:text-gray-400"
+                                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 disabled:bg-gray-100 disabled:text-gray-400"
                               >
                                 {PROCEDURES.map((p) => <option key={p} value={p}>{p}</option>)}
                               </select>
@@ -1827,7 +1896,7 @@ export default function PatientsPage() {
                                 <select
                                   value={workForm.status}
                                   onChange={(e) => handleWorkStatusChange(e.target.value as WorkStatus)}
-                                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                                 >
                                   <option value="completed">{t("dentalChart.completed")}</option>
                                   <option value="planned">{t("dentalChart.plannedStatus")}</option>
@@ -1843,7 +1912,7 @@ export default function PatientsPage() {
                                   value={workForm.amount}
                                   onChange={(e) => setWorkForm((f) => ({ ...f, amount: e.target.value }))}
                                   disabled={workForm.status === "missing"}
-                                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30 disabled:bg-gray-100 disabled:text-gray-400"
+                                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 disabled:bg-gray-100 disabled:text-gray-400"
                                 />
                               </div>
                             </div>
@@ -1854,12 +1923,12 @@ export default function PatientsPage() {
                                 value={workForm.notes}
                                 onChange={(e) => setWorkForm((f) => ({ ...f, notes: e.target.value }))}
                                 placeholder={t("dentalChart.notesPlaceholder")}
-                                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                               />
                             </div>
                             <Button
                               size="sm"
-                              className="w-full bg-dental-blue hover:bg-dental-blue/90"
+                              className="w-full bg-brand hover:bg-brand/90"
                               disabled={selectedTeeth.length === 0}
                               onClick={handleAddWorkItems}
                             >
@@ -1869,7 +1938,7 @@ export default function PatientsPage() {
                           </div>
 
                           {workItems.length > 0 && (
-                            <div className="border border-dental-blue/30 bg-blue-50/40 rounded-xl p-4 space-y-3">
+                            <div className="border border-brand/30 bg-blue-50/40 rounded-xl p-4 space-y-3">
                               <h3 className="font-semibold text-gray-900">
                                 {t("dentalChart.pendingWork")} ({workItems.length})
                               </h3>
@@ -1878,7 +1947,7 @@ export default function PatientsPage() {
                                   <li key={`${item.tooth}-${item.procedure}-${index}`} className="flex items-center justify-between gap-2 px-3 py-2 text-sm">
                                     <div className="min-w-0">
                                       <p className="font-medium text-gray-900 truncate">
-                                        <span className="inline-block w-8 text-dental-blue font-bold">{item.tooth}</span>
+                                        <span className="inline-block w-8 text-brand font-bold">{item.tooth}</span>
                                         {procedureLabel(item.status, item.procedure)}
                                       </p>
                                       <p className="text-xs text-gray-500">
@@ -1920,7 +1989,7 @@ export default function PatientsPage() {
                                     type="date"
                                     value={workDate}
                                     onChange={(e) => setWorkDate(e.target.value)}
-                                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                                   />
                                 </div>
                                 <div>
@@ -1929,7 +1998,7 @@ export default function PatientsPage() {
                                     type="text"
                                     value={workNotes}
                                     onChange={(e) => setWorkNotes(e.target.value)}
-                                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                                   />
                                 </div>
                               </div>
@@ -1954,7 +2023,7 @@ export default function PatientsPage() {
                                     </div>
                                     {workBillableCount > 1 && (
                                       <div className="flex gap-3 text-xs whitespace-nowrap shrink-0">
-                                        <button type="button" onClick={() => setAllWorkItemsBill(true)} className="font-medium text-dental-blue hover:underline">
+                                        <button type="button" onClick={() => setAllWorkItemsBill(true)} className="font-medium text-brand hover:underline">
                                           {t("dentalChart.billAll")}
                                         </button>
                                         <button type="button" onClick={() => setAllWorkItemsBill(false)} className="font-medium text-gray-500 hover:underline">
@@ -1966,7 +2035,7 @@ export default function PatientsPage() {
                                 </div>
                               )}
                               <Button
-                                className="w-full bg-dental-blue hover:bg-dental-blue/90"
+                                className="w-full bg-brand hover:bg-brand/90"
                                 disabled={savingWork}
                                 onClick={handleSaveWork}
                               >
@@ -2050,7 +2119,7 @@ export default function PatientsPage() {
                                       )}
                                     </td>
                                     <td className="py-2.5 px-3 text-gray-600 whitespace-nowrap">{h.date ? new Date(`${h.date}T12:00:00`).toLocaleDateString() : "—"}</td>
-                                    <td className="py-2.5 px-3 font-bold text-dental-blue">{h.tooth}</td>
+                                    <td className="py-2.5 px-3 font-bold text-brand">{h.tooth}</td>
                                     <td className="py-2.5 px-3 text-gray-900">
                                       {procedureLabel(h.status, h.procedure)}
                                       {h.notes && h.notes !== h.procedure && (
@@ -2114,7 +2183,7 @@ export default function PatientsPage() {
                                         {h.invoiceId && h.invoiceStatus !== "paid" && h.invoiceRemaining > 0 && (
                                           <Button
                                             size="sm"
-                                            className="h-7 px-2 text-xs bg-dental-blue hover:bg-dental-blue/90 whitespace-nowrap"
+                                            className="h-7 px-2 text-xs bg-brand hover:bg-brand/90 whitespace-nowrap"
                                             onClick={() => openPayModal({ id: h.invoiceId as number, total: h.invoiceTotal, remaining: h.invoiceRemaining })}
                                           >
                                             <FaMoneyBillWave className="mr-1" /> {t("dentalChart.pay")}
@@ -2167,7 +2236,7 @@ export default function PatientsPage() {
                       />
                       <Button
                         size="sm"
-                        className="bg-dental-blue hover:bg-dental-blue/90"
+                        className="bg-brand hover:bg-brand/90"
                         onClick={() => docInputRef.current?.click()}
                         disabled={uploadingDoc}
                       >
@@ -2199,7 +2268,7 @@ export default function PatientsPage() {
                             {doc.url && (
                               <button
                                 onClick={() => setPreviewDoc(doc)}
-                                className="p-2 text-dental-blue hover:bg-blue-50 rounded-lg transition-colors"
+                                className="p-2 text-brand hover:bg-blue-50 rounded-lg transition-colors"
                                 title="View"
                               >
                                 <FaFileAlt />
@@ -2255,8 +2324,8 @@ export default function PatientsPage() {
 
       {/* Book Appointment Modal */}
       {showBookModal && selectedPatient && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-scale-in">
             <div className="p-6 border-b border-gray-100 flex items-center justify-between">
               <h2 className="text-xl font-bold text-gray-900">Book Appointment</h2>
               <button
@@ -2278,7 +2347,7 @@ export default function PatientsPage() {
                     value={bookDate}
                     min={new Date().toISOString().split("T")[0]}
                     onChange={(e) => { setBookDate(e.target.value); setBookError(""); }}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                   />
                 </div>
                 <div>
@@ -2287,7 +2356,7 @@ export default function PatientsPage() {
                     type="time"
                     value={bookTime}
                     onChange={(e) => { setBookTime(e.target.value); setBookError(""); }}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                   />
                 </div>
               </div>
@@ -2299,7 +2368,7 @@ export default function PatientsPage() {
                   value={bookReason}
                   onChange={(e) => setBookReason(e.target.value)}
                   placeholder="e.g. Routine checkup, tooth pain..."
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                 />
               </div>
 
@@ -2316,7 +2385,7 @@ export default function PatientsPage() {
                 Cancel
               </Button>
               <Button
-                className="bg-dental-blue hover:bg-dental-blue/90"
+                className="bg-brand hover:bg-brand/90"
                 disabled={bookLoading}
                 onClick={handleBookAppointment}
               >
@@ -2330,10 +2399,10 @@ export default function PatientsPage() {
       {/* Complete Planned Work Modal */}
       {showCompleteModal && (
         <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[70] p-4"
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[70] p-4 animate-fade-in"
           onClick={(e) => { if (e.target === e.currentTarget && !completing) setShowCompleteModal(false); }}
         >
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg animate-scale-in">
             <div className="p-6 border-b border-gray-100 flex items-center justify-between">
               <h2 className="text-xl font-bold text-gray-900">
                 {completeAllDone ? t("dentalChart.billTitle") : t("dentalChart.completeTitle")}
@@ -2349,7 +2418,7 @@ export default function PatientsPage() {
                   <li key={item.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-gray-900">
-                        <span className="inline-block w-8 text-dental-blue font-bold">{item.tooth}</span>
+                        <span className="inline-block w-8 text-brand font-bold">{item.tooth}</span>
                         {item.procedure}
                       </p>
                       <p className="text-xs text-gray-500">
@@ -2387,7 +2456,7 @@ export default function PatientsPage() {
                               }
                               className={`w-24 border rounded-lg px-2 py-1.5 text-sm text-right focus:outline-none ${
                                 item.editPrice
-                                  ? "border-gray-200 bg-white focus:ring-2 focus:ring-dental-blue/30"
+                                  ? "border-gray-200 bg-white focus:ring-2 focus:ring-brand/30"
                                   : "border-gray-100 bg-gray-50 text-gray-600 cursor-default"
                               }`}
                             />
@@ -2399,7 +2468,7 @@ export default function PatientsPage() {
                                 setCompleteItems((prev) => prev.map((p) => (p.id === item.id ? { ...p, editPrice: true } : p)));
                                 setTimeout(() => document.getElementById(`complete-price-${item.id}`)?.focus(), 0);
                               }}
-                              className="mt-1 text-[11px] font-medium text-dental-blue hover:underline"
+                              className="mt-1 text-[11px] font-medium text-brand hover:underline"
                             >
                               {t("dentalChart.editBillCost")}
                             </button>
@@ -2420,7 +2489,7 @@ export default function PatientsPage() {
                     value={completeDate}
                     max={new Date().toISOString().split("T")[0]}
                     onChange={(e) => setCompleteDate(e.target.value)}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                   />
                 </div>
                 <div>
@@ -2429,7 +2498,7 @@ export default function PatientsPage() {
                     type="text"
                     value={completeNotes}
                     onChange={(e) => setCompleteNotes(e.target.value)}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                   />
                 </div>
               </div>
@@ -2453,7 +2522,7 @@ export default function PatientsPage() {
                   </div>
                   {completeItems.length > 1 && (
                     <div className="flex gap-3 text-xs whitespace-nowrap shrink-0">
-                      <button type="button" onClick={() => setAllCompleteItemsBill(true)} className="font-medium text-dental-blue hover:underline">
+                      <button type="button" onClick={() => setAllCompleteItemsBill(true)} className="font-medium text-brand hover:underline">
                         {t("dentalChart.billAll")}
                       </button>
                       <button type="button" onClick={() => setAllCompleteItemsBill(false)} className="font-medium text-gray-500 hover:underline">
@@ -2486,10 +2555,10 @@ export default function PatientsPage() {
       {/* Invoice Payment Modal */}
       {payInvoice && (
         <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[70] p-4"
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[70] p-4 animate-fade-in"
           onClick={(e) => { if (e.target === e.currentTarget && !paying) setPayInvoice(null); }}
         >
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-scale-in">
             <div className="p-6 border-b border-gray-100 flex items-center justify-between">
               <h2 className="text-xl font-bold text-gray-900">
                 {t("dentalChart.payInvoice")} <span className="text-gray-400 font-semibold">#{payInvoice.id}</span>
@@ -2523,13 +2592,13 @@ export default function PatientsPage() {
                     max={payInvoice.remaining}
                     value={payForm.amount}
                     onChange={(e) => setPayForm((f) => ({ ...f, amount: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                     autoFocus
                   />
                   <button
                     type="button"
                     onClick={() => setPayForm((f) => ({ ...f, amount: payInvoice.remaining.toFixed(2) }))}
-                    className="mt-1 text-xs font-medium text-dental-blue hover:underline"
+                    className="mt-1 text-xs font-medium text-brand hover:underline"
                   >
                     {t("expenses.payRemaining")}
                   </button>
@@ -2539,7 +2608,7 @@ export default function PatientsPage() {
                   <select
                     value={payForm.method}
                     onChange={(e) => setPayForm((f) => ({ ...f, method: e.target.value as (typeof PAYMENT_METHODS)[number] }))}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                   >
                     <option value="cash">{t("expenses.cash")}</option>
                     <option value="card">{t("expenses.card")}</option>
@@ -2555,7 +2624,7 @@ export default function PatientsPage() {
                   value={payForm.notes}
                   onChange={(e) => setPayForm((f) => ({ ...f, notes: e.target.value }))}
                   placeholder={t("expenses.notesPlaceholder")}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                 />
               </div>
             </div>
@@ -2563,7 +2632,7 @@ export default function PatientsPage() {
               <Button variant="outline" onClick={() => setPayInvoice(null)} disabled={paying}>
                 {t("common.close")}
               </Button>
-              <Button className="bg-dental-blue hover:bg-dental-blue/90" disabled={paying} onClick={handlePayConfirm}>
+              <Button className="bg-brand hover:bg-brand/90" disabled={paying} onClick={handlePayConfirm}>
                 {paying ? (
                   <><span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />Saving...</>
                 ) : (
@@ -2578,10 +2647,10 @@ export default function PatientsPage() {
       {/* Password Setup Link Modal */}
       {inviteResult && (
         <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[70] p-4"
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[70] p-4 animate-fade-in"
           onClick={(e) => { if (e.target === e.currentTarget) setInviteResult(null); }}
         >
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg animate-scale-in">
             <div className="p-6 border-b border-gray-100 flex items-center justify-between">
               <h2 className="text-xl font-bold text-gray-900">{t("patients.setupLink")}</h2>
               <button onClick={() => setInviteResult(null)} className="p-2 hover:bg-gray-100 rounded-lg">
@@ -2620,7 +2689,7 @@ export default function PatientsPage() {
               </div>
             </div>
             <div className="p-6 border-t border-gray-100 flex justify-end">
-              <Button className="bg-dental-blue hover:bg-dental-blue/90" onClick={() => setInviteResult(null)}>
+              <Button className="bg-brand hover:bg-brand/90" onClick={() => setInviteResult(null)}>
                 {t("common.close")}
               </Button>
             </div>
@@ -2631,10 +2700,10 @@ export default function PatientsPage() {
       {/* Add Patient Modal */}
       {showAddPatientModal && (
         <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4"
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4 animate-fade-in"
           onClick={(e) => { if (e.target === e.currentTarget && !addPatientSaving) setShowAddPatientModal(false); }}
         >
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl animate-scale-in">
             <div className="p-6 border-b border-gray-100 flex items-center justify-between">
               <h2 className="text-xl font-bold text-gray-900">{t("patients.addNewPatient")}</h2>
               <button
@@ -2653,7 +2722,7 @@ export default function PatientsPage() {
                     type="text"
                     value={newPatient.firstName}
                     onChange={(e) => setNewPatient((f) => ({ ...f, firstName: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                     autoFocus
                   />
                 </div>
@@ -2663,7 +2732,7 @@ export default function PatientsPage() {
                     type="text"
                     value={newPatient.lastName}
                     onChange={(e) => setNewPatient((f) => ({ ...f, lastName: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                   />
                 </div>
               </div>
@@ -2674,7 +2743,7 @@ export default function PatientsPage() {
                     type="email"
                     value={newPatient.email}
                     onChange={(e) => setNewPatient((f) => ({ ...f, email: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                   />
                 </div>
                 <div>
@@ -2683,7 +2752,7 @@ export default function PatientsPage() {
                     type="tel"
                     value={newPatient.phone}
                     onChange={(e) => setNewPatient((f) => ({ ...f, phone: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                   />
                 </div>
               </div>
@@ -2696,7 +2765,7 @@ export default function PatientsPage() {
                     value={newPatient.dateOfBirth}
                     max={new Date().toISOString().split("T")[0]}
                     onChange={(e) => setNewPatient((f) => ({ ...f, dateOfBirth: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                   />
                 </div>
                 <div>
@@ -2704,7 +2773,7 @@ export default function PatientsPage() {
                   <select
                     value={newPatient.gender}
                     onChange={(e) => setNewPatient((f) => ({ ...f, gender: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                   >
                     <option value="">{t("patients.selectGender")}</option>
                     <option value="male">{t("patients.male")}</option>
@@ -2719,7 +2788,7 @@ export default function PatientsPage() {
                   type="text"
                   value={newPatient.address}
                   onChange={(e) => setNewPatient((f) => ({ ...f, address: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -2728,7 +2797,7 @@ export default function PatientsPage() {
                   <select
                     value={newPatient.bloodType}
                     onChange={(e) => setNewPatient((f) => ({ ...f, bloodType: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                   >
                     <option value="">{t("patients.unknown")}</option>
                     {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((bt) => (
@@ -2743,7 +2812,7 @@ export default function PatientsPage() {
                     value={newPatient.insurance}
                     onChange={(e) => setNewPatient((f) => ({ ...f, insurance: e.target.value }))}
                     placeholder="e.g. AXA, BUPA, Self-pay"
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                   />
                 </div>
               </div>
@@ -2754,7 +2823,7 @@ export default function PatientsPage() {
                   value={newPatient.allergies}
                   onChange={(e) => setNewPatient((f) => ({ ...f, allergies: e.target.value }))}
                   placeholder="Comma-separated, e.g. Penicillin, Latex"
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                 />
               </div>
               <div>
@@ -2763,7 +2832,7 @@ export default function PatientsPage() {
                   value={newPatient.notes}
                   onChange={(e) => setNewPatient((f) => ({ ...f, notes: e.target.value }))}
                   rows={3}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30 resize-none"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 resize-none"
                 />
               </div>
             </div>
@@ -2772,7 +2841,7 @@ export default function PatientsPage() {
                 {t("common.cancel")}
               </Button>
               <Button
-                className="bg-dental-blue hover:bg-dental-blue/90"
+                className="bg-brand hover:bg-brand/90"
                 disabled={addPatientSaving}
                 onClick={handleAddPatient}
               >
@@ -2787,8 +2856,8 @@ export default function PatientsPage() {
 
       {/* Edit Patient Modal */}
       {showEditPatientModal && selectedPatient && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg animate-scale-in">
             <div className="p-6 border-b border-gray-100 flex items-center justify-between">
               <h2 className="text-xl font-bold text-gray-900">Edit Patient</h2>
               <button
@@ -2806,7 +2875,7 @@ export default function PatientsPage() {
                     type="tel"
                     value={editPatientForm.phone}
                     onChange={(e) => setEditPatientForm((f) => ({ ...f, phone: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                   />
                 </div>
                 <div>
@@ -2815,7 +2884,7 @@ export default function PatientsPage() {
                     type="date"
                     value={editPatientForm.dateOfBirth}
                     onChange={(e) => setEditPatientForm((f) => ({ ...f, dateOfBirth: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                   />
                 </div>
               </div>
@@ -2825,7 +2894,7 @@ export default function PatientsPage() {
                   <select
                     value={editPatientForm.bloodType}
                     onChange={(e) => setEditPatientForm((f) => ({ ...f, bloodType: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                   >
                     <option value="">Unknown</option>
                     {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((bt) => (
@@ -2840,7 +2909,7 @@ export default function PatientsPage() {
                     value={editPatientForm.insurance}
                     onChange={(e) => setEditPatientForm((f) => ({ ...f, insurance: e.target.value }))}
                     placeholder="e.g. AXA, BUPA, Self-pay"
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                   />
                 </div>
               </div>
@@ -2851,7 +2920,7 @@ export default function PatientsPage() {
                   value={editPatientForm.allergies}
                   onChange={(e) => setEditPatientForm((f) => ({ ...f, allergies: e.target.value }))}
                   placeholder="Comma-separated, e.g. Penicillin, Latex"
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                 />
               </div>
               <div>
@@ -2860,7 +2929,7 @@ export default function PatientsPage() {
                   value={editPatientForm.notes}
                   onChange={(e) => setEditPatientForm((f) => ({ ...f, notes: e.target.value }))}
                   rows={3}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-dental-blue/30 resize-none"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 resize-none"
                 />
               </div>
             </div>
@@ -2869,7 +2938,7 @@ export default function PatientsPage() {
                 {t("common.cancel")}
               </Button>
               <Button
-                className="bg-dental-blue hover:bg-dental-blue/90"
+                className="bg-brand hover:bg-brand/90"
                 disabled={editPatientSaving}
                 onClick={handleEditPatientSave}
               >
@@ -2884,8 +2953,8 @@ export default function PatientsPage() {
 
       {/* Document Preview Modal */}
       {previewDoc && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[70] p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[70] p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col animate-scale-in">
             <div className="p-4 border-b border-gray-100 flex items-center justify-between">
               <p className="font-semibold text-gray-900 truncate">{previewDoc.file_name || "Document"}</p>
               <div className="flex items-center gap-2 ml-4 shrink-0">
@@ -2893,7 +2962,7 @@ export default function PatientsPage() {
                   href={previewDoc.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-dental-blue border border-dental-blue/30 rounded-lg hover:bg-blue-50 transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-brand border border-brand/30 rounded-lg hover:bg-blue-50 transition-colors"
                 >
                   <FaDownload className="text-xs" /> Download
                 </a>
@@ -2924,6 +2993,110 @@ export default function PatientsPage() {
           </div>
         </div>
       )}
+
+      <Drawer
+        isOpen={!!quickViewPatient}
+        onClose={() => setQuickViewPatient(null)}
+        title={quickViewPatient?.name ?? "Patient"}
+        description="Quick view"
+        footer={
+          quickViewPatient && (
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setQuickViewPatient(null)}
+              >
+                {t("common.close")}
+              </Button>
+              <Button
+                className="flex-1"
+                onClick={() => {
+                  const patient = quickViewPatient;
+                  setQuickViewPatient(null);
+                  if (patient) openPatientDetails(patient);
+                }}
+              >
+                Open full record
+              </Button>
+            </div>
+          )
+        }
+      >
+        {quickViewPatient && (
+          <div className="space-y-5">
+            <div className="flex items-center gap-3.5">
+              <Avatar name={quickViewPatient.name} size="lg" src={quickViewPatient.photoUrl} />
+              <div className="min-w-0">
+                <p className="truncate font-semibold text-ink-900">{quickViewPatient.name}</p>
+                <span className={statusBadgeClass(quickViewPatient.status === "active")}>
+                  <span className={cn("h-1.5 w-1.5 rounded-full", quickViewPatient.status === "active" ? "bg-emerald-500" : "bg-gray-400")} />
+                  {quickViewPatient.status === "active" ? t("patients.active") : t("patients.inactive")}
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              {quickViewPatient.phone && (
+                <p className="flex items-center gap-2 text-sm text-ink-700">
+                  <FaPhone className="shrink-0 text-xs text-ink-300" />
+                  <span dir="ltr">{quickViewPatient.phone}</span>
+                </p>
+              )}
+              {quickViewPatient.email && (
+                <p className="flex items-center gap-2 text-sm text-ink-700">
+                  <FaEnvelope className="shrink-0 text-xs text-ink-300" />
+                  <span className="truncate">{quickViewPatient.email}</span>
+                </p>
+              )}
+              {quickViewPatient.insurance && (
+                <p className="flex items-center gap-2 text-sm text-ink-700">
+                  <FaIdCard className="shrink-0 text-xs text-ink-300" />
+                  {quickViewPatient.insurance}
+                </p>
+              )}
+              {quickViewPatient.allergies.length > 0 && (
+                <p className="flex items-start gap-2 text-sm text-ink-700">
+                  <FaAllergies className="mt-0.5 shrink-0 text-xs text-ink-300" />
+                  {quickViewPatient.allergies.join(", ")}
+                </p>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-xl bg-ink-50 px-3 py-2">
+                <p className="text-[11px] uppercase tracking-wide text-ink-400">{t("patients.lastVisit")}</p>
+                <p className={cn("text-sm font-semibold", quickViewPatient.lastVisit ? "text-ink-900" : "text-ink-400")}>
+                  {quickViewPatient.lastVisit ? formatDate(quickViewPatient.lastVisit) : t("patients.noVisitsYet")}
+                </p>
+              </div>
+              <div className="rounded-xl bg-ink-50 px-3 py-2">
+                <p className="text-[11px] uppercase tracking-wide text-ink-400">{t("patients.totalVisits")}</p>
+                <p className="text-sm font-semibold text-ink-900 tabular-nums">{quickViewPatient.totalVisits}</p>
+              </div>
+            </div>
+
+            {quickViewPatient.notes && (
+              <div>
+                <p className="mb-1 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-ink-400">
+                  <FaNotesMedical className="text-ink-300" /> {t("common.notes")}
+                </p>
+                <p className="whitespace-pre-wrap text-sm text-ink-600">{quickViewPatient.notes}</p>
+              </div>
+            )}
+          </div>
+        )}
+      </Drawer>
+
+      <BulkActionBar
+        count={selectedIds.size}
+        onClear={() => setSelectedIds(new Set())}
+        itemLabel="patient"
+        actions={[
+          { key: "export", label: "Export", icon: <FaDownload className="h-3 w-3" />, onClick: bulkExport.exportExcel },
+          { key: "delete", label: "Delete", icon: <FaTrash className="h-3 w-3" />, onClick: handleBulkDeletePatients, tone: "danger" },
+        ]}
+      />
     </div>
   );
 }

@@ -36,16 +36,21 @@ const LANGUAGES = [
   { value: "ar", label: "العربية", flag: "🇱🇧" },
 ] as const;
 
+/* The tone *names* are part of this component's API — pages already pass
+ * "teal" and "blue" — so they stay, even though "blue" itself still points
+ * at honey (amber) rather than literal blue; only "primary" now uses the
+ * real accent-blue, matching the solid blue primary button in the Shopify
+ * admin reference. */
 const TONE: Record<HeaderActionTone, string> = {
-  primary: "bg-dental-blue text-white group-hover:bg-dental-blue/90 shadow-dental-blue/30",
-  teal: "bg-teal-600 text-white group-hover:bg-teal-700 shadow-teal-600/30",
-  blue: "bg-blue-600 text-white group-hover:bg-blue-700 shadow-blue-600/30",
-  neutral: "bg-white text-gray-700 group-hover:bg-gray-100 ring-1 ring-gray-200 shadow-gray-300/40",
+  primary: "bg-accent-blue-600 text-white group-hover:bg-accent-blue-700 shadow-accent-blue-700/30",
+  teal: "bg-clay-600 text-white group-hover:bg-clay-700 shadow-clay-700/30",
+  blue: "bg-honey-600 text-white group-hover:bg-honey-700 shadow-honey-700/30",
+  neutral: "bg-card text-ink-700 group-hover:bg-ink-100 ring-1 ring-ink-200 shadow-ink-300/40",
 };
 
 const ROUND =
   "flex h-10 w-10 shrink-0 items-center justify-center rounded-full shadow-md transition-all duration-200 " +
-  "focus:outline-none focus-visible:ring-2 focus-visible:ring-dental-blue/40 focus-visible:ring-offset-2";
+  "focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue-400 focus-visible:ring-offset-2";
 
 type RoundIconProps = { tone?: HeaderActionTone; className?: string; children: ReactNode } & ButtonHTMLAttributes<HTMLButtonElement>;
 
@@ -72,12 +77,12 @@ function ActionRow({ action, index, onDone }: { action: HeaderAction; index: num
   const tone = action.tone ?? "neutral";
   const inner = (
     <>
-      <span className={cn("text-sm font-medium", tone === "primary" ? "text-gray-900" : "text-gray-700")}>{action.label}</span>
+      <span className={cn("text-sm font-semibold", tone === "primary" ? "text-ink-900" : "text-ink-700")}>{action.label}</span>
       <span className={cn(ROUND, TONE[tone], "group-hover:scale-105 group-active:scale-95 [&>svg]:h-4 [&>svg]:w-4")}>{action.icon}</span>
     </>
   );
   const rowClass =
-    "group flex w-full items-center justify-between gap-3 rounded-2xl px-3 py-2 text-left rtl:text-right cursor-pointer hover:bg-gray-50 focus:outline-none focus-visible:bg-gray-50";
+    "group flex w-full items-center justify-between gap-3 rounded-2xl px-3 py-2 text-left rtl:text-right cursor-pointer hover:bg-accent-blue-50/70 focus:outline-none focus-visible:bg-accent-blue-50";
   return (
     <Row index={index} className="p-0">
       {action.href ? (
@@ -135,10 +140,10 @@ export default function HeaderSpeedDial({ primary, actions = [], data, filename,
         aria-haspopup="menu"
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          "relative flex h-12 w-12 items-center justify-center rounded-full bg-dental-blue text-white shadow-lg shadow-dental-blue/30",
-          "transition-all duration-300 hover:bg-dental-blue/90 hover:scale-105 active:scale-95",
-          "focus:outline-none focus-visible:ring-2 focus-visible:ring-dental-blue/40 focus-visible:ring-offset-2",
-          open && "rotate-45 ring-4 ring-dental-blue/20",
+          "relative flex h-12 w-12 items-center justify-center rounded-full bg-accent-blue-600 text-white shadow-lg shadow-accent-blue-700/30",
+          "transition-all duration-300 hover:bg-accent-blue-700 hover:scale-105 active:scale-95",
+          "focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue-400 focus-visible:ring-offset-2",
+          open && "rotate-45 ring-4 ring-accent-blue-500/20",
         )}
       >
         <Plus className="h-6 w-6" strokeWidth={2.5} />
@@ -148,9 +153,9 @@ export default function HeaderSpeedDial({ primary, actions = [], data, filename,
       {open && (
         <div
           role="menu"
-          className="absolute end-0 top-full z-50 mt-3 w-72 origin-top-right rtl:origin-top-left rounded-3xl bg-white/95 p-2 shadow-2xl ring-1 ring-black/5 backdrop-blur animate-in fade-in zoom-in-95 duration-200"
+          className="absolute end-0 top-full z-50 mt-3 w-72 origin-top-right rounded-3xl bg-card/95 p-2 shadow-2xl ring-1 ring-ink-900/5 backdrop-blur-md rtl:origin-top-left animate-scale-in"
         >
-          <p className="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wide text-gray-400">{t("common.quickActions")}</p>
+          <p className="px-3 pb-1 pt-2 text-[11px] font-bold uppercase tracking-wide text-ink-400">{t("common.quickActions")}</p>
 
           {primary && <ActionRow action={{ ...primary, tone: primary.tone ?? "primary" }} index={i++} onDone={close} />}
           {actions.map((a) => (
@@ -159,29 +164,29 @@ export default function HeaderSpeedDial({ primary, actions = [], data, filename,
 
           {hasIo && (
             <>
-              <div className="mx-3 my-1 border-t border-gray-100" />
+              <div className="mx-3 my-1.5 border-t border-ink-200/70" />
               <Row index={i++}>
-                <span className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                  <Download className="h-4 w-4 text-gray-400" /> {t("common.export")}
+                <span className="flex items-center gap-2 text-sm font-semibold text-ink-700">
+                  <Download className="h-4 w-4 text-ink-400" /> {t("common.export")}
                 </span>
                 <span className="flex items-center gap-2">
-                  <RoundIcon title="Excel (.xlsx)" aria-label="Export Excel" className="h-9 w-9 text-green-600" onClick={() => { io.exportExcel(); close(); }}>
+                  <RoundIcon title="Excel (.xlsx)" aria-label="Export Excel" className="h-9 w-9 text-leaf-700" onClick={() => { io.exportExcel(); close(); }}>
                     <FileSpreadsheet className="h-4 w-4" />
                   </RoundIcon>
-                  <RoundIcon title="JSON (.json)" aria-label="Export JSON" className="h-9 w-9 text-blue-600" onClick={() => { io.exportJson(); close(); }}>
+                  <RoundIcon title="JSON (.json)" aria-label="Export JSON" className="h-9 w-9 text-clay-700" onClick={() => { io.exportJson(); close(); }}>
                     <FileJson className="h-4 w-4" />
                   </RoundIcon>
                 </span>
               </Row>
               <Row index={i++}>
-                <span className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                  <Upload className="h-4 w-4 text-gray-400" /> {t("common.import")}
+                <span className="flex items-center gap-2 text-sm font-semibold text-ink-700">
+                  <Upload className="h-4 w-4 text-ink-400" /> {t("common.import")}
                 </span>
                 <span className="flex items-center gap-2">
-                  <RoundIcon title="Excel (.xlsx)" aria-label="Import Excel" className="h-9 w-9 text-green-600" onClick={() => { io.importExcel(); close(); }}>
+                  <RoundIcon title="Excel (.xlsx)" aria-label="Import Excel" className="h-9 w-9 text-leaf-700" onClick={() => { io.importExcel(); close(); }}>
                     <FileSpreadsheet className="h-4 w-4" />
                   </RoundIcon>
-                  <RoundIcon title="JSON (.json)" aria-label="Import JSON" className="h-9 w-9 text-blue-600" onClick={() => { io.importJson(); close(); }}>
+                  <RoundIcon title="JSON (.json)" aria-label="Import JSON" className="h-9 w-9 text-clay-700" onClick={() => { io.importJson(); close(); }}>
                     <FileJson className="h-4 w-4" />
                   </RoundIcon>
                 </span>
@@ -189,10 +194,10 @@ export default function HeaderSpeedDial({ primary, actions = [], data, filename,
             </>
           )}
 
-          <div className="mx-3 my-1 border-t border-gray-100" />
+          <div className="mx-3 my-1.5 border-t border-ink-200/70" />
           <Row index={i++}>
-            <span className="flex items-center gap-2 text-sm font-medium text-gray-700">
-              <Languages className="h-4 w-4 text-gray-400" /> {t("common.language")}
+            <span className="flex items-center gap-2 text-sm font-semibold text-ink-700">
+              <Languages className="h-4 w-4 text-ink-400" /> {t("common.language")}
             </span>
             <span className="flex items-center gap-2">
               {LANGUAGES.map((l) => {
@@ -203,7 +208,7 @@ export default function HeaderSpeedDial({ primary, actions = [], data, filename,
                     title={l.label}
                     aria-label={l.label}
                     aria-pressed={active}
-                    className={cn("h-9 w-9 text-lg leading-none", active && "ring-2 ring-dental-blue ring-offset-2 bg-dental-blue/10")}
+                    className={cn("h-9 w-9 text-lg leading-none", active && "bg-accent-blue-100 ring-2 ring-accent-blue-500 ring-offset-2")}
                     onClick={() => setLanguage(l.value)}
                   >
                     {l.flag}

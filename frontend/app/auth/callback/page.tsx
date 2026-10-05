@@ -89,7 +89,7 @@ export default function AuthCallbackPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center">
-      <span className="w-8 h-8 border-4 border-dental-blue/30 border-t-dental-blue rounded-full animate-spin" />
+      <span className="w-8 h-8 border-4 border-brand/30 border-t-brand rounded-full animate-spin" />
     </div>
   );
 }

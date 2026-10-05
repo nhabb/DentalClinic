@@ -9,6 +9,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { safeStorage } from "@/lib/browser-compat";
 import { supabase } from "@/lib/supabase/client";
 import AgentChat from "@/components/ui/AgentChat";
+import { CommandPalette } from "@/components/ui/CommandPalette";
 
 export default function AdminLayout({
   children,
@@ -96,6 +97,7 @@ export default function AdminLayout({
     <>
       {children}
       {showChat && <AgentChat doctorName={doctorName} doctorId={doctorId} />}
+      {showChat && <CommandPalette />}
     </>
   );
 }

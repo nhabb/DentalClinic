@@ -519,7 +519,7 @@ export default function ExpensesPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-white flex">
       <AdminSidebar activePage="expenses" sidebarOpen={sidebarOpen} onToggle={() => setSidebarOpen((v) => !v)} onLogout={handleLogout} />
 
       <div className="flex-1 flex flex-col min-w-0">
@@ -663,7 +663,7 @@ export default function ExpensesPage() {
                           type="button"
                           onClick={() => setMonthFilterOn(false)}
                           title={t("expenses.showAllMonths")}
-                          className="inline-flex items-center gap-1.5 rounded-full border border-dental-blue/30 bg-dental-blue/10 px-2.5 py-1 text-xs font-medium capitalize text-dental-blue transition hover:bg-dental-blue/15"
+                          className="inline-flex items-center gap-1.5 rounded-full border border-brand/30 bg-brand/10 px-2.5 py-1 text-xs font-medium capitalize text-brand transition hover:bg-brand/15"
                         >
                           {calMonth.toLocaleDateString(locale, { month: "long", year: "numeric" })}
                           <span aria-hidden>×</span>
@@ -705,7 +705,7 @@ export default function ExpensesPage() {
                 />
                 {hasExpenseFilters && (
                   <div className="-mt-6 pb-10 text-center">
-                    <button type="button" onClick={clearExpenseFilters} className="text-sm font-medium text-dental-blue hover:underline">
+                    <button type="button" onClick={clearExpenseFilters} className="text-sm font-medium text-brand hover:underline">
                       {t("common.clearFilters")}
                     </button>
                   </div>
@@ -725,7 +725,7 @@ export default function ExpensesPage() {
                       <th className="py-3 px-5 text-center text-[11px] font-semibold uppercase tracking-wide text-gray-500">{t("common.actions")}</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
+                  <tbody className="divide-y divide-gray-100 stagger">
                     {filteredExpenses.map((expense) => (
                       <tr key={expense.id} className="transition-colors hover:bg-gray-50/80">
                         <td className="py-3.5 px-5 text-sm text-gray-600">
@@ -769,7 +769,7 @@ export default function ExpensesPage() {
                             <button
                               onClick={() => handleOpenEdit(expense)}
                               title={t("expenses.editExpense")}
-                              className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-dental-blue transition-colors"
+                              className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-brand transition-colors"
                             >
                               <FaEdit />
                             </button>
@@ -859,7 +859,7 @@ export default function ExpensesPage() {
           <Button variant="outline" className="flex-1" onClick={() => setShowAddModal(false)} disabled={isSaving}>
             {t("common.cancel")}
           </Button>
-          <Button className="flex-1 bg-dental-blue hover:bg-dental-blue/90" onClick={handleAdd} disabled={isSaving}>
+          <Button className="flex-1 bg-brand hover:bg-brand/90" onClick={handleAdd} disabled={isSaving}>
             {t("expenses.addExpense")}
           </Button>
         </div>
@@ -921,7 +921,7 @@ export default function ExpensesPage() {
                 <button
                   type="button"
                   onClick={() => handleOpenPayments(selectedExpense)}
-                  className="inline-flex items-center gap-2 text-sm font-medium text-dental-blue hover:underline"
+                  className="inline-flex items-center gap-2 text-sm font-medium text-brand hover:underline"
                 >
                   <FaDollarSign /> {t("expenses.recordPayment")}
                 </button>
@@ -931,7 +931,7 @@ export default function ExpensesPage() {
               <Button variant="outline" className="flex-1" onClick={() => setShowEditModal(false)} disabled={isSaving}>
                 {t("common.cancel")}
               </Button>
-              <Button className="flex-1 bg-dental-blue hover:bg-dental-blue/90" onClick={handleEditSave} disabled={isSaving}>
+              <Button className="flex-1 bg-brand hover:bg-brand/90" onClick={handleEditSave} disabled={isSaving}>
                 {t("expenses.saveChanges")}
               </Button>
             </div>
@@ -973,7 +973,7 @@ export default function ExpensesPage() {
                       onClick={() =>
                         setPaymentForm((f) => ({ ...f, amount: paymentExpense.remaining.toFixed(2) }))
                       }
-                      className="mt-1 text-xs font-medium text-dental-blue hover:underline"
+                      className="mt-1 text-xs font-medium text-brand hover:underline"
                     >
                       {t("expenses.payRemaining")} ({formatAmount(paymentExpense.remaining)})
                     </button>
@@ -1012,7 +1012,7 @@ export default function ExpensesPage() {
                   </FormField>
                 </div>
                 <Button
-                  className="w-full bg-dental-blue hover:bg-dental-blue/90"
+                  className="w-full bg-brand hover:bg-brand/90"
                   onClick={handleRecordPayment}
                   disabled={isSubmittingPayment}
                 >

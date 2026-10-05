@@ -120,7 +120,7 @@ export default function CompleteProfilePage() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <span className="w-8 h-8 border-4 border-dental-blue/30 border-t-dental-blue rounded-full animate-spin" />
+        <span className="w-8 h-8 border-4 border-brand/30 border-t-brand rounded-full animate-spin" />
       </div>
     );
   }
@@ -131,7 +131,7 @@ export default function CompleteProfilePage() {
         {/* Header */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 justify-center mb-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-dental-blue to-dental-teal flex items-center justify-center shadow-lg">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-brand to-brand-400 flex items-center justify-center shadow-lg">
               <FaTooth className="text-white text-xl" />
             </div>
             <span className="text-2xl font-bold text-gray-900">BrightSmile</span>
@@ -256,7 +256,7 @@ export default function CompleteProfilePage() {
           <button
             type="submit"
             disabled={isSaving}
-            className="w-full flex items-center justify-center gap-3 py-4 rounded-xl bg-gradient-to-r from-dental-blue to-dental-teal text-white font-semibold text-base hover:shadow-lg disabled:opacity-60 transition-all"
+            className="w-full flex items-center justify-center gap-3 py-4 rounded-xl bg-gradient-to-r from-brand to-brand-400 text-white font-semibold text-base hover:shadow-lg disabled:opacity-60 transition-all"
           >
             {isSaving ? (
               <span className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" />

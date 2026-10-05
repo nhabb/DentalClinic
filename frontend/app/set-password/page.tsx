@@ -16,7 +16,7 @@ import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 const inputClass =
-  "appearance-none block w-full px-4 py-3 border border-gray-300 placeholder-gray-400 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-auth-blue focus:border-transparent transition-all";
+  "appearance-none block w-full px-4 py-3 border border-gray-300 placeholder-gray-400 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-transparent transition-all";
 
 function SetPasswordForm() {
   const params = useSearchParams();
@@ -99,7 +99,7 @@ function SetPasswordForm() {
               <LanguageSwitcher />
             </div>
             <Link href="/" className="inline-flex items-center space-x-2">
-              <div className="w-12 h-12 bg-gradient-to-br from-dental-blue to-dental-teal rounded-lg flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-br from-brand to-brand-400 rounded-lg flex items-center justify-center shadow-lg">
                 <FaTooth className="text-white text-2xl" />
               </div>
               <span className="text-2xl font-bold text-gray-900">BrightSmile</span>

@@ -476,6 +476,16 @@ export default function AppointmentsManagement() {
     }
   };
 
+  // Lets the command palette's "New appointment" action land here and open
+  // the modal directly, e.g. navigating to /admin/appointments?new=1.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("new") === "1") {
+      openAddModal();
+      router.replace("/admin/appointments");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleAddAppointment = async () => {
     if (!newAppt.patientId || !newAppt.doctorId || !newAppt.date || !newAppt.time) {
       setAddError("Please fill in all required fields.");
@@ -691,7 +701,7 @@ export default function AppointmentsManagement() {
         : doctors;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-white flex">
       <AdminSidebar
         onToggle={() => setSidebarOpen((v) => !v)}
         activePage="appointments"
@@ -798,7 +808,7 @@ export default function AppointmentsManagement() {
                     <button
                       type="button"
                       onClick={() => setSelectedDate(new Date())}
-                      className="ms-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-dental-blue transition hover:bg-dental-blue/10"
+                      className="ms-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-brand transition hover:bg-brand/10"
                     >
                       {t("common.today")}
                     </button>
@@ -825,7 +835,7 @@ export default function AppointmentsManagement() {
                             ...visibleDoctors.map((doctor) => ({
                               value: String(doctor.id),
                               label: doctor.name,
-                              dot: doctor.color || "bg-dental-blue",
+                              dot: doctor.color || "bg-brand",
                               count: dateAppointments.filter((a) => a.doctorId === doctor.id).length,
                             })),
                           ],
@@ -948,7 +958,7 @@ export default function AppointmentsManagement() {
                                       setPostponeTime(apt.time);
                                     }}
                                   >
-                                    <FaCalendarPlus className="text-dental-blue" /> {t("appointments.postpone")}
+                                    <FaCalendarPlus className="text-brand" /> {t("appointments.postpone")}
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
                                     onClick={() => handleCancelAppointment(apt.id)}
@@ -1037,7 +1047,7 @@ export default function AppointmentsManagement() {
           <Button variant="outline" className="flex-1" onClick={() => setShowAddModal(false)}>
             {t("common.cancel")}
           </Button>
-          <Button className="flex-1 bg-dental-blue hover:bg-dental-blue/90" onClick={handleAddAppointment} disabled={addLoading}>
+          <Button className="flex-1 bg-brand hover:bg-brand/90" onClick={handleAddAppointment} disabled={addLoading}>
             {addLoading ? t("appointments.scheduling") : t("appointments.scheduleAppointment")}
           </Button>
         </div>
@@ -1317,7 +1327,7 @@ export default function AppointmentsManagement() {
                   value={postponeDate}
                   min={new Date().toISOString().split("T")[0]}
                   onChange={(e) => setPostponeDate(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
                 />
               </div>
               <div>
@@ -1326,7 +1336,7 @@ export default function AppointmentsManagement() {
                   type="time"
                   value={postponeTime}
                   onChange={(e) => setPostponeTime(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
                 />
               </div>
               <p className="text-xs text-gray-500">{t("appointments.slotAutoCreate")}</p>
@@ -1341,7 +1351,7 @@ export default function AppointmentsManagement() {
               <button
                 onClick={handlePostponeSubmit}
                 disabled={!postponeDate || !postponeTime || postponeLoading}
-                className="flex-1 px-4 py-2 bg-dental-blue text-white rounded-lg text-sm font-medium hover:bg-dental-blue/90 disabled:opacity-50 transition-colors"
+                className="flex-1 px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:bg-brand/90 disabled:opacity-50 transition-colors"
               >
                 {postponeLoading ? t("common.saving") : t("common.confirm")}
               </button>

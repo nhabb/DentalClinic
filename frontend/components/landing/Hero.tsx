@@ -15,7 +15,7 @@ export default function Hero() {
           <div className="text-center md:text-left rtl:md:text-right animate-fadeIn">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
               {t("landing.heroTitle")}
-              <span className="block text-dental-blue">{t("landing.heroBrand")}</span>
+              <span className="block text-brand">{t("landing.heroBrand")}</span>
             </h1>
             <p className="text-lg md:text-xl text-gray-600 mb-8 max-w-2xl">
               {t("landing.heroSubtitle")}
@@ -24,7 +24,7 @@ export default function Hero() {
             <div className="flex justify-center md:justify-start">
               <Link
                 href="/login"
-                className="bg-dental-blue text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-primary-700 transition-all transform hover:scale-105 shadow-lg"
+                className="bg-brand text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-primary-700 transition-all transform hover:scale-105 shadow-lg"
               >
                 {t("landing.patientPortal")}
               </Link>

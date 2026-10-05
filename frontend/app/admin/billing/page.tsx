@@ -317,7 +317,7 @@ export default function BillingPage() {
   // ── Render ────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-white flex">
       <AdminSidebar activePage="billing" sidebarOpen={sidebarOpen} onToggle={() => setSidebarOpen((v) => !v)} onLogout={handleLogout} />
 
       <div className="flex-1 flex flex-col min-w-0">
@@ -410,7 +410,7 @@ export default function BillingPage() {
                           ))}
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-100">
+                      <tbody className="divide-y divide-gray-100 stagger">
                         {filtered.map((inv) => (
                           <tr key={inv.id} className="hover:bg-gray-50 transition-colors">
                             <td className="px-4 py-3">
@@ -435,7 +435,7 @@ export default function BillingPage() {
                               <div className="flex items-center gap-1">
                                 <button
                                   onClick={() => openViewModal(inv)}
-                                  className="p-2 text-dental-blue hover:bg-blue-50 rounded-lg transition-colors"
+                                  className="p-2 text-brand hover:bg-blue-50 rounded-lg transition-colors"
                                   title={t("billing.viewInvoice")}
                                 >
                                   <FaEye />
@@ -518,7 +518,7 @@ export default function BillingPage() {
                   <select
                     value={item.procedure_name}
                     onChange={(e) => updateLineItem(idx, "procedure_name", e.target.value)}
-                    className="flex-1 min-w-0 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue text-gray-900 bg-white"
+                    className="flex-1 min-w-0 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand text-gray-900 bg-white"
                   >
                     <option value="">{t("billing.selectProcedure")}</option>
                     {PROCEDURES.map((p) => (
@@ -533,7 +533,7 @@ export default function BillingPage() {
                     placeholder={t("billing.amountCol")}
                     value={item.amount}
                     onChange={(e) => updateLineItem(idx, "amount", e.target.value)}
-                    className="w-32 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue text-gray-900 bg-white"
+                    className="w-32 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand text-gray-900 bg-white"
                   />
                   {lineItems.length > 1 && (
                     <button
@@ -549,12 +549,12 @@ export default function BillingPage() {
             <button
               type="button"
               onClick={addLineItem}
-              className="mt-2 flex items-center gap-1 text-sm text-dental-blue hover:text-dental-teal font-medium"
+              className="mt-2 flex items-center gap-1 text-sm text-brand hover:text-brand-400 font-medium"
             >
               <FaPlus className="text-xs" /> {t("billing.addLineItem")}
             </button>
             <div className="mt-3 text-right text-sm font-semibold text-gray-800">
-              {t("billing.total")}: <span className="text-dental-blue text-base">${computedTotal.toFixed(2)}</span>
+              {t("billing.total")}: <span className="text-brand text-base">${computedTotal.toFixed(2)}</span>
             </div>
           </div>
 
@@ -610,7 +610,7 @@ export default function BillingPage() {
                       <td className="px-3 py-2 text-gray-800">
                         {li.procedure_name}
                         {li.tooth_number && (
-                          <span className="ml-2 rtl:ml-0 rtl:mr-2 inline-block px-1.5 py-0.5 rounded bg-blue-50 text-dental-blue text-xs font-semibold">
+                          <span className="ml-2 rtl:ml-0 rtl:mr-2 inline-block px-1.5 py-0.5 rounded bg-blue-50 text-brand text-xs font-semibold">
                             {t("dentalChart.toothCol")} {li.tooth_number}
                           </span>
                         )}

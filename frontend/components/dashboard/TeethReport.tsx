@@ -211,11 +211,11 @@ export default function TeethReport({ records }: { records: RecordRow[] }) {
                   aria-pressed={active}
                   className={cn(
                     "inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-[13px] font-medium transition-all",
-                    active ? "border-dental-blue/30 bg-dental-blue/10 text-dental-blue" : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-900",
+                    active ? "border-brand/30 bg-brand/10 text-brand" : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-900",
                   )}
                 >
                   {p.name === null ? t("adminDashboard.allProcedures") : p.name}
-                  {p.name !== null && <span className={cn("rounded-full px-1.5 py-px text-[11px] leading-4 tabular-nums", active ? "bg-dental-blue/15 text-dental-blue" : "bg-gray-100 text-gray-500")}>{p.count}</span>}
+                  {p.name !== null && <span className={cn("rounded-full px-1.5 py-px text-[11px] leading-4 tabular-nums", active ? "bg-brand/15 text-brand" : "bg-gray-100 text-gray-500")}>{p.count}</span>}
                 </button>
               );
             })}
@@ -226,7 +226,7 @@ export default function TeethReport({ records }: { records: RecordRow[] }) {
           <select
             value={pinned ?? ""}
             onChange={(e) => pin(e.target.value || null)}
-            className="h-8 rounded-xl border border-gray-200 bg-white px-2 text-sm text-gray-700 shadow-sm focus:border-dental-blue focus:outline-none focus:ring-4 focus:ring-dental-blue/10"
+            className="h-8 rounded-xl border border-gray-200 bg-white px-2 text-sm text-gray-700 shadow-sm focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/10"
           >
             <option value="">{t("adminDashboard.allTeeth")}</option>
             {agg.ranked.map((a) => (
@@ -274,7 +274,7 @@ export default function TeethReport({ records }: { records: RecordRow[] }) {
                 <div className="min-w-0">
                   <p className="flex items-center gap-2 text-[11px] uppercase tracking-wide text-gray-400">
                     {t("dentalChart.toothCol")} {current.fdi}
-                    <span className={cn("rounded-full px-1.5 py-px text-[10px] normal-case tracking-normal", pinned === current.fdi ? "bg-dental-blue/10 text-dental-blue" : "bg-gray-100 text-gray-500")}>
+                    <span className={cn("rounded-full px-1.5 py-px text-[10px] normal-case tracking-normal", pinned === current.fdi ? "bg-brand/10 text-brand" : "bg-gray-100 text-gray-500")}>
                       {pinned === current.fdi ? t("adminDashboard.pinned") : t("adminDashboard.previewClickToPin")}
                     </span>
                   </p>
@@ -340,7 +340,7 @@ export default function TeethReport({ records }: { records: RecordRow[] }) {
                       onMouseLeave={() => setHovered(null)}
                       className="flex w-full items-center gap-2 rounded-lg px-2 py-1 text-left text-xs transition hover:bg-gray-50 rtl:text-right"
                     >
-                      <span className="w-7 shrink-0 font-bold text-dental-blue">{a.fdi}</span>
+                      <span className="w-7 shrink-0 font-bold text-brand">{a.fdi}</span>
                       <span className="min-w-0 flex-1 truncate text-gray-700">{toothName(a.fdi, t)}</span>
                       <span className="flex shrink-0 items-center gap-1.5">
                         {a.completed > 0 && <span className="rounded-full bg-blue-50 px-1.5 text-[10px] font-medium tabular-nums text-blue-700">{a.completed}</span>}

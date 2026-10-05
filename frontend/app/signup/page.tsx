@@ -245,7 +245,7 @@ export default function SignupPage() {
             <LanguageSwitcher />
           </div>
           <Link href="/" className="inline-flex items-center space-x-2">
-            <div className="w-12 h-12 bg-gradient-to-br from-dental-blue to-dental-teal rounded-lg flex items-center justify-center shadow-lg">
+            <div className="w-12 h-12 bg-gradient-to-br from-brand to-brand-400 rounded-lg flex items-center justify-center shadow-lg">
               <FaTooth className="text-white text-2xl" />
             </div>
             <span className="text-2xl font-bold text-white">BrightSmile</span>
@@ -260,8 +260,8 @@ export default function SignupPage() {
 
         <form className="space-y-6" onSubmit={handleSubmit}>
           {/* Personal Information — Required (section 1) */}
-          <FieldSet className="border-2 border-dental-blue/20 rounded-xl p-6 bg-white shadow-xl">
-            <FieldLegend className="text-2xl font-bold text-dental-blue px-3 bg-white tracking-tight">
+          <FieldSet className="border-2 border-brand/20 rounded-xl p-6 bg-white shadow-xl">
+            <FieldLegend className="text-2xl font-bold text-brand px-3 bg-white tracking-tight">
               {t("continueLogin.personalInfo")}
             </FieldLegend>
             <FieldDescription className="text-gray-600 mb-6 font-light text-base">
@@ -280,7 +280,7 @@ export default function SignupPage() {
                     value={form.firstName}
                     onChange={handleChange}
                     placeholder="Ahmad"
-                    className={`focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal ${errors.firstName ? "border-red-400" : ""}`}
+                    className={`focus:ring-2 focus:ring-brand focus:border-brand text-base font-normal ${errors.firstName ? "border-red-400" : ""}`}
                   />
                   <FieldError field="firstName" />
                 </Field>
@@ -295,7 +295,7 @@ export default function SignupPage() {
                     value={form.lastName}
                     onChange={handleChange}
                     placeholder="Khoury"
-                    className={`focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal ${errors.lastName ? "border-red-400" : ""}`}
+                    className={`focus:ring-2 focus:ring-brand focus:border-brand text-base font-normal ${errors.lastName ? "border-red-400" : ""}`}
                   />
                   <FieldError field="lastName" />
                 </Field>
@@ -313,7 +313,7 @@ export default function SignupPage() {
                     value={form.phone}
                     onChange={handleChange}
                     placeholder="+961 3 123 456"
-                    className={`focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal ${errors.phone ? "border-red-400" : ""}`}
+                    className={`focus:ring-2 focus:ring-brand focus:border-brand text-base font-normal ${errors.phone ? "border-red-400" : ""}`}
                   />
                   <FieldError field="phone" />
                 </Field>
@@ -369,8 +369,8 @@ export default function SignupPage() {
           </FieldSet>
 
           {/* Address — Optional (section 2) */}
-          <FieldSet className="border-2 border-dental-blue/20 rounded-xl p-6 bg-white shadow-xl">
-            <FieldLegend className="text-2xl font-bold text-dental-blue px-3 bg-white tracking-tight flex items-center">
+          <FieldSet className="border-2 border-brand/20 rounded-xl p-6 bg-white shadow-xl">
+            <FieldLegend className="text-2xl font-bold text-brand px-3 bg-white tracking-tight flex items-center">
               {t("continueLogin.addressInfo")}
               <OptionalBadge />
             </FieldLegend>
@@ -389,7 +389,7 @@ export default function SignupPage() {
                   value={form.address}
                   onChange={handleChange}
                   placeholder="Hamra Street, Building 123"
-                  className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
+                  className="focus:ring-2 focus:ring-brand focus:border-brand text-base font-normal"
                 />
               </Field>
               <div className="grid grid-cols-2 gap-4">
@@ -404,7 +404,7 @@ export default function SignupPage() {
                     value={form.city}
                     onChange={handleChange}
                     placeholder="Beirut"
-                    className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
+                    className="focus:ring-2 focus:ring-brand focus:border-brand text-base font-normal"
                   />
                 </Field>
                 <Field>
@@ -418,7 +418,7 @@ export default function SignupPage() {
                     value={form.governate}
                     onChange={handleChange}
                     placeholder="Beirut"
-                    className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
+                    className="focus:ring-2 focus:ring-brand focus:border-brand text-base font-normal"
                   />
                 </Field>
               </div>
@@ -426,8 +426,8 @@ export default function SignupPage() {
           </FieldSet>
 
           {/* Emergency Contact — Required (section 3) */}
-          <FieldSet className="border-2 border-dental-blue/20 rounded-xl p-6 bg-white shadow-xl">
-            <FieldLegend className="text-2xl font-bold text-dental-blue px-3 bg-white tracking-tight flex items-center">
+          <FieldSet className="border-2 border-brand/20 rounded-xl p-6 bg-white shadow-xl">
+            <FieldLegend className="text-2xl font-bold text-brand px-3 bg-white tracking-tight flex items-center">
               {t("continueLogin.emergencyContact")}
             </FieldLegend>
             <FieldDescription className="text-gray-600 mb-6 font-light text-base">
@@ -446,7 +446,7 @@ export default function SignupPage() {
                     value={form.emergencyContact}
                     onChange={handleChange}
                     placeholder="Layla Khoury"
-                    className={`focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal ${errors.emergencyContact ? "border-red-400" : ""}`}
+                    className={`focus:ring-2 focus:ring-brand focus:border-brand text-base font-normal ${errors.emergencyContact ? "border-red-400" : ""}`}
                   />
                   <FieldError field="emergencyContact" />
                 </Field>
@@ -462,7 +462,7 @@ export default function SignupPage() {
                     value={form.emergencyPhone}
                     onChange={handleChange}
                     placeholder="+961 3 987 654"
-                    className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
+                    className="focus:ring-2 focus:ring-brand focus:border-brand text-base font-normal"
                   />
                 </Field>
               </div>
@@ -470,8 +470,8 @@ export default function SignupPage() {
           </FieldSet>
 
           {/* Insurance — Optional (section 4) */}
-          <FieldSet className="border-2 border-dental-blue/20 rounded-xl p-6 bg-white shadow-xl">
-            <FieldLegend className="text-2xl font-bold text-dental-blue px-3 bg-white tracking-tight flex items-center">
+          <FieldSet className="border-2 border-brand/20 rounded-xl p-6 bg-white shadow-xl">
+            <FieldLegend className="text-2xl font-bold text-brand px-3 bg-white tracking-tight flex items-center">
               {t("continueLogin.insuranceInfo")}
               <OptionalBadge />
             </FieldLegend>
@@ -491,7 +491,7 @@ export default function SignupPage() {
                     value={form.insuranceProvider}
                     onChange={handleChange}
                     placeholder="Globemed"
-                    className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
+                    className="focus:ring-2 focus:ring-brand focus:border-brand text-base font-normal"
                   />
                 </Field>
                 <Field>
@@ -505,7 +505,7 @@ export default function SignupPage() {
                     value={form.insurancePolicy}
                     onChange={handleChange}
                     placeholder="ABC123456789"
-                    className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
+                    className="focus:ring-2 focus:ring-brand focus:border-brand text-base font-normal"
                   />
                 </Field>
               </div>
@@ -513,8 +513,8 @@ export default function SignupPage() {
           </FieldSet>
 
           {/* Medical History — Optional (section 5) */}
-          <FieldSet className="border-2 border-dental-blue/20 rounded-xl p-6 bg-white shadow-xl">
-            <FieldLegend className="text-2xl font-bold text-dental-blue px-3 bg-white tracking-tight flex items-center">
+          <FieldSet className="border-2 border-brand/20 rounded-xl p-6 bg-white shadow-xl">
+            <FieldLegend className="text-2xl font-bold text-brand px-3 bg-white tracking-tight flex items-center">
               {t("continueLogin.medicalHistory")}
               <OptionalBadge />
             </FieldLegend>
@@ -531,7 +531,7 @@ export default function SignupPage() {
                   name="bloodType"
                   value={form.bloodType}
                   onChange={(e) => setForm({ ...form, bloodType: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-dental-blue focus:border-dental-blue"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
                 >
                   <option value="">Select blood type</option>
                   {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((bt) => (
@@ -550,7 +550,7 @@ export default function SignupPage() {
                   value={form.medicalConditions}
                   onChange={handleChange}
                   placeholder="e.g., Diabetes, Hypertension"
-                  className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
+                  className="focus:ring-2 focus:ring-brand focus:border-brand text-base font-normal"
                 />
               </Field>
               <Field>
@@ -564,7 +564,7 @@ export default function SignupPage() {
                   value={form.allergies}
                   onChange={handleChange}
                   placeholder="e.g., Penicillin, Latex"
-                  className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
+                  className="focus:ring-2 focus:ring-brand focus:border-brand text-base font-normal"
                 />
               </Field>
               <Field>
@@ -578,15 +578,15 @@ export default function SignupPage() {
                   value={form.currentMedications}
                   onChange={handleChange}
                   placeholder="e.g., Aspirin, Lisinopril"
-                  className="focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal"
+                  className="focus:ring-2 focus:ring-brand focus:border-brand text-base font-normal"
                 />
               </Field>
             </FieldGroup>
           </FieldSet>
 
           {/* Account — Required (section 6 / last) */}
-          <FieldSet className="border-2 border-dental-blue/20 rounded-xl p-6 bg-white shadow-xl">
-            <FieldLegend className="text-2xl font-bold text-dental-blue px-3 bg-white tracking-tight">
+          <FieldSet className="border-2 border-brand/20 rounded-xl p-6 bg-white shadow-xl">
+            <FieldLegend className="text-2xl font-bold text-brand px-3 bg-white tracking-tight">
               {t("signup.createAccount")}
             </FieldLegend>
             <FieldDescription className="text-gray-600 mb-6 font-light text-base">
@@ -604,7 +604,7 @@ export default function SignupPage() {
                   value={form.email}
                   onChange={handleChange}
                   placeholder="ahmad@example.com"
-                  className={`focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal ${errors.email ? "border-red-400" : ""}`}
+                  className={`focus:ring-2 focus:ring-brand focus:border-brand text-base font-normal ${errors.email ? "border-red-400" : ""}`}
                 />
                 <FieldError field="email" />
               </Field>
@@ -620,7 +620,7 @@ export default function SignupPage() {
                     value={form.password}
                     onChange={handleChange}
                     placeholder={t("signup.createPassword")}
-                    className={`focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal ${errors.password ? "border-red-400" : ""}`}
+                    className={`focus:ring-2 focus:ring-brand focus:border-brand text-base font-normal ${errors.password ? "border-red-400" : ""}`}
                   />
                   <FieldError field="password" />
                 </Field>
@@ -635,7 +635,7 @@ export default function SignupPage() {
                     value={form.confirmPassword}
                     onChange={handleChange}
                     placeholder={t("signup.repeatPassword")}
-                    className={`focus:ring-2 focus:ring-dental-blue focus:border-dental-blue text-base font-normal ${errors.confirmPassword ? "border-red-400" : ""}`}
+                    className={`focus:ring-2 focus:ring-brand focus:border-brand text-base font-normal ${errors.confirmPassword ? "border-red-400" : ""}`}
                   />
                   <FieldError field="confirmPassword" />
                 </Field>

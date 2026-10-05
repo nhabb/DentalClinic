@@ -558,7 +558,7 @@ export default function DashboardAnalytics({ data, loading = false, operations }
                   key={c.key}
                   type="button"
                   onClick={() => clearDim(c.key)}
-                  className="inline-flex h-7 items-center gap-1.5 rounded-full border border-dental-blue/30 bg-dental-blue/10 px-2.5 text-xs font-medium text-dental-blue transition hover:bg-dental-blue/15"
+                  className="inline-flex h-7 items-center gap-1.5 rounded-full border border-brand/30 bg-brand/10 px-2.5 text-xs font-medium text-brand transition hover:bg-brand/15"
                 >
                   {c.label}
                   <FaTimes className="text-[9px]" />
@@ -738,7 +738,7 @@ export default function DashboardAnalytics({ data, loading = false, operations }
           title={t("adminDashboard.lowStockAlerts")}
           subtitle={filters.inventoryCategory ? inventoryCatLabel(filters.inventoryCategory) : undefined}
           action={
-            <Link href="/admin/inventory" className="inline-flex items-center gap-1 text-xs font-medium text-dental-blue hover:underline">
+            <Link href="/admin/inventory" className="inline-flex items-center gap-1 text-xs font-medium text-brand hover:underline">
               {t("common.manage")} <FaChevronRight className="text-[9px] rtl:rotate-180" />
             </Link>
           }

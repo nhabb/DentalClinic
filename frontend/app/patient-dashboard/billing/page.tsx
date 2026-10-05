@@ -142,7 +142,7 @@ export default function PatientBillingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <Link href="/" className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-dental-blue to-dental-teal rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-br from-brand to-brand-400 rounded-lg flex items-center justify-center">
                 <FaTooth className="text-white text-xl" />
               </div>
               <span className="text-xl font-bold text-gray-900">BrightSmile</span>
@@ -169,7 +169,7 @@ export default function PatientBillingPage() {
         {/* Page title */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-            <FaFileInvoiceDollar className="text-dental-blue" />
+            <FaFileInvoiceDollar className="text-brand" />
             My Invoices
           </h1>
           <p className="text-gray-500 mt-1 text-sm">View your treatment invoices and payment history.</p>
@@ -193,7 +193,7 @@ export default function PatientBillingPage() {
                   <div className="p-5 flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
-                        <FaFileInvoiceDollar className="text-dental-blue" />
+                        <FaFileInvoiceDollar className="text-brand" />
                       </div>
                       <div>
                         <p className="font-semibold text-gray-900">
@@ -213,7 +213,7 @@ export default function PatientBillingPage() {
                       </div>
                       <button
                         onClick={() => toggleExpand(inv.id)}
-                        className="p-2 text-gray-400 hover:text-dental-blue hover:bg-blue-50 rounded-lg transition-colors"
+                        className="p-2 text-gray-400 hover:text-brand hover:bg-blue-50 rounded-lg transition-colors"
                       >
                         {isExpanded ? <FaChevronUp /> : <FaChevronDown />}
                       </button>

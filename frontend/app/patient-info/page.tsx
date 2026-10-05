@@ -174,7 +174,7 @@ export default function PatientInfoPage() {
           <div className="flex gap-4 pt-4">
             <button
               type="submit"
-              className="flex-1 bg-dental-blue text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-primary-700 transition-all transform hover:scale-105 shadow-lg"
+              className="flex-1 bg-brand text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-primary-700 transition-all transform hover:scale-105 shadow-lg"
             >
               Complete Registration
             </button>
@@ -250,7 +250,7 @@ function InputField({
         value={value}
         onChange={onChange}
         required={required}
-        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-dental-blue focus:border-transparent transition-all"
+        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
       />
     </div>
   )
@@ -287,7 +287,7 @@ function TextAreaField({
         onChange={onChange}
         required={required}
         rows={rows}
-        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-dental-blue focus:border-transparent transition-all resize-none"
+        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent transition-all resize-none"
       />
     </div>
   )

@@ -56,13 +56,13 @@ export interface ListToolbarProps {
 
 /** Shared control styles so page-specific controls (selects, toggles) match the bar. */
 export const toolbarSelectClass =
-  "h-9 rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-700 shadow-sm transition focus:border-dental-blue focus:outline-none focus:ring-4 focus:ring-dental-blue/10";
+  "h-9 rounded-xl border border-ink-200 bg-card px-3 text-sm font-medium text-ink-700 shadow-xs transition focus:border-brand-400 focus:outline-none focus:ring-4 focus:ring-brand-500/12";
 export const toolbarIconButtonClass = (active: boolean) =>
   cn(
     "inline-flex h-8 w-8 items-center justify-center rounded-lg transition-all",
-    active ? "bg-white text-dental-blue shadow-sm ring-1 ring-black/5" : "text-gray-400 hover:text-gray-700",
+    active ? "bg-card text-brand-700 shadow-xs ring-1 ring-ink-900/5" : "text-ink-400 hover:bg-card/60 hover:text-ink-800",
   );
-export const toolbarSegmentWrapClass = "inline-flex items-center gap-0.5 rounded-xl bg-gray-100/80 p-1";
+export const toolbarSegmentWrapClass = "inline-flex items-center gap-0.5 rounded-xl bg-ink-100/80 p-1";
 
 function Chip({ option, active, onClick }: { option: ToolbarOption; active: boolean; onClick: () => void }) {
   return (
@@ -71,10 +71,10 @@ function Chip({ option, active, onClick }: { option: ToolbarOption; active: bool
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        "inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-[13px] font-medium transition-all",
+        "press inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-[13px] font-semibold",
         active
-          ? "border-dental-blue/30 bg-dental-blue/10 text-dental-blue"
-          : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-900",
+          ? "border-brand-300 bg-brand-50 text-brand-800 shadow-xs"
+          : "border-ink-200 bg-card text-ink-600 hover:border-brand-200 hover:bg-brand-50/60 hover:text-ink-900",
       )}
     >
       {option.dot && <span className={cn("h-2 w-2 rounded-full", option.dot)} />}
@@ -84,7 +84,7 @@ function Chip({ option, active, onClick }: { option: ToolbarOption; active: bool
         <span
           className={cn(
             "rounded-full px-1.5 py-px text-[11px] leading-4 tabular-nums",
-            active ? "bg-dental-blue/15 text-dental-blue" : "bg-gray-100 text-gray-500",
+            active ? "bg-brand-200/70 text-brand-900" : "bg-ink-100 text-ink-500",
           )}
         >
           {option.count}
@@ -101,15 +101,15 @@ function Segment({ option, active, onClick }: { option: ToolbarOption; active: b
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        "inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 text-[13px] font-medium transition-all",
-        active ? "bg-white text-gray-900 shadow-sm ring-1 ring-black/5" : "text-gray-500 hover:text-gray-900",
+        "press inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 text-[13px] font-semibold",
+        active ? "bg-card text-ink-900 shadow-xs ring-1 ring-ink-900/5" : "text-ink-500 hover:bg-card/60 hover:text-ink-900",
       )}
     >
       {option.dot && <span className={cn("h-2 w-2 rounded-full", option.dot)} />}
       {option.icon && <span className="inline-flex text-xs [&>svg]:h-3 [&>svg]:w-3">{option.icon}</span>}
       {option.label}
       {option.count !== undefined && (
-        <span className={cn("text-[11px] tabular-nums", active ? "text-gray-500" : "text-gray-400")}>{option.count}</span>
+        <span className={cn("text-[11px] tabular-nums", active ? "text-ink-500" : "text-ink-400")}>{option.count}</span>
       )}
     </button>
   );
@@ -133,27 +133,32 @@ export function ListToolbar({
   const showTally = typeof shown === "number" && typeof total === "number";
 
   return (
-    <div className={cn(sticky ? "sticky top-0 z-10 -mx-2 px-2 pt-1 pb-5 bg-gray-50/90 backdrop-blur-sm" : "mb-6", className)}>
-      <div className="rounded-2xl border border-gray-200/80 bg-white shadow-sm">
+    <div
+      className={cn(
+        sticky ? "sticky top-[70px] z-10 -mx-2 bg-background/85 px-2 pb-5 pt-2 backdrop-blur-md" : "mb-6",
+        className,
+      )}
+    >
+      <div className="rounded-2xl border border-ink-200/80 bg-card shadow-sm">
         {/* Row 1: leading · search · tally · clear · trailing */}
         <div className="flex flex-col gap-3 p-3 md:flex-row md:items-center">
           {leading}
           {search && (
             <div className="relative min-w-0 flex-1">
-              <FaSearch className="pointer-events-none absolute start-3.5 top-1/2 -translate-y-1/2 text-[13px] text-gray-400" />
+              <FaSearch className="pointer-events-none absolute start-3.5 top-1/2 -translate-y-1/2 text-[13px] text-ink-400" />
               <input
                 type="search"
                 value={search.value}
                 onChange={(e) => search.onChange(e.target.value)}
                 placeholder={search.placeholder}
-                className="h-10 w-full rounded-xl border border-gray-200 bg-gray-50 ps-10 pe-9 text-sm text-gray-900 placeholder:text-gray-400 transition focus:border-dental-blue focus:bg-white focus:outline-none focus:ring-4 focus:ring-dental-blue/10 [&::-webkit-search-cancel-button]:hidden"
+                className="h-10 w-full rounded-xl border border-ink-200 bg-ink-50/70 ps-10 pe-9 text-sm text-ink-900 placeholder:text-ink-400 transition focus:border-brand-400 focus:bg-card focus:outline-none focus:ring-4 focus:ring-brand-500/12 [&::-webkit-search-cancel-button]:hidden"
               />
               {search.value && (
                 <button
                   type="button"
                   onClick={() => search.onChange("")}
                   aria-label="Clear search"
-                  className="absolute end-2.5 top-1/2 -translate-y-1/2 rounded-full p-1 text-gray-400 transition hover:bg-gray-200/70 hover:text-gray-700"
+                  className="press absolute end-2.5 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-ink-400 hover:bg-ink-200/70 hover:text-ink-800"
                 >
                   <FaTimes className="text-[11px]" />
                 </button>
@@ -163,9 +168,9 @@ export function ListToolbar({
           {(showTally || (hasActiveFilters && onClear) || trailing) && (
             <div className="flex flex-wrap items-center gap-2 md:shrink-0">
               {showTally && (
-                <span className="inline-flex h-8 items-center rounded-full bg-gray-100 px-3 text-xs text-gray-600 tabular-nums">
-                  <span className="font-semibold text-gray-900">{shown}</span>
-                  <span className="mx-1 text-gray-400">/</span>
+                <span className="inline-flex h-8 items-center rounded-full bg-ink-100 px-3 text-xs text-ink-600 tabular-nums">
+                  <span className="font-bold text-ink-900">{shown}</span>
+                  <span className="mx-1 text-ink-400">/</span>
                   {total}
                   {unitLabel && <span className="ms-1">{unitLabel}</span>}
                 </span>
@@ -174,7 +179,7 @@ export function ListToolbar({
                 <button
                   type="button"
                   onClick={onClear}
-                  className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium text-gray-600 transition hover:bg-gray-100 hover:text-gray-900"
+                  className="press inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-clay-700 hover:bg-clay-50"
                 >
                   <FaTimes className="text-[10px]" />
                   {clearLabel}
@@ -187,13 +192,13 @@ export function ListToolbar({
 
         {/* Row 2: filter groups */}
         {visibleGroups.length > 0 && (
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-3 border-t border-gray-100 px-3 py-3">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-3 border-t border-ink-200/60 px-3 py-3">
             {visibleGroups.map((g, gi) => (
               <Fragment key={g.key}>
-                {gi > 0 && <span className="hidden h-6 w-px bg-gray-200 lg:block" aria-hidden />}
+                {gi > 0 && <span className="hidden h-6 w-px bg-ink-200 lg:block" aria-hidden />}
                 <div className="flex flex-wrap items-center gap-2">
                   {g.label && (
-                    <span className="me-1 text-[11px] font-semibold uppercase tracking-wide text-gray-400">{g.label}</span>
+                    <span className="me-1 text-[11px] font-bold uppercase tracking-wide text-ink-400">{g.label}</span>
                   )}
                   {g.variant === "segmented" ? (
                     <div className={toolbarSegmentWrapClass} role="group" aria-label={g.label}>

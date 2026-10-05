@@ -117,7 +117,7 @@ export default function LoginPage() {
               <LanguageSwitcher />
             </div>
             <Link href="/" className="inline-flex items-center space-x-2">
-              <div className="w-12 h-12 bg-gradient-to-br from-dental-blue to-dental-teal rounded-lg flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-br from-brand to-brand-400 rounded-lg flex items-center justify-center shadow-lg">
                 <FaTooth className="text-white text-2xl" />
               </div>
               <span className="text-2xl font-bold text-gray-900">BrightSmile</span>
@@ -147,7 +147,7 @@ export default function LoginPage() {
                 type="email"
                 autoComplete="email"
                 required
-                className="appearance-none block w-full px-4 py-3 border border-gray-300 placeholder-gray-400 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-auth-blue focus:border-transparent transition-all"
+                className="appearance-none block w-full px-4 py-3 border border-gray-300 placeholder-gray-400 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-transparent transition-all"
                 placeholder={t("login.emailPlaceholder")}
               />
             </div>
@@ -164,7 +164,7 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
                 required
-                className="appearance-none block w-full px-4 py-3 border border-gray-300 placeholder-gray-400 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-auth-blue focus:border-transparent transition-all"
+                className="appearance-none block w-full px-4 py-3 border border-gray-300 placeholder-gray-400 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-transparent transition-all"
                 placeholder={t("login.passwordPlaceholder")}
               />
             </div>
@@ -218,7 +218,7 @@ export default function LoginPage() {
                   key={acc.role}
                   type="button"
                   onClick={() => fillDemo(acc)}
-                  className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg hover:border-dental-blue hover:shadow-sm transition-all text-left"
+                  className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg hover:border-brand hover:shadow-sm transition-all text-left"
                 >
                   <acc.icon className={`text-sm ${acc.color} shrink-0`} />
                   <div>
@@ -236,7 +236,7 @@ export default function LoginPage() {
           {/* Sign Up */}
           <p className="text-center text-sm text-gray-600">
             {t("login.noAccount")}{" "}
-            <Link href="/signup" className="font-semibold text-auth-blue hover:text-auth-blue-light">
+            <Link href="/signup" className="font-semibold text-brand-700 hover:text-brand-500">
               {t("login.signUp")}
             </Link>
           </p>

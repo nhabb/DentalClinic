@@ -354,7 +354,7 @@ export default function MedicalRecords() {
             onClick={() => setActiveTab("history")}
             className={`px-6 py-2.5 rounded-lg font-medium transition-all ${
               activeTab === "history"
-                ? "bg-white text-dental-blue shadow-sm"
+                ? "bg-white text-brand shadow-sm"
                 : "text-gray-600 hover:text-gray-900"
             }`}
           >
@@ -365,7 +365,7 @@ export default function MedicalRecords() {
             onClick={() => setActiveTab("documents")}
             className={`px-6 py-2.5 rounded-lg font-medium transition-all ${
               activeTab === "documents"
-                ? "bg-white text-dental-blue shadow-sm"
+                ? "bg-white text-brand shadow-sm"
                 : "text-gray-600 hover:text-gray-900"
             }`}
           >
@@ -387,7 +387,7 @@ export default function MedicalRecords() {
                     placeholder="Search visits by type, doctor, or notes..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/20 focus:border-dental-blue"
+                    className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
                   />
                 </div>
                 <div className="relative">
@@ -399,7 +399,7 @@ export default function MedicalRecords() {
                     <FaFilter className="mr-2" />
                     Filter
                     {filterType !== "all" && (
-                      <span className="ml-2 w-2 h-2 rounded-full bg-dental-blue inline-block" />
+                      <span className="ml-2 w-2 h-2 rounded-full bg-brand inline-block" />
                     )}
                   </Button>
                   {showFilter && (
@@ -410,7 +410,7 @@ export default function MedicalRecords() {
                           onClick={() => { setFilterType(type); setShowFilter(false); }}
                           className={`w-full text-left px-3 py-2 rounded-lg text-sm capitalize transition-colors ${
                             filterType === type
-                              ? "bg-dental-blue text-white"
+                              ? "bg-brand text-white"
                               : "hover:bg-gray-50 text-gray-700"
                           }`}
                         >
@@ -440,8 +440,8 @@ export default function MedicalRecords() {
                     className="w-full p-6 flex items-center justify-between text-left"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-dental-blue/10 rounded-xl flex items-center justify-center">
-                        <FaNotesMedical className="text-dental-blue text-xl" />
+                      <div className="w-12 h-12 bg-brand/10 rounded-xl flex items-center justify-center">
+                        <FaNotesMedical className="text-brand text-xl" />
                       </div>
                       <div>
                         <h3 className="font-bold text-gray-900 text-lg">
@@ -449,7 +449,7 @@ export default function MedicalRecords() {
                         </h3>
                         <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
                           <span className="flex items-center gap-1">
-                            <FaCalendarAlt className="text-dental-blue" />
+                            <FaCalendarAlt className="text-brand" />
                             {new Date(visit.date).toLocaleDateString("en-US", {
                               year: "numeric",
                               month: "long",
@@ -457,14 +457,14 @@ export default function MedicalRecords() {
                             })}
                           </span>
                           <span className="flex items-center gap-1">
-                            <FaUserMd className="text-dental-blue" />
+                            <FaUserMd className="text-brand" />
                             {visit.doctor}
                           </span>
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
-                      <span className="text-dental-blue font-semibold hidden sm:block">
+                      <span className="text-brand font-semibold hidden sm:block">
                         {visit.cost}
                       </span>
                       {expandedVisit === visit.id ? (
@@ -495,7 +495,7 @@ export default function MedicalRecords() {
                             {visit.treatments.map((treatment) => (
                               <span
                                 key={treatment}
-                                className="px-3 py-1.5 bg-dental-blue/10 text-dental-blue text-sm rounded-lg font-medium"
+                                className="px-3 py-1.5 bg-brand/10 text-brand text-sm rounded-lg font-medium"
                               >
                                 {treatment}
                               </span>
@@ -534,7 +534,7 @@ export default function MedicalRecords() {
                   {documents.map((doc) => (
                     <div
                       key={doc.id}
-                      className="flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:border-dental-blue/30 hover:bg-dental-blue/5 transition-all group"
+                      className="flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:border-brand/30 hover:bg-brand/5 transition-all group"
                     >
                       <div className="flex items-center gap-4">
                         <div
@@ -562,14 +562,14 @@ export default function MedicalRecords() {
                           <>
                             <button
                               onClick={() => setPreviewDoc({ name: doc.name, url: doc.url! })}
-                              className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 hover:text-dental-blue transition-colors"
+                              className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 hover:text-brand transition-colors"
                             >
                               <FaEye />
                             </button>
                             <a
                               href={doc.url}
                               download={doc.name}
-                              className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 hover:text-dental-blue transition-colors"
+                              className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 hover:text-brand transition-colors"
                             >
                               <FaDownload />
                             </a>
@@ -597,7 +597,7 @@ export default function MedicalRecords() {
                   href={previewDoc.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-dental-blue border border-dental-blue/30 rounded-lg hover:bg-blue-50 transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-brand border border-brand/30 rounded-lg hover:bg-blue-50 transition-colors"
                 >
                   <FaDownload className="text-xs" /> Download
                 </a>

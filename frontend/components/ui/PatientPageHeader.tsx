@@ -47,29 +47,29 @@ export function PatientPageHeader({
   }, []);
 
   return (
-    <header className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div className="flex justify-between items-center">
-          <Link
-            href="/patient-dashboard"
-            className="flex items-center space-x-2"
-          >
-            <div className="w-10 h-10 bg-gradient-to-br from-dental-blue to-dental-teal rounded-lg flex items-center justify-center">
-              <FaTooth className="text-white text-xl" />
-            </div>
-            <span className="text-xl font-bold text-gray-900">BrightSmile</span>
+    <header className="sticky top-0 z-50 border-b border-ink-200/70 bg-card/85 backdrop-blur-md">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 items-center justify-between gap-3">
+          <Link href="/patient-dashboard" className="group flex items-center gap-2.5">
+            <span className="flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 shadow-sm shadow-brand-700/20 transition-transform duration-200 group-hover:scale-105">
+              <FaTooth className="text-lg text-white" />
+            </span>
+            <span className="font-display text-xl font-bold text-ink-900">BrightSmile</span>
           </Link>
-          <div className="flex items-center gap-4">
+
+          <div className="flex items-center gap-3">
+            {/* The label is the useful part on a wide screen; on a phone the
+             * arrow alone is unambiguous and leaves room for the avatar. */}
+            <Link
+              href={backHref}
+              className="press inline-flex h-10 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-ink-600 hover:bg-brand-50 hover:text-brand-700"
+            >
+              <FaArrowLeft className="text-xs rtl:rotate-180" />
+              <span className="hidden sm:inline">{backLabel}</span>
+            </Link>
             {(photoUrl || name) && (
               <Avatar name={name || "User"} size="sm" src={photoUrl} />
             )}
-            <Link
-              href={backHref}
-              className="text-gray-600 hover:text-dental-blue transition-colors flex items-center gap-2"
-            >
-              <FaArrowLeft className="text-sm" />
-              {backLabel}
-            </Link>
           </div>
         </div>
       </div>

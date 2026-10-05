@@ -5,7 +5,7 @@ import { FaTimes } from "react-icons/fa";
 import { cn } from "@/lib/utils";
 import { useDialogBehavior } from "@/components/ui/useDialogBehavior";
 
-interface ModalProps {
+interface DrawerProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
@@ -18,27 +18,27 @@ interface ModalProps {
 }
 
 /**
- * Shared dialog. The panel never grows past the viewport: the title stays
- * pinned and the body scrolls, so long forms keep their footer buttons
- * reachable. While open it locks the page behind it and parks focus inside,
- * so Tab cannot wander off into the obscured page.
+ * Right-anchored slide-over — a lighter-weight sibling of Modal for quick
+ * peeks (a patient's headline info, a record preview) that shouldn't
+ * interrupt the list behind it as fully as a centered dialog does. Shares
+ * Modal's focus/Escape/scroll-lock behavior via useDialogBehavior.
  */
-export function Modal({
+export function Drawer({
   isOpen,
   onClose,
   title,
   children,
-  maxWidth = "max-w-lg",
+  maxWidth = "max-w-md",
   description,
   footer,
-}: ModalProps) {
+}: DrawerProps) {
   const panelRef = useDialogBehavior(isOpen, onClose);
 
   if (!isOpen) return null;
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-ink-950/45 p-0 backdrop-blur-sm animate-fade-in sm:items-center sm:p-4"
+      className="fixed inset-0 z-50 flex justify-end bg-ink-950/45 backdrop-blur-sm animate-fade-in"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -50,14 +50,10 @@ export function Modal({
         aria-label={title}
         tabIndex={-1}
         className={cn(
-          "flex max-h-[92vh] w-full flex-col overflow-hidden bg-card shadow-2xl outline-none",
-          "rounded-t-3xl sm:rounded-3xl animate-scale-in",
+          "flex h-full w-full flex-col overflow-hidden bg-card shadow-2xl outline-none animate-slide-left",
           maxWidth,
         )}
       >
-        {/* Grab handle — the sheet is bottom-anchored on phones. */}
-        <div aria-hidden className="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-ink-300 sm:hidden" />
-
         <div className="flex shrink-0 items-start justify-between gap-4 border-b border-ink-200/70 px-6 pb-4 pt-5">
           <div className="min-w-0">
             <h2 className="truncate text-xl font-bold tracking-tight text-ink-900">{title}</h2>

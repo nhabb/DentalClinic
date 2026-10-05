@@ -79,17 +79,17 @@ export default function Diplomas() {
         </div>
 
         {/* Featured Credential */}
-        <div className="bg-gradient-to-r from-dental-blue to-dental-teal rounded-2xl p-8 md:p-12 text-white text-center shadow-xl">
+        <div className="bg-gradient-to-r from-brand to-brand-400 rounded-2xl p-8 md:p-12 text-white text-center shadow-xl">
           <div className="flex justify-center mb-6">
             <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center">
-              <Award className="w-12 h-12 text-dental-blue" />
+              <Award className="w-12 h-12 text-brand" />
             </div>
           </div>
           <h3 className="text-2xl md:text-3xl font-bold mb-3">
             American Dental Association
           </h3>
           <p className="text-xl mb-2">{t("landing.boardCertifiedPractice")}</p>
-          <p className="text-dental-lightblue">
+          <p className="text-brand-200">
             {t("landing.adaRecognized")}
           </p>
         </div>
@@ -132,8 +132,8 @@ function CredentialCard({
   };
 
   return (
-    <div className="p-6 rounded-xl border-2 border-gray-200 hover:border-dental-blue hover:shadow-lg transition-all duration-300 group bg-white">
-      <div className="w-16 h-16 bg-dental-lightblue bg-opacity-20 rounded-lg flex items-center justify-center text-dental-blue mb-4 group-hover:bg-dental-blue group-hover:text-white transition-all">
+    <div className="p-6 rounded-xl border-2 border-gray-200 hover:border-brand hover:shadow-lg transition-all duration-300 group bg-white">
+      <div className="w-16 h-16 bg-brand-200 bg-opacity-20 rounded-lg flex items-center justify-center text-brand mb-4 group-hover:bg-brand group-hover:text-white transition-all">
         {getIcon()}
       </div>
       <h4 className="font-bold text-gray-900 mb-2 text-sm leading-tight">

@@ -1,6 +1,7 @@
 "use client";
 import { useRef } from "react";
 import { FaCamera } from "react-icons/fa";
+import { cn } from "@/lib/utils";
 
 interface AvatarProps {
   name: string;
@@ -10,18 +11,36 @@ interface AvatarProps {
 }
 
 const sizeClasses: Record<string, string> = {
-  sm: "w-8 h-8 text-sm",
-  md: "w-10 h-10 text-base",
-  lg: "w-14 h-14 text-xl",
-  xl: "w-16 h-16 text-2xl",
+  sm: "size-9 text-xs",
+  md: "size-10 text-sm",
+  lg: "size-14 text-lg",
+  xl: "size-16 text-xl",
 };
 
 const cameraIconSize: Record<string, string> = {
   sm: "text-[8px]",
-  md: "text-xs",
+  md: "text-[10px]",
   lg: "text-sm",
   xl: "text-base",
 };
+
+/* A patient list is far easier to scan when the initials bubbles are not all
+ * the same colour. The tone is derived from the name, so the same person keeps
+ * the same colour on every screen. All five sit at the 600 level, so white
+ * initials stay legible on each. */
+const TONES = [
+  "from-brand-500 to-brand-700",
+  "from-clay-500 to-clay-700",
+  "from-honey-500 to-honey-700",
+  "from-leaf-500 to-leaf-700",
+  "from-brick-400 to-brick-600",
+];
+
+function toneFor(name: string) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) % 9973;
+  return TONES[hash % TONES.length];
+}
 
 function getInitials(name: string) {
   return name
@@ -46,26 +65,40 @@ export function Avatar({ name, size = "lg", src, onUpload }: AvatarProps) {
     e.target.value = "";
   };
 
-  const baseClass = `${sizeClasses[size]} rounded-full overflow-hidden flex items-center justify-center text-white font-bold flex-shrink-0`;
+  const baseClass = cn(
+    sizeClasses[size],
+    "relative shrink-0 overflow-hidden rounded-full font-bold text-white",
+    "ring-2 ring-white/70 shadow-sm",
+    "flex items-center justify-center select-none",
+  );
+
+  const gradient = cn("bg-gradient-to-br", toneFor(name));
 
   const content = src ? (
-    <img src={src} alt={name} className="w-full h-full object-cover" />
+    <img src={src} alt={name} className="size-full object-cover" />
   ) : (
-    <span>{getInitials(name)}</span>
+    <span className="tracking-wide">{getInitials(name)}</span>
   );
 
   if (onUpload) {
     return (
       <div
         role="button"
+        tabIndex={0}
         aria-label="Change profile photo"
-        className={`${baseClass} relative cursor-pointer group ${!src ? "bg-gradient-to-br from-dental-blue to-dental-teal" : ""}`}
+        className={cn(baseClass, "group cursor-pointer", !src && gradient)}
         onClick={() => inputRef.current?.click()}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            inputRef.current?.click();
+          }
+        }}
       >
         {content}
-        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-          <FaCamera className={`text-white ${cameraIconSize[size]}`} />
-        </div>
+        <span className="absolute inset-0 flex items-center justify-center bg-ink-950/55 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100">
+          <FaCamera className={cn("text-white", cameraIconSize[size])} />
+        </span>
         <input
           ref={inputRef}
           type="file"
@@ -77,9 +110,5 @@ export function Avatar({ name, size = "lg", src, onUpload }: AvatarProps) {
     );
   }
 
-  return (
-    <div className={`${baseClass} bg-gradient-to-br from-dental-blue to-dental-teal`}>
-      {content}
-    </div>
-  );
+  return <div className={cn(baseClass, !src && gradient)}>{content}</div>;
 }

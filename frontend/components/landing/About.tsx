@@ -98,19 +98,19 @@ export default function About() {
             <h4 className="text-xl font-bold text-gray-900 mb-4">{t("landing.ourValues")}</h4>
             <ul className="space-y-2 text-gray-600">
               <li className="flex items-start space-x-2">
-                <span className="text-dental-blue font-bold">•</span>
+                <span className="text-brand font-bold">•</span>
                 <span>{t("landing.value1")}</span>
               </li>
               <li className="flex items-start space-x-2">
-                <span className="text-dental-blue font-bold">•</span>
+                <span className="text-brand font-bold">•</span>
                 <span>{t("landing.value2")}</span>
               </li>
               <li className="flex items-start space-x-2">
-                <span className="text-dental-blue font-bold">•</span>
+                <span className="text-brand font-bold">•</span>
                 <span>{t("landing.value3")}</span>
               </li>
               <li className="flex items-start space-x-2">
-                <span className="text-dental-blue font-bold">•</span>
+                <span className="text-brand font-bold">•</span>
                 <span>{t("landing.value4")}</span>
               </li>
             </ul>
@@ -148,7 +148,7 @@ function StatCard({
 }) {
   return (
     <div className="text-center p-6 bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow">
-      <div className="text-4xl md:text-5xl font-bold text-dental-blue mb-2">
+      <div className="text-4xl md:text-5xl font-bold text-brand mb-2">
         {number}
       </div>
       <div className="text-lg font-semibold text-gray-900 mb-1">{label}</div>
@@ -174,12 +174,12 @@ function TeamMemberCard({
       {/* Placeholder for team member photo */}
       <div className="h-64 gradient-hero flex items-center justify-center">
         <div className="w-32 h-32 bg-white rounded-full flex items-center justify-center">
-          <User className="w-16 h-16 text-dental-blue" />
+          <User className="w-16 h-16 text-brand" />
         </div>
       </div>
       <div className="p-6">
         <h4 className="text-xl font-bold text-gray-900 mb-1">{name}</h4>
-        <p className="text-dental-blue font-semibold mb-2">{role}</p>
+        <p className="text-brand font-semibold mb-2">{role}</p>
         <p className="text-sm text-gray-500 mb-3">{education}</p>
         <p className="text-gray-600 text-sm">{description}</p>
       </div>

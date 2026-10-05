@@ -13,6 +13,8 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { cn } from "@/lib/utils";
 import { ListToolbar } from "@/components/ui/ListToolbar";
 import { AdminPageHeader } from "@/components/ui/AdminPageHeader";
+import { BulkActionBar } from "@/components/ui/BulkActionBar";
+import { useImportExport } from "@/components/ui/useImportExport";
 import { Modal } from "@/components/ui/Modal";
 import { FormField, inputClass } from "@/components/ui/FormField";
 import {
@@ -34,6 +36,7 @@ import {
   FaArrowUp,
   FaArrowDown,
   FaHistory,
+  FaFileExport,
 } from "react-icons/fa";
 import type { IconType } from "react-icons";
 
@@ -105,7 +108,7 @@ function ImageUploadBox({
   return (
     <div
       onClick={() => inputRef.current?.click()}
-      className="relative w-full h-40 rounded-xl border-2 border-dashed border-gray-300 hover:border-dental-blue cursor-pointer overflow-hidden flex items-center justify-center bg-gray-50 transition-colors group"
+      className="relative w-full h-40 rounded-xl border-2 border-dashed border-gray-300 hover:border-brand cursor-pointer overflow-hidden flex items-center justify-center bg-gray-50 transition-colors group"
     >
       {preview ? (
         <>
@@ -117,7 +120,7 @@ function ImageUploadBox({
           </div>
         </>
       ) : (
-        <div className="flex flex-col items-center gap-2 text-gray-400 group-hover:text-dental-blue transition-colors">
+        <div className="flex flex-col items-center gap-2 text-gray-400 group-hover:text-brand transition-colors">
           <FaCamera className="text-3xl" />
           <span className="text-sm font-medium">Upload item photo</span>
           <span className="text-xs">PNG, JPG, WEBP · max 5 MB</span>
@@ -242,6 +245,7 @@ export default function InventoryManagement() {
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" }>({ key: "status", dir: "asc" });
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   // Details drawer
   const [detailItem, setDetailItem] = useState<InventoryItem | null>(null);
@@ -299,7 +303,7 @@ export default function InventoryManagement() {
         type="button"
         onClick={() => toggleSort(key)}
         aria-sort={sort.key === key ? (sort.dir === "asc" ? "ascending" : "descending") : "none"}
-        className={cn("inline-flex items-center gap-1.5 transition-colors hover:text-gray-900", sort.key === key && "text-dental-blue")}
+        className={cn("inline-flex items-center gap-1.5 transition-colors hover:text-gray-900", sort.key === key && "text-brand")}
       >
         {label}
         {sort.key === key ? (sort.dir === "asc" ? <FaSortUp className="text-xs" /> : <FaSortDown className="text-xs" />) : <FaSort className="text-xs text-gray-300" />}
@@ -450,6 +454,38 @@ export default function InventoryManagement() {
     }
   };
 
+  const toggleSelect = (id: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const allVisibleSelected = filteredItems.length > 0 && filteredItems.every((item) => selectedIds.has(item.id));
+
+  const toggleSelectAll = () => {
+    setSelectedIds(allVisibleSelected ? new Set() : new Set(filteredItems.map((item) => item.id)));
+  };
+
+  const selectedItems = inventoryItems.filter((item) => selectedIds.has(item.id));
+  const bulkExport = useImportExport({ data: selectedItems, filename: "inventory-selected", onImport: () => {} });
+
+  const handleBulkDelete = async () => {
+    const ids = [...selectedIds];
+    if (ids.length === 0) return;
+    try {
+      await Promise.all(ids.map((id) => apiFetch(`/api/inventory/${id}`, { method: "DELETE" })));
+      setInventoryItems((prev) => prev.filter((item) => !selectedIds.has(item.id)));
+      toast.success(`${ids.length} item${ids.length === 1 ? "" : "s"} deleted.`);
+    } catch {
+      toast.error("Failed to delete selected items.");
+    } finally {
+      setSelectedIds(new Set());
+    }
+  };
+
   const handleEditSave = async () => {
     if (!selectedItem) return;
     const parsedCost = parseFloat(editForm.cost_price as string) || 0;
@@ -473,7 +509,7 @@ export default function InventoryManagement() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-white flex">
       <AdminSidebar activePage="inventory" sidebarOpen={sidebarOpen} onToggle={() => setSidebarOpen((v) => !v)} onLogout={handleLogout} />
 
       <div className="flex-1 flex flex-col min-w-0">
@@ -565,7 +601,7 @@ export default function InventoryManagement() {
                 />
                 {hasActiveFilters && (
                   <div className="-mt-6 pb-10 text-center">
-                    <button type="button" onClick={clearFilters} className="text-sm font-medium text-dental-blue hover:underline">
+                    <button type="button" onClick={clearFilters} className="text-sm font-medium text-brand hover:underline">
                       {t("common.clearFilters")}
                     </button>
                   </div>
@@ -575,15 +611,25 @@ export default function InventoryManagement() {
               <div className="overflow-x-auto">
                 <table className="w-full table-fixed">
                   <colgroup>
-                    <col className="w-[28%]" />
+                    <col className="w-[4%]" />
+                    <col className="w-[26%]" />
+                    <col className="w-[13%]" />
                     <col className="w-[14%]" />
-                    <col className="w-[15%]" />
-                    <col className="w-[17%]" />
+                    <col className="w-[16%]" />
                     <col className="w-[13%]" />
                     <col className="w-[13%]" />
                   </colgroup>
                   <thead className="bg-gray-50/80 border-b border-gray-200">
                     <tr>
+                      <th className="py-3 pl-5 pr-2">
+                        <input
+                          type="checkbox"
+                          aria-label="Select all"
+                          checked={allVisibleSelected}
+                          onChange={toggleSelectAll}
+                          className="size-4 rounded border-gray-300 accent-accent-blue-500"
+                        />
+                      </th>
                       {renderSortTh("name", t("inventory.item"))}
                       {renderSortTh("category", t("inventory.category"))}
                       {renderSortTh("stock", t("inventory.stock"), "center")}
@@ -592,7 +638,7 @@ export default function InventoryManagement() {
                       <th className="py-3 px-5 text-center text-[11px] font-semibold uppercase tracking-wide text-gray-500">{t("common.actions")}</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
+                  <tbody className="divide-y divide-gray-100 stagger">
                     {filteredItems.map((item) => {
                       const tone = statusTone(item.status);
                       const meta = categoryMeta(item.category);
@@ -606,8 +652,21 @@ export default function InventoryManagement() {
                           key={item.id}
                           onClick={() => openDetails(item)}
                           title={t("inventory.viewDetails")}
-                          className={cn("group cursor-pointer transition-colors hover:bg-gray-50/80", item.status === "out" && "bg-red-50/30")}
+                          className={cn(
+                            "group cursor-pointer transition-colors hover:bg-gray-50/80",
+                            item.status === "out" && "bg-red-50/30",
+                            selectedIds.has(item.id) && "bg-accent-blue-50/40 hover:bg-accent-blue-50/60",
+                          )}
                         >
+                          <td className="py-3.5 pl-5 pr-2" onClick={(e) => e.stopPropagation()}>
+                            <input
+                              type="checkbox"
+                              aria-label={`Select ${item.name}`}
+                              checked={selectedIds.has(item.id)}
+                              onChange={() => toggleSelect(item.id)}
+                              className="size-4 rounded border-gray-300 accent-accent-blue-500"
+                            />
+                          </td>
                           <td className="py-3.5 px-5">
                             <div className="flex items-center gap-3">
                               <div className="w-11 h-11 rounded-xl overflow-hidden flex items-center justify-center shrink-0 bg-gray-100 ring-1 ring-gray-200/60">
@@ -671,7 +730,7 @@ export default function InventoryManagement() {
                                 type="button"
                                 title={t("common.edit")}
                                 onClick={() => handleOpenEdit(item)}
-                                className="p-2 rounded-full text-gray-400 transition-colors hover:bg-dental-blue/10 hover:text-dental-blue"
+                                className="p-2 rounded-full text-gray-400 transition-colors hover:bg-brand/10 hover:text-brand"
                               >
                                 <FaEdit />
                               </button>
@@ -777,7 +836,7 @@ export default function InventoryManagement() {
 
               {/* Actions */}
               <div className="flex flex-wrap gap-2">
-                <Button onClick={() => { setDetailItem(null); handleOpenEdit(item); }} className="bg-dental-blue hover:bg-dental-blue/90">
+                <Button onClick={() => { setDetailItem(null); handleOpenEdit(item); }} className="bg-brand hover:bg-brand/90">
                   <FaEdit className="me-2" /> {t("inventory.adjustStock")}
                 </Button>
                 <Button
@@ -931,7 +990,7 @@ export default function InventoryManagement() {
             {t("common.cancel")}
           </Button>
           <Button
-            className="flex-1 bg-dental-blue hover:bg-dental-blue/90"
+            className="flex-1 bg-brand hover:bg-brand/90"
             disabled={!addForm.name.trim() || addSaving}
             onClick={handleAddSave}
           >
@@ -1037,7 +1096,7 @@ export default function InventoryManagement() {
               <Button variant="outline" className="flex-1" onClick={() => setShowEditModal(false)}>
                 {t("common.cancel")}
               </Button>
-              <Button className="flex-1 bg-dental-blue hover:bg-dental-blue/90" onClick={handleEditSave} disabled={editSaving}>
+              <Button className="flex-1 bg-brand hover:bg-brand/90" onClick={handleEditSave} disabled={editSaving}>
                 {editSaving ? "Saving..." : t("inventory.saveChanges")}
               </Button>
             </div>
@@ -1065,6 +1124,16 @@ export default function InventoryManagement() {
           <button onClick={() => setPhotoError("")} className="font-bold text-white/80 hover:text-white">✕</button>
         </div>
       )}
+
+      <BulkActionBar
+        count={selectedIds.size}
+        onClear={() => setSelectedIds(new Set())}
+        itemLabel="item"
+        actions={[
+          { key: "export", label: "Export", icon: <FaFileExport className="h-3 w-3" />, onClick: bulkExport.exportExcel },
+          { key: "delete", label: "Delete", icon: <FaTrash className="h-3 w-3" />, onClick: handleBulkDelete, tone: "danger" },
+        ]}
+      />
     </div>
   );
 }

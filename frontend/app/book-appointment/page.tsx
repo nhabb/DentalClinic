@@ -346,7 +346,7 @@ export default function BookAppointment() {
               href="/patient-dashboard"
               className="flex items-center space-x-2"
             >
-              <div className="w-10 h-10 bg-gradient-to-br from-dental-blue to-dental-teal rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-br from-brand to-brand-400 rounded-lg flex items-center justify-center">
                 <FaTooth className="text-white text-xl" />
               </div>
               <span className="text-xl font-bold text-gray-900">
@@ -359,7 +359,7 @@ export default function BookAppointment() {
               )}
               <Link
                 href="/patient-dashboard"
-                className="text-gray-600 hover:text-dental-blue transition-colors flex items-center gap-2"
+                className="text-gray-600 hover:text-brand transition-colors flex items-center gap-2"
               >
                 <FaArrowLeft className="text-sm" />
                 Back to Dashboard
@@ -390,7 +390,7 @@ export default function BookAppointment() {
                     step > s
                       ? "bg-green-500 text-white"
                       : step === s
-                        ? "bg-dental-blue text-white shadow-lg shadow-dental-blue/30 scale-110"
+                        ? "bg-brand text-white shadow-lg shadow-brand/30 scale-110"
                         : "bg-gray-200 text-gray-500"
                   }`}
                 >
@@ -410,28 +410,28 @@ export default function BookAppointment() {
             <div className="grid grid-cols-4 gap-4 sm:gap-16 text-center text-sm">
               <span
                 className={
-                  step >= 1 ? "text-dental-blue font-medium" : "text-gray-400"
+                  step >= 1 ? "text-brand font-medium" : "text-gray-400"
                 }
               >
                 Doctor
               </span>
               <span
                 className={
-                  step >= 2 ? "text-dental-blue font-medium" : "text-gray-400"
+                  step >= 2 ? "text-brand font-medium" : "text-gray-400"
                 }
               >
                 Service
               </span>
               <span
                 className={
-                  step >= 3 ? "text-dental-blue font-medium" : "text-gray-400"
+                  step >= 3 ? "text-brand font-medium" : "text-gray-400"
                 }
               >
                 Date
               </span>
               <span
                 className={
-                  step >= 4 ? "text-dental-blue font-medium" : "text-gray-400"
+                  step >= 4 ? "text-brand font-medium" : "text-gray-400"
                 }
               >
                 Time
@@ -454,7 +454,7 @@ export default function BookAppointment() {
 
               {loadingDoctors ? (
                 <div className="flex justify-center items-center py-12">
-                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-dental-blue"></div>
+                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand"></div>
                   <span className="ml-3 text-gray-600">Loading doctors...</span>
                 </div>
               ) : doctors.length === 0 ? (
@@ -478,8 +478,8 @@ export default function BookAppointment() {
                           !doctor.available
                             ? "border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed"
                             : isSelected
-                              ? "border-dental-blue bg-dental-blue/5 shadow-lg"
-                              : "border-gray-200 hover:border-dental-blue/50 hover:shadow-md"
+                              ? "border-brand bg-brand/5 shadow-lg"
+                              : "border-gray-200 hover:border-brand/50 hover:shadow-md"
                         }`}
                       >
                         <div className="mb-4 mx-auto w-fit">
@@ -488,7 +488,7 @@ export default function BookAppointment() {
                         <h3 className="text-lg font-bold text-gray-900 text-center">
                           {doctor.name}
                         </h3>
-                        <p className="text-dental-blue text-sm text-center font-medium mb-2">
+                        <p className="text-brand text-sm text-center font-medium mb-2">
                           {doctor.specialty}
                         </p>
                         {doctor.bio && (
@@ -508,10 +508,10 @@ export default function BookAppointment() {
                         )}
                         {doctor.available && isSelected && (
                           <div className="absolute top-3 right-3 flex flex-col items-center gap-1">
-                            <div className="w-8 h-8 bg-dental-blue rounded-full flex items-center justify-center">
+                            <div className="w-8 h-8 bg-brand rounded-full flex items-center justify-center">
                               <FaCheckCircle className="text-white" />
                             </div>
-                            <span className="text-[10px] text-dental-blue font-medium">tap to deselect</span>
+                            <span className="text-[10px] text-brand font-medium">tap to deselect</span>
                           </div>
                         )}
                       </button>
@@ -541,15 +541,15 @@ export default function BookAppointment() {
                   }}
                   className={`relative p-8 rounded-2xl border-2 transition-all duration-300 text-left group hover:shadow-lg ${
                     serviceType === "checkup"
-                      ? "border-dental-blue bg-dental-blue/5 shadow-lg"
-                      : "border-gray-200 hover:border-dental-blue/50"
+                      ? "border-brand bg-brand/5 shadow-lg"
+                      : "border-gray-200 hover:border-brand/50"
                   }`}
                 >
                   <div
                     className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-4 transition-all ${
                       serviceType === "checkup"
-                        ? "bg-dental-blue text-white"
-                        : "bg-gray-100 text-gray-500 group-hover:bg-dental-blue/10 group-hover:text-dental-blue"
+                        ? "bg-brand text-white"
+                        : "bg-gray-100 text-gray-500 group-hover:bg-brand/10 group-hover:text-brand"
                     }`}
                   >
                     <FaStethoscope className="text-3xl" />
@@ -561,11 +561,11 @@ export default function BookAppointment() {
                     Routine dental examination to ensure your oral health is in
                     great shape
                   </p>
-                  <span className="inline-block mt-4 text-sm font-medium text-dental-blue">
+                  <span className="inline-block mt-4 text-sm font-medium text-brand">
                     Duration: 30 min
                   </span>
                   {serviceType === "checkup" && (
-                    <div className="absolute top-4 right-4 w-8 h-8 bg-dental-blue rounded-full flex items-center justify-center">
+                    <div className="absolute top-4 right-4 w-8 h-8 bg-brand rounded-full flex items-center justify-center">
                       <FaCheckCircle className="text-white" />
                     </div>
                   )}
@@ -576,15 +576,15 @@ export default function BookAppointment() {
                   onClick={() => setServiceType("procedure")}
                   className={`relative p-8 rounded-2xl border-2 transition-all duration-300 text-left group hover:shadow-lg ${
                     serviceType === "procedure"
-                      ? "border-dental-blue bg-dental-blue/5 shadow-lg"
-                      : "border-gray-200 hover:border-dental-blue/50"
+                      ? "border-brand bg-brand/5 shadow-lg"
+                      : "border-gray-200 hover:border-brand/50"
                   }`}
                 >
                   <div
                     className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-4 transition-all ${
                       serviceType === "procedure"
-                        ? "bg-dental-blue text-white"
-                        : "bg-gray-100 text-gray-500 group-hover:bg-dental-blue/10 group-hover:text-dental-blue"
+                        ? "bg-brand text-white"
+                        : "bg-gray-100 text-gray-500 group-hover:bg-brand/10 group-hover:text-brand"
                     }`}
                   >
                     <FaTeeth className="text-3xl" />
@@ -596,11 +596,11 @@ export default function BookAppointment() {
                     Specific treatments like cleaning, whitening, fillings, and
                     more
                   </p>
-                  <span className="inline-block mt-4 text-sm font-medium text-dental-blue">
+                  <span className="inline-block mt-4 text-sm font-medium text-brand">
                     Various durations
                   </span>
                   {serviceType === "procedure" && (
-                    <div className="absolute top-4 right-4 w-8 h-8 bg-dental-blue rounded-full flex items-center justify-center">
+                    <div className="absolute top-4 right-4 w-8 h-8 bg-brand rounded-full flex items-center justify-center">
                       <FaCheckCircle className="text-white" />
                     </div>
                   )}
@@ -620,8 +620,8 @@ export default function BookAppointment() {
                         onClick={() => setSelectedProcedure(proc.id)}
                         className={`p-4 rounded-xl border-2 transition-all text-left ${
                           selectedProcedure === proc.id
-                            ? "border-dental-blue bg-dental-blue/5"
-                            : "border-gray-200 hover:border-dental-blue/50"
+                            ? "border-brand bg-brand/5"
+                            : "border-gray-200 hover:border-brand/50"
                         }`}
                       >
                         <p className="font-semibold text-gray-900">
@@ -661,7 +661,7 @@ export default function BookAppointment() {
               <div className="flex justify-center">
                 {loadingDates ? (
                   <div className="flex items-center gap-3 py-16 text-gray-500">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-dental-blue" />
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand" />
                     Loading available dates...
                   </div>
                 ) : (
@@ -697,9 +697,9 @@ export default function BookAppointment() {
                       "text-gray-500 rounded-md w-12 font-medium text-sm",
                     row: "flex w-full mt-2",
                     cell: "text-center text-sm p-0 relative",
-                    day: "h-12 w-12 p-0 font-normal rounded-xl hover:bg-dental-blue/10 transition-colors",
+                    day: "h-12 w-12 p-0 font-normal rounded-xl hover:bg-brand/10 transition-colors",
                     day_selected:
-                      "bg-dental-blue text-white hover:bg-dental-blue hover:text-white focus:bg-dental-blue focus:text-white",
+                      "bg-brand text-white hover:bg-brand hover:text-white focus:bg-brand focus:text-white",
                     day_today: "bg-gray-100 text-gray-900 font-semibold",
                     day_outside: "text-gray-300",
                     day_disabled: "text-gray-300 hover:bg-transparent",
@@ -714,7 +714,7 @@ export default function BookAppointment() {
                 <div className="mt-6 text-center">
                   <p className="text-lg">
                     Selected:{" "}
-                    <span className="font-semibold text-dental-blue">
+                    <span className="font-semibold text-brand">
                       {selectedDate.toLocaleDateString("en-US", {
                         weekday: "long",
                         year: "numeric",
@@ -741,7 +741,7 @@ export default function BookAppointment() {
 
               {loadingSlots ? (
                 <div className="flex justify-center items-center py-12">
-                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-dental-blue"></div>
+                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand"></div>
                   <span className="ml-3 text-gray-600">
                     Loading {getSelectedDoctorInfo()?.name}'s available slots...
                   </span>
@@ -768,8 +768,8 @@ export default function BookAppointment() {
                           !slot.available
                             ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed line-through"
                             : isSelected
-                              ? "border-dental-blue bg-dental-blue text-white shadow-lg shadow-dental-blue/30"
-                              : "border-gray-200 hover:border-dental-blue/50 text-gray-700 hover:bg-gray-50"
+                              ? "border-brand bg-brand text-white shadow-lg shadow-brand/30"
+                              : "border-gray-200 hover:border-brand/50 text-gray-700 hover:bg-gray-50"
                         }`}
                       >
                         <FaClock
@@ -778,7 +778,7 @@ export default function BookAppointment() {
                               ? "text-gray-400"
                               : isSelected
                                 ? "text-white"
-                                : "text-dental-blue"
+                                : "text-brand"
                           }`}
                         />
                         {slot.time}
@@ -800,14 +800,14 @@ export default function BookAppointment() {
 
               {/* Appointment Summary */}
               {selectedTime && (
-                <div className="mt-8 p-6 bg-gradient-to-r from-dental-blue/5 to-dental-teal/5 rounded-2xl">
+                <div className="mt-8 p-6 bg-gradient-to-r from-brand/5 to-brand-400/5 rounded-2xl">
                   <h3 className="text-lg font-bold text-gray-900 mb-4">
                     Appointment Summary
                   </h3>
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-dental-blue/10 rounded-lg flex items-center justify-center">
-                        <FaUserMd className="text-dental-blue" />
+                      <div className="w-10 h-10 bg-brand/10 rounded-lg flex items-center justify-center">
+                        <FaUserMd className="text-brand" />
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Dentist</p>
@@ -817,8 +817,8 @@ export default function BookAppointment() {
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-dental-blue/10 rounded-lg flex items-center justify-center">
-                        <FaStethoscope className="text-dental-blue" />
+                      <div className="w-10 h-10 bg-brand/10 rounded-lg flex items-center justify-center">
+                        <FaStethoscope className="text-brand" />
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Service</p>
@@ -830,8 +830,8 @@ export default function BookAppointment() {
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-dental-blue/10 rounded-lg flex items-center justify-center">
-                        <FaCalendarAlt className="text-dental-blue" />
+                      <div className="w-10 h-10 bg-brand/10 rounded-lg flex items-center justify-center">
+                        <FaCalendarAlt className="text-brand" />
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Date & Time</p>
@@ -845,8 +845,8 @@ export default function BookAppointment() {
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-dental-blue/10 rounded-lg flex items-center justify-center">
-                        <FaClock className="text-dental-blue" />
+                      <div className="w-10 h-10 bg-brand/10 rounded-lg flex items-center justify-center">
+                        <FaClock className="text-brand" />
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Duration</p>
@@ -888,7 +888,7 @@ export default function BookAppointment() {
               <Button
                 onClick={handleNext}
                 disabled={!canProceed()}
-                className="px-8 py-3 bg-dental-blue hover:bg-dental-blue/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-8 py-3 bg-brand hover:bg-brand/90 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Continue
                 <FaArrowRight className="ml-2" />
@@ -897,7 +897,7 @@ export default function BookAppointment() {
               <Button
                 onClick={handleBookAppointment}
                 disabled={!canProceed() || submitting}
-                className="px-8 py-3 bg-gradient-to-r from-dental-blue to-dental-teal hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-8 py-3 bg-gradient-to-r from-brand to-brand-400 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {submitting ? (
                   <>
@@ -944,7 +944,7 @@ export default function BookAppointment() {
             </p>
             <div className="flex gap-4 justify-center">
               <Link href="/patient-dashboard">
-                <Button className="px-6 py-3 bg-dental-blue hover:bg-dental-blue/90">
+                <Button className="px-6 py-3 bg-brand hover:bg-brand/90">
                   Go to Dashboard
                 </Button>
               </Link>

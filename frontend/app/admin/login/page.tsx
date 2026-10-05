@@ -78,15 +78,15 @@ export default function AdminLogin() {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center px-4">
       {/* Background Pattern */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-dental-blue/10 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-dental-teal/10 rounded-full blur-3xl"></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-brand/10 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-brand-400/10 rounded-full blur-3xl"></div>
       </div>
 
       <div className="relative w-full max-w-md">
         {/* Logo Card */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center space-x-3">
-            <div className="w-14 h-14 bg-gradient-to-br from-dental-blue to-dental-teal rounded-2xl flex items-center justify-center shadow-lg shadow-dental-blue/20">
+            <div className="w-14 h-14 bg-gradient-to-br from-brand to-brand-400 rounded-2xl flex items-center justify-center shadow-lg shadow-brand/20">
               <FaTooth className="text-white text-2xl" />
             </div>
             <div className="text-left">
@@ -99,7 +99,7 @@ export default function AdminLogin() {
         {/* Login Card */}
         <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/10">
           <div className="text-center mb-6">
-            <div className="w-16 h-16 bg-gradient-to-br from-dental-blue to-dental-teal rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <div className="w-16 h-16 bg-gradient-to-br from-brand to-brand-400 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
               {role === "doctor" ? (
                 <FaUserMd className="text-white text-2xl" />
               ) : (
@@ -117,7 +117,7 @@ export default function AdminLogin() {
               onClick={() => setRole("doctor")}
               className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-medium transition-all ${
                 role === "doctor"
-                  ? "bg-gradient-to-r from-dental-blue to-dental-teal text-white shadow-lg"
+                  ? "bg-gradient-to-r from-brand to-brand-400 text-white shadow-lg"
                   : "text-gray-400 hover:text-white"
               }`}
             >
@@ -129,7 +129,7 @@ export default function AdminLogin() {
               onClick={() => setRole("secretary")}
               className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-medium transition-all ${
                 role === "secretary"
-                  ? "bg-gradient-to-r from-dental-blue to-dental-teal text-white shadow-lg"
+                  ? "bg-gradient-to-r from-brand to-brand-400 text-white shadow-lg"
                   : "text-gray-400 hover:text-white"
               }`}
             >
@@ -164,7 +164,7 @@ export default function AdminLogin() {
                   }
                   placeholder={t("adminLogin.emailPlaceholder")}
                   required
-                  className="w-full pl-12 rtl:pl-4 rtl:pr-12 pr-4 py-4 bg-white/5 border border-white/10 text-white placeholder-gray-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/50 focus:border-dental-blue transition-all"
+                  className="w-full pl-12 rtl:pl-4 rtl:pr-12 pr-4 py-4 bg-white/5 border border-white/10 text-white placeholder-gray-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand transition-all"
                 />
               </div>
             </div>
@@ -186,7 +186,7 @@ export default function AdminLogin() {
                   }
                   placeholder={t("adminLogin.passwordPlaceholder")}
                   required
-                  className="w-full pl-12 rtl:pl-12 rtl:pr-12 pr-12 py-4 bg-white/5 border border-white/10 text-white placeholder-gray-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-dental-blue/50 focus:border-dental-blue transition-all"
+                  className="w-full pl-12 rtl:pl-12 rtl:pr-12 pr-12 py-4 bg-white/5 border border-white/10 text-white placeholder-gray-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand transition-all"
                 />
                 <button
                   type="button"
@@ -203,13 +203,13 @@ export default function AdminLogin() {
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
-                  className="w-4 h-4 rounded border-gray-600 bg-white/5 text-dental-blue focus:ring-dental-blue/50"
+                  className="w-4 h-4 rounded border-gray-600 bg-white/5 text-brand focus:ring-brand/50"
                 />
                 <span className="text-sm text-gray-400">{t("adminLogin.rememberMe")}</span>
               </label>
               <button
                 type="button"
-                className="text-sm text-dental-lightblue hover:underline"
+                className="text-sm text-brand-200 hover:underline"
               >
                 {t("adminLogin.forgotPassword")}
               </button>
@@ -219,7 +219,7 @@ export default function AdminLogin() {
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-full py-4 bg-gradient-to-r from-dental-blue to-dental-teal hover:shadow-lg hover:shadow-dental-blue/25 transition-all text-lg font-semibold"
+              className="w-full py-4 bg-gradient-to-r from-brand to-brand-400 hover:shadow-lg hover:shadow-brand/25 transition-all text-lg font-semibold"
             >
               {isLoading ? (
                 <div className="flex items-center gap-2">
