@@ -7,10 +7,11 @@ import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { SupabaseStorageService } from '../storage/supabase-storage.service';
 import { UpdateUserDto, ChangePasswordDto } from './dto/update-user.dto';
+import { uploadLimit, formatMb } from '../common/uploads/upload-limit';
 
 const PROFILE_BUCKET = 'profile-photos';
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-const MAX_SIZE = 5 * 1024 * 1024;
+const MAX_SIZE = uploadLimit(5 * 1024 * 1024);
 
 @Injectable()
 export class UsersService {
@@ -160,7 +161,7 @@ export class UsersService {
       throw new BadRequestException('Only JPEG, PNG, and WebP images are allowed');
     }
     if (file.size > MAX_SIZE) {
-      throw new BadRequestException('Image must be under 5 MB');
+      throw new BadRequestException(`Image must be under ${formatMb(MAX_SIZE)}`);
     }
 
     const user = await this.prisma.users.findUnique({ where: { id } });

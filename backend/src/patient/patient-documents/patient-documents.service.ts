@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import { SupabaseStorageService } from '../../shared/storage/supabase-storage.service';
+import { uploadLimit, formatMb } from '../../shared/common/uploads/upload-limit';
 
 const ALLOWED_MIME_TYPES = [
   'image/jpeg',
@@ -12,7 +13,7 @@ const ALLOWED_MIME_TYPES = [
   'image/webp',
   'application/pdf',
 ];
-const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+const MAX_FILE_SIZE_BYTES = uploadLimit(10 * 1024 * 1024);
 const BUCKET = process.env.SUPABASE_STORAGE_BUCKET ?? 'patient-documents';
 
 const DOCUMENT_TYPES = ['xray', 'scan', 'report', 'prescription', 'other'];
@@ -39,7 +40,7 @@ export class PatientDocumentsService {
       );
     }
     if (file.size > MAX_FILE_SIZE_BYTES) {
-      throw new BadRequestException('File size exceeds the 10 MB limit');
+      throw new BadRequestException(`File size exceeds the ${formatMb(MAX_FILE_SIZE_BYTES)} limit`);
     }
     if (document_type && !DOCUMENT_TYPES.includes(document_type)) {
       throw new BadRequestException(`Invalid document_type`);

@@ -14,10 +14,11 @@ import { ApiBearerAuth, ApiTags, ApiOperation, ApiConsumes, ApiBody } from '@nes
 import { JwtAuthGuard } from '../../shared/common/guards/jwt-auth.guard';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import { SupabaseStorageService } from '../../shared/storage/supabase-storage.service';
+import { uploadLimit, formatMb } from '../../shared/common/uploads/upload-limit';
 
 const PROFILE_BUCKET = 'profile-photos';
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-const MAX_SIZE = 5 * 1024 * 1024;
+const MAX_SIZE = uploadLimit(5 * 1024 * 1024);
 
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
@@ -48,7 +49,7 @@ export class ClinicProfileController {
       throw new BadRequestException('Only JPEG, PNG, and WebP images are allowed');
     }
     if (file.size > MAX_SIZE) {
-      throw new BadRequestException('Image must be under 5 MB');
+      throw new BadRequestException(`Image must be under ${formatMb(MAX_SIZE)}`);
     }
 
     const clinic = await this.prisma.clinic_profile.findFirst();

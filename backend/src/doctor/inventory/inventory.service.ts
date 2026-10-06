@@ -8,10 +8,11 @@ import { SupabaseStorageService } from '../../shared/storage/supabase-storage.se
 import { CreateInventoryItemDto } from './dto/create-item.dto';
 import { UpdateInventoryItemDto } from './dto/update-item.dto';
 import { CreateMovementDto } from './dto/create-movement.dto';
+import { uploadLimit, formatMb } from '../../shared/common/uploads/upload-limit';
 
 const INVENTORY_BUCKET = 'inventory-photos';
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-const MAX_SIZE = 5 * 1024 * 1024;
+const MAX_SIZE = uploadLimit(5 * 1024 * 1024);
 
 @Injectable()
 export class InventoryService {
@@ -24,7 +25,7 @@ export class InventoryService {
     if (!ALLOWED_IMAGE_TYPES.includes(file.mimetype))
       throw new BadRequestException('Only JPEG, PNG, and WebP images are allowed');
     if (file.size > MAX_SIZE)
-      throw new BadRequestException('Image must be under 5 MB');
+      throw new BadRequestException(`Image must be under ${formatMb(MAX_SIZE)}`);
 
     const item = await this.findOne(id);
 
