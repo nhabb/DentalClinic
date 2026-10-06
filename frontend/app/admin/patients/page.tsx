@@ -396,7 +396,7 @@ export default function PatientsPage() {
           totalVisits: visitsByPatient[Number(p.id)] || 0,
           status: isActive ? "active" : "inactive",
           notes: p.medical_notes || "",
-          photoUrl: getStoredPhoto(userEmbed?.email || user?.email || ""),
+          photoUrl: userEmbed?.avatar_url || user?.avatar_url || getStoredPhoto(userEmbed?.email || user?.email || ""),
           mustSetPassword: userEmbed?.must_set_password === true || user?.must_set_password === true,
         };
       });
