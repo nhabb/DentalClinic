@@ -24,9 +24,13 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post('register')
-  @ApiOperation({ summary: 'Create user in DB after Supabase signup (public)' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Create a patient user (used by the patient import)' })
   register(@Body() body: { email: string; first_name: string; last_name: string; phone?: string; role?: string }) {
-    return this.usersService.create(body);
+    // Patients only: staff accounts go through POST /users/staff. Ignoring the
+    // client-supplied role stops callers from minting admin/superadmin rows.
+    return this.usersService.create({ ...body, role: 'patient' });
   }
 
   @Get('by-email')
