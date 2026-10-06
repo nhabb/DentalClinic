@@ -37,6 +37,7 @@ import {
   FaArrowDown,
   FaHistory,
   FaFileExport,
+  FaChartLine,
 } from "react-icons/fa";
 import type { IconType } from "react-icons";
 
@@ -545,6 +546,7 @@ export default function InventoryManagement() {
           }}
           onAdd={() => setShowAddModal(true)}
           addLabel={t("inventory.addItem")}
+          actions={[{ key: "analytics", label: "View analytics", icon: <FaChartLine />, href: "/admin/inventory/analytics" }]}
         />
 
         <main className="flex-1 p-8 overflow-auto">

@@ -1226,6 +1226,7 @@ export default function PatientsPage() {
           }}
           onAdd={handleOpenAddPatient}
           addLabel={t("patients.addPatient")}
+          actions={[{ key: "analytics", label: "View analytics", icon: <FaUsers />, href: "/admin/patients/analytics" }]}
         />
 
         <main className="flex-1 p-8 overflow-auto">

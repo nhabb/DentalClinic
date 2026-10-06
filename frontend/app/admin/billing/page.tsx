@@ -326,7 +326,10 @@ export default function BillingPage() {
           subtitle={t("billing.subtitle")}
           onAdd={() => { resetCreateModal(); setShowCreateModal(true); }}
           addLabel={t("billing.newInvoice")}
-          actions={[{ key: "dashboard", label: t("billing.goToDashboard"), icon: <FaChartLine />, href: "/admin" }]}
+          actions={[
+            { key: "dashboard", label: t("billing.goToDashboard"), icon: <FaChartLine />, href: "/admin" },
+            { key: "analytics", label: "View analytics", icon: <FaFileInvoiceDollar />, href: "/admin/billing/analytics" },
+          ]}
         />
 
         <main className="flex-1 p-8 overflow-auto">
