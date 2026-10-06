@@ -173,6 +173,7 @@ export class InventoryService {
           item_id: itemId,
           movement_type: dto.movement_type,
           quantity: dto.quantity,
+          unit_cost: dto.movement_type === 'in' ? (dto.unit_cost ?? item.cost_price ?? 0) : null,
           note: dto.note,
           performed_by: BigInt(dto.performed_by),
         },
@@ -207,12 +208,17 @@ export class InventoryService {
     return { data, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } };
   }
 
-  async listMovements(filters: { item_id?: bigint; movement_type?: string; page?: number; limit?: number }) {
-    const { item_id, movement_type, page = 1, limit = 20 } = filters;
+  async listMovements(filters: { item_id?: bigint; movement_type?: string; from?: string; to?: string; page?: number; limit?: number }) {
+    const { item_id, movement_type, from, to, page = 1, limit = 20 } = filters;
     const skip = (page - 1) * limit;
     const where: any = {};
     if (item_id) where.item_id = item_id;
     if (movement_type) where.movement_type = movement_type;
+    if (from || to) {
+      where.created_at = {};
+      if (from) where.created_at.gte = new Date(`${from}T00:00:00`);
+      if (to) where.created_at.lte = new Date(`${to}T23:59:59.999`);
+    }
 
     const [data, total] = await Promise.all([
       this.prisma.inventory_movements.findMany({

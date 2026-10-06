@@ -1729,6 +1729,7 @@ export const Inventory_movementsScalarFieldEnum = {
   item_id: 'item_id',
   movement_type: 'movement_type',
   quantity: 'quantity',
+  unit_cost: 'unit_cost',
   note: 'note',
   performed_by: 'performed_by',
   created_at: 'created_at'
