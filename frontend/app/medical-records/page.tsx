@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { safeStorage } from "@/lib/browser-compat";
 import { apiFetch } from "@/lib/api/client";
-import { getStoredPhoto } from "@/lib/profilePhoto";
+import { fetchMyPhoto } from "@/lib/profilePhoto";
 import { toast } from 'sonner';
 import { Avatar } from "@/components/ui/Avatar";
 import { PatientPageHeader } from "@/components/ui/PatientPageHeader";
@@ -79,7 +79,7 @@ export default function MedicalRecords() {
         if (!meRes.ok) { router.push("/login"); return; }
         const me = await meRes.json();
 
-        setPhotoUrl(getStoredPhoto(me.email));
+        fetchMyPhoto().then(setPhotoUrl);
 
         setPatientInfo((prev) => ({
           ...prev,

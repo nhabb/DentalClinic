@@ -1,4 +1,5 @@
 import {
+  UseGuards,
   Controller,
   Get,
   Post,
@@ -16,6 +17,7 @@ import {
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import {
+  ApiBearerAuth,
   ApiTags,
   ApiOperation,
   ApiConsumes,
@@ -23,7 +25,10 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { PatientDocumentsService } from './patient-documents.service';
+import { JwtAuthGuard } from '../../shared/common/guards/jwt-auth.guard';
 
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @ApiTags('Patient Documents')
 @Controller('patient-documents')
 export class PatientDocumentsController {

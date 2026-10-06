@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { FaTooth, FaArrowLeft } from "react-icons/fa";
 import { Avatar } from "@/components/ui/Avatar";
-import { getStoredPhoto } from "@/lib/profilePhoto";
+import { fetchMyPhoto } from "@/lib/profilePhoto";
 import { supabase } from "@/lib/supabase/client";
 
 interface PatientPageHeaderProps {
@@ -41,7 +41,7 @@ export function PatientPageHeader({
       }
 
       if (firstName || lastName) setName(`${firstName} ${lastName}`.trim());
-      if (email) setPhotoUrl(getStoredPhoto(email));
+      fetchMyPhoto().then(setPhotoUrl);
     };
     load();
   }, []);

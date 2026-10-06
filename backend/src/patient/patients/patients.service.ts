@@ -11,10 +11,11 @@ import { SupabaseStorageService } from '../../shared/storage/supabase-storage.se
 import { UpdatePatientProfileDto } from './dto/update-patient-profile.dto';
 import { CreatePatientDto } from './dto/create-patient.dto';
 import { AccountSetupService } from '../../shared/account-setup/account-setup.service';
+import { uploadLimit, formatMb } from '../../shared/common/uploads/upload-limit';
 
 const PROFILE_BUCKET = 'profile-photos';
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
+const MAX_SIZE = uploadLimit(5 * 1024 * 1024);
 
 @Injectable()
 export class PatientsService {
@@ -237,7 +238,7 @@ export class PatientsService {
       throw new BadRequestException('Only JPEG, PNG, and WebP images are allowed');
     }
     if (file.size > MAX_SIZE) {
-      throw new BadRequestException('Image must be under 5 MB');
+      throw new BadRequestException(`Image must be under ${formatMb(MAX_SIZE)}`);
     }
 
     const profile = await this.prisma.patient_profiles.findUnique({ where: { id } });

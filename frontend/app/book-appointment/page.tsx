@@ -7,7 +7,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { safeStorage } from "@/lib/browser-compat";
 import { Avatar } from "@/components/ui/Avatar";
-import { getStoredPhoto } from "@/lib/profilePhoto";
+import { fetchMyPhoto } from "@/lib/profilePhoto";
 import { supabase } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -149,7 +149,7 @@ export default function BookAppointment() {
         } catch {}
       }
       if (name) setPatientName(name);
-      if (email) setPhotoUrl(getStoredPhoto(email));
+      fetchMyPhoto().then(setPhotoUrl);
     };
     loadPhoto();
   }, []);

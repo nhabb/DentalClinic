@@ -10,7 +10,7 @@ import { useTranslation } from "@/lib/i18n";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Avatar } from "@/components/ui/Avatar";
-import { getStoredPhoto } from "@/lib/profilePhoto";
+import { fetchMyPhoto } from "@/lib/profilePhoto";
 import { supabase } from "@/lib/supabase/client";
 import {
   FaTooth,
@@ -89,7 +89,7 @@ export default function PatientBillingPage() {
         } catch {}
       }
       if (name) setPatientName(name);
-      if (email) setPhotoUrl(getStoredPhoto(email));
+      fetchMyPhoto().then(setPhotoUrl);
     };
     loadPhoto();
   }, []);

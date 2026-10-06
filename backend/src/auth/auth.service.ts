@@ -186,6 +186,7 @@ export class AuthService {
         gender: true,
         address: true,
         role: true,
+        avatar_url: true,
         created_at: true,
         password_hash: true,
       },

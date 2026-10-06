@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { FaKey, FaSignOutAlt, FaChevronDown } from "react-icons/fa";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Avatar } from "@/components/ui/Avatar";
-import { getStoredPhoto } from "@/lib/profilePhoto";
+import { fetchMyPhoto, uploadMyPhoto } from "@/lib/profilePhoto";
 import { supabase } from "@/lib/supabase/client";
 import { apiFetch } from "@/lib/api/client";
 import { safeStorage } from "@/lib/browser-compat";
@@ -57,8 +57,8 @@ export function ProfileMenu() {
       if (name) setUserName(name);
       if (resolvedEmail) {
         setEmail(resolvedEmail);
-        setPhotoUrl(getStoredPhoto(resolvedEmail));
       }
+      fetchMyPhoto().then(setPhotoUrl);
 
       try {
         const meRes = await apiFetch("/api/auth/me");
@@ -72,9 +72,15 @@ export function ProfileMenu() {
     load();
   }, []);
 
-  const handlePhotoUpload = (dataUrl: string) => {
+  const handlePhotoUpload = async (dataUrl: string) => {
+    const previous = photoUrl;
     setPhotoUrl(dataUrl);
-    if (email) localStorage.setItem(`brightsmile_photo_${email}`, dataUrl);
+    try {
+      setPhotoUrl(await uploadMyPhoto(userId, dataUrl));
+    } catch (err) {
+      setPhotoUrl(previous);
+      toast.error(err instanceof Error ? err.message : "Could not upload photo.");
+    }
   };
 
   const handleLogout = () => {
