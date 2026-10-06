@@ -12,7 +12,13 @@ export class PrismaService
   declare expenses: expensesDelegate;
 
   constructor() {
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    // On Vercel every function instance gets its own pool, so keep each one
+    // tiny and quick to release (pair with Supabase's transaction pooler,
+    // port 6543). Other hosts run one long-lived process and keep pg defaults.
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ...(process.env.VERCEL ? { max: 2, idleTimeoutMillis: 5_000 } : {}),
+    });
     const adapter = new PrismaPg(pool);
     super({ adapter });
   }
