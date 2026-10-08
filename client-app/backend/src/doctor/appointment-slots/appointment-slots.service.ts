@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import { CreateSlotDto } from './dto/create-slot.dto';
+import { CreateBulkSlotsDto } from './dto/create-bulk-slots.dto';
 
 @Injectable() //this means that the class can be injected as a dependency into other classes, allowing for better modularity and separation of concerns. In this case, the AppointmentSlotsService can be injected into controllers or other services that need to use its functionality related to managing appointment slots.
 export class AppointmentSlotsService {
@@ -46,14 +47,7 @@ export class AppointmentSlotsService {
     return doctor.branch_id ?? undefined;
   }
 
-  async createBulk(dto: {
-    doctor_id: number;
-    slot_date: string;
-    from_time: string;
-    to_time: string;
-    duration_minutes: number;
-    branch_id?: number | null;
-  }) {
+  async createBulk(dto: CreateBulkSlotsDto) {
     const doctor = await this.prisma.users.findFirst({
       //waiting for the result of a database query that checks if a doctor with the specified doctor_id exists in the users table and has a role of either 'admin' or 'doctor'. If no such doctor is found, it throws a NotFoundException with the message 'Doctor not found'. This is a validation step to ensure that the doctor for whom the appointment slots are being created actually exists in the system before proceeding with creating the slots.
       where: { id: BigInt(dto.doctor_id), role: { in: ['admin', 'doctor'] } },

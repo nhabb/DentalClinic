@@ -1,0 +1,13 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`API route coverage keeps public routes to the sign-in and booking surface 1`] = `
+[
+  "GET /auth/set-password/validate",
+  "GET /users/by-email",
+  "GET /users/doctors",
+  "POST /auth/login",
+  "POST /auth/provision",
+  "POST /auth/set-password",
+  "POST /auth/signup",
+]
+`;

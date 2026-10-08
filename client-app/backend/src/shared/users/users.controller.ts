@@ -7,6 +7,7 @@ import {
   Param,
   Body,
   Query,
+  ParseFilePipe,
   ParseIntPipe,
   UploadedFile,
   UseInterceptors,
@@ -31,6 +32,7 @@ import { AccessControlService } from '../access/access-control.service';
 import { UsersService } from './users.service';
 import { UpdateUserDto, ChangePasswordDto } from './dto/update-user.dto';
 import { StaffAssignmentDto } from './dto/staff-assignment.dto';
+import { CreateStaffDto, RegisterPatientDto } from './dto/create-staff.dto';
 
 type AuthedRequest = { user: RequestUser };
 
@@ -55,15 +57,7 @@ export class UsersController {
     summary:
       'Create a patient account from the admin panel (legacy; prefer POST /patients)',
   })
-  register(
-    @Body()
-    body: {
-      email: string;
-      first_name: string;
-      last_name: string;
-      phone?: string;
-    },
-  ) {
+  register(@Body() body: RegisterPatientDto) {
     return this.usersService.create({ ...body, role: 'patient' });
   }
 
@@ -95,18 +89,7 @@ export class UsersController {
     summary:
       'Create a staff member with one of the clinic’s roles; branch_id sets their home branch',
   })
-  async createStaff(
-    @Body()
-    body: {
-      email: string;
-      first_name: string;
-      last_name: string;
-      phone?: string;
-      role: string;
-      branch_id?: number;
-      restrict_to_branch?: boolean;
-    },
-  ) {
+  async createStaff(@Body() body: CreateStaffDto) {
     if (!(await this.roles.isAssignableStaffRole(body.role))) {
       throw new BadRequestException(
         `"${body.role}" is not a staff role of this clinic (see GET /roles)`,
@@ -186,7 +169,7 @@ export class UsersController {
   updateAvatar(
     @Req() req: AuthedRequest,
     @Param('id', ParseIntPipe) id: number,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile(new ParseFilePipe()) file: Express.Multer.File,
   ) {
     this.access.assertSelfOrPermission(req.user, id, 'staff:manage');
     return this.usersService.updateAvatar(BigInt(id), file);

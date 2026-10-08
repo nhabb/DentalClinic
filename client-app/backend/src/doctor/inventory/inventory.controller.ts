@@ -7,6 +7,7 @@ import {
   Param,
   Body,
   Query,
+  ParseFilePipe,
   ParseIntPipe,
   DefaultValuePipe,
   UseInterceptors,
@@ -158,7 +159,7 @@ export class InventoryController {
   @UseInterceptors(FileInterceptor('image', { storage: memoryStorage() }))
   uploadImage(
     @Param('id', ParseIntPipe) id: number,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile(new ParseFilePipe()) file: Express.Multer.File,
   ) {
     return this.inventoryService.uploadImage(BigInt(id), file);
   }

@@ -7,6 +7,7 @@ import {
   Param,
   Body,
   Query,
+  ParseFilePipe,
   ParseIntPipe,
   DefaultValuePipe,
   UploadedFile,
@@ -150,7 +151,7 @@ export class PatientsController {
   async updatePhoto(
     @Req() req: AuthedRequest,
     @Param('id', ParseIntPipe) id: number,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile(new ParseFilePipe()) file: Express.Multer.File,
   ) {
     await this.access.assertPatientProfileAccess(
       req.user,

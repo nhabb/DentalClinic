@@ -22,13 +22,19 @@
  * Everything it creates is removed at the end (directly in the database, as the
  * migration login).
  */
-const path = require('node:path');
-require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
-const { Client } = require('pg');
-const bcrypt = require('bcrypt');
+const {
+  BASE,
+  PASSWORD,
+  api,
+  claims,
+  dbClient,
+  login,
+  record,
+  report,
+  setPassword,
+  waitForServer,
+} = require('./lib/smoke-helpers');
 
-const BASE = (process.env.API_URL ?? 'http://localhost:5000') + '/api';
-const PASSWORD = process.env.SMOKE_PASSWORD ?? 'demo123';
 const TEST_SLUG = 'smoke-test-clinic';
 const SMOKE_EMAILS = [
   'smoke-doctor@example.com',
@@ -37,77 +43,6 @@ const SMOKE_EMAILS = [
 ];
 const SLOT_DATE = '2099-01-01';
 const SMOKE_ROLE_KEY = 'smoke-assistant';
-
-const results = [];
-const record = (name, ok, detail) =>
-  results.push({
-    check: name,
-    ok: ok ? 'PASS' : 'FAIL',
-    detail: String(detail ?? '').slice(0, 100),
-  });
-
-async function api(method, route, { token, body, headers = {} } = {}) {
-  const res = await fetch(BASE + route, {
-    method,
-    headers: {
-      'content-type': 'application/json',
-      ...(token ? { authorization: `Bearer ${token}` } : {}),
-      ...headers,
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  let json = null;
-  try {
-    json = await res.json();
-  } catch {}
-  return { status: res.status, json };
-}
-
-const claims = (token) =>
-  JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString());
-
-async function waitForServer(ms = 120_000) {
-  const deadline = Date.now() + ms;
-  while (Date.now() < deadline) {
-    try {
-      if ((await fetch(BASE + '/docs')).status < 500) return true;
-    } catch {}
-    await new Promise((r) => setTimeout(r, 2000));
-  }
-  return false;
-}
-
-async function login(email) {
-  const res = await api('POST', '/auth/login', {
-    body: { email, password: PASSWORD },
-  });
-  return {
-    ok: res.status === 200,
-    token: res.json?.token,
-    user: res.json?.user,
-    detail: `status ${res.status} ${res.json?.message ?? ''}`,
-  };
-}
-
-function dbClient() {
-  return new Client({
-    connectionString: process.env.DIRECT_URL || process.env.DATABASE_URL,
-  });
-}
-
-/** Give a staff account created through the API a known password (as the migration login). */
-async function setPassword(email, password) {
-  const pg = dbClient();
-  await pg.connect();
-  try {
-    await pg.query(
-      `update users set password_hash = $1, must_set_password = false where email = $2`,
-      [await bcrypt.hash(password, 10), email],
-    );
-  } finally {
-    await pg.end();
-  }
-}
 
 async function cleanup(ids) {
   const pg = dbClient();
@@ -709,18 +644,7 @@ async function main() {
     await cleanup(ids);
   }
 
-  console.table(results);
-  const failed = results.filter((r) => r.ok === 'FAIL').length;
-  console.log(
-    failed
-      ? `${failed} check(s) FAILED`
-      : `all ${results.length} checks passed`,
-  );
-  process.exit(failed ? 1 : 0);
+  report();
 }
 
-main().catch(async (e) => {
-  console.error('FATAL', e);
-  console.table(results);
-  process.exit(1);
-});
+main().catch((e) => report(e));

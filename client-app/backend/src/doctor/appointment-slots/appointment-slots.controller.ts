@@ -18,6 +18,7 @@ import {
 import { RequirePermissions } from '../../shared/authorization/permissions.decorator';
 import { AppointmentSlotsService } from './appointment-slots.service';
 import { CreateSlotDto } from './dto/create-slot.dto';
+import { CreateBulkSlotsDto } from './dto/create-bulk-slots.dto';
 
 /**
  * Staff management of a doctor's bookable time slots. Patients browse slots
@@ -33,17 +34,7 @@ export class AppointmentSlotsController {
   @Post('bulk')
   @RequirePermissions('slots:manage')
   @ApiOperation({ summary: 'Create multiple slots from a time range' })
-  createBulk(
-    @Body()
-    dto: {
-      doctor_id: number;
-      slot_date: string;
-      from_time: string;
-      to_time: string;
-      duration_minutes: number;
-      branch_id?: number;
-    },
-  ) {
+  createBulk(@Body() dto: CreateBulkSlotsDto) {
     return this.slotsService.createBulk(dto);
   }
 
