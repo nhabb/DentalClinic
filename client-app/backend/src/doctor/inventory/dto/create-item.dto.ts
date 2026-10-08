@@ -40,7 +40,10 @@ export class CreateInventoryItemDto {
   @Min(0)
   quantity?: number;
 
-  @ApiPropertyOptional({ default: 0, description: 'Threshold for low-stock alert' })
+  @ApiPropertyOptional({
+    default: 0,
+    description: 'Threshold for low-stock alert',
+  })
   @IsOptional()
   @IsNumber()
   @Min(0)
@@ -59,7 +62,10 @@ export class CreateInventoryItemDto {
   @Max(100000)
   cost_price?: number;
 
-  @ApiPropertyOptional({ description: 'Branch whose stock this is. Defaults to your home branch, then the organization’s default branch.' })
+  @ApiPropertyOptional({
+    description:
+      'Branch whose stock this is. Defaults to your home branch, then the organization’s default branch.',
+  })
   @IsOptional()
   @IsNumber()
   branch_id?: number;

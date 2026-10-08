@@ -5,7 +5,10 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import { SupabaseStorageService } from '../../shared/storage/supabase-storage.service';
-import { uploadLimit, formatMb } from '../../shared/common/uploads/upload-limit';
+import {
+  uploadLimit,
+  formatMb,
+} from '../../shared/common/uploads/upload-limit';
 
 const ALLOWED_MIME_TYPES = [
   'image/jpeg',
@@ -40,7 +43,9 @@ export class PatientDocumentsService {
       );
     }
     if (file.size > MAX_FILE_SIZE_BYTES) {
-      throw new BadRequestException(`File size exceeds the ${formatMb(MAX_FILE_SIZE_BYTES)} limit`);
+      throw new BadRequestException(
+        `File size exceeds the ${formatMb(MAX_FILE_SIZE_BYTES)} limit`,
+      );
     }
     if (document_type && !DOCUMENT_TYPES.includes(document_type)) {
       throw new BadRequestException(`Invalid document_type`);
@@ -54,10 +59,18 @@ export class PatientDocumentsService {
     const ext = file.originalname.split('.').pop();
     const storagePath = `patients/${patient_id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
-    const publicUrl = await this.storage.upload(BUCKET, storagePath, file.buffer, file.mimetype);
+    const publicUrl = await this.storage.upload(
+      BUCKET,
+      storagePath,
+      file.buffer,
+      file.mimetype,
+    );
 
     const uploaderExists = uploaded_by
-      ? await this.prisma.users.findUnique({ where: { id: BigInt(uploaded_by) }, select: { id: true } })
+      ? await this.prisma.users.findUnique({
+          where: { id: BigInt(uploaded_by) },
+          select: { id: true },
+        })
       : null;
 
     const doc = await this.prisma.patient_documents.create({
@@ -109,7 +122,9 @@ export class PatientDocumentsService {
   }
 
   async findOne(id: bigint) {
-    const doc = await this.prisma.patient_documents.findUnique({ where: { id } });
+    const doc = await this.prisma.patient_documents.findUnique({
+      where: { id },
+    });
     if (!doc) throw new NotFoundException('Document not found');
     return { ...doc, url: this.storage.getPublicUrl(BUCKET, doc.file_path) };
   }

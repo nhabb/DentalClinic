@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
@@ -16,7 +20,10 @@ const paymentInclude = {
   creator: creatorSelect,
 };
 
-const paymentOrder = [{ payment_date: 'desc' as const }, { id: 'desc' as const }];
+const paymentOrder = [
+  { payment_date: 'desc' as const },
+  { id: 'desc' as const },
+];
 
 // Tolerance for floating point comparisons on 2-decimal money values.
 const EPSILON = 0.005;
@@ -38,7 +45,9 @@ function toDateOnly(value: string): Date {
 }
 
 /** Attach the computed remaining balance so clients never have to derive it. */
-function withRemaining<T extends { amount: unknown; amount_paid: unknown }>(expense: T) {
+function withRemaining<T extends { amount: unknown; amount_paid: unknown }>(
+  expense: T,
+) {
   const amount = Number(expense.amount);
   const paid = Number(expense.amount_paid);
   return { ...expense, remaining_amount: round2(Math.max(0, amount - paid)) };
@@ -142,8 +151,10 @@ export class ExpensesService {
     if (typeof dto.title === 'string') data.title = dto.title;
     if (typeof dto.category === 'string') data.category = dto.category;
     if (typeof dto.description === 'string') data.description = dto.description;
-    if (typeof dto.expense_date === 'string') data.expense_date = toDateOnly(dto.expense_date);
-    if (dto.created_by !== undefined) data.created_by = dto.created_by ? BigInt(dto.created_by) : null;
+    if (typeof dto.expense_date === 'string')
+      data.expense_date = toDateOnly(dto.expense_date);
+    if (dto.created_by !== undefined)
+      data.created_by = dto.created_by ? BigInt(dto.created_by) : null;
 
     let amount = Number(existing.amount);
     if (typeof dto.amount === 'number') {
@@ -227,7 +238,9 @@ export class ExpensesService {
             amount: round2(dto.amount),
             payment_method: dto.payment_method ?? 'cash',
             notes: dto.notes,
-            ...(dto.payment_date ? { payment_date: toDateOnly(dto.payment_date) } : {}),
+            ...(dto.payment_date
+              ? { payment_date: toDateOnly(dto.payment_date) }
+              : {}),
             created_by: dto.created_by ? BigInt(dto.created_by) : null,
           },
         },
@@ -248,7 +261,9 @@ export class ExpensesService {
     if (!payment) throw new NotFoundException('Payment not found');
 
     const amount = Number(expense.amount);
-    const newPaid = round2(Math.max(0, Number(expense.amount_paid) - Number(payment.amount)));
+    const newPaid = round2(
+      Math.max(0, Number(expense.amount_paid) - Number(payment.amount)),
+    );
 
     const [, updated] = await this.prisma.$transaction([
       this.prisma.expense_payments.delete({ where: { id: paymentId } }),
@@ -278,7 +293,12 @@ export class ExpensesService {
 
     const expenses = await this.prisma.expenses.findMany({
       where: { expense_date: { gte: since } },
-      select: { amount: true, amount_paid: true, category: true, expense_date: true },
+      select: {
+        amount: true,
+        amount_paid: true,
+        category: true,
+        expense_date: true,
+      },
     });
 
     // Monthly totals
@@ -298,7 +318,8 @@ export class ExpensesService {
     // By category
     const byCategory: Record<string, { total: number; count: number }> = {};
     for (const e of expenses) {
-      if (!byCategory[e.category]) byCategory[e.category] = { total: 0, count: 0 };
+      if (!byCategory[e.category])
+        byCategory[e.category] = { total: 0, count: 0 };
       byCategory[e.category].total += Number(e.amount);
       byCategory[e.category].count++;
     }
@@ -311,8 +332,12 @@ export class ExpensesService {
       total,
       total_paid: round2(totalPaid),
       total_outstanding: round2(Math.max(0, total - totalPaid)),
-      monthly: Object.entries(monthlyMap).map(([month, amount]) => ({ month, amount })),
-      by_category: Object.entries(byCategory).map(([category, v]) => ({ category, ...v }))
+      monthly: Object.entries(monthlyMap).map(([month, amount]) => ({
+        month,
+        amount,
+      })),
+      by_category: Object.entries(byCategory)
+        .map(([category, v]) => ({ category, ...v }))
         .sort((a, b) => b.total - a.total),
     };
   }

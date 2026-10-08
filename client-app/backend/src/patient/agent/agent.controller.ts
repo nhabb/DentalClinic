@@ -3,7 +3,10 @@ import { ApiOperation, ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { IsArray, IsString, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { AgentService, ChatMessage } from './agent.service';
-import { Roles, STAFF_ROLES } from '../../shared/common/decorators/roles.decorator';
+import {
+  Roles,
+  STAFF_ROLES,
+} from '../../shared/common/decorators/roles.decorator';
 
 class ChatMessageDto {
   @IsString() role: 'user' | 'assistant';
@@ -26,7 +29,10 @@ export class AgentController {
 
   @Post('chat')
   @ApiOperation({ summary: 'Send a message to the clinic AI assistant' })
-  async chat(@Body() dto: ChatRequestDto, @Req() req: any): Promise<{ reply: string }> {
+  async chat(
+    @Body() dto: ChatRequestDto,
+    @Req() req: any,
+  ): Promise<{ reply: string }> {
     const userId = parseInt(req.user.id, 10);
     const reply = await this.agentService.chat(dto.messages, { userId });
     return { reply };

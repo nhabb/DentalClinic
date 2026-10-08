@@ -1,7 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import { CreatePatientRecordDto } from './dto/create-record.dto';
 import { UpdatePatientRecordDto } from './dto/update-record.dto';
@@ -34,12 +31,16 @@ export class PatientRecordsService {
     return this.prisma.patient_records.create({
       data: {
         patient_id: BigInt(dto.patient_id),
-        appointment_id: dto.appointment_id ? BigInt(dto.appointment_id) : undefined,
+        appointment_id: dto.appointment_id
+          ? BigInt(dto.appointment_id)
+          : undefined,
         record_type: dto.record_type,
         title: dto.title,
         description: dto.description,
         tooth_number: dto.tooth_number,
-        treatment_date: dto.treatment_date ? new Date(dto.treatment_date) : undefined,
+        treatment_date: dto.treatment_date
+          ? new Date(dto.treatment_date)
+          : undefined,
         created_by: BigInt(dto.created_by),
       },
       include: recordInclude,
@@ -92,7 +93,9 @@ export class PatientRecordsService {
       where: { id },
       data: {
         ...dto,
-        treatment_date: dto.treatment_date ? new Date(dto.treatment_date) : undefined,
+        treatment_date: dto.treatment_date
+          ? new Date(dto.treatment_date)
+          : undefined,
         updated_at: new Date(),
       },
       include: recordInclude,

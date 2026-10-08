@@ -1,6 +1,17 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Roles, STAFF_ROLES } from '../../shared/common/decorators/roles.decorator';
+import {
+  Roles,
+  STAFF_ROLES,
+} from '../../shared/common/decorators/roles.decorator';
 import { PatientWorkService } from './patient-work.service';
 import { RecordWorkDto } from './dto/record-work.dto';
 import { CompleteWorkDto } from './dto/complete-work.dto';
@@ -13,7 +24,9 @@ export class PatientWorkController {
   constructor(private readonly patientWorkService: PatientWorkService) {}
 
   @Get('chart/:patientId')
-  @ApiOperation({ summary: 'Per-tooth status summary and work history for the dental chart' })
+  @ApiOperation({
+    summary: 'Per-tooth status summary and work history for the dental chart',
+  })
   getChart(@Param('patientId', ParseIntPipe) patientId: number) {
     return this.patientWorkService.getChart(BigInt(patientId));
   }
@@ -39,7 +52,9 @@ export class PatientWorkController {
   }
 
   @Delete('records/:id')
-  @ApiOperation({ summary: 'Remove a planned or missing-tooth record (not billed work)' })
+  @ApiOperation({
+    summary: 'Remove a planned or missing-tooth record (not billed work)',
+  })
   removeRecord(@Param('id', ParseIntPipe) id: number) {
     return this.patientWorkService.removeRecord(BigInt(id));
   }

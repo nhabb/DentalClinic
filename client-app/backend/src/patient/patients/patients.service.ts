@@ -16,7 +16,10 @@ import {
   runAsSystem,
 } from '../../shared/tenant/tenant-context';
 import { UserAccessService } from '../../shared/tenant/user-access.service';
-import { uploadLimit, formatMb } from '../../shared/common/uploads/upload-limit';
+import {
+  uploadLimit,
+  formatMb,
+} from '../../shared/common/uploads/upload-limit';
 
 const PROFILE_BUCKET = 'profile-photos';
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -303,7 +306,9 @@ export class PatientsService {
       );
     }
     if (file.size > MAX_SIZE) {
-      throw new BadRequestException(`Image must be under ${formatMb(MAX_SIZE)}`);
+      throw new BadRequestException(
+        `Image must be under ${formatMb(MAX_SIZE)}`,
+      );
     }
 
     const profile = await this.prisma.patient_profiles.findUnique({

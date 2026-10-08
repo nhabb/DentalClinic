@@ -9,7 +9,10 @@ import { CreateInventoryItemDto } from './dto/create-item.dto';
 import { UpdateInventoryItemDto } from './dto/update-item.dto';
 import { CreateMovementDto } from './dto/create-movement.dto';
 import { TenantResolverService } from '../../shared/tenant/tenant-resolver.service';
-import { uploadLimit, formatMb } from '../../shared/common/uploads/upload-limit';
+import {
+  uploadLimit,
+  formatMb,
+} from '../../shared/common/uploads/upload-limit';
 
 const INVENTORY_BUCKET = 'inventory-photos';
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -25,20 +28,30 @@ export class InventoryService {
 
   async uploadImage(id: bigint, file: Express.Multer.File) {
     if (!ALLOWED_IMAGE_TYPES.includes(file.mimetype))
-      throw new BadRequestException('Only JPEG, PNG, and WebP images are allowed');
+      throw new BadRequestException(
+        'Only JPEG, PNG, and WebP images are allowed',
+      );
     if (file.size > MAX_SIZE)
-      throw new BadRequestException(`Image must be under ${formatMb(MAX_SIZE)}`);
+      throw new BadRequestException(
+        `Image must be under ${formatMb(MAX_SIZE)}`,
+      );
 
     const item = await this.findOne(id);
 
     if (item.image_url) {
       const oldPath = item.image_url.split(`/${INVENTORY_BUCKET}/`)[1];
-      if (oldPath) await this.storage.delete(INVENTORY_BUCKET, oldPath).catch(() => null);
+      if (oldPath)
+        await this.storage.delete(INVENTORY_BUCKET, oldPath).catch(() => null);
     }
 
     const ext = file.mimetype.split('/')[1];
     const storagePath = `items/${id}/${Date.now()}.${ext}`;
-    const publicUrl = await this.storage.upload(INVENTORY_BUCKET, storagePath, file.buffer, file.mimetype);
+    const publicUrl = await this.storage.upload(
+      INVENTORY_BUCKET,
+      storagePath,
+      file.buffer,
+      file.mimetype,
+    );
 
     return this.prisma.inventory_items.update({
       where: { id },
@@ -53,7 +66,8 @@ export class InventoryService {
       const existing = await this.prisma.inventory_items.findFirst({
         where: { sku: dto.sku, branch_id },
       });
-      if (existing) throw new BadRequestException('SKU already exists at this branch');
+      if (existing)
+        throw new BadRequestException('SKU already exists at this branch');
     }
 
     return this.prisma.inventory_items.create({
@@ -79,7 +93,14 @@ export class InventoryService {
     page?: number;
     limit?: number;
   }) {
-    const { category, search, branch_id, low_stock_only, page = 1, limit = 20 } = filters;
+    const {
+      category,
+      search,
+      branch_id,
+      low_stock_only,
+      page = 1,
+      limit = 20,
+    } = filters;
     const skip = (page - 1) * limit;
 
     const where: any = {};
@@ -95,7 +116,11 @@ export class InventoryService {
     if (low_stock_only) {
       where.AND = [
         ...(where.AND ?? []),
-        { quantity: { lte: this.prisma.inventory_items.fields.minimum_quantity } },
+        {
+          quantity: {
+            lte: this.prisma.inventory_items.fields.minimum_quantity,
+          },
+        },
       ];
     }
 
@@ -127,12 +152,16 @@ export class InventoryService {
 
   async findLowStock() {
     const all = await this.prisma.inventory_items.findMany();
-    const lowStock = all.filter((item) => item.quantity <= item.minimum_quantity);
+    const lowStock = all.filter(
+      (item) => item.quantity <= item.minimum_quantity,
+    );
     return { data: lowStock, total: lowStock.length };
   }
 
   async findOne(id: bigint) {
-    const item = await this.prisma.inventory_items.findUnique({ where: { id } });
+    const item = await this.prisma.inventory_items.findUnique({
+      where: { id },
+    });
     if (!item) throw new NotFoundException('Inventory item not found');
     return item;
   }
@@ -144,7 +173,8 @@ export class InventoryService {
       const conflict = await this.prisma.inventory_items.findFirst({
         where: { sku: dto.sku, branch_id: item.branch_id, NOT: { id } },
       });
-      if (conflict) throw new BadRequestException('SKU already in use at this branch');
+      if (conflict)
+        throw new BadRequestException('SKU already in use at this branch');
     }
 
     return this.prisma.inventory_items.update({
@@ -181,7 +211,10 @@ export class InventoryService {
           item_id: itemId,
           movement_type: dto.movement_type,
           quantity: dto.quantity,
-          unit_cost: dto.movement_type === 'in' ? (dto.unit_cost ?? item.cost_price ?? 0) : null,
+          unit_cost:
+            dto.movement_type === 'in'
+              ? (dto.unit_cost ?? item.cost_price ?? 0)
+              : null,
           note: dto.note,
           performed_by: BigInt(dto.performed_by),
         },
@@ -213,10 +246,20 @@ export class InventoryService {
       this.prisma.inventory_movements.count({ where: { item_id: itemId } }),
     ]);
 
-    return { data, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } };
+    return {
+      data,
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    };
   }
 
-  async listMovements(filters: { item_id?: bigint; movement_type?: string; from?: string; to?: string; page?: number; limit?: number }) {
+  async listMovements(filters: {
+    item_id?: bigint;
+    movement_type?: string;
+    from?: string;
+    to?: string;
+    page?: number;
+    limit?: number;
+  }) {
     const { item_id, movement_type, from, to, page = 1, limit = 20 } = filters;
     const skip = (page - 1) * limit;
     const where: any = {};
@@ -242,6 +285,9 @@ export class InventoryService {
       this.prisma.inventory_movements.count({ where }),
     ]);
 
-    return { data, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } };
+    return {
+      data,
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    };
   }
 }

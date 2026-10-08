@@ -15,8 +15,18 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
-import { Roles, STAFF_ROLES } from '../../shared/common/decorators/roles.decorator';
-import { ApiBearerAuth, ApiTags, ApiOperation, ApiQuery, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import {
+  Roles,
+  STAFF_ROLES,
+} from '../../shared/common/decorators/roles.decorator';
+import {
+  ApiBearerAuth,
+  ApiTags,
+  ApiOperation,
+  ApiQuery,
+  ApiConsumes,
+  ApiBody,
+} from '@nestjs/swagger';
 import { InventoryService } from './inventory.service';
 import { CreateInventoryItemDto } from './dto/create-item.dto';
 import { UpdateInventoryItemDto } from './dto/update-item.dto';
@@ -39,7 +49,12 @@ export class InventoryController {
   @ApiOperation({ summary: 'List inventory items' })
   @ApiQuery({ name: 'category', required: false })
   @ApiQuery({ name: 'search', required: false })
-  @ApiQuery({ name: 'branch_id', required: false, type: Number, description: 'Only stock of this branch' })
+  @ApiQuery({
+    name: 'branch_id',
+    required: false,
+    type: Number,
+    description: 'Only stock of this branch',
+  })
   @ApiQuery({ name: 'low_stock_only', required: false, type: Boolean })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
@@ -71,9 +86,21 @@ export class InventoryController {
   @Get('movements')
   @ApiOperation({ summary: 'List stock movements across all items' })
   @ApiQuery({ name: 'item_id', required: false, type: Number })
-  @ApiQuery({ name: 'movement_type', required: false, enum: ['in', 'out', 'adjustment'] })
-  @ApiQuery({ name: 'from', required: false, description: 'YYYY-MM-DD, inclusive' })
-  @ApiQuery({ name: 'to', required: false, description: 'YYYY-MM-DD, inclusive' })
+  @ApiQuery({
+    name: 'movement_type',
+    required: false,
+    enum: ['in', 'out', 'adjustment'],
+  })
+  @ApiQuery({
+    name: 'from',
+    required: false,
+    description: 'YYYY-MM-DD, inclusive',
+  })
+  @ApiQuery({
+    name: 'to',
+    required: false,
+    description: 'YYYY-MM-DD, inclusive',
+  })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   listMovements(
@@ -85,7 +112,8 @@ export class InventoryController {
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit?: number,
   ) {
     const isDate = (d?: string) => !d || /^\d{4}-\d{2}-\d{2}$/.test(d);
-    if (!isDate(from) || !isDate(to)) throw new BadRequestException('from/to must be YYYY-MM-DD');
+    if (!isDate(from) || !isDate(to))
+      throw new BadRequestException('from/to must be YYYY-MM-DD');
     return this.inventoryService.listMovements({
       item_id: item_id ? BigInt(item_id) : undefined,
       movement_type,
@@ -120,7 +148,12 @@ export class InventoryController {
   @Post(':id/image')
   @ApiOperation({ summary: 'Upload or replace an inventory item photo' })
   @ApiConsumes('multipart/form-data')
-  @ApiBody({ schema: { type: 'object', properties: { image: { type: 'string', format: 'binary' } } } })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: { image: { type: 'string', format: 'binary' } },
+    },
+  })
   @UseInterceptors(FileInterceptor('image', { storage: memoryStorage() }))
   uploadImage(
     @Param('id', ParseIntPipe) id: number,

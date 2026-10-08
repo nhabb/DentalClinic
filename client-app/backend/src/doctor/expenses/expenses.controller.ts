@@ -10,8 +10,16 @@ import {
   ParseIntPipe,
   DefaultValuePipe,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { Roles, STAFF_ROLES } from '../../shared/common/decorators/roles.decorator';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
+import {
+  Roles,
+  STAFF_ROLES,
+} from '../../shared/common/decorators/roles.decorator';
 import { ExpensesService } from './expenses.service';
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
@@ -32,8 +40,15 @@ export class ExpensesController {
 
   @Get('analytics')
   @ApiOperation({ summary: 'Monthly expense trends and breakdown by category' })
-  @ApiQuery({ name: 'months', required: false, type: Number, description: 'Number of past months (default 12)' })
-  getAnalytics(@Query('months', new DefaultValuePipe(12), ParseIntPipe) months: number) {
+  @ApiQuery({
+    name: 'months',
+    required: false,
+    type: Number,
+    description: 'Number of past months (default 12)',
+  })
+  getAnalytics(
+    @Query('months', new DefaultValuePipe(12), ParseIntPipe) months: number,
+  ) {
     return this.expensesService.getAnalytics(months);
   }
 
@@ -42,10 +57,26 @@ export class ExpensesController {
   @ApiQuery({
     name: 'category',
     required: false,
-    enum: ['utilities', 'rent', 'equipment', 'supplies', 'maintenance', 'other'],
+    enum: [
+      'utilities',
+      'rent',
+      'equipment',
+      'supplies',
+      'maintenance',
+      'other',
+    ],
   })
-  @ApiQuery({ name: 'branch_id', required: false, type: Number, description: 'Only expenses of this branch' })
-  @ApiQuery({ name: 'from', required: false, description: 'Start date YYYY-MM-DD' })
+  @ApiQuery({
+    name: 'branch_id',
+    required: false,
+    type: Number,
+    description: 'Only expenses of this branch',
+  })
+  @ApiQuery({
+    name: 'from',
+    required: false,
+    description: 'Start date YYYY-MM-DD',
+  })
   @ApiQuery({ name: 'to', required: false, description: 'End date YYYY-MM-DD' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
@@ -79,10 +110,7 @@ export class ExpensesController {
     description:
       'Status is derived from recorded payments. Sending status "paid" records a payment for the remaining balance.',
   })
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateExpenseDto,
-  ) {
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateExpenseDto) {
     return this.expensesService.update(BigInt(id), dto);
   }
 
@@ -93,7 +121,9 @@ export class ExpensesController {
   }
 
   @Post(':id/payments')
-  @ApiOperation({ summary: 'Record a payment (partial or full) against an expense' })
+  @ApiOperation({
+    summary: 'Record a payment (partial or full) against an expense',
+  })
   recordPayment(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: RecordExpensePaymentDto,
@@ -102,7 +132,9 @@ export class ExpensesController {
   }
 
   @Delete(':id/payments/:paymentId')
-  @ApiOperation({ summary: 'Remove a recorded expense payment and recalculate the balance' })
+  @ApiOperation({
+    summary: 'Remove a recorded expense payment and recalculate the balance',
+  })
   deletePayment(
     @Param('id', ParseIntPipe) id: number,
     @Param('paymentId', ParseIntPipe) paymentId: number,

@@ -10,7 +10,16 @@ import {
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 
-export const BLOOD_TYPES = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] as const;
+export const BLOOD_TYPES = [
+  'A+',
+  'A-',
+  'B+',
+  'B-',
+  'AB+',
+  'AB-',
+  'O+',
+  'O-',
+] as const;
 export const GENDERS = ['male', 'female', 'other'] as const;
 
 /**
@@ -19,8 +28,13 @@ export const GENDERS = ['male', 'female', 'other'] as const;
  * When an email is given, a password setup link is emailed to the patient.
  */
 export class CreatePatientDto {
-  @ApiPropertyOptional({ example: 'jane@example.com', description: 'Optional, but email or phone is required' })
-  @Transform(({ value }) => (typeof value === 'string' && value.trim() === '' ? undefined : value))
+  @ApiPropertyOptional({
+    example: 'jane@example.com',
+    description: 'Optional, but email or phone is required',
+  })
+  @Transform(({ value }) =>
+    typeof value === 'string' && value.trim() === '' ? undefined : value,
+  )
   @IsOptional()
   @IsEmail()
   @MaxLength(255)
@@ -65,7 +79,10 @@ export class CreatePatientDto {
   @IsIn([...BLOOD_TYPES])
   blood_type?: string;
 
-  @ApiPropertyOptional({ description: 'Comma-separated list', example: 'Penicillin, Latex' })
+  @ApiPropertyOptional({
+    description: 'Comma-separated list',
+    example: 'Penicillin, Latex',
+  })
   @IsOptional()
   @IsString()
   @MaxLength(1000)

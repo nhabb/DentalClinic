@@ -1,4 +1,12 @@
-import { IsIn, IsNumber, IsOptional, IsPositive, IsString, MaxLength, Min } from 'class-validator';
+import {
+  IsIn,
+  IsNumber,
+  IsOptional,
+  IsPositive,
+  IsString,
+  MaxLength,
+  Min,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateMovementDto {
@@ -11,7 +19,10 @@ export class CreateMovementDto {
   @IsPositive()
   quantity: number;
 
-  @ApiPropertyOptional({ description: "Unit cost paid (stock-in only); defaults to the item's cost_price" })
+  @ApiPropertyOptional({
+    description:
+      "Unit cost paid (stock-in only); defaults to the item's cost_price",
+  })
   @IsOptional()
   @IsNumber()
   @Min(0)

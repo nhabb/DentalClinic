@@ -1,11 +1,28 @@
-import { IsDateString, IsIn, IsNumber, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
+import {
+  IsDateString,
+  IsIn,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Max,
+  MaxLength,
+  Min,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
-export const EXPENSE_PAYMENT_METHODS = ['cash', 'card', 'bank_transfer', 'other'] as const;
+export const EXPENSE_PAYMENT_METHODS = [
+  'cash',
+  'card',
+  'bank_transfer',
+  'other',
+] as const;
 
 export class RecordExpensePaymentDto {
-  @ApiProperty({ description: 'Amount paid now (must not exceed the remaining balance)', example: 100 })
+  @ApiProperty({
+    description: 'Amount paid now (must not exceed the remaining balance)',
+    example: 100,
+  })
   @Type(() => Number)
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0.01)
@@ -17,7 +34,9 @@ export class RecordExpensePaymentDto {
   @IsIn([...EXPENSE_PAYMENT_METHODS])
   payment_method?: string;
 
-  @ApiPropertyOptional({ description: 'Date of the payment (YYYY-MM-DD). Defaults to today.' })
+  @ApiPropertyOptional({
+    description: 'Date of the payment (YYYY-MM-DD). Defaults to today.',
+  })
   @IsOptional()
   @IsDateString()
   payment_date?: string;

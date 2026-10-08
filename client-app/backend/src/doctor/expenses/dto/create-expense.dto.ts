@@ -1,24 +1,43 @@
-import { IsIn, IsNumber, IsOptional, IsString, IsDateString, Max, Min, MaxLength } from 'class-validator';
+import {
+  IsIn,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsDateString,
+  Max,
+  Min,
+  MaxLength,
+} from 'class-validator';
 
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
 export class CreateExpenseDto {
-  @ApiProperty({ description: 'Short title for the expense', example: 'Electricity bill' })
+  @ApiProperty({
+    description: 'Short title for the expense',
+    example: 'Electricity bill',
+  })
   @IsString()
   @MaxLength(255)
   title: string;
 
   @ApiPropertyOptional({
     description: 'Expense category',
-    enum: ['utilities', 'rent', 'equipment', 'supplies', 'maintenance', 'other'],
+    enum: [
+      'utilities',
+      'rent',
+      'equipment',
+      'supplies',
+      'maintenance',
+      'other',
+    ],
     default: 'other',
   })
   @IsOptional()
   @IsIn(['utilities', 'rent', 'equipment', 'supplies', 'maintenance', 'other'])
   category?: string;
 
-  @ApiProperty({ description: 'Expense amount', example: 200.00 })
+  @ApiProperty({ description: 'Expense amount', example: 200.0 })
   @Type(() => Number)
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
@@ -30,11 +49,18 @@ export class CreateExpenseDto {
   @IsString()
   description?: string;
 
-  @ApiProperty({ description: 'Date of the expense (YYYY-MM-DD)', example: '2026-04-10' })
+  @ApiProperty({
+    description: 'Date of the expense (YYYY-MM-DD)',
+    example: '2026-04-10',
+  })
   @IsDateString()
   expense_date: string;
 
-  @ApiPropertyOptional({ description: 'Payment status', enum: ['paid', 'pending'], default: 'pending' })
+  @ApiPropertyOptional({
+    description: 'Payment status',
+    enum: ['paid', 'pending'],
+    default: 'pending',
+  })
   @IsOptional()
   @IsIn(['paid', 'pending'])
   status?: string;
@@ -45,7 +71,10 @@ export class CreateExpenseDto {
   @IsNumber()
   created_by?: number;
 
-  @ApiPropertyOptional({ description: 'Branch the expense belongs to. Defaults to your home branch, then the organization’s default branch.' })
+  @ApiPropertyOptional({
+    description:
+      'Branch the expense belongs to. Defaults to your home branch, then the organization’s default branch.',
+  })
   @IsOptional()
   @Type(() => Number)
   @IsNumber()

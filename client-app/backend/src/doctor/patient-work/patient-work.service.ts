@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import { RecordWorkDto, WorkStatus } from './dto/record-work.dto';
 import { CompleteWorkDto } from './dto/complete-work.dto';
@@ -27,7 +31,14 @@ const RESTORES_TOOTH = new Set(['Implant', 'Bridge']);
 
 const historyInclude = {
   users: { select: { id: true, first_name: true, last_name: true } },
-  invoice: { select: { id: true, status: true, total_amount: true, remaining_amount: true } },
+  invoice: {
+    select: {
+      id: true,
+      status: true,
+      total_amount: true,
+      remaining_amount: true,
+    },
+  },
 };
 
 function toDateOnly(value: string): Date {
@@ -48,7 +59,9 @@ export class PatientWorkService {
   constructor(private readonly prisma: PrismaService) {}
 
   private async requirePatient(patientId: bigint) {
-    const patient = await this.prisma.patient_profiles.findUnique({ where: { id: patientId } });
+    const patient = await this.prisma.patient_profiles.findUnique({
+      where: { id: patientId },
+    });
     if (!patient) throw new NotFoundException('Patient profile not found');
     return patient;
   }
@@ -58,7 +71,11 @@ export class PatientWorkService {
     await this.requirePatient(patientId);
 
     const records = await this.prisma.patient_records.findMany({
-      where: { patient_id: patientId, tooth_number: { not: null }, record_type: { in: WORK_RECORD_TYPES } },
+      where: {
+        patient_id: patientId,
+        tooth_number: { not: null },
+        record_type: { in: WORK_RECORD_TYPES },
+      },
       include: historyInclude,
       orderBy: [{ treatment_date: 'asc' }, { id: 'asc' }],
     });
@@ -66,14 +83,24 @@ export class PatientWorkService {
     const teeth: Record<string, ToothSummary> = {};
     for (const r of records) {
       const tooth = r.tooth_number as string;
-      const entry = teeth[tooth] ?? { status: 'healthy', last_procedure: null, last_date: null, count: 0 };
+      const entry = teeth[tooth] ?? {
+        status: 'healthy',
+        last_procedure: null,
+        last_date: null,
+        count: 0,
+      };
       entry.count += 1;
       entry.last_procedure = r.title;
-      entry.last_date = r.treatment_date ? r.treatment_date.toISOString().split('T')[0] : null;
+      entry.last_date = r.treatment_date
+        ? r.treatment_date.toISOString().split('T')[0]
+        : null;
 
       if (r.record_type === 'treatment_plan') {
         entry.status = 'planned';
-      } else if (r.record_type === 'missing_tooth' || REMOVES_TOOTH.has(r.title)) {
+      } else if (
+        r.record_type === 'missing_tooth' ||
+        REMOVES_TOOTH.has(r.title)
+      ) {
         entry.status = 'missing';
       } else if (RESTORES_TOOTH.has(r.title) || entry.status !== 'missing') {
         entry.status = 'treated';
@@ -93,11 +120,16 @@ export class PatientWorkService {
 
     const treatmentDate = toDateOnly(dto.treatment_date);
     const createdBy = dto.created_by ? BigInt(dto.created_by) : null;
-    const appointmentId = dto.appointment_id ? BigInt(dto.appointment_id) : null;
+    const appointmentId = dto.appointment_id
+      ? BigInt(dto.appointment_id)
+      : null;
     const createInvoice = dto.create_invoice !== false;
 
     const recordData = (item: RecordWorkDto['items'][number]) => {
-      const title = item.status === 'missing' ? MISSING_TITLE : (item.procedure_name as string);
+      const title =
+        item.status === 'missing'
+          ? MISSING_TITLE
+          : (item.procedure_name as string);
       const defaultDescription =
         item.status === 'missing'
           ? `Tooth ${item.tooth_number} recorded as missing`
@@ -107,12 +139,16 @@ export class PatientWorkService {
         appointment_id: appointmentId,
         record_type: RECORD_TYPE_FOR_STATUS[item.status],
         title,
-        description: item.notes?.trim() || dto.notes?.trim() || defaultDescription,
+        description:
+          item.notes?.trim() || dto.notes?.trim() || defaultDescription,
         tooth_number: item.tooth_number,
         treatment_date: treatmentDate,
         created_by: createdBy,
         // Remember the agreed price so completing a plan later bills it, not the default.
-        quoted_amount: item.status !== 'missing' && item.amount != null ? round2(item.amount) : null,
+        quoted_amount:
+          item.status !== 'missing' && item.amount != null
+            ? round2(item.amount)
+            : null,
       };
     };
 
@@ -152,7 +188,11 @@ export class PatientWorkService {
       );
     }
     if (unbilled.length > 0) {
-      ops.push(this.prisma.patient_records.createMany({ data: unbilled.map(recordData) }));
+      ops.push(
+        this.prisma.patient_records.createMany({
+          data: unbilled.map(recordData),
+        }),
+      );
     }
 
     const results = await this.prisma.$transaction(ops);
@@ -181,20 +221,36 @@ export class PatientWorkService {
       where: {
         id: { in: ids },
         patient_id: patientId,
-        OR: [{ record_type: 'treatment_plan' }, { record_type: 'treatment', invoice_id: null }],
+        OR: [
+          { record_type: 'treatment_plan' },
+          { record_type: 'treatment', invoice_id: null },
+        ],
       },
     });
     if (records.length !== ids.length) {
-      throw new BadRequestException('Every item must be planned or not-yet-billed work belonging to this patient');
+      throw new BadRequestException(
+        'Every item must be planned or not-yet-billed work belonging to this patient',
+      );
     }
-    const plannedIds = records.filter((r) => r.record_type === 'treatment_plan').map((r) => r.id);
+    const plannedIds = records
+      .filter((r) => r.record_type === 'treatment_plan')
+      .map((r) => r.id);
 
-    const treatmentDate = dto.treatment_date ? toDateOnly(dto.treatment_date) : toDateOnly(new Date().toISOString());
+    const treatmentDate = dto.treatment_date
+      ? toDateOnly(dto.treatment_date)
+      : toDateOnly(new Date().toISOString());
     const createdBy = dto.created_by ? BigInt(dto.created_by) : null;
-    const amountOf = new Map(dto.items.map((i) => [String(i.record_id), round2(i.amount ?? 0)]));
+    const amountOf = new Map(
+      dto.items.map((i) => [String(i.record_id), round2(i.amount ?? 0)]),
+    );
 
-    const billable = dto.create_invoice !== false ? records.filter((r) => (amountOf.get(String(r.id)) ?? 0) > 0) : [];
-    const total = round2(billable.reduce((s, r) => s + (amountOf.get(String(r.id)) ?? 0), 0));
+    const billable =
+      dto.create_invoice !== false
+        ? records.filter((r) => (amountOf.get(String(r.id)) ?? 0) > 0)
+        : [];
+    const total = round2(
+      billable.reduce((s, r) => s + (amountOf.get(String(r.id)) ?? 0), 0),
+    );
 
     const ops: any[] = [];
     if (billable.length > 0) {
@@ -228,7 +284,12 @@ export class PatientWorkService {
       if (r.record_type !== 'treatment_plan') {
         // Unbilled completed work: keep the price used now as the record's quoted price.
         if (finalAmount !== undefined && finalAmount > 0) {
-          ops.push(this.prisma.patient_records.update({ where: { id: r.id }, data: { quoted_amount: finalAmount, updated_at: new Date() } }));
+          ops.push(
+            this.prisma.patient_records.update({
+              where: { id: r.id },
+              data: { quoted_amount: finalAmount, updated_at: new Date() },
+            }),
+          );
         }
         continue;
       }
@@ -241,8 +302,12 @@ export class PatientWorkService {
             record_type: 'treatment',
             treatment_date: treatmentDate,
             updated_at: new Date(),
-            ...(finalAmount !== undefined && finalAmount > 0 ? { quoted_amount: finalAmount } : {}),
-            ...(r.description === autoPlanned ? { description: `${r.title} on tooth ${r.tooth_number}` } : {}),
+            ...(finalAmount !== undefined && finalAmount > 0
+              ? { quoted_amount: finalAmount }
+              : {}),
+            ...(r.description === autoPlanned
+              ? { description: `${r.title} on tooth ${r.tooth_number}` }
+              : {}),
           },
         }),
       );
@@ -260,12 +325,16 @@ export class PatientWorkService {
 
   /** Remove a planned or missing-tooth record. Billed work must be removed via its invoice. */
   async removeRecord(recordId: bigint) {
-    const record = await this.prisma.patient_records.findUnique({ where: { id: recordId } });
+    const record = await this.prisma.patient_records.findUnique({
+      where: { id: recordId },
+    });
     if (!record || !WORK_RECORD_TYPES.includes(record.record_type)) {
       throw new NotFoundException('Work record not found');
     }
     if (record.invoice_id) {
-      throw new BadRequestException('This work is billed on an invoice; delete the invoice first');
+      throw new BadRequestException(
+        'This work is billed on an invoice; delete the invoice first',
+      );
     }
     await this.prisma.patient_records.delete({ where: { id: recordId } });
     return { removed: true, chart: await this.getChart(record.patient_id) };

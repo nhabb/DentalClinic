@@ -10,8 +10,16 @@ import {
   ParseIntPipe,
   DefaultValuePipe,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { Roles, STAFF_ROLES } from '../../shared/common/decorators/roles.decorator';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
+import {
+  Roles,
+  STAFF_ROLES,
+} from '../../shared/common/decorators/roles.decorator';
 import { BillingService } from './billing.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { RecordPaymentDto } from './dto/record-payment.dto';
@@ -24,15 +32,21 @@ export class BillingController {
   constructor(private readonly billingService: BillingService) {}
 
   @Get('summary')
-  @ApiOperation({ summary: 'Financial summary: total income (invoice payments), expenses, outstanding' })
+  @ApiOperation({
+    summary:
+      'Financial summary: total income (invoice payments), expenses, outstanding',
+  })
   @ApiQuery({ name: 'from', required: false })
-  @ApiQuery({ name: 'to',   required: false })
+  @ApiQuery({ name: 'to', required: false })
   getSummary(@Query('from') from?: string, @Query('to') to?: string) {
     return this.billingService.getSummary({ from, to });
   }
 
   @Get('kpis')
-  @ApiOperation({ summary: 'Key financial KPIs based on treatment invoices and invoice payments' })
+  @ApiOperation({
+    summary:
+      'Key financial KPIs based on treatment invoices and invoice payments',
+  })
   getKpis() {
     return this.billingService.getKpis();
   }
@@ -47,7 +61,9 @@ export class BillingController {
   }
 
   @Post('invoices')
-  @ApiOperation({ summary: 'Create a treatment invoice with procedure line items' })
+  @ApiOperation({
+    summary: 'Create a treatment invoice with procedure line items',
+  })
   createInvoice(@Body() dto: CreateInvoiceDto) {
     return this.billingService.create(dto);
   }
@@ -55,15 +71,30 @@ export class BillingController {
   @Get('invoices')
   @ApiOperation({ summary: 'List treatment invoices with optional filters' })
   @ApiQuery({ name: 'patient_id', required: false, type: Number })
-  @ApiQuery({ name: 'branch_id', required: false, type: Number, description: 'Only invoices issued by this branch' })
-  @ApiQuery({ name: 'status', required: false, enum: ['open', 'partial', 'paid'] })
-  @ApiQuery({ name: 'from', required: false, description: 'Start date YYYY-MM-DD' })
+  @ApiQuery({
+    name: 'branch_id',
+    required: false,
+    type: Number,
+    description: 'Only invoices issued by this branch',
+  })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: ['open', 'partial', 'paid'],
+  })
+  @ApiQuery({
+    name: 'from',
+    required: false,
+    description: 'Start date YYYY-MM-DD',
+  })
   @ApiQuery({ name: 'to', required: false, description: 'End date YYYY-MM-DD' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   findAll(
-    @Query('patient_id', new DefaultValuePipe(0), ParseIntPipe) patient_id: number,
-    @Query('branch_id', new DefaultValuePipe(0), ParseIntPipe) branch_id: number,
+    @Query('patient_id', new DefaultValuePipe(0), ParseIntPipe)
+    patient_id: number,
+    @Query('branch_id', new DefaultValuePipe(0), ParseIntPipe)
+    branch_id: number,
     @Query('status') status?: string,
     @Query('from') from?: string,
     @Query('to') to?: string,
@@ -88,7 +119,9 @@ export class BillingController {
   }
 
   @Post('invoices/:id/payments')
-  @ApiOperation({ summary: 'Record a payment (partial or full) against a treatment invoice' })
+  @ApiOperation({
+    summary: 'Record a payment (partial or full) against a treatment invoice',
+  })
   recordPayment(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: RecordPaymentDto,
@@ -97,7 +130,9 @@ export class BillingController {
   }
 
   @Delete('invoices/:id')
-  @ApiOperation({ summary: 'Delete a treatment invoice and all its payments and line items' })
+  @ApiOperation({
+    summary: 'Delete a treatment invoice and all its payments and line items',
+  })
   deleteInvoice(@Param('id', ParseIntPipe) id: number) {
     return this.billingService.deleteInvoice(BigInt(id));
   }

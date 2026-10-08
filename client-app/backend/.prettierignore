@@ -1,0 +1,5 @@
+src/shared/generated/
+src/generated/
+dist/
+node_modules/
+coverage/

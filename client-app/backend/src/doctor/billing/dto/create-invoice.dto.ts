@@ -51,7 +51,9 @@ export class CreateInvoiceDto {
   @IsDateString()
   procedure_date: string;
 
-  @ApiPropertyOptional({ example: 'Patient requested whitening after cleaning.' })
+  @ApiPropertyOptional({
+    example: 'Patient requested whitening after cleaning.',
+  })
   @IsOptional()
   @IsString()
   notes?: string;
@@ -61,7 +63,10 @@ export class CreateInvoiceDto {
   @IsNumber()
   created_by?: number;
 
-  @ApiPropertyOptional({ description: 'Branch issuing the invoice. Defaults to your home branch, then the organization’s default branch.' })
+  @ApiPropertyOptional({
+    description:
+      'Branch issuing the invoice. Defaults to your home branch, then the organization’s default branch.',
+  })
   @IsOptional()
   @IsNumber()
   branch_id?: number;

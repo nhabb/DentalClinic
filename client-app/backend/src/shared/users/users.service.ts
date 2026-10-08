@@ -264,7 +264,9 @@ export class UsersService {
       );
     }
     if (file.size > MAX_SIZE) {
-      throw new BadRequestException(`Image must be under ${formatMb(MAX_SIZE)}`);
+      throw new BadRequestException(
+        `Image must be under ${formatMb(MAX_SIZE)}`,
+      );
     }
 
     const user = await this.prisma.users.findUnique({ where: { id } });

@@ -16,11 +16,16 @@ import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CompleteWorkItemDto {
-  @ApiProperty({ description: 'ID of a planned (treatment_plan) patient record' })
+  @ApiProperty({
+    description: 'ID of a planned (treatment_plan) patient record',
+  })
   @IsNumber()
   record_id: number;
 
-  @ApiPropertyOptional({ example: 250, description: 'Price to bill; 0 or omitted = not billed' })
+  @ApiPropertyOptional({
+    example: 250,
+    description: 'Price to bill; 0 or omitted = not billed',
+  })
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
@@ -34,7 +39,10 @@ export class CompleteWorkDto {
   @IsNumber()
   patient_id: number;
 
-  @ApiPropertyOptional({ example: '2026-10-03', description: 'Date the work was done; defaults to today' })
+  @ApiPropertyOptional({
+    example: '2026-10-03',
+    description: 'Date the work was done; defaults to today',
+  })
   @IsOptional()
   @IsDateString()
   treatment_date?: string;

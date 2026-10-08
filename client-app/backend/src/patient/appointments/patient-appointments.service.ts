@@ -1,7 +1,4 @@
-import {
-  Injectable,
-  ForbiddenException,
-} from '@nestjs/common';
+import { Injectable, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import { AppointmentsService } from '../../doctor/appointments/appointments.service';
 import { CancelAppointmentDto } from '../../doctor/appointments/dto/update-appointment.dto';
@@ -78,9 +75,15 @@ export class PatientAppointmentsService {
     };
   }
 
-  async cancel(userId: number, appointmentId: number, dto: CancelAppointmentDto) {
+  async cancel(
+    userId: number,
+    appointmentId: number,
+    dto: CancelAppointmentDto,
+  ) {
     const patientId = await this.getPatientProfileId(userId);
-    const appointment = await this.appointmentsService.findOne(BigInt(appointmentId));
+    const appointment = await this.appointmentsService.findOne(
+      BigInt(appointmentId),
+    );
 
     if (appointment.patient_profiles.id.toString() !== patientId.toString()) {
       throw new ForbiddenException('You can only cancel your own appointments');

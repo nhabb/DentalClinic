@@ -6,4 +6,5 @@ const VERCEL_MAX_BYTES = 4 * 1024 * 1024;
 export const uploadLimit = (bytes: number): number =>
   process.env.VERCEL ? Math.min(bytes, VERCEL_MAX_BYTES) : bytes;
 
-export const formatMb = (bytes: number): string => `${Math.round(bytes / (1024 * 1024))} MB`;
+export const formatMb = (bytes: number): string =>
+  `${Math.round(bytes / (1024 * 1024))} MB`;

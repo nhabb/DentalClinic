@@ -34,7 +34,9 @@ async function main() {
   const client = new Client({ connectionString: url });
   await client.connect();
   const who = await client.query('select current_user, current_database()');
-  console.log(`Applying ${path.basename(path.dirname(path.resolve(file)))}/${path.basename(file)} as ${who.rows[0].current_user} on ${who.rows[0].current_database}`);
+  console.log(
+    `Applying ${path.basename(path.dirname(path.resolve(file)))}/${path.basename(file)} as ${who.rows[0].current_user} on ${who.rows[0].current_database}`,
+  );
 
   client.on('notice', (n) => console.log(`  notice: ${n.message}`));
   try {

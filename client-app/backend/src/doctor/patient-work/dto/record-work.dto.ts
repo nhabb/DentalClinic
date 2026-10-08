@@ -32,10 +32,16 @@ const FDI_TOOTH = /^(?:[1-4][1-8]|[5-8][1-5])$/;
 export class WorkItemDto {
   @ApiProperty({ example: '16', description: 'FDI tooth number' })
   @IsString()
-  @Matches(FDI_TOOTH, { message: 'tooth_number must be an FDI tooth number (11-48 or 51-85)' })
+  @Matches(FDI_TOOTH, {
+    message: 'tooth_number must be an FDI tooth number (11-48 or 51-85)',
+  })
   tooth_number: string;
 
-  @ApiPropertyOptional({ enum: PROCEDURES, example: 'Filling', description: 'Required unless status is "missing"' })
+  @ApiPropertyOptional({
+    enum: PROCEDURES,
+    example: 'Filling',
+    description: 'Required unless status is "missing"',
+  })
   @ValidateIf((o: WorkItemDto) => o.status !== 'missing')
   @IsString()
   @IsIn(PROCEDURES as unknown as string[])
@@ -45,7 +51,10 @@ export class WorkItemDto {
   @IsIn([...WORK_STATUSES])
   status: WorkStatus;
 
-  @ApiPropertyOptional({ example: 50, description: 'Price; completed items with a price are invoiced' })
+  @ApiPropertyOptional({
+    example: 50,
+    description: 'Price; completed items with a price are invoiced',
+  })
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
@@ -64,7 +73,10 @@ export class RecordWorkDto {
   @IsNumber()
   patient_id: number;
 
-  @ApiProperty({ example: '2026-10-03', description: 'Date of the work (YYYY-MM-DD)' })
+  @ApiProperty({
+    example: '2026-10-03',
+    description: 'Date of the work (YYYY-MM-DD)',
+  })
   @IsDateString()
   treatment_date: string;
 
@@ -73,7 +85,10 @@ export class RecordWorkDto {
   @IsNumber()
   appointment_id?: number;
 
-  @ApiPropertyOptional({ description: 'Notes applied to the invoice and to items without their own notes' })
+  @ApiPropertyOptional({
+    description:
+      'Notes applied to the invoice and to items without their own notes',
+  })
   @IsOptional()
   @IsString()
   @MaxLength(2000)
@@ -84,7 +99,10 @@ export class RecordWorkDto {
   @IsNumber()
   created_by?: number;
 
-  @ApiPropertyOptional({ default: true, description: 'Create an invoice for completed items with a price' })
+  @ApiPropertyOptional({
+    default: true,
+    description: 'Create an invoice for completed items with a price',
+  })
   @IsOptional()
   @IsBoolean()
   create_invoice?: boolean;
