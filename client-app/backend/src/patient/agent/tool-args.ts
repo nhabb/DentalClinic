@@ -4,8 +4,8 @@
  * The model's JSON is untrusted input: a field may be missing, the wrong type
  * ("12" instead of 12) or garbage. Each accessor coerces what it reasonably
  * can and otherwise returns undefined (or the given default), so a service
- * never receives a value of the wrong type. `req*` accessors throw a readable
- * error that is sent back to the model so it can correct itself.
+ * never receives a value of the wrong type. `id()` throws a readable error
+ * that is sent back to the model so it can correct itself.
  */
 export class ToolArgs {
   constructor(private readonly raw: Record<string, unknown>) {}
@@ -43,14 +43,6 @@ export class ToolArgs {
     return this.str(...keys) ?? fallback;
   }
 
-  reqStr(...keys: string[]): string {
-    const v = this.str(...keys);
-    if (v === undefined || v.trim() === '') {
-      throw new Error(`Argument "${keys[0]}" is required`);
-    }
-    return v;
-  }
-
   num(...keys: string[]): number | undefined {
     const v = this.first(keys);
     if (typeof v === 'number' && Number.isFinite(v)) return v;
@@ -63,14 +55,6 @@ export class ToolArgs {
 
   numOr(fallback: number, ...keys: string[]): number {
     return this.num(...keys) ?? fallback;
-  }
-
-  reqNum(...keys: string[]): number {
-    const v = this.num(...keys);
-    if (v === undefined) {
-      throw new Error(`Argument "${keys[0]}" must be a number`);
-    }
-    return v;
   }
 
   /** Database ids. Throws a readable error when the model sent none. */
@@ -96,17 +80,5 @@ export class ToolArgs {
     if (v === 'true') return true;
     if (v === 'false') return false;
     return undefined;
-  }
-
-  /** Arrays of objects (invoice line items); anything else is "not given". */
-  objects(...keys: string[]): ToolArgs[] | undefined {
-    const v = this.first(keys);
-    if (!Array.isArray(v)) return undefined;
-    return v
-      .filter(
-        (item): item is Record<string, unknown> =>
-          !!item && typeof item === 'object' && !Array.isArray(item),
-      )
-      .map((item) => new ToolArgs(item));
   }
 }

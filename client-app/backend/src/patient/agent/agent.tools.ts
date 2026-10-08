@@ -99,61 +99,6 @@ export const AGENT_TOOLS: OpenAI.ChatCompletionFunctionTool[] = [
       },
     },
   },
-  {
-    type: 'function',
-    function: {
-      name: 'confirm_appointment',
-      description: 'Confirm a scheduled appointment.',
-      parameters: {
-        type: 'object',
-        properties: { id: { type: 'number', description: 'Appointment ID' } },
-        required: ['id'],
-      },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'complete_appointment',
-      description: 'Mark a confirmed appointment as completed.',
-      parameters: {
-        type: 'object',
-        properties: { id: { type: 'number', description: 'Appointment ID' } },
-        required: ['id'],
-      },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'cancel_appointment',
-      description: 'Cancel an appointment.',
-      parameters: {
-        type: 'object',
-        properties: {
-          id: { type: 'number', description: 'Appointment ID' },
-          reason: { type: 'string', description: 'Cancellation reason' },
-        },
-        required: ['id'],
-      },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'update_appointment_notes',
-      description: 'Update notes or reason on an appointment.',
-      parameters: {
-        type: 'object',
-        properties: {
-          id: { type: 'number', description: 'Appointment ID' },
-          notes: { type: 'string' },
-          reason: { type: 'string' },
-        },
-        required: ['id'],
-      },
-    },
-  },
 
   // ── Appointment Slots ─────────────────────────────────────────
   {
@@ -171,18 +116,6 @@ export const AGENT_TOOLS: OpenAI.ChatCompletionFunctionTool[] = [
             description: 'Only show unbooked slots',
           },
         },
-      },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'delete_slot',
-      description: 'Delete an unbooked appointment slot.',
-      parameters: {
-        type: 'object',
-        properties: { id: { type: 'number', description: 'Slot ID' } },
-        required: ['id'],
       },
     },
   },
@@ -302,22 +235,6 @@ export const AGENT_TOOLS: OpenAI.ChatCompletionFunctionTool[] = [
   },
 
   // ── Notifications ─────────────────────────────────────────────
-  {
-    type: 'function',
-    function: {
-      name: 'send_notification',
-      description: 'Send a notification to a user.',
-      parameters: {
-        type: 'object',
-        properties: {
-          user_id: { type: 'number' },
-          title: { type: 'string' },
-          message: { type: 'string' },
-        },
-        required: ['user_id', 'title', 'message'],
-      },
-    },
-  },
 
   // ── Payments ──────────────────────────────────────────────────
   {
@@ -417,59 +334,6 @@ export const AGENT_TOOLS: OpenAI.ChatCompletionFunctionTool[] = [
       },
     },
   },
-  {
-    type: 'function',
-    function: {
-      name: 'create_payment',
-      description:
-        'Create a new payment invoice for a patient. The invoice starts as pending until payment is recorded.',
-      parameters: {
-        type: 'object',
-        properties: {
-          patient_id: { type: 'number', description: 'Patient profile ID' },
-          amount: { type: 'number', description: 'Total invoice amount' },
-          payment_method: {
-            type: 'string',
-            enum: ['cash', 'card', 'insurance', 'bank_transfer'],
-            description: 'Default: cash',
-          },
-          description: {
-            type: 'string',
-            description: 'Description of the treatment or service',
-          },
-          appointment_id: {
-            type: 'number',
-            description: 'Optional linked appointment ID',
-          },
-        },
-        required: ['patient_id', 'amount'],
-      },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'record_payment',
-      description:
-        'Record a payment (full or partial) against an existing invoice. The amount_paid accumulates — call this each time the patient makes a payment. Status auto-updates to partial or paid.',
-      parameters: {
-        type: 'object',
-        properties: {
-          id: { type: 'number', description: 'Payment record ID' },
-          amount_paid: {
-            type: 'number',
-            description:
-              'Amount received this time (will be added to any previous payments)',
-          },
-          paid_at: {
-            type: 'string',
-            description: 'ISO timestamp of payment (defaults to now)',
-          },
-        },
-        required: ['id', 'amount_paid'],
-      },
-    },
-  },
 
   // ── Treatment Billing ─────────────────────────────────────────
   {
@@ -513,94 +377,6 @@ export const AGENT_TOOLS: OpenAI.ChatCompletionFunctionTool[] = [
       },
     },
   },
-  {
-    type: 'function',
-    function: {
-      name: 'create_invoice',
-      description:
-        'Create a new treatment invoice for a patient after a procedure. Specify the procedure date, individual procedures with amounts, and optional notes. The invoice starts as "open".',
-      parameters: {
-        type: 'object',
-        properties: {
-          patient_id: {
-            type: 'number',
-            description: 'Patient profile ID or user ID',
-          },
-          procedure_date: {
-            type: 'string',
-            description: 'Date of procedure (YYYY-MM-DD)',
-          },
-          notes: {
-            type: 'string',
-            description: 'Optional notes about the treatment',
-          },
-          line_items: {
-            type: 'array',
-            description: 'List of procedures performed with their costs',
-            items: {
-              type: 'object',
-              properties: {
-                procedure_name: {
-                  type: 'string',
-                  enum: [
-                    'Checkup',
-                    'X-Ray',
-                    'Teeth Cleaning',
-                    'Whitening',
-                    'Tooth Extraction',
-                    'Root Canal',
-                    'Filling',
-                    'Crown',
-                    'Bridge',
-                    'Implant',
-                    'Orthodontic',
-                    'Veneers',
-                    'Gum Treatment',
-                    'Fluoride Treatment',
-                  ],
-                },
-                amount: {
-                  type: 'number',
-                  description: 'Cost of this procedure',
-                },
-              },
-              required: ['procedure_name', 'amount'],
-            },
-          },
-        },
-        required: ['patient_id', 'procedure_date', 'line_items'],
-      },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'record_invoice_payment',
-      description:
-        'Record a payment (full or partial) against a treatment invoice. The remaining balance updates automatically. Status changes to "partial" or "paid" as appropriate.',
-      parameters: {
-        type: 'object',
-        properties: {
-          invoice_id: { type: 'number', description: 'Treatment invoice ID' },
-          amount: {
-            type: 'number',
-            description:
-              'Amount being paid now (must not exceed remaining balance)',
-          },
-          payment_method: {
-            type: 'string',
-            enum: ['cash', 'card', 'insurance', 'bank_transfer'],
-            description: 'Default: cash',
-          },
-          notes: {
-            type: 'string',
-            description: 'Optional notes about this payment',
-          },
-        },
-        required: ['invoice_id', 'amount'],
-      },
-    },
-  },
 
   // ── Expenses ──────────────────────────────────────────────────
   {
@@ -630,42 +406,7 @@ export const AGENT_TOOLS: OpenAI.ChatCompletionFunctionTool[] = [
       },
     },
   },
-  {
-    type: 'function',
-    function: {
-      name: 'create_expense',
-      description:
-        'Record a new clinic expense (rent, utilities, equipment, etc.).',
-      parameters: {
-        type: 'object',
-        properties: {
-          title: {
-            type: 'string',
-            description: 'Short description of the expense',
-          },
-          category: {
-            type: 'string',
-            enum: [
-              'utilities',
-              'rent',
-              'equipment',
-              'supplies',
-              'maintenance',
-              'other',
-            ],
-            description: 'Default: other',
-          },
-          amount: { type: 'number', description: 'Expense amount' },
-          description: { type: 'string', description: 'Additional details' },
-          expense_date: {
-            type: 'string',
-            description: 'Date of expense (YYYY-MM-DD)',
-          },
-        },
-        required: ['title', 'amount', 'expense_date'],
-      },
-    },
-  },
+
   {
     type: 'function',
     function: {

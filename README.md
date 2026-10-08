@@ -514,7 +514,7 @@ A dental clinic's administration needs visibility into its operations: which app
 ### hshehab — Hussein Shehab (Product Owner + Developer)
 
 - **Product ownership:** Defined the product vision (dental clinic SaaS), prioritized the feature backlog, validated completed work, and communicated with evaluators and peers.
-- **AI assistant:** OpenAI function-calling agent with 30+ permission-gated tools and an RLS-scoped SQL tool (`POST /api/agent/chat`); the model only sees the tools the caller’s role may use.
+- **AI assistant:** read-only OpenAI function-calling agent with 20+ permission-gated tools and an RLS-scoped SQL tool (`POST /api/agent/chat`); the model only sees the tools the caller’s role may use.
 - **Internationalization:** Custom i18n context with EN/FR/AR translation files, `useTranslation()` hook, `localStorage` persistence.
 - **RTL support:** Automatic `dir`/`lang` attributes on `<html>`, layout mirroring for Arabic using CSS logical properties.
 - **Landing page:** Hero, services, pricing, testimonials, and footer with Privacy Policy and Terms of Service links.

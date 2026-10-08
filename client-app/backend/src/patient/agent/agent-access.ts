@@ -23,12 +23,7 @@ export const TOOL_PERMISSIONS: Readonly<Record<string, string | null>> = {
   // Appointments and slots
   list_appointments: 'appointments:read',
   get_appointment: 'appointments:read',
-  confirm_appointment: 'appointments:write',
-  complete_appointment: 'appointments:write',
-  cancel_appointment: 'appointments:write',
-  update_appointment_notes: 'appointments:write',
   list_slots: 'appointments:read',
-  delete_slot: 'slots:manage',
 
   // Patients
   list_patients: 'patients:read',
@@ -42,9 +37,8 @@ export const TOOL_PERMISSIONS: Readonly<Record<string, string | null>> = {
 
   // Team
   list_doctors: 'staff:read',
-  send_notification: 'staff:manage',
 
-  // Billing
+  // Billing (read-only: the assistant never creates invoices or records payments)
   get_financial_kpis: 'billing:read',
   get_financial_summary: 'billing:read',
   get_payments_analytics: 'billing:read',
@@ -54,15 +48,10 @@ export const TOOL_PERMISSIONS: Readonly<Record<string, string | null>> = {
   list_invoices: 'billing:read',
   list_payments: 'billing:read',
   get_invoice: 'billing:read',
-  create_invoice: 'billing:write',
-  create_payment: 'billing:write',
-  record_invoice_payment: 'billing:write',
-  record_payment: 'billing:write',
 
   // Expenses
   list_expenses: 'expenses:read',
   get_expenses_analytics: 'expenses:read',
-  create_expense: 'expenses:write',
 
   // Raw SQL: allowed for everyone, but each table it touches is checked below.
   query_database: null,

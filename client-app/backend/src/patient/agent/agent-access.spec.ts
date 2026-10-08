@@ -78,13 +78,13 @@ describe('agent access: which tools a user sees', () => {
     );
     expect(names).not.toContain('list_invoices');
     expect(names).not.toContain('list_roles');
-    expect(names).not.toContain('cancel_appointment');
+    expect(names).not.toContain('list_expenses');
   });
 
   it('hides roles management from a secretary but keeps billing', () => {
     const names = toolsFor(secretary).map((t) => t.function.name);
     expect(names).toContain('list_invoices');
-    expect(names).toContain('create_expense');
+    expect(names).toContain('list_expenses');
     expect(names).not.toContain('list_roles');
   });
 
@@ -95,12 +95,12 @@ describe('agent access: which tools a user sees', () => {
 
 describe('agent access: running a tool', () => {
   it('allows a tool the role holds the permission for', () => {
-    expect(toolDenial(doctor, 'create_invoice')).toBeNull();
+    expect(toolDenial(doctor, 'get_invoice')).toBeNull();
   });
 
   it('names the missing permission with its label', () => {
-    expect(toolDenial(doctor, 'create_expense')).toMatch(
-      /lacks the permission: expenses:write \(Record, edit and delete expenses/,
+    expect(toolDenial(doctor, 'list_roles')).toMatch(
+      /lacks the permission: roles:manage \(Edit roles and permissions/,
     );
   });
 

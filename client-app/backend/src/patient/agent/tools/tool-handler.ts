@@ -22,6 +22,3 @@ export class ToolRefusedError extends Error {
     this.name = 'ToolRefusedError';
   }
 }
-
-/** Today as YYYY-MM-DD, the format the services and the model use. */
-export const todayIso = (): string => new Date().toISOString().split('T')[0];

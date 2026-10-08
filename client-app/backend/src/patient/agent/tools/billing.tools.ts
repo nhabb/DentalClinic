@@ -1,7 +1,7 @@
 import type { BillingService } from '../../../doctor/billing/billing.service';
-import { todayIso, type ToolHandlers } from './tool-handler';
+import type { ToolHandlers } from './tool-handler';
 
-/** Treatment invoices, payments and the financial reports built on them. */
+/** Treatment invoices, payments and the financial reports built on them (read-only). */
 export function billingTools(billing: BillingService): ToolHandlers {
   const listInvoices: ToolHandlers[string] = (a) =>
     billing.findAll({
@@ -11,24 +11,6 @@ export function billingTools(billing: BillingService): ToolHandlers {
       to: a.str('to'),
       page: a.numOr(1, 'page'),
       limit: a.numOr(20, 'limit'),
-    });
-
-  const createInvoice: ToolHandlers[string] = (a) =>
-    billing.create({
-      patient_id: a.reqNum('patient_id'),
-      procedure_date: a.strOr(todayIso(), 'procedure_date', 'date'),
-      notes: a.str('notes', 'description'),
-      line_items: a.objects('line_items')?.map((item) => ({
-        procedure_name: item.strOr('Procedure', 'procedure_name'),
-        amount: item.numOr(0, 'amount'),
-      })) ?? [{ procedure_name: 'Checkup', amount: a.numOr(0, 'amount') }],
-    });
-
-  const recordPayment: ToolHandlers[string] = (a) =>
-    billing.recordPayment(a.id('invoice_id', 'id'), {
-      amount: a.reqNum('amount', 'amount_paid'),
-      payment_method: a.strOr('cash', 'payment_method'),
-      notes: a.str('notes'),
     });
 
   return {
@@ -43,13 +25,9 @@ export function billingTools(billing: BillingService): ToolHandlers {
     get_patient_financials: (a) =>
       billing.getPatientFinancials(a.num('patient_id')),
 
-    // Invoices. The *_payment names are older aliases kept for saved conversations.
+    // Invoices. list_payments is an older alias kept for saved conversations.
     list_invoices: listInvoices,
     list_payments: listInvoices,
     get_invoice: (a) => billing.findOne(a.id('id')),
-    create_invoice: createInvoice,
-    create_payment: createInvoice,
-    record_invoice_payment: recordPayment,
-    record_payment: recordPayment,
   };
 }

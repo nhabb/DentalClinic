@@ -4,7 +4,6 @@ import { AppointmentSlotsService } from '../../../doctor/appointment-slots/appoi
 import { PatientsService } from '../../patients/patients.service';
 import { InventoryService } from '../../../doctor/inventory/inventory.service';
 import { UsersService } from '../../../shared/users/users.service';
-import { NotificationsService } from '../../../shared/notifications/notifications.service';
 import { ExpensesService } from '../../../doctor/expenses/expenses.service';
 import { BillingService } from '../../../doctor/billing/billing.service';
 import { RolesService } from '../../../shared/authorization/roles.service';
@@ -42,7 +41,6 @@ export class ToolRunner {
     patients: PatientsService,
     inventory: InventoryService,
     users: UsersService,
-    notifications: NotificationsService,
     expenses: ExpensesService,
     billing: BillingService,
     roles: RolesService,
@@ -54,7 +52,7 @@ export class ToolRunner {
         ...appointmentTools(appointments, slots),
         ...patientTools(patients, prisma),
         ...inventoryTools(inventory),
-        ...teamTools(users, notifications),
+        ...teamTools(users),
         ...billingTools(billing),
         ...expenseTools(expenses),
         ...sqlTools(prisma),

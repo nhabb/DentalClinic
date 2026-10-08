@@ -268,6 +268,39 @@ async function main() {
         state.u === 'dental_app',
       JSON.stringify(state),
     );
+    // users: patient accounts need patients:read on top of staff:read.
+    const staffOnly = ['agent:use', 'staff:read'];
+    const hidden = await runGuardedSelect(
+      prisma,
+      "SELECT count(*)::int AS n FROM users WHERE role = 'patient'",
+      staffOnly,
+    );
+    record(
+      'users: patient rows hidden from a role with staff:read only',
+      (hidden.rows[0] as { n: number }).n === 0,
+      JSON.stringify(hidden.rows),
+    );
+    const staffRows = await runGuardedSelect(
+      prisma,
+      "SELECT count(*)::int AS n FROM users WHERE role <> 'patient'",
+      staffOnly,
+    );
+    record(
+      'users: staff rows still visible to that role',
+      (staffRows.rows[0] as { n: number }).n > 0,
+      JSON.stringify(staffRows.rows),
+    );
+    const visible = await runGuardedSelect(
+      prisma,
+      "SELECT count(*)::int AS n FROM users WHERE role = 'patient'",
+      permissions,
+    );
+    record(
+      'users: patient rows visible with patients:read (secretary)',
+      (visible.rows[0] as { n: number }).n > 0,
+      JSON.stringify(visible.rows),
+    );
+
     const big = await runGuardedSelect(
       prisma,
       'SELECT g FROM generate_series(1, 500) g',

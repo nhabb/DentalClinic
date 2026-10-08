@@ -28,7 +28,6 @@ function build() {
     {} as never,
     {} as never,
     {} as never,
-    {} as never,
     billing as never,
     roles as never,
     {} as never,

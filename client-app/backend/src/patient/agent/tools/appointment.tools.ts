@@ -2,7 +2,7 @@ import type { AppointmentsService } from '../../../doctor/appointments/appointme
 import type { AppointmentSlotsService } from '../../../doctor/appointment-slots/appointment-slots.service';
 import type { ToolHandlers } from './tool-handler';
 
-/** Appointments and the slots they are booked into. */
+/** Appointments and the slots they are booked into (read-only). */
 export function appointmentTools(
   appointments: AppointmentsService,
   slots: AppointmentSlotsService,
@@ -20,31 +20,6 @@ export function appointmentTools(
 
     get_appointment: (a) => appointments.findOne(a.id('id')),
 
-    confirm_appointment: async (a) => ({
-      success: true,
-      appointment: await appointments.confirm(a.id('id')),
-    }),
-
-    complete_appointment: async (a) => ({
-      success: true,
-      appointment: await appointments.complete(a.id('id')),
-    }),
-
-    cancel_appointment: async (a) => ({
-      success: true,
-      appointment: await appointments.cancel(a.id('id'), {
-        reason: a.str('reason'),
-      }),
-    }),
-
-    update_appointment_notes: async (a) => ({
-      success: true,
-      appointment: await appointments.updateNotes(a.id('id'), {
-        notes: a.str('notes'),
-        reason: a.str('reason'),
-      }),
-    }),
-
     list_slots: (a) =>
       slots.findAll({
         doctor_id: a.num('doctor_id'),
@@ -52,7 +27,5 @@ export function appointmentTools(
         available_only: a.bool('available_only'),
         limit: 50,
       }),
-
-    delete_slot: (a) => slots.remove(a.id('id')),
   };
 }

@@ -97,7 +97,6 @@ function build(turns: Completion[]) {
     {} as never,
     users as never,
     {} as never,
-    {} as never,
     billing as never,
     roles as never,
     prisma as never,
@@ -137,7 +136,7 @@ describe('AgentService.chat', () => {
     const offered = paramsOf(0).tools.map((t) => t.function.name);
     expect(offered).toContain('list_invoices');
     expect(offered).toContain('get_my_permissions');
-    expect(offered).not.toContain('create_invoice');
+    expect(offered).not.toContain('list_expenses');
     expect(offered).not.toContain('list_roles');
   });
 

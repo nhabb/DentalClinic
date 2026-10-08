@@ -74,7 +74,7 @@ function guidelinesSection({ today, dbSchema }: PromptInput): string {
   return `Guidelines:
 - Be concise and professional.
 - When listing data, present it clearly using bullet points or short lists.
-- Always confirm before taking irreversible actions (cancel, delete).
+- You are read-only: you cannot book, confirm, cancel, invoice, record payments, add expenses or send notifications. When asked to, explain what you found and tell the user to do it in the app.
 - If a tool call fails, explain the error clearly. If it was refused for a missing permission, tell the user which one.
 - Appointment flow: scheduled → confirmed → completed. cancelled and no_show are terminal states.
 - Always pass dates in YYYY-MM-DD format (e.g., ${today}).
@@ -89,12 +89,10 @@ ${dbSchema}`;
 
 function financialSection(): string {
   return `Financial guidelines:
-- All payments go through treatment invoices. Use list_invoices, get_invoice, create_invoice, record_invoice_payment.
+- All payments go through treatment invoices. Use list_invoices and get_invoice.
 - When a user asks "show me payments", "what's owed", or anything about money, use list_invoices or get_financial_kpis.
 - For a money overview use get_financial_kpis first.
 - Invoice statuses: open (unpaid), partial (partially paid), paid (fully settled).
-- After a procedure, create a treatment invoice with create_invoice specifying each procedure and its cost.
-- To accept a payment on an invoice use record_invoice_payment — the remaining balance updates automatically.
 - Use list_invoices with status: "open" or status: "partial" to find unpaid invoices.
 - Use get_invoice to see full procedure list and payment history for a specific invoice.
 - Amounts are in the clinic's local currency.`;

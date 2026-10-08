@@ -8,7 +8,6 @@ import { AppointmentSlotsModule } from '../../doctor/appointment-slots/appointme
 import { PatientsModule } from '../patients/patients.module';
 import { InventoryModule } from '../../doctor/inventory/inventory.module';
 import { UsersModule } from '../../shared/users/users.module';
-import { NotificationsModule } from '../../shared/notifications/notifications.module';
 import { ExpensesModule } from '../../doctor/expenses/expenses.module';
 import { BillingModule } from '../../doctor/billing/billing.module';
 import { PrismaModule } from '../../shared/prisma/prisma.module';
@@ -24,7 +23,6 @@ import { PrismaModule } from '../../shared/prisma/prisma.module';
     PatientsModule,
     InventoryModule,
     UsersModule,
-    NotificationsModule,
     ExpensesModule,
     BillingModule,
     PrismaModule,
