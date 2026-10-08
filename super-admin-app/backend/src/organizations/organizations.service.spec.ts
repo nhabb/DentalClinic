@@ -31,7 +31,9 @@ describe('OrganizationsService', () => {
       $queryRaw: jest.fn().mockResolvedValue([]),
       $transaction: jest.fn(async (fn: (tx: any) => Promise<unknown>) => fn(tx)),
     };
-    service = new OrganizationsService(prisma);
+    service = new OrganizationsService(prisma, {
+      isAssignableStaffRole: jest.fn().mockResolvedValue(true),
+    } as never);
   });
 
   describe('list', () => {

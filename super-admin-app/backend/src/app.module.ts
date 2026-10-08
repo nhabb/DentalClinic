@@ -6,6 +6,10 @@ import { PlatformAuthGuard } from './auth/platform-auth.guard';
 import { OrganizationsModule } from './organizations/organizations.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { AdminsModule } from './admins/admins.module';
+import { MailModule } from './mail/mail.module';
+import { AuditModule } from './audit/audit.module';
+import { RolesModule } from './roles/roles.module';
+import { AccountsModule } from './accounts/accounts.module';
 
 /**
  * Platform console API.
@@ -16,7 +20,17 @@ import { AdminsModule } from './admins/admins.module';
  * need, so this API must never be exposed to clinic users.
  */
 @Module({
-  imports: [PrismaModule, AuthModule, OrganizationsModule, DashboardModule, AdminsModule],
+  imports: [
+    PrismaModule,
+    MailModule,
+    AuditModule,
+    AuthModule,
+    OrganizationsModule,
+    DashboardModule,
+    AdminsModule,
+    RolesModule,
+    AccountsModule,
+  ],
   providers: [{ provide: APP_GUARD, useClass: PlatformAuthGuard }],
 })
 export class AppModule {}

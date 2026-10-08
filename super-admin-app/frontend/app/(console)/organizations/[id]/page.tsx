@@ -4,13 +4,13 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { FaUsers, FaCalendarCheck, FaFileInvoiceDollar, FaMoneyBillWave, FaMapMarkerAlt, FaUserMd, FaPlus, FaPaperPlane, FaBan, FaCheck } from "react-icons/fa";
+import { FaUsers, FaCalendarCheck, FaFileInvoiceDollar, FaMoneyBillWave, FaMapMarkerAlt, FaPlus, FaBan, FaCheck } from "react-icons/fa";
 import { PageHeader } from "@/components/console/PageHeader";
 import { DataTable, type Column } from "@/components/console/DataTable";
 import { ActivityBars } from "@/components/console/ActivityBars";
-import { ActiveBadge, RoleBadge } from "@/components/console/StatusBadge";
+import { ActiveBadge } from "@/components/console/StatusBadge";
 import { ErrorNote } from "@/components/console/ErrorNote";
-import { InviteLinkCard } from "@/components/console/InviteLinkCard";
+
 import { StatsCard } from "@/components/ui/StatsCard";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/button";
@@ -21,17 +21,24 @@ import { Modal } from "@/components/ui/Modal";
 import { Tabs } from "@/components/ui/Tabs";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { AccountsTab } from "@/components/console/accounts/AccountsTab";
+import { RolesTab } from "@/components/console/roles/RolesTab";
 import { useApi } from "@/lib/useApi";
 import { ApiError, patch, post } from "@/lib/api";
 import { formatDate, formatMoney, formatNumber } from "@/lib/format";
-import type { Branch, Invite, OrganizationDetail, StaffMember } from "@/lib/types";
+import type { Branch, OrganizationDetail } from "@/lib/types";
 
-type Tab = "overview" | "branches" | "staff" | "settings";
+type Tab = "overview" | "branches" | "accounts" | "roles" | "settings";
+const TABS: Tab[] = ["overview", "branches", "accounts", "roles", "settings"];
 
 export default function ClinicDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { data: org, error, loading, reload } = useApi<OrganizationDetail>(`/organizations/${id}`);
   const [tab, setTab] = useState<Tab>("overview");
+  useEffect(() => {
+    const wanted = new URLSearchParams(window.location.search).get("tab") as Tab | null;
+    if (wanted && TABS.includes(wanted)) setTab(wanted);
+  }, []);
 
   if (error) {
     return (
@@ -90,7 +97,8 @@ export default function ClinicDetailPage() {
           items={[
             { id: "overview", label: "Overview" },
             { id: "branches", label: "Branches", count: org.branches.length },
-            { id: "staff", label: "Staff", count: org.staff.length },
+            { id: "accounts", label: "Accounts", count: org.staff.length },
+            { id: "roles", label: "Roles" },
             { id: "settings", label: "Settings" },
           ]}
         />
@@ -98,7 +106,8 @@ export default function ClinicDetailPage() {
         <div role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`}>
           {tab === "overview" && <OverviewTab org={org} />}
           {tab === "branches" && <BranchesTab org={org} onChanged={reload} />}
-          {tab === "staff" && <StaffTab org={org} onChanged={reload} />}
+          {tab === "accounts" && <AccountsTab org={org} onChanged={reload} />}
+          {tab === "roles" && <RolesTab org={org} />}
           {tab === "settings" && <SettingsTab org={org} onChanged={reload} />}
         </div>
       </main>
@@ -420,178 +429,6 @@ function BranchModal({
 }
 
 // ── Staff ─────────────────────────────────────────────────────────────────────
-
-function StaffTab({ org, onChanged }: { org: OrganizationDetail; onChanged: () => void }) {
-  const [adding, setAdding] = useState(false);
-  const [invite, setInvite] = useState<{ invite: Invite; recipient: string } | null>(null);
-  const branchName = (id: string | null) => org.branches.find((b) => b.id === id)?.name ?? "All branches";
-
-  const resend = async (member: StaffMember) => {
-    try {
-      const result = await post<{ invite: Invite }>(`/organizations/${org.id}/staff/${member.id}/invite`);
-      setInvite({ invite: result.invite, recipient: `${member.first_name} ${member.last_name}` });
-      toast.success("New setup link issued");
-    } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Request failed");
-    }
-  };
-
-  const columns: Column<StaffMember>[] = [
-    {
-      key: "name",
-      header: "Name",
-      render: (m) => (
-        <span className="block min-w-0">
-          <span className="block truncate font-semibold text-ink-900">
-            {m.first_name} {m.last_name}
-          </span>
-          <span className="block truncate text-xs text-ink-400">{m.email ?? "no email"}</span>
-        </span>
-      ),
-    },
-    { key: "role", header: "Role", render: (m) => <RoleBadge role={m.role} /> },
-    {
-      key: "branch",
-      header: "Branch",
-      render: (m) => (
-        <span className="text-ink-700">
-          {branchName(m.branch_id)}
-          {m.restrict_to_branch && <span className="ms-1 text-xs text-ink-400">(restricted)</span>}
-        </span>
-      ),
-    },
-    {
-      key: "status",
-      header: "Status",
-      render: (m) =>
-        !m.is_active ? <Badge tone="brick" dot>Disabled</Badge> : m.must_set_password ? <Badge tone="honey" dot>Awaiting password</Badge> : <Badge tone="leaf" dot>Active</Badge>,
-    },
-    {
-      key: "actions",
-      header: "",
-      align: "end",
-      render: (m) => (
-        <Button variant="ghost" size="sm" onClick={() => resend(m)} title="Issue a new password setup link">
-          <FaPaperPlane /> Setup link
-        </Button>
-      ),
-    },
-  ];
-
-  return (
-    <div className="space-y-4">
-      {invite && <InviteLinkCard invite={invite.invite} recipient={invite.recipient} />}
-      <Card>
-        <CardHeader
-          title="Staff"
-          subtitle="Doctors, secretaries and admins of this clinic"
-          icon={<FaUserMd />}
-          action={
-            <Button size="sm" onClick={() => setAdding(true)}>
-              <FaPlus /> Add staff
-            </Button>
-          }
-        />
-        <DataTable columns={columns} rows={org.staff} rowKey={(m) => m.id} empty={<EmptyState icon={FaUserMd} title="No staff yet" />} />
-      </Card>
-      <AddStaffModal
-        organizationId={org.id}
-        isOpen={adding}
-        onClose={() => setAdding(false)}
-        onCreated={(result) => {
-          setInvite(result);
-          onChanged();
-        }}
-      />
-    </div>
-  );
-}
-
-function AddStaffModal({
-  organizationId,
-  isOpen,
-  onClose,
-  onCreated,
-}: {
-  organizationId: string;
-  isOpen: boolean;
-  onClose: () => void;
-  onCreated: (result: { invite: Invite; recipient: string }) => void;
-}) {
-  const [form, setForm] = useState({ first_name: "", last_name: "", email: "", phone: "", role: "admin" });
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setBusy(true);
-    setError("");
-    try {
-      const created = await post<{ invite: Invite; first_name: string; last_name: string; email: string }>(
-        `/organizations/${organizationId}/staff`,
-        { ...form, phone: form.phone.trim() || undefined },
-      );
-      onCreated({ invite: created.invite, recipient: `${created.first_name} ${created.last_name} (${created.email})` });
-      setForm({ first_name: "", last_name: "", email: "", phone: "", role: "admin" });
-      onClose();
-      toast.success("Staff account created");
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Request failed");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Add staff"
-      description="They receive a link to set their password in the clinic app."
-      footer={
-        <div className="flex justify-end gap-2">
-          <Button variant="ghost" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button type="submit" form="add-staff" disabled={busy}>
-            {busy ? "Creating…" : "Create account"}
-          </Button>
-        </div>
-      }
-    >
-      <form id="add-staff" onSubmit={submit} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {error && (
-          <div className="sm:col-span-2">
-            <ErrorNote message={error} />
-          </div>
-        )}
-        <FormField label="First name" required>
-          <Input required value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} />
-        </FormField>
-        <FormField label="Last name" required>
-          <Input required value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} />
-        </FormField>
-        <FormField label="Email" required>
-          <Input type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-        </FormField>
-        <FormField label="Phone">
-          <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-        </FormField>
-        <FormField label="Role" className="sm:col-span-2">
-          <select
-            value={form.role}
-            onChange={(e) => setForm({ ...form, role: e.target.value })}
-            className="h-11 w-full rounded-xl border border-ink-200 bg-ink-50/70 px-3.5 text-sm text-ink-900 focus:border-brand-400 focus:bg-card focus:outline-none focus:ring-4 focus:ring-brand-500/12"
-          >
-            <option value="admin">Admin (manages the whole clinic)</option>
-            <option value="doctor">Doctor</option>
-            <option value="secretary">Secretary</option>
-          </select>
-        </FormField>
-      </form>
-    </Modal>
-  );
-}
 
 // ── Settings ──────────────────────────────────────────────────────────────────
 

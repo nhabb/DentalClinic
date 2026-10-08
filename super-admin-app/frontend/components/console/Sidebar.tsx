@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FaTooth, FaChartLine, FaHospital, FaUserShield, FaBars, FaSignOutAlt, FaPlus } from "react-icons/fa";
+import { FaTooth, FaChartLine, FaHospital, FaUsers, FaUserShield, FaBars, FaSignOutAlt, FaPlus } from "react-icons/fa";
 import { cn } from "@/lib/utils";
 import type { PlatformUser } from "@/lib/auth";
 
 const NAV = [
   { href: "/", label: "Dashboard", icon: FaChartLine, exact: true },
   { href: "/organizations", label: "Clinics", icon: FaHospital, exact: false },
+  { href: "/accounts", label: "Accounts", icon: FaUsers, exact: false },
   { href: "/admins", label: "Platform admins", icon: FaUserShield, exact: false },
 ] as const;
 

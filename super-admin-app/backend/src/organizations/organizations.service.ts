@@ -1,6 +1,7 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { newPasswordSetup, unusablePasswordHash } from '../common/password-setup';
+import { RolesService } from '../roles/roles.service';
 import {
   CreateBranchDto,
   CreateOrganizationDto,
@@ -9,7 +10,8 @@ import {
   UpdateOrganizationDto,
 } from './dto/organization.dto';
 
-const STAFF_ROLES = ['doctor', 'secretary', 'admin'];
+/** Staff = every clinic account that is not a patient; custom roles included. */
+const STAFF_FILTER = { role: { notIn: ['patient', 'superadmin'] } };
 
 /** One row of the clinics table: the organization plus the numbers an operator watches. */
 export interface OrganizationSummary {
@@ -33,7 +35,10 @@ export interface OrganizationSummary {
  */
 @Injectable()
 export class OrganizationsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly roles: RolesService,
+  ) {}
 
   async list(): Promise<OrganizationSummary[]> {
     const [orgs, revenue, activity, staff] = await Promise.all([
@@ -45,7 +50,7 @@ export class OrganizationsService {
       this.prisma.appointments.groupBy({ by: ['organization_id'], _max: { created_at: true } }),
       this.prisma.users.groupBy({
         by: ['organization_id'],
-        where: { role: { in: STAFF_ROLES }, is_active: true },
+        where: { ...STAFF_FILTER, is_active: true },
         _count: { _all: true },
       }),
     ]);
@@ -86,7 +91,7 @@ export class OrganizationsService {
 
     const [staff, revenue, outstanding, monthly] = await Promise.all([
       this.prisma.users.findMany({
-        where: { organization_id: id, role: { in: STAFF_ROLES } },
+        where: { organization_id: id, ...STAFF_FILTER },
         select: {
           id: true,
           email: true,
@@ -226,6 +231,10 @@ export class OrganizationsService {
   async createStaff(organizationId: bigint, dto: CreateStaffDto) {
     await this.requireOrganization(organizationId);
     await this.assertEmailFree(dto.email);
+    const role = dto.role ?? 'admin';
+    if (!(await this.roles.isAssignableStaffRole(organizationId, role))) {
+      throw new BadRequestException(`"${role}" is not a staff role of this clinic (see its roles)`);
+    }
     const branch = await this.prisma.branches.findFirst({
       where: { organization_id: organizationId, is_default: true },
       select: { id: true },
@@ -239,7 +248,7 @@ export class OrganizationsService {
         first_name: dto.first_name.trim(),
         last_name: dto.last_name.trim(),
         phone: dto.phone ?? null,
-        role: dto.role ?? 'admin',
+        role,
         password_hash: await unusablePasswordHash(),
         must_set_password: true,
         password_setup_token_hash: setup.tokenHash,

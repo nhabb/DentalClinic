@@ -20,6 +20,10 @@ npm install
 npm run prisma:generate         # client generated from ../../client-app/backend/prisma/schema.prisma
 npm run start:dev               # http://localhost:5100/api/docs
 
+## Accounts, roles and permissions
+
+Each clinic page has an **Accounts** tab (staff and patients: edit name and contact, role, home branch and branch restriction, enable or disable, add staff, send a new set-password link) and a **Roles** tab (the clinic's roles with a permission matrix; custom roles can be added, built-in ones renamed, admin is locked). The sidebar's **Accounts** page searches every clinic's accounts at once. Password links are emailed when `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` and `MAIL_FROM` are set in `super-admin-app/backend/.env`; otherwise the link is shown to copy. The clinic app applies role changes within a minute.
+
 # Console
 cd super-admin-app/frontend
 npm install

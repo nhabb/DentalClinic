@@ -8,7 +8,8 @@
  *
  * Proves: login is platform-only, clinic tokens are refused, the dashboard and
  * clinic list work, a clinic can be onboarded with an owner invite, suspended
- * and reactivated, and everything created here is removed again.
+ * and reactivated, its roles and accounts can be managed (custom roles, role and
+ * branch changes, password links) and everything created here is removed again.
  *
  * Needs the demo platform admin (super@demo.com / demo123).
  */
@@ -56,6 +57,7 @@ async function cleanup() {
   try {
     const org = await pg.query(`select id from organizations where slug = $1`, [TEST_SLUG]);
     for (const { id } of org.rows) {
+      await pg.query(`delete from audit_logs where organization_id = $1`, [id]);
       await pg.query(`delete from users where organization_id = $1`, [id]);
       await pg.query(`delete from clinic_profile where organization_id = $1`, [id]);
       await pg.query(`delete from organizations where id = $1`, [id]);
@@ -212,6 +214,140 @@ async function main() {
       body: { is_active: true },
     });
     record('reactivate the clinic', reactivated.status === 200 && reactivated.json?.is_active === true);
+
+    // ── Accounts, roles and permissions of the clinic ───────────────────────
+    const catalog = await api('GET', '/permissions', { token: t });
+    record(
+      'permission catalog',
+      catalog.status === 200 && Array.isArray(catalog.json) && catalog.json.length > 0,
+    );
+
+    const roles = await api('GET', `/organizations/${id}/roles`, { token: t });
+    const roleKeys = (roles.json ?? []).map((r) => r.key).sort();
+    record(
+      'clinic has the four default roles',
+      roles.status === 200 &&
+        JSON.stringify(roleKeys) === JSON.stringify(['admin', 'doctor', 'patient', 'secretary']),
+      roleKeys.join(','),
+    );
+    const adminRole = (roles.json ?? []).find((r) => r.key === 'admin');
+    record(
+      'admin role is locked with every permission',
+      adminRole?.locked === true && adminRole.permissions.length > 20,
+    );
+
+    const newRole = await api('POST', `/organizations/${id}/roles`, {
+      token: t,
+      body: {
+        key: 'hygienist',
+        name: 'Hygienist',
+        permissions: ['appointments:read', 'patients:read', 'agent:use'],
+      },
+    });
+    record(
+      'create a custom role',
+      newRole.status === 201 && newRole.json?.permissions?.length === 3,
+      `status ${newRole.status} ${newRole.json?.message ?? ''}`,
+    );
+    record(
+      'unknown permission is refused',
+      (
+        await api('POST', `/organizations/${id}/roles`, {
+          token: t,
+          body: { key: 'bad', name: 'Bad', permissions: ['nope:read'] },
+        })
+      ).status === 400,
+    );
+    record(
+      'admin permissions cannot be edited',
+      (
+        await api('PATCH', `/organizations/${id}/roles/admin`, {
+          token: t,
+          body: { permissions: ['billing:read'] },
+        })
+      ).status === 400,
+    );
+    const edited = await api('PATCH', `/organizations/${id}/roles/hygienist`, {
+      token: t,
+      body: { name: 'Dental hygienist', permissions: ['appointments:read', 'records:read'] },
+    });
+    record(
+      'edit a custom role',
+      edited.status === 200 &&
+        edited.json?.permissions?.length === 2 &&
+        edited.json?.name === 'Dental hygienist',
+    );
+
+    const accounts = await api('GET', `/organizations/${id}/accounts`, { token: t });
+    const owner = (accounts.json?.data ?? []).find((a) => a.email === OWNER_EMAIL);
+    record(
+      'list clinic accounts shows the owner',
+      accounts.status === 200 && !!owner,
+      `total ${accounts.json?.meta?.total}`,
+    );
+    record(
+      'the only admin cannot be demoted',
+      (
+        await api('PATCH', `/organizations/${id}/accounts/${owner?.id}`, {
+          token: t,
+          body: { role: 'doctor' },
+        })
+      ).status === 400,
+    );
+    record(
+      'the only admin cannot be disabled',
+      (
+        await api('PATCH', `/organizations/${id}/accounts/${owner?.id}`, {
+          token: t,
+          body: { is_active: false },
+        })
+      ).status === 400,
+    );
+    const staffId = staff.json?.id;
+    const moved = await api('PATCH', `/organizations/${id}/accounts/${staffId}`, {
+      token: t,
+      body: {
+        role: 'hygienist',
+        branch_id: Number(branch.json?.id),
+        restrict_to_branch: true,
+        phone: '+961 70 123456',
+      },
+    });
+    record(
+      'edit a staff account (role, branch, restriction)',
+      moved.status === 200 && moved.json?.role === 'hygienist' && moved.json?.restrict_to_branch === true,
+      `status ${moved.status} ${moved.json?.message ?? ''}`,
+    );
+    record(
+      'a role the clinic does not have is refused',
+      (await api('PATCH', `/organizations/${id}/accounts/${staffId}`, { token: t, body: { role: 'wizard' } }))
+        .status === 400,
+    );
+    record(
+      'a role in use cannot be deleted',
+      (await api('DELETE', `/organizations/${id}/roles/hygienist`, { token: t })).status === 409,
+    );
+    const reset = await api('POST', `/organizations/${id}/accounts/${staffId}/password-reset`, { token: t });
+    record(
+      'password reset issues a link',
+      reset.status === 201 &&
+        /set-password\?token=/.test(reset.json?.invite?.link ?? '') &&
+        typeof reset.json?.emailed === 'boolean',
+    );
+    const back = await api('PATCH', `/organizations/${id}/accounts/${staffId}`, {
+      token: t,
+      body: { role: 'doctor', restrict_to_branch: false },
+    });
+    record('move the account back to doctor', back.status === 200 && back.json?.role === 'doctor');
+    record(
+      'delete the unused custom role',
+      (await api('DELETE', `/organizations/${id}/roles/hygienist`, { token: t })).status === 200,
+    );
+    const search = await api('GET', `/accounts?search=${encodeURIComponent(OWNER_EMAIL)}`, { token: t });
+    record(
+      'cross-clinic account search',
+      search.status === 200 && search.json?.data?.some((a) => a.email === OWNER_EMAIL),
+    );
 
     const admins = await api('GET', '/admins', { token: t });
     record(
