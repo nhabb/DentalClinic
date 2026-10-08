@@ -12,7 +12,7 @@ import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { Logger } from '@nestjs/common';
 import { AppModule } from '../src/app.module';
-import { AgentService } from '../src/patient/agent/agent.service';
+import { ToolRunner } from '../src/patient/agent/tools/tool-runner';
 import { RolesService } from '../src/shared/authorization/roles.service';
 import { PrismaService } from '../src/shared/prisma/prisma.service';
 import {
@@ -115,7 +115,7 @@ async function main() {
   const app = await NestFactory.createApplicationContext(AppModule, {
     logger: ['error'],
   });
-  const agent = app.get(AgentService);
+  const tools = app.get(ToolRunner);
   const roles = app.get(RolesService);
   const prisma = app.get(PrismaService);
 
@@ -148,7 +148,7 @@ async function main() {
     source: 'jwt' as const,
   };
   const sql = (q: string) =>
-    agent.executeTool(user, 'query_database', new ToolArgs({ sql: q }));
+    tools.run(user, 'query_database', new ToolArgs({ sql: q }));
   const parse = (s: string) => JSON.parse(s) as { error?: string };
 
   await runWithTenant(ctx, async () => {

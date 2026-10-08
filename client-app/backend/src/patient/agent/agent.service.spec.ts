@@ -1,5 +1,6 @@
 import type { RequestUser } from '../../shared/common/guards/jwt-auth.guard';
 import { AgentService } from './agent.service';
+import { ToolRunner } from './tools/tool-runner';
 
 /**
  * The OpenAI client is stubbed: each test scripts what the model "says",
@@ -89,7 +90,7 @@ function build(turns: Completion[]) {
       fn({ $queryRawUnsafe, $executeRawUnsafe }),
   };
 
-  const service = new AgentService(
+  const runner = new ToolRunner(
     {} as never,
     {} as never,
     {} as never,
@@ -100,6 +101,11 @@ function build(turns: Completion[]) {
     billing as never,
     roles as never,
     prisma as never,
+  );
+  const service = new AgentService(
+    users as never,
+    { text: '  appointments: id (bigint)' } as never,
+    runner,
   );
   // Replace the lazily created client with the scripted stub.
   (service as unknown as { openai: unknown }).openai = {
