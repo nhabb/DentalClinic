@@ -559,6 +559,7 @@ export default function ExpensesPage() {
           }}
           onAdd={handleOpenAdd}
           addLabel={t("expenses.addExpense")}
+          actions={[{ key: "analytics", label: "View analytics", icon: <FaDollarSign />, href: "/admin/expenses/analytics" }]}
         />
 
         <main className="flex-1 p-8 overflow-auto">

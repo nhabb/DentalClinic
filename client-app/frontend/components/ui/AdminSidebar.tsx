@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useTranslation } from "@/lib/i18n";
 import {
   FaTooth,
@@ -13,6 +14,7 @@ import {
   FaFileInvoiceDollar,
   FaBars,
   FaEllipsisH,
+  FaChevronDown,
 } from "react-icons/fa";
 import { cn } from "@/lib/utils";
 
@@ -26,7 +28,9 @@ type ActivePage =
   | "billing";
 
 type Props = {
-  activePage: ActivePage;
+  /** Omit on the analytics sub-pages — none of the top-level items should
+   * light up there; the Dashboard sub-section highlights itself instead. */
+  activePage?: ActivePage;
   sidebarOpen: boolean;
   onToggle: () => void;
   onLogout: () => void;
@@ -43,6 +47,16 @@ const navItems = [
   { id: "patients",     href: "/admin/patients",     icon: FaUsers,             labelKey: "nav.patients"     },
   { id: "expenses",     href: "/admin/expenses",     icon: FaMoneyBillWave,     labelKey: "nav.expenses"     },
   { id: "billing",      href: "/admin/billing",      icon: FaFileInvoiceDollar, labelKey: "nav.billing"      },
+] as const;
+
+/** The deeper per-category analytics pages — nested under "Dashboard" as a
+ * collapsible sub-section rather than living in the top-level rail. */
+const DASHBOARD_SUB_ITEMS = [
+  { id: "appointments-analytics", href: "/admin/appointments/analytics", label: "Appointments" },
+  { id: "inventory-analytics",    href: "/admin/inventory/analytics",    label: "Inventory"    },
+  { id: "patients-analytics",     href: "/admin/patients/analytics",     label: "Patients"     },
+  { id: "expenses-analytics",     href: "/admin/expenses/analytics",     label: "Expenses"     },
+  { id: "billing-analytics",      href: "/admin/billing/analytics",      label: "Billing"      },
 ] as const;
 
 const BAR_IDS: readonly ActivePage[] = ["dashboard", "appointments", "patients", "billing"];
@@ -62,8 +76,12 @@ export default function AdminSidebar({
   badges,
 }: Props) {
   const { t } = useTranslation();
+  const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
   const [playEntrance] = useState(() => !sidebarHasAnimated);
+
+  const activeSubId = DASHBOARD_SUB_ITEMS.find((s) => s.href === pathname)?.id ?? null;
+  const [dashboardExpanded, setDashboardExpanded] = useState(() => activeSubId !== null);
 
   useEffect(() => {
     sidebarHasAnimated = true;
@@ -147,47 +165,89 @@ export default function AdminSidebar({
           {navItems.map(({ id, href, icon: Icon, labelKey }) => {
             const isActive = activePage === id;
             const badge = badgeFor(id);
+            const isDashboard = id === "dashboard";
             return (
-              <Link
-                key={id}
-                href={href}
-                aria-current={isActive ? "page" : undefined}
-                title={!sidebarOpen ? t(labelKey) : undefined}
-                className={cn(
-                  "group relative flex items-center gap-3 rounded-xl px-3 py-3 font-medium",
-                  "transition-all duration-150 ease-out hover:-translate-y-0.5 hover:scale-[1.02] hover:shadow-sm active:scale-[0.98] active:translate-y-0",
-                  isActive
-                    ? "bg-accent-blue-50 text-accent-blue-700"
-                    : "text-ink-600 hover:bg-ink-100 hover:text-ink-900",
-                  !sidebarOpen && "justify-center",
-                )}
-              >
-                {/* Active marker: a short bar on the inline edge. Reads as
-                 * "you are here" even when the rail is collapsed. */}
-                <span
-                  aria-hidden
-                  className={cn(
-                    "absolute inset-y-2 start-0 w-[3px] rounded-e-full bg-accent-blue-500 transition-transform duration-200",
-                    isActive ? "scale-y-100" : "scale-y-0",
-                  )}
-                />
-                <span className="relative shrink-0">
-                  <Icon className="text-lg" />
-                  {/* Collapsed rail cannot show a number, so show a dot. */}
-                  {badge && !sidebarOpen && (
-                    <span className="absolute -end-1 -top-1 size-2 rounded-full bg-clay-400 ring-2 ring-white" />
-                  )}
-                </span>
+              <div key={id}>
+                <div className="group/row relative flex items-center">
+                  <Link
+                    href={href}
+                    aria-current={isActive ? "page" : undefined}
+                    title={!sidebarOpen ? t(labelKey) : undefined}
+                    className={cn(
+                      "group relative flex flex-1 items-center gap-3 rounded-xl px-3 py-3 font-medium",
+                      "transition-all duration-150 ease-out hover:-translate-y-0.5 hover:scale-[1.02] hover:shadow-sm active:scale-[0.98] active:translate-y-0",
+                      isActive
+                        ? "bg-accent-blue-50 text-accent-blue-700"
+                        : "text-ink-600 hover:bg-ink-100 hover:text-ink-900",
+                      !sidebarOpen && "justify-center",
+                      isDashboard && sidebarOpen && "pe-9",
+                    )}
+                  >
+                    {/* Active marker: a short bar on the inline edge. Reads as
+                     * "you are here" even when the rail is collapsed. */}
+                    <span
+                      aria-hidden
+                      className={cn(
+                        "absolute inset-y-2 start-0 w-[3px] rounded-e-full bg-accent-blue-500 transition-transform duration-200",
+                        isActive ? "scale-y-100" : "scale-y-0",
+                      )}
+                    />
+                    <span className="relative shrink-0">
+                      <Icon className="text-lg" />
+                      {/* Collapsed rail cannot show a number, so show a dot. */}
+                      {badge && !sidebarOpen && (
+                        <span className="absolute -end-1 -top-1 size-2 rounded-full bg-clay-400 ring-2 ring-white" />
+                      )}
+                    </span>
 
-                {sidebarOpen && <span className="min-w-0 flex-1 truncate">{t(labelKey)}</span>}
-                {sidebarOpen && badge && (
-                  <span className="rounded-full bg-clay-500/90 px-2 py-0.5 text-[11px] font-bold text-white tabular-nums">
-                    {badge}
-                  </span>
-                )}
+                    {sidebarOpen && <span className="min-w-0 flex-1 truncate">{t(labelKey)}</span>}
+                    {sidebarOpen && badge && (
+                      <span className="rounded-full bg-clay-500/90 px-2 py-0.5 text-[11px] font-bold text-white tabular-nums">
+                        {badge}
+                      </span>
+                    )}
 
-                {/* Tooltip for the collapsed rail. */}
-              </Link>
+                    {/* Tooltip for the collapsed rail. */}
+                  </Link>
+
+                  {isDashboard && sidebarOpen && (
+                    <button
+                      type="button"
+                      onClick={() => setDashboardExpanded((v) => !v)}
+                      aria-label={dashboardExpanded ? "Collapse analytics" : "Expand analytics"}
+                      aria-expanded={dashboardExpanded}
+                      className="press absolute end-1.5 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-ink-400 hover:bg-ink-200/70 hover:text-ink-700"
+                    >
+                      <FaChevronDown className={cn("h-3 w-3 transition-transform duration-200", dashboardExpanded && "rotate-180")} />
+                    </button>
+                  )}
+                </div>
+
+                {/* Analytics sub-section, nested under Dashboard. */}
+                {isDashboard && sidebarOpen && dashboardExpanded && (
+                  <ul className="ms-5 mt-1 space-y-0.5 border-s border-ink-200 ps-3">
+                    {DASHBOARD_SUB_ITEMS.map((s) => {
+                      const subActive = activeSubId === s.id;
+                      return (
+                        <li key={s.id}>
+                          <Link
+                            href={s.href}
+                            aria-current={subActive ? "page" : undefined}
+                            className={cn(
+                              "block rounded-lg px-2.5 py-2 text-sm transition-colors",
+                              subActive
+                                ? "bg-accent-blue-50 font-semibold text-accent-blue-700"
+                                : "text-ink-500 hover:bg-ink-100 hover:text-ink-900",
+                            )}
+                          >
+                            {s.label}
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
             );
           })}
         </nav>

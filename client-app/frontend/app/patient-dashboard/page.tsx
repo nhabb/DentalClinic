@@ -1,6 +1,7 @@
 "use client";
 
 import { toast } from 'sonner';
+import { uploadMyPhoto } from "@/lib/profilePhoto";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -46,7 +47,7 @@ export default function PatientDashboard() {
           setPatientEmail(dbUser.email || "");
           setDbUserId(Number(dbUser.id));
           setIsOAuth(!!dbUser.is_oauth);
-          const saved = localStorage.getItem(`brightsmile_photo_${dbUser.email}`);
+          const saved = dbUser.avatar_url || localStorage.getItem(`brightsmile_photo_${dbUser.email}`);
           if (saved) setPhotoUrl(saved);
         }
 
@@ -79,9 +80,15 @@ export default function PatientDashboard() {
     fetchData();
   }, []);
 
-  const handlePhotoUpload = (dataUrl: string) => {
+  const handlePhotoUpload = async (dataUrl: string) => {
+    const previous = photoUrl;
     setPhotoUrl(dataUrl);
-    if (patientEmail) localStorage.setItem(`brightsmile_photo_${patientEmail}`, dataUrl);
+    try {
+      setPhotoUrl(await uploadMyPhoto(dbUserId, dataUrl));
+    } catch (err) {
+      setPhotoUrl(previous);
+      toast.error(err instanceof Error ? err.message : "Could not upload photo.");
+    }
   };
 
   const handleLogout = () => {

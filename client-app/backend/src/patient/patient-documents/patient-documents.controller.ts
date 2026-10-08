@@ -1,4 +1,5 @@
 import {
+  UseGuards,
   Controller,
   Get,
   Post,
@@ -32,6 +33,7 @@ import {
 import { RequestUser } from '../../shared/common/guards/jwt-auth.guard';
 import { AccessControlService } from '../../shared/access/access-control.service';
 import { PatientDocumentsService } from './patient-documents.service';
+import { JwtAuthGuard } from '../../shared/common/guards/jwt-auth.guard';
 
 type AuthedRequest = { user: RequestUser };
 

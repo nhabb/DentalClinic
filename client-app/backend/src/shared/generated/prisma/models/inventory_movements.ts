@@ -31,6 +31,7 @@ export type Inventory_movementsAvgAggregateOutputType = {
   organization_id: number | null
   item_id: number | null
   quantity: number | null
+  unit_cost: runtime.Decimal | null
   performed_by: number | null
 }
 
@@ -39,6 +40,7 @@ export type Inventory_movementsSumAggregateOutputType = {
   organization_id: bigint | null
   item_id: bigint | null
   quantity: number | null
+  unit_cost: runtime.Decimal | null
   performed_by: bigint | null
 }
 
@@ -48,6 +50,7 @@ export type Inventory_movementsMinAggregateOutputType = {
   item_id: bigint | null
   movement_type: string | null
   quantity: number | null
+  unit_cost: runtime.Decimal | null
   note: string | null
   performed_by: bigint | null
   created_at: Date | null
@@ -59,6 +62,7 @@ export type Inventory_movementsMaxAggregateOutputType = {
   item_id: bigint | null
   movement_type: string | null
   quantity: number | null
+  unit_cost: runtime.Decimal | null
   note: string | null
   performed_by: bigint | null
   created_at: Date | null
@@ -70,6 +74,7 @@ export type Inventory_movementsCountAggregateOutputType = {
   item_id: number
   movement_type: number
   quantity: number
+  unit_cost: number
   note: number
   performed_by: number
   created_at: number
@@ -82,6 +87,7 @@ export type Inventory_movementsAvgAggregateInputType = {
   organization_id?: true
   item_id?: true
   quantity?: true
+  unit_cost?: true
   performed_by?: true
 }
 
@@ -90,6 +96,7 @@ export type Inventory_movementsSumAggregateInputType = {
   organization_id?: true
   item_id?: true
   quantity?: true
+  unit_cost?: true
   performed_by?: true
 }
 
@@ -99,6 +106,7 @@ export type Inventory_movementsMinAggregateInputType = {
   item_id?: true
   movement_type?: true
   quantity?: true
+  unit_cost?: true
   note?: true
   performed_by?: true
   created_at?: true
@@ -110,6 +118,7 @@ export type Inventory_movementsMaxAggregateInputType = {
   item_id?: true
   movement_type?: true
   quantity?: true
+  unit_cost?: true
   note?: true
   performed_by?: true
   created_at?: true
@@ -121,6 +130,7 @@ export type Inventory_movementsCountAggregateInputType = {
   item_id?: true
   movement_type?: true
   quantity?: true
+  unit_cost?: true
   note?: true
   performed_by?: true
   created_at?: true
@@ -219,6 +229,7 @@ export type Inventory_movementsGroupByOutputType = {
   item_id: bigint
   movement_type: string
   quantity: number
+  unit_cost: runtime.Decimal | null
   note: string | null
   performed_by: bigint | null
   created_at: Date
@@ -253,6 +264,7 @@ export type inventory_movementsWhereInput = {
   item_id?: Prisma.BigIntFilter<"inventory_movements"> | bigint | number
   movement_type?: Prisma.StringFilter<"inventory_movements"> | string
   quantity?: Prisma.IntFilter<"inventory_movements"> | number
+  unit_cost?: Prisma.DecimalNullableFilter<"inventory_movements"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   note?: Prisma.StringNullableFilter<"inventory_movements"> | string | null
   performed_by?: Prisma.BigIntNullableFilter<"inventory_movements"> | bigint | number | null
   created_at?: Prisma.DateTimeFilter<"inventory_movements"> | Date | string
@@ -267,6 +279,7 @@ export type inventory_movementsOrderByWithRelationInput = {
   item_id?: Prisma.SortOrder
   movement_type?: Prisma.SortOrder
   quantity?: Prisma.SortOrder
+  unit_cost?: Prisma.SortOrderInput | Prisma.SortOrder
   note?: Prisma.SortOrderInput | Prisma.SortOrder
   performed_by?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrder
@@ -284,6 +297,7 @@ export type inventory_movementsWhereUniqueInput = Prisma.AtLeast<{
   item_id?: Prisma.BigIntFilter<"inventory_movements"> | bigint | number
   movement_type?: Prisma.StringFilter<"inventory_movements"> | string
   quantity?: Prisma.IntFilter<"inventory_movements"> | number
+  unit_cost?: Prisma.DecimalNullableFilter<"inventory_movements"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   note?: Prisma.StringNullableFilter<"inventory_movements"> | string | null
   performed_by?: Prisma.BigIntNullableFilter<"inventory_movements"> | bigint | number | null
   created_at?: Prisma.DateTimeFilter<"inventory_movements"> | Date | string
@@ -298,6 +312,7 @@ export type inventory_movementsOrderByWithAggregationInput = {
   item_id?: Prisma.SortOrder
   movement_type?: Prisma.SortOrder
   quantity?: Prisma.SortOrder
+  unit_cost?: Prisma.SortOrderInput | Prisma.SortOrder
   note?: Prisma.SortOrderInput | Prisma.SortOrder
   performed_by?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrder
@@ -317,6 +332,7 @@ export type inventory_movementsScalarWhereWithAggregatesInput = {
   item_id?: Prisma.BigIntWithAggregatesFilter<"inventory_movements"> | bigint | number
   movement_type?: Prisma.StringWithAggregatesFilter<"inventory_movements"> | string
   quantity?: Prisma.IntWithAggregatesFilter<"inventory_movements"> | number
+  unit_cost?: Prisma.DecimalNullableWithAggregatesFilter<"inventory_movements"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   note?: Prisma.StringNullableWithAggregatesFilter<"inventory_movements"> | string | null
   performed_by?: Prisma.BigIntNullableWithAggregatesFilter<"inventory_movements"> | bigint | number | null
   created_at?: Prisma.DateTimeWithAggregatesFilter<"inventory_movements"> | Date | string
@@ -326,6 +342,7 @@ export type inventory_movementsCreateInput = {
   id?: bigint | number
   movement_type: string
   quantity: number
+  unit_cost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   note?: string | null
   created_at?: Date | string
   organization?: Prisma.organizationsCreateNestedOneWithoutInventory_movementsInput
@@ -339,6 +356,7 @@ export type inventory_movementsUncheckedCreateInput = {
   item_id: bigint | number
   movement_type: string
   quantity: number
+  unit_cost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   note?: string | null
   performed_by?: bigint | number | null
   created_at?: Date | string
@@ -348,6 +366,7 @@ export type inventory_movementsUpdateInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   movement_type?: Prisma.StringFieldUpdateOperationsInput | string
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
+  unit_cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   organization?: Prisma.organizationsUpdateOneRequiredWithoutInventory_movementsNestedInput
@@ -361,6 +380,7 @@ export type inventory_movementsUncheckedUpdateInput = {
   item_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   movement_type?: Prisma.StringFieldUpdateOperationsInput | string
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
+  unit_cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   performed_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -372,6 +392,7 @@ export type inventory_movementsCreateManyInput = {
   item_id: bigint | number
   movement_type: string
   quantity: number
+  unit_cost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   note?: string | null
   performed_by?: bigint | number | null
   created_at?: Date | string
@@ -381,6 +402,7 @@ export type inventory_movementsUpdateManyMutationInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   movement_type?: Prisma.StringFieldUpdateOperationsInput | string
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
+  unit_cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -391,6 +413,7 @@ export type inventory_movementsUncheckedUpdateManyInput = {
   item_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   movement_type?: Prisma.StringFieldUpdateOperationsInput | string
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
+  unit_cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   performed_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -412,6 +435,7 @@ export type inventory_movementsCountOrderByAggregateInput = {
   item_id?: Prisma.SortOrder
   movement_type?: Prisma.SortOrder
   quantity?: Prisma.SortOrder
+  unit_cost?: Prisma.SortOrder
   note?: Prisma.SortOrder
   performed_by?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
@@ -422,6 +446,7 @@ export type inventory_movementsAvgOrderByAggregateInput = {
   organization_id?: Prisma.SortOrder
   item_id?: Prisma.SortOrder
   quantity?: Prisma.SortOrder
+  unit_cost?: Prisma.SortOrder
   performed_by?: Prisma.SortOrder
 }
 
@@ -431,6 +456,7 @@ export type inventory_movementsMaxOrderByAggregateInput = {
   item_id?: Prisma.SortOrder
   movement_type?: Prisma.SortOrder
   quantity?: Prisma.SortOrder
+  unit_cost?: Prisma.SortOrder
   note?: Prisma.SortOrder
   performed_by?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
@@ -442,6 +468,7 @@ export type inventory_movementsMinOrderByAggregateInput = {
   item_id?: Prisma.SortOrder
   movement_type?: Prisma.SortOrder
   quantity?: Prisma.SortOrder
+  unit_cost?: Prisma.SortOrder
   note?: Prisma.SortOrder
   performed_by?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
@@ -452,6 +479,7 @@ export type inventory_movementsSumOrderByAggregateInput = {
   organization_id?: Prisma.SortOrder
   item_id?: Prisma.SortOrder
   quantity?: Prisma.SortOrder
+  unit_cost?: Prisma.SortOrder
   performed_by?: Prisma.SortOrder
 }
 
@@ -585,6 +613,7 @@ export type inventory_movementsCreateWithoutOrganizationInput = {
   id?: bigint | number
   movement_type: string
   quantity: number
+  unit_cost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   note?: string | null
   created_at?: Date | string
   inventory_items: Prisma.inventory_itemsCreateNestedOneWithoutInventory_movementsInput
@@ -596,6 +625,7 @@ export type inventory_movementsUncheckedCreateWithoutOrganizationInput = {
   item_id: bigint | number
   movement_type: string
   quantity: number
+  unit_cost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   note?: string | null
   performed_by?: bigint | number | null
   created_at?: Date | string
@@ -636,6 +666,7 @@ export type inventory_movementsScalarWhereInput = {
   item_id?: Prisma.BigIntFilter<"inventory_movements"> | bigint | number
   movement_type?: Prisma.StringFilter<"inventory_movements"> | string
   quantity?: Prisma.IntFilter<"inventory_movements"> | number
+  unit_cost?: Prisma.DecimalNullableFilter<"inventory_movements"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   note?: Prisma.StringNullableFilter<"inventory_movements"> | string | null
   performed_by?: Prisma.BigIntNullableFilter<"inventory_movements"> | bigint | number | null
   created_at?: Prisma.DateTimeFilter<"inventory_movements"> | Date | string
@@ -645,6 +676,7 @@ export type inventory_movementsCreateWithoutInventory_itemsInput = {
   id?: bigint | number
   movement_type: string
   quantity: number
+  unit_cost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   note?: string | null
   created_at?: Date | string
   organization?: Prisma.organizationsCreateNestedOneWithoutInventory_movementsInput
@@ -656,6 +688,7 @@ export type inventory_movementsUncheckedCreateWithoutInventory_itemsInput = {
   organization_id?: bigint | number
   movement_type: string
   quantity: number
+  unit_cost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   note?: string | null
   performed_by?: bigint | number | null
   created_at?: Date | string
@@ -691,6 +724,7 @@ export type inventory_movementsCreateWithoutUsersInput = {
   id?: bigint | number
   movement_type: string
   quantity: number
+  unit_cost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   note?: string | null
   created_at?: Date | string
   organization?: Prisma.organizationsCreateNestedOneWithoutInventory_movementsInput
@@ -703,6 +737,7 @@ export type inventory_movementsUncheckedCreateWithoutUsersInput = {
   item_id: bigint | number
   movement_type: string
   quantity: number
+  unit_cost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   note?: string | null
   created_at?: Date | string
 }
@@ -738,6 +773,7 @@ export type inventory_movementsCreateManyOrganizationInput = {
   item_id: bigint | number
   movement_type: string
   quantity: number
+  unit_cost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   note?: string | null
   performed_by?: bigint | number | null
   created_at?: Date | string
@@ -747,6 +783,7 @@ export type inventory_movementsUpdateWithoutOrganizationInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   movement_type?: Prisma.StringFieldUpdateOperationsInput | string
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
+  unit_cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   inventory_items?: Prisma.inventory_itemsUpdateOneRequiredWithoutInventory_movementsNestedInput
@@ -758,6 +795,7 @@ export type inventory_movementsUncheckedUpdateWithoutOrganizationInput = {
   item_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   movement_type?: Prisma.StringFieldUpdateOperationsInput | string
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
+  unit_cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   performed_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -768,6 +806,7 @@ export type inventory_movementsUncheckedUpdateManyWithoutOrganizationInput = {
   item_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   movement_type?: Prisma.StringFieldUpdateOperationsInput | string
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
+  unit_cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   performed_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -778,6 +817,7 @@ export type inventory_movementsCreateManyInventory_itemsInput = {
   organization_id?: bigint | number
   movement_type: string
   quantity: number
+  unit_cost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   note?: string | null
   performed_by?: bigint | number | null
   created_at?: Date | string
@@ -787,6 +827,7 @@ export type inventory_movementsUpdateWithoutInventory_itemsInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   movement_type?: Prisma.StringFieldUpdateOperationsInput | string
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
+  unit_cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   organization?: Prisma.organizationsUpdateOneRequiredWithoutInventory_movementsNestedInput
@@ -798,6 +839,7 @@ export type inventory_movementsUncheckedUpdateWithoutInventory_itemsInput = {
   organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   movement_type?: Prisma.StringFieldUpdateOperationsInput | string
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
+  unit_cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   performed_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -808,6 +850,7 @@ export type inventory_movementsUncheckedUpdateManyWithoutInventory_itemsInput = 
   organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   movement_type?: Prisma.StringFieldUpdateOperationsInput | string
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
+  unit_cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   performed_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -819,6 +862,7 @@ export type inventory_movementsCreateManyUsersInput = {
   item_id: bigint | number
   movement_type: string
   quantity: number
+  unit_cost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   note?: string | null
   created_at?: Date | string
 }
@@ -827,6 +871,7 @@ export type inventory_movementsUpdateWithoutUsersInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   movement_type?: Prisma.StringFieldUpdateOperationsInput | string
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
+  unit_cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   organization?: Prisma.organizationsUpdateOneRequiredWithoutInventory_movementsNestedInput
@@ -839,6 +884,7 @@ export type inventory_movementsUncheckedUpdateWithoutUsersInput = {
   item_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   movement_type?: Prisma.StringFieldUpdateOperationsInput | string
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
+  unit_cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -849,6 +895,7 @@ export type inventory_movementsUncheckedUpdateManyWithoutUsersInput = {
   item_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   movement_type?: Prisma.StringFieldUpdateOperationsInput | string
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
+  unit_cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -861,6 +908,7 @@ export type inventory_movementsSelect<ExtArgs extends runtime.Types.Extensions.I
   item_id?: boolean
   movement_type?: boolean
   quantity?: boolean
+  unit_cost?: boolean
   note?: boolean
   performed_by?: boolean
   created_at?: boolean
@@ -875,6 +923,7 @@ export type inventory_movementsSelectCreateManyAndReturn<ExtArgs extends runtime
   item_id?: boolean
   movement_type?: boolean
   quantity?: boolean
+  unit_cost?: boolean
   note?: boolean
   performed_by?: boolean
   created_at?: boolean
@@ -889,6 +938,7 @@ export type inventory_movementsSelectUpdateManyAndReturn<ExtArgs extends runtime
   item_id?: boolean
   movement_type?: boolean
   quantity?: boolean
+  unit_cost?: boolean
   note?: boolean
   performed_by?: boolean
   created_at?: boolean
@@ -903,12 +953,13 @@ export type inventory_movementsSelectScalar = {
   item_id?: boolean
   movement_type?: boolean
   quantity?: boolean
+  unit_cost?: boolean
   note?: boolean
   performed_by?: boolean
   created_at?: boolean
 }
 
-export type inventory_movementsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "organization_id" | "item_id" | "movement_type" | "quantity" | "note" | "performed_by" | "created_at", ExtArgs["result"]["inventory_movements"]>
+export type inventory_movementsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "organization_id" | "item_id" | "movement_type" | "quantity" | "unit_cost" | "note" | "performed_by" | "created_at", ExtArgs["result"]["inventory_movements"]>
 export type inventory_movementsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   organization?: boolean | Prisma.organizationsDefaultArgs<ExtArgs>
   inventory_items?: boolean | Prisma.inventory_itemsDefaultArgs<ExtArgs>
@@ -938,6 +989,7 @@ export type $inventory_movementsPayload<ExtArgs extends runtime.Types.Extensions
     item_id: bigint
     movement_type: string
     quantity: number
+    unit_cost: runtime.Decimal | null
     note: string | null
     performed_by: bigint | null
     created_at: Date
@@ -1372,6 +1424,7 @@ export interface inventory_movementsFieldRefs {
   readonly item_id: Prisma.FieldRef<"inventory_movements", 'BigInt'>
   readonly movement_type: Prisma.FieldRef<"inventory_movements", 'String'>
   readonly quantity: Prisma.FieldRef<"inventory_movements", 'Int'>
+  readonly unit_cost: Prisma.FieldRef<"inventory_movements", 'Decimal'>
   readonly note: Prisma.FieldRef<"inventory_movements", 'String'>
   readonly performed_by: Prisma.FieldRef<"inventory_movements", 'BigInt'>
   readonly created_at: Prisma.FieldRef<"inventory_movements", 'DateTime'>

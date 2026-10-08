@@ -260,6 +260,7 @@ export class AuthService {
         role: true,
         organization_id: true,
         branch_id: true,
+        avatar_url: true,
         created_at: true,
         password_hash: true,
         organization: {

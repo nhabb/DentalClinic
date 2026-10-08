@@ -744,6 +744,7 @@ export default function AppointmentsManagement() {
                 setShowSlotCalendar(true);
               },
             },
+            { key: "analytics", label: "View analytics", icon: <FaCalendarCheck />, href: "/admin/appointments/analytics" },
           ]}
         />
 

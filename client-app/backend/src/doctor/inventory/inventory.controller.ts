@@ -11,6 +11,7 @@ import {
   DefaultValuePipe,
   UseInterceptors,
   UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
@@ -64,6 +65,35 @@ export class InventoryController {
   @ApiOperation({ summary: 'Get all items where quantity <= minimum_quantity' })
   findLowStock() {
     return this.inventoryService.findLowStock();
+  }
+
+  // Declared before ':id' so "movements" isn't parsed as an item ID.
+  @Get('movements')
+  @ApiOperation({ summary: 'List stock movements across all items' })
+  @ApiQuery({ name: 'item_id', required: false, type: Number })
+  @ApiQuery({ name: 'movement_type', required: false, enum: ['in', 'out', 'adjustment'] })
+  @ApiQuery({ name: 'from', required: false, description: 'YYYY-MM-DD, inclusive' })
+  @ApiQuery({ name: 'to', required: false, description: 'YYYY-MM-DD, inclusive' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  listMovements(
+    @Query('item_id', new ParseIntPipe({ optional: true })) item_id?: number,
+    @Query('movement_type') movement_type?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
+    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit?: number,
+  ) {
+    const isDate = (d?: string) => !d || /^\d{4}-\d{2}-\d{2}$/.test(d);
+    if (!isDate(from) || !isDate(to)) throw new BadRequestException('from/to must be YYYY-MM-DD');
+    return this.inventoryService.listMovements({
+      item_id: item_id ? BigInt(item_id) : undefined,
+      movement_type,
+      from,
+      to,
+      page,
+      limit,
+    });
   }
 
   @Get(':id')

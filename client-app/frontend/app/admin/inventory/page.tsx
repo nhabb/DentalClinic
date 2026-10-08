@@ -37,6 +37,7 @@ import {
   FaArrowDown,
   FaHistory,
   FaFileExport,
+  FaChartLine,
 } from "react-icons/fa";
 import type { IconType } from "react-icons";
 
@@ -45,6 +46,9 @@ import type { IconType } from "react-icons";
 // Add a POST /api/inventory/:id/image endpoint that accepts multipart/form-data
 // with a field named "image" (image/jpeg, image/png, image/webp, max 5 MB).
 // It should store the file and return { image_url: string }.
+
+// The API caps uploads at 4 MB while hosted on Vercel (4.5 MB request body limit).
+const MAX_UPLOAD_MB = process.env.NEXT_PUBLIC_VERCEL_ENV ? 4 : 5;
 
 type InventoryMovement = {
   id: number;
@@ -123,7 +127,7 @@ function ImageUploadBox({
         <div className="flex flex-col items-center gap-2 text-gray-400 group-hover:text-brand transition-colors">
           <FaCamera className="text-3xl" />
           <span className="text-sm font-medium">Upload item photo</span>
-          <span className="text-xs">PNG, JPG, WEBP · max 5 MB</span>
+          <span className="text-xs">PNG, JPG, WEBP · max {MAX_UPLOAD_MB} MB</span>
         </div>
       )}
       <input
@@ -545,6 +549,7 @@ export default function InventoryManagement() {
           }}
           onAdd={() => setShowAddModal(true)}
           addLabel={t("inventory.addItem")}
+          actions={[{ key: "analytics", label: "View analytics", icon: <FaChartLine />, href: "/admin/inventory/analytics" }]}
         />
 
         <main className="flex-1 p-8 overflow-auto">

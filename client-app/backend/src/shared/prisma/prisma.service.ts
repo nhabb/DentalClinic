@@ -27,7 +27,12 @@ export class PrismaService
   declare expenses: expensesDelegate;
 
   constructor() {
-    const pool = new TenantPool({ connectionString: process.env.DATABASE_URL });
+    // On Vercel every function instance gets its own pool, so keep each one tiny and
+    // quick to release. Other hosts run one long-lived process and keep pg defaults.
+    const pool = new TenantPool({
+      connectionString: process.env.DATABASE_URL,
+      ...(process.env.VERCEL ? { max: 2, idleTimeoutMillis: 5_000 } : {}),
+    });
     super({ adapter: new PrismaPg(pool) });
 
     // The extended client is a proxy over this instance; returning it from the
