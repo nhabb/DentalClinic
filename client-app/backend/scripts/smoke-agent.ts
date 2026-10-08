@@ -184,10 +184,64 @@ async function main() {
       await runGuardedSelect(
         prisma,
         "SELECT set_config('app.bypass_rls','on',false)",
+        permissions,
       );
     } catch (e) {
       caught = (e as Error).name;
     }
+    let dbRefusal = '';
+    try {
+      await runGuardedSelect(prisma, 'SELECT * FROM roles', permissions);
+    } catch (e) {
+      dbRefusal = (e as Error).message;
+    }
+    record(
+      'db backstop: roles (4 rows) refused by Postgres for the secretary (policy bypassed on purpose)',
+      /roles:manage is required/.test(dbRefusal),
+      dbRefusal,
+    );
+    let unset = '';
+    try {
+      await runGuardedSelect(prisma, 'SELECT * FROM appointments', []);
+    } catch (e) {
+      unset = (e as Error).message;
+    }
+    record(
+      'db backstop: no permission list means no reads (fail closed)',
+      /agent permissions are not set/.test(unset),
+      unset,
+    );
+    const okRead = await runGuardedSelect(
+      prisma,
+      'SELECT count(*)::int AS n FROM appointments',
+      permissions,
+    );
+    record(
+      'db backstop: permitted table still readable as dental_agent',
+      okRead.rows.length === 1,
+      JSON.stringify(okRead.rows),
+    );
+    const star = await runGuardedSelect(
+      prisma,
+      'SELECT count(*)::int AS n FROM audit_logs',
+      '*',
+    );
+    record(
+      'db backstop: "*" (superadmin) reads any mapped table',
+      star.rows.length === 1,
+      JSON.stringify(star.rows),
+    );
+    let write = '';
+    try {
+      await runGuardedSelect(prisma, "SELECT nextval('users_id_seq')", '*');
+    } catch (e) {
+      write = (e as Error).message;
+    }
+    record(
+      'db backstop: dental_agent cannot touch sequences',
+      /permission denied|read-only/.test(write),
+      write,
+    );
     record(
       'guard: set_config rolled back (policy bypassed on purpose)',
       caught === 'SessionTamperedError',
@@ -195,7 +249,7 @@ async function main() {
     );
     let msg = '';
     try {
-      await runGuardedSelect(prisma, 'SELECT 1; SELECT 2');
+      await runGuardedSelect(prisma, 'SELECT 1; SELECT 2', permissions);
     } catch (e) {
       msg = (e as Error).message;
     }
@@ -217,6 +271,7 @@ async function main() {
     const big = await runGuardedSelect(
       prisma,
       'SELECT g FROM generate_series(1, 500) g',
+      permissions,
     );
     record(
       'guard: rows capped at 200 and flagged',

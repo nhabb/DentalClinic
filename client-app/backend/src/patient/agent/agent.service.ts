@@ -20,7 +20,11 @@ import {
   toolsFor,
 } from './agent-access';
 import { buildSystemPrompt } from './agent-prompt';
-import { MAX_ROWS, runGuardedSelect } from './guarded-select';
+import {
+  MAX_ROWS,
+  isDatabasePermissionRefusal,
+  runGuardedSelect,
+} from './guarded-select';
 import { ToolArgs } from './tool-args';
 
 export interface ChatMessage {
@@ -192,6 +196,12 @@ export class AgentService implements OnModuleInit {
     try {
       return await this.runTool(user, name, args);
     } catch (err) {
+      if (isDatabasePermissionRefusal(err)) {
+        // The application-side check should have refused first: investigate.
+        this.logger.error(
+          `Database refused a read for user ${user.id} (${user.role}) that passed the application check: ${(err as Error).message}`,
+        );
+      }
       return errorResult((err as Error).message ?? 'Tool execution failed');
     }
   }
@@ -450,7 +460,11 @@ export class AgentService implements OnModuleInit {
         }
         // Runs on the request's tenant connection (SET ROLE dental_app + RLS),
         // read-only, row-capped, rolled back if it touched session settings.
-        const { rows, truncated } = await runGuardedSelect(this.prisma, sql);
+        const { rows, truncated } = await runGuardedSelect(
+          this.prisma,
+          sql,
+          user.role === 'superadmin' ? '*' : user.permissions,
+        );
         const data = redactSensitiveFields(rows);
         return serialize(
           truncated
