@@ -1,14 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { runAsSystem } from './tenant-context';
-import { ORG_ADMIN_ROLES } from '../common/decorators/roles.decorator';
+import { RolesService } from '../authorization/roles.service';
+import { ADMIN_ROLE_KEY } from '../authorization/permissions';
 
 const CACHE_TTL_MS = 60_000;
 
 /**
  * What the database currently says about an account. The JWT only proves
  * identity; everything that decides what the user may do comes from here, so
- * deactivating a user, changing their role or moving them to another branch
+ * deactivating a user, changing their role, its permissions or their branch
  * takes effect within CACHE_TTL_MS without waiting for the token to expire.
  */
 export interface UserAccess {
@@ -16,6 +17,8 @@ export interface UserAccess {
   organizationId: bigint | null;
   organizationActive: boolean;
   role: string;
+  /** Permission keys the role holds in this organization. */
+  permissions: string[];
   isActive: boolean;
   homeBranchId: bigint | null;
   restrictToBranch: boolean;
@@ -30,7 +33,10 @@ interface CacheEntry {
 export class UserAccessService {
   private readonly cache = new Map<string, CacheEntry>();
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly roles: RolesService,
+  ) {}
 
   /** Access record for a user, or null when the account does not exist. */
   async load(userId: bigint): Promise<UserAccess | null> {
@@ -60,6 +66,13 @@ export class UserAccessService {
           // Platform accounts have no organization; treat that as active.
           organizationActive: user.organization?.is_active ?? true,
           role: user.role,
+          permissions:
+            user.organization_id === null
+              ? []
+              : await this.roles.permissionsFor(
+                  user.organization_id,
+                  user.role,
+                ),
           isActive: user.is_active,
           homeBranchId: user.branch_id,
           restrictToBranch: user.restrict_to_branch,
@@ -77,11 +90,11 @@ export class UserAccessService {
 
   /**
    * Branch the user is confined to, or null for the whole organization.
-   * Organization admins are never confined; other staff are when an admin
-   * ticked "restrict to branch" and they have a home branch.
+   * Administrators are never confined; other staff are when an admin ticked
+   * "restrict to branch" and they have a home branch.
    */
   static branchScopeOf(access: UserAccess): bigint | null {
-    if (ORG_ADMIN_ROLES.includes(access.role)) return null;
+    if (access.role === ADMIN_ROLE_KEY) return null;
     if (!access.restrictToBranch) return null;
     return access.homeBranchId;
   }

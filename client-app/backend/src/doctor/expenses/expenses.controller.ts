@@ -16,23 +16,21 @@ import {
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
-import {
-  Roles,
-  STAFF_ROLES,
-} from '../../shared/common/decorators/roles.decorator';
+import { RequirePermissions } from '../../shared/authorization/permissions.decorator';
 import { ExpensesService } from './expenses.service';
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
 import { RecordExpensePaymentDto } from './dto/record-expense-payment.dto';
 
 @ApiBearerAuth()
-@Roles(...STAFF_ROLES)
+@RequirePermissions('expenses:read')
 @ApiTags('Expenses')
 @Controller('expenses')
 export class ExpensesController {
   constructor(private readonly expensesService: ExpensesService) {}
 
   @Post()
+  @RequirePermissions('expenses:write')
   @ApiOperation({ summary: 'Record a new clinic expense' })
   create(@Body() dto: CreateExpenseDto) {
     return this.expensesService.create(dto);
@@ -105,6 +103,7 @@ export class ExpensesController {
   }
 
   @Patch(':id')
+  @RequirePermissions('expenses:write')
   @ApiOperation({
     summary: 'Update an expense record',
     description:
@@ -121,6 +120,7 @@ export class ExpensesController {
   }
 
   @Post(':id/payments')
+  @RequirePermissions('expenses:write')
   @ApiOperation({
     summary: 'Record a payment (partial or full) against an expense',
   })
@@ -132,6 +132,7 @@ export class ExpensesController {
   }
 
   @Delete(':id/payments/:paymentId')
+  @RequirePermissions('expenses:write')
   @ApiOperation({
     summary: 'Remove a recorded expense payment and recalculate the balance',
   })
@@ -143,6 +144,7 @@ export class ExpensesController {
   }
 
   @Delete(':id')
+  @RequirePermissions('expenses:write')
   @ApiOperation({ summary: 'Delete an expense record' })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.expensesService.remove(BigInt(id));

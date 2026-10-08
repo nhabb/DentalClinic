@@ -23,11 +23,7 @@ import {
   ApiConsumes,
   ApiBody,
 } from '@nestjs/swagger';
-import {
-  ORG_ADMIN_ROLES,
-  Roles,
-  STAFF_ROLES,
-} from '../../shared/common/decorators/roles.decorator';
+import { RequirePermissions } from '../../shared/authorization/permissions.decorator';
 import { RequestUser } from '../../shared/common/guards/jwt-auth.guard';
 import { AccessControlService } from '../../shared/access/access-control.service';
 import { PatientsService } from './patients.service';
@@ -38,8 +34,8 @@ import { CreatePatientDto } from './dto/create-patient.dto';
 type AuthedRequest = { user: RequestUser };
 
 /**
- * Patient profiles. Staff manage every patient of their organization; a
- * patient can read and edit their own profile only.
+ * Patient profiles. Staff need `patients:read` / `patients:write` /
+ * `patients:delete`; a patient can read and edit their own profile only.
  */
 @ApiBearerAuth()
 @ApiTags('Patients')
@@ -51,7 +47,7 @@ export class PatientsController {
   ) {}
 
   @Post()
-  @Roles(...STAFF_ROLES)
+  @RequirePermissions('patients:write')
   @ApiOperation({
     summary: 'Create a patient (user account + profile) from the admin panel',
     description:
@@ -62,7 +58,7 @@ export class PatientsController {
   }
 
   @Post(':id/invite')
-  @Roles(...STAFF_ROLES)
+  @RequirePermissions('patients:write')
   @ApiOperation({
     summary: 'Send (or resend) the password setup link to a patient by email',
   })
@@ -71,7 +67,7 @@ export class PatientsController {
   }
 
   @Get()
-  @Roles(...STAFF_ROLES)
+  @RequirePermissions('patients:read')
   @ApiOperation({ summary: 'List all patient profiles of the organization' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
@@ -92,7 +88,7 @@ export class PatientsController {
     @Req() req: AuthedRequest,
     @Param('userId', ParseIntPipe) userId: number,
   ) {
-    this.access.assertSelfOrStaff(req.user, userId);
+    this.access.assertSelfOrPermission(req.user, userId, 'patients:read');
     return this.patientsService.findByUserId(BigInt(userId));
   }
 
@@ -105,7 +101,7 @@ export class PatientsController {
     @Param('userId', ParseIntPipe) userId: number,
     @Body() dto: UpdatePatientProfileDto,
   ) {
-    this.access.assertSelfOrStaff(req.user, userId);
+    this.access.assertSelfOrPermission(req.user, userId, 'patients:write');
     return this.patientsService.updateByUserId(BigInt(userId), dto);
   }
 
@@ -117,7 +113,7 @@ export class PatientsController {
     @Req() req: AuthedRequest,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    await this.access.assertPatientProfileAccess(req.user, id);
+    await this.access.assertPatientProfileAccess(req.user, id, 'patients:read');
     return this.patientsService.findById(BigInt(id));
   }
 
@@ -130,7 +126,11 @@ export class PatientsController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdatePatientProfileDto,
   ) {
-    await this.access.assertPatientProfileAccess(req.user, id);
+    await this.access.assertPatientProfileAccess(
+      req.user,
+      id,
+      'patients:write',
+    );
     return this.patientsService.update(BigInt(id), dto);
   }
 
@@ -152,12 +152,16 @@ export class PatientsController {
     @Param('id', ParseIntPipe) id: number,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    await this.access.assertPatientProfileAccess(req.user, id);
+    await this.access.assertPatientProfileAccess(
+      req.user,
+      id,
+      'patients:write',
+    );
     return this.patientsService.updatePhoto(BigInt(id), file);
   }
 
   @Patch(':id/status')
-  @Roles(...STAFF_ROLES)
+  @RequirePermissions('patients:write')
   @ApiOperation({ summary: 'Set patient active/inactive status' })
   setStatus(
     @Param('id', ParseIntPipe) id: number,
@@ -167,7 +171,7 @@ export class PatientsController {
   }
 
   @Delete(':id')
-  @Roles(...ORG_ADMIN_ROLES)
+  @RequirePermissions('patients:delete')
   @ApiOperation({
     summary: 'Delete a patient (removes user account and all associated data)',
   })

@@ -8,22 +8,20 @@ import {
   Post,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import {
-  Roles,
-  STAFF_ROLES,
-} from '../../shared/common/decorators/roles.decorator';
+import { RequirePermissions } from '../../shared/authorization/permissions.decorator';
 import { PatientWorkService } from './patient-work.service';
 import { RecordWorkDto } from './dto/record-work.dto';
 import { CompleteWorkDto } from './dto/complete-work.dto';
 
 @ApiBearerAuth()
-@Roles(...STAFF_ROLES)
+@RequirePermissions('records:write')
 @ApiTags('Patient Work (dental chart)')
 @Controller('patient-work')
 export class PatientWorkController {
   constructor(private readonly patientWorkService: PatientWorkService) {}
 
   @Get('chart/:patientId')
+  @RequirePermissions('records:read')
   @ApiOperation({
     summary: 'Per-tooth status summary and work history for the dental chart',
   })

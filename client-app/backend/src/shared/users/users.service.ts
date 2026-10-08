@@ -10,10 +10,8 @@ import { UpdateUserDto, ChangePasswordDto } from './dto/update-user.dto';
 import { StaffAssignmentDto } from './dto/staff-assignment.dto';
 import { requireOrganizationId, runAsSystem } from '../tenant/tenant-context';
 import { UserAccessService } from '../tenant/user-access.service';
-import {
-  ORG_ADMIN_ROLES,
-  STAFF_ROLES,
-} from '../common/decorators/roles.decorator';
+import { ADMIN_ROLE_KEY, PATIENT_ROLE_KEY } from '../authorization/permissions';
+import { RolesService } from '../authorization/roles.service';
 import { uploadLimit, formatMb } from '../common/uploads/upload-limit';
 
 const PROFILE_BUCKET = 'profile-photos';
@@ -26,6 +24,7 @@ export class UsersService {
     private readonly prisma: PrismaService,
     private readonly storage: SupabaseStorageService,
     private readonly userAccess: UserAccessService,
+    private readonly roles: RolesService,
   ) {}
 
   async create(data: {
@@ -144,7 +143,10 @@ export class UsersService {
   /** Active staff of the organization; shown publicly on the booking page. */
   async findStaff() {
     return this.prisma.users.findMany({
-      where: { role: { in: STAFF_ROLES }, is_active: true },
+      where: {
+        role: { notIn: [PATIENT_ROLE_KEY, 'superadmin'] },
+        is_active: true,
+      },
       select: {
         id: true,
         email: true,
@@ -177,6 +179,14 @@ export class UsersService {
     }
 
     const role = dto.role ?? user.role;
+    if (
+      dto.role !== undefined &&
+      !(await this.roles.isAssignableStaffRole(dto.role))
+    ) {
+      throw new BadRequestException(
+        `"" is not a staff role of this clinic (see GET /roles)`,
+      );
+    }
     const branch_id =
       dto.branch_id === undefined
         ? user.branch_id
@@ -199,7 +209,7 @@ export class UsersService {
         'A home branch is required to restrict the account to it',
       );
     }
-    if (restrict_to_branch && ORG_ADMIN_ROLES.includes(role)) {
+    if (restrict_to_branch && role === ADMIN_ROLE_KEY) {
       throw new BadRequestException(
         'Organization admins cannot be restricted to a branch',
       );

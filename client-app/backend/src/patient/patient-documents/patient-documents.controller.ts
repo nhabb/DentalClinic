@@ -1,5 +1,4 @@
 import {
-  UseGuards,
   Controller,
   Get,
   Post,
@@ -26,14 +25,10 @@ import {
   ApiBody,
   ApiQuery,
 } from '@nestjs/swagger';
-import {
-  Roles,
-  STAFF_ROLES,
-} from '../../shared/common/decorators/roles.decorator';
+import { RequirePermissions } from '../../shared/authorization/permissions.decorator';
 import { RequestUser } from '../../shared/common/guards/jwt-auth.guard';
 import { AccessControlService } from '../../shared/access/access-control.service';
 import { PatientDocumentsService } from './patient-documents.service';
-import { JwtAuthGuard } from '../../shared/common/guards/jwt-auth.guard';
 
 type AuthedRequest = { user: RequestUser };
 
@@ -57,9 +52,9 @@ const uploadBodySchema = (filesField: 'file' | 'files') => ({
 });
 
 /**
- * X-rays, scans and reports attached to a patient. Staff upload and delete;
- * patients can only read documents of their own profile. The uploader is always
- * the caller, never a value taken from the request body.
+ * X-rays, scans and reports attached to a patient. Uploading and deleting
+ * needs `documents:write`; reading needs `documents:read`, except that a
+ * patient can always read their own. The uploader is always the caller.
  */
 @ApiBearerAuth()
 @ApiTags('Patient Documents')
@@ -71,7 +66,7 @@ export class PatientDocumentsController {
   ) {}
 
   @Post()
-  @Roles(...STAFF_ROLES)
+  @RequirePermissions('documents:write')
   @ApiOperation({ summary: 'Upload a patient document to Supabase Storage' })
   @ApiConsumes('multipart/form-data')
   @ApiBody(uploadBodySchema('file'))
@@ -94,7 +89,7 @@ export class PatientDocumentsController {
   }
 
   @Post('bulk')
-  @Roles(...STAFF_ROLES)
+  @RequirePermissions('documents:write')
   @ApiOperation({
     summary: 'Upload multiple patient documents in one request (max 10 files)',
   })
@@ -142,9 +137,14 @@ export class PatientDocumentsController {
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit?: number,
   ) {
-    if (!this.access.isStaff(req.user)) {
-      if (!patient_id) throw new ForbiddenException('patient_id is required');
-      await this.access.assertPatientProfileAccess(req.user, patient_id);
+    if (patient_id) {
+      await this.access.assertPatientProfileAccess(
+        req.user,
+        patient_id,
+        'documents:read',
+      );
+    } else if (!this.access.hasPermission(req.user, 'documents:read')) {
+      throw new ForbiddenException('patient_id is required');
     }
     return this.patientDocumentsService.findAll({
       patient_id: patient_id ? Number(patient_id) : undefined,
@@ -163,12 +163,16 @@ export class PatientDocumentsController {
     @Param('id', ParseIntPipe) id: number,
   ) {
     const doc = await this.patientDocumentsService.findOne(BigInt(id));
-    await this.access.assertPatientProfileAccess(req.user, doc.patient_id);
+    await this.access.assertPatientProfileAccess(
+      req.user,
+      doc.patient_id,
+      'documents:read',
+    );
     return doc;
   }
 
   @Delete('bulk')
-  @Roles(...STAFF_ROLES)
+  @RequirePermissions('documents:write')
   @ApiOperation({ summary: 'Delete multiple documents by their IDs' })
   @ApiBody({
     schema: {
@@ -190,7 +194,7 @@ export class PatientDocumentsController {
   }
 
   @Delete(':id')
-  @Roles(...STAFF_ROLES)
+  @RequirePermissions('documents:write')
   @ApiOperation({
     summary: 'Delete a single document from storage and database',
   })

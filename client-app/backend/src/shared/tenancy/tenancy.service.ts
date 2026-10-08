@@ -10,6 +10,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AccountSetupService } from '../account-setup/account-setup.service';
 import { TenantResolverService } from '../tenant/tenant-resolver.service';
 import { UserAccessService } from '../tenant/user-access.service';
+import { RolesService } from '../authorization/roles.service';
 import { requireOrganizationId, runAsSystem } from '../tenant/tenant-context';
 import {
   CreateOrganizationDto,
@@ -34,6 +35,7 @@ export class TenancyService {
     private readonly accountSetup: AccountSetupService,
     private readonly resolver: TenantResolverService,
     private readonly userAccess: UserAccessService,
+    private readonly roles: RolesService,
   ) {}
 
   // ── Current organization ────────────────────────────────────────────────────
@@ -257,6 +259,9 @@ export class TenancyService {
     );
 
     this.resolver.invalidate();
+
+    // Every clinic starts with the default roles (admin, doctor, secretary, patient).
+    await runAsSystem(() => this.roles.ensureDefaults(created.org.id));
 
     const invite = created.ownerUser
       ? await runAsSystem(() =>

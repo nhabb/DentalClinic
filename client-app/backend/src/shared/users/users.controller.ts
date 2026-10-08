@@ -24,11 +24,8 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import { Public } from '../common/decorators/public.decorator';
-import {
-  ORG_ADMIN_ROLES,
-  Roles,
-  STAFF_ROLES,
-} from '../common/decorators/roles.decorator';
+import { RequirePermissions } from '../authorization/permissions.decorator';
+import { RolesService } from '../authorization/roles.service';
 import { RequestUser } from '../common/guards/jwt-auth.guard';
 import { AccessControlService } from '../access/access-control.service';
 import { UsersService } from './users.service';
@@ -38,20 +35,21 @@ import { StaffAssignmentDto } from './dto/staff-assignment.dto';
 type AuthedRequest = { user: RequestUser };
 
 /**
- * User accounts. Account management is for organization admins, profile edits
- * are for the user themselves or staff, and two lookups stay public because the
- * admin UI needs them before it has a token.
+ * User accounts. Managing accounts needs `staff:manage`, listing them
+ * `staff:read`; a user may always read and edit their own profile. Two
+ * lookups stay public because the admin UI needs them before it has a token.
  */
 @ApiTags('Users')
 @Controller('users')
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,
+    private readonly roles: RolesService,
     private readonly access: AccessControlService,
   ) {}
 
   @Post('register')
-  @Roles(...STAFF_ROLES)
+  @RequirePermissions('patients:write')
   @ApiBearerAuth()
   @ApiOperation({
     summary:
@@ -91,13 +89,13 @@ export class UsersController {
   }
 
   @Post('staff')
-  @Roles(...ORG_ADMIN_ROLES)
+  @RequirePermissions('staff:manage')
   @ApiBearerAuth()
   @ApiOperation({
     summary:
-      'Create a staff member (doctor, secretary, admin); branch_id sets their home branch',
+      'Create a staff member with one of the clinic’s roles; branch_id sets their home branch',
   })
-  createStaff(
+  async createStaff(
     @Body()
     body: {
       email: string;
@@ -109,16 +107,16 @@ export class UsersController {
       restrict_to_branch?: boolean;
     },
   ) {
-    if (!STAFF_ROLES.includes(body.role)) {
+    if (!(await this.roles.isAssignableStaffRole(body.role))) {
       throw new BadRequestException(
-        `role must be one of: ${STAFF_ROLES.join(', ')}`,
+        `"${body.role}" is not a staff role of this clinic (see GET /roles)`,
       );
     }
     return this.usersService.create(body);
   }
 
   @Patch(':id/assignment')
-  @Roles(...ORG_ADMIN_ROLES)
+  @RequirePermissions('staff:manage')
   @ApiBearerAuth()
   @ApiOperation({
     summary:
@@ -132,7 +130,7 @@ export class UsersController {
   }
 
   @Delete(':id')
-  @Roles(...ORG_ADMIN_ROLES)
+  @RequirePermissions('staff:manage')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a user' })
   remove(@Param('id', ParseIntPipe) id: number) {
@@ -140,46 +138,42 @@ export class UsersController {
   }
 
   @Get()
-  @Roles(...STAFF_ROLES)
+  @RequirePermissions('staff:read')
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'List users of the organization (optionally filtered by role)',
   })
-  @ApiQuery({
-    name: 'role',
-    required: false,
-    enum: ['patient', 'doctor', 'secretary', 'admin'],
-  })
+  @ApiQuery({ name: 'role', required: false, type: String })
   findAll(@Query('role') role?: string) {
     return this.usersService.findAll(role);
   }
 
   @Get(':id')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get a user by ID (patients: only themselves)' })
+  @ApiOperation({ summary: 'Get a user by ID (others need staff:read)' })
   findOne(@Req() req: AuthedRequest, @Param('id', ParseIntPipe) id: number) {
-    this.access.assertSelfOrStaff(req.user, id);
+    this.access.assertSelfOrPermission(req.user, id, 'staff:read');
     return this.usersService.findById(BigInt(id));
   }
 
   @Patch(':id')
   @ApiBearerAuth()
   @ApiOperation({
-    summary: 'Update profile fields (patients: only themselves)',
+    summary: 'Update profile fields (others need staff:manage)',
   })
   update(
     @Req() req: AuthedRequest,
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateUserDto,
   ) {
-    this.access.assertSelfOrStaff(req.user, id);
+    this.access.assertSelfOrPermission(req.user, id, 'staff:manage');
     return this.usersService.update(BigInt(id), dto);
   }
 
   @Patch(':id/avatar')
   @ApiBearerAuth()
   @ApiOperation({
-    summary: 'Upload or replace an avatar photo (patients: only themselves)',
+    summary: 'Upload or replace an avatar photo (others need staff:manage)',
   })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -194,7 +188,7 @@ export class UsersController {
     @Param('id', ParseIntPipe) id: number,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    this.access.assertSelfOrStaff(req.user, id);
+    this.access.assertSelfOrPermission(req.user, id, 'staff:manage');
     return this.usersService.updateAvatar(BigInt(id), file);
   }
 

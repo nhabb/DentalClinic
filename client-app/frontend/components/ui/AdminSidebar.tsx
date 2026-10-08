@@ -12,6 +12,7 @@ import {
   FaUsers,
   FaMoneyBillWave,
   FaFileInvoiceDollar,
+  FaUserShield,
   FaBars,
   FaEllipsisH,
   FaChevronDown,
@@ -25,7 +26,8 @@ type ActivePage =
   | "patients"
   | "notifications"
   | "expenses"
-  | "billing";
+  | "billing"
+  | "roles";
 
 type Props = {
   /** Omit on the analytics sub-pages — none of the top-level items should
@@ -47,6 +49,7 @@ const navItems = [
   { id: "patients",     href: "/admin/patients",     icon: FaUsers,             labelKey: "nav.patients"     },
   { id: "expenses",     href: "/admin/expenses",     icon: FaMoneyBillWave,     labelKey: "nav.expenses"     },
   { id: "billing",      href: "/admin/billing",      icon: FaFileInvoiceDollar, labelKey: "nav.billing"      },
+  { id: "roles",        href: "/admin/roles",        icon: FaUserShield,        labelKey: "nav.roles"        },
 ] as const;
 
 /** The deeper per-category analytics pages — nested under "Dashboard" as a

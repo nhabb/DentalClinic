@@ -15,10 +15,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
-import {
-  Roles,
-  STAFF_ROLES,
-} from '../../shared/common/decorators/roles.decorator';
+import { RequirePermissions } from '../../shared/authorization/permissions.decorator';
 import {
   ApiBearerAuth,
   ApiTags,
@@ -33,13 +30,14 @@ import { UpdateInventoryItemDto } from './dto/update-item.dto';
 import { CreateMovementDto } from './dto/create-movement.dto';
 
 @ApiBearerAuth()
-@Roles(...STAFF_ROLES)
+@RequirePermissions('inventory:read')
 @ApiTags('Inventory')
 @Controller('inventory')
 export class InventoryController {
   constructor(private readonly inventoryService: InventoryService) {}
 
   @Post()
+  @RequirePermissions('inventory:write')
   @ApiOperation({ summary: 'Add a new inventory item' })
   create(@Body() dto: CreateInventoryItemDto) {
     return this.inventoryService.create(dto);
@@ -131,6 +129,7 @@ export class InventoryController {
   }
 
   @Patch(':id')
+  @RequirePermissions('inventory:write')
   @ApiOperation({ summary: 'Update an inventory item' })
   update(
     @Param('id', ParseIntPipe) id: number,
@@ -140,12 +139,14 @@ export class InventoryController {
   }
 
   @Delete(':id')
+  @RequirePermissions('inventory:write')
   @ApiOperation({ summary: 'Delete an inventory item' })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.inventoryService.remove(BigInt(id));
   }
 
   @Post(':id/image')
+  @RequirePermissions('inventory:write')
   @ApiOperation({ summary: 'Upload or replace an inventory item photo' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -163,6 +164,7 @@ export class InventoryController {
   }
 
   @Post(':id/movements')
+  @RequirePermissions('inventory:write')
   @ApiOperation({ summary: 'Record a stock movement (in / out / adjustment)' })
   addMovement(
     @Param('id', ParseIntPipe) id: number,

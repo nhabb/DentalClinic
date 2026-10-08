@@ -74,6 +74,7 @@ describe('JwtAuthGuard', () => {
       organization_id: '1',
       branch_id: '2',
       branch_scope_id: null,
+      permissions: [],
     });
   });
 

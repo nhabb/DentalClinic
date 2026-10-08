@@ -35,6 +35,8 @@ export interface TenantContext {
    * identity lookups that must see across tenants (login by email, invite tokens).
    */
   system: boolean;
+  /** Permissions of the caller's role in their organization (empty for patients and anonymous). */
+  permissions: readonly string[];
   /** Where the tenant came from; useful in logs. */
   source: 'jwt' | 'header' | 'host' | 'default' | 'system' | 'none';
 }
@@ -46,6 +48,7 @@ export const EMPTY_TENANT: Readonly<TenantContext> = Object.freeze({
   userId: null,
   role: null,
   accountStatus: null,
+  permissions: [],
   system: false,
   source: 'none',
 });

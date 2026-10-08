@@ -42,7 +42,7 @@ export class PatientRecordsViewController {
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit?: number,
   ) {
-    this.access.assertSelfOrStaff(req.user, userId);
+    this.access.assertSelfOrPermission(req.user, userId, 'records:read');
     const profile = await this.patientsService.findByUserId(BigInt(userId));
     return this.patientRecordsService.findAll({
       patient_id: Number(profile.id),
@@ -59,7 +59,11 @@ export class PatientRecordsViewController {
     @Param('id', ParseIntPipe) id: number,
   ) {
     const record = await this.patientRecordsService.findOne(BigInt(id));
-    await this.access.assertPatientProfileAccess(req.user, record.patient_id);
+    await this.access.assertPatientProfileAccess(
+      req.user,
+      record.patient_id,
+      'records:read',
+    );
     return record;
   }
 }

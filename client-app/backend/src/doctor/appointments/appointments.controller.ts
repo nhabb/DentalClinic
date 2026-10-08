@@ -16,10 +16,7 @@ import {
   ApiOperation,
   ApiQuery,
 } from '@nestjs/swagger';
-import {
-  Roles,
-  STAFF_ROLES,
-} from '../../shared/common/decorators/roles.decorator';
+import { RequirePermissions } from '../../shared/authorization/permissions.decorator';
 import { RequestUser } from '../../shared/common/guards/jwt-auth.guard';
 import { AccessControlService } from '../../shared/access/access-control.service';
 import { AppointmentsService } from './appointments.service';
@@ -32,8 +29,8 @@ import {
 type AuthedRequest = { user: RequestUser };
 
 /**
- * Appointments. Staff manage every appointment of their organization; patients
- * may only book for themselves, read and cancel their own.
+ * Appointments. Staff need `appointments:read` / `appointments:write`;
+ * patients may book for themselves, and read and cancel their own.
  */
 @ApiBearerAuth()
 @ApiTags('Appointments')
@@ -49,12 +46,16 @@ export class AppointmentsController {
     summary: 'Book an available slot (patients: only for their own profile)',
   })
   async create(@Req() req: AuthedRequest, @Body() dto: CreateAppointmentDto) {
-    await this.access.assertPatientProfileAccess(req.user, dto.patient_id);
+    await this.access.assertPatientProfileAccess(
+      req.user,
+      dto.patient_id,
+      'appointments:write',
+    );
     return this.appointmentsService.create(dto);
   }
 
   @Get()
-  @Roles(...STAFF_ROLES)
+  @RequirePermissions('appointments:read')
   @ApiOperation({ summary: 'List appointments with filters' })
   @ApiQuery({ name: 'doctor_id', required: false, type: Number })
   @ApiQuery({ name: 'patient_id', required: false, type: Number })
@@ -105,25 +106,25 @@ export class AppointmentsController {
     @Req() req: AuthedRequest,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return this.ownAppointment(req.user, id);
+    return this.ownAppointment(req.user, id, 'appointments:read');
   }
 
   @Patch(':id/confirm')
-  @Roles(...STAFF_ROLES)
+  @RequirePermissions('appointments:write')
   @ApiOperation({ summary: 'Confirm a pending appointment' })
   confirm(@Param('id', ParseIntPipe) id: number) {
     return this.appointmentsService.confirm(BigInt(id));
   }
 
   @Patch(':id/complete')
-  @Roles(...STAFF_ROLES)
+  @RequirePermissions('appointments:write')
   @ApiOperation({ summary: 'Mark an appointment as completed' })
   complete(@Param('id', ParseIntPipe) id: number) {
     return this.appointmentsService.complete(BigInt(id));
   }
 
   @Patch(':id/no-show')
-  @Roles(...STAFF_ROLES)
+  @RequirePermissions('appointments:write')
   @ApiOperation({ summary: 'Mark an appointment as no-show (patient missed)' })
   noShow(@Param('id', ParseIntPipe) id: number) {
     return this.appointmentsService.noShow(BigInt(id));
@@ -139,12 +140,12 @@ export class AppointmentsController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: CancelAppointmentDto,
   ) {
-    await this.ownAppointment(req.user, id);
+    await this.ownAppointment(req.user, id, 'appointments:write');
     return this.appointmentsService.cancel(BigInt(id), dto);
   }
 
   @Patch(':id/notes')
-  @Roles(...STAFF_ROLES)
+  @RequirePermissions('appointments:write')
   @ApiOperation({ summary: 'Update appointment notes' })
   updateNotes(
     @Param('id', ParseIntPipe) id: number,
@@ -153,10 +154,18 @@ export class AppointmentsController {
     return this.appointmentsService.updateNotes(BigInt(id), dto);
   }
 
-  /** The appointment, after checking a patient only reaches their own. */
-  private async ownAppointment(user: RequestUser, id: number) {
+  /** The appointment, once the caller is its patient or holds `permission`. */
+  private async ownAppointment(
+    user: RequestUser,
+    id: number,
+    permission: string,
+  ) {
     const appointment = await this.appointmentsService.findOne(BigInt(id));
-    await this.access.assertPatientProfileAccess(user, appointment.patient_id);
+    await this.access.assertPatientProfileAccess(
+      user,
+      appointment.patient_id,
+      permission,
+    );
     return appointment;
   }
 }

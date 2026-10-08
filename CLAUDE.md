@@ -102,6 +102,7 @@ Node version: **20** (see `.nvmrc`)
 | Inventory | `src/inventory/` |
 | Notifications | `src/notifications/` |
 | Prisma (shared) | `src/prisma/` |
+| Authorization (roles & permissions) | `src/shared/authorization/` |
 
 ### Database — PostgreSQL via Prisma
 Schema at `client-app/backend/prisma/schema.prisma`. Key tables: `organizations`, `branches`, `users`, `patient_profiles`, `appointments`, `appointment_slots`, `patient_records`, `patient_documents`, `inventory_items`, `inventory_movements`, `notifications`, `clinic_profile`, `audit_logs`, `treatment_invoices`, `expenses`.
@@ -113,7 +114,7 @@ Schema at `client-app/backend/prisma/schema.prisma`. Key tables: `organizations`
 - New rows get `organization_id`/`branch_id` from the SQL defaults `app.current_org_id()` / `app.default_branch_id()`, so services rarely set them. Set them explicitly only in scripts that connect as `postgres` (seed).
 - `src/shared/prisma/tenant-safety.extension.ts` rewrites `findUnique` to `findFirst` outside transactions: Prisma batches same-tick `findUnique` calls across requests into one statement, which would run under one tenant's RLS settings.
 - Prisma queries are lazy: always `await` them *inside* `runWithTenant` / `runAsSystem` (the helpers do this for you when you return the query from the callback). Returning the unawaited query to a caller outside the scope runs it with the caller's tenant.
-- Management API: `GET/PATCH /api/organizations/me`, `GET/POST/PATCH/DELETE /api/branches`, superadmin-only `GET/POST /api/organizations`. Role checks use `@Roles()` + `RolesGuard`. A superadmin passes `X-Organization-Id` (or `X-Organization` slug) to act inside one tenant.
+- Management API: `GET/PATCH /api/organizations/me`, `GET/POST/PATCH/DELETE /api/branches`, superadmin-only `GET/POST /api/organizations`. Platform-only routes use `@Roles('superadmin')` + `RolesGuard`; everything else uses permissions (below). A superadmin passes `X-Organization-Id` (or `X-Organization` slug) to act inside one tenant.
 - Requires a session-mode DB connection (direct `:5432` or Supavisor session mode); transaction-mode poolers would drop `SET ROLE` between statements.
 - Tests: `npm test` covers the tenancy layer (`src/shared/tenant/*.spec.ts`, `src/shared/prisma/*.spec.ts`, `src/shared/tenancy/*.spec.ts`). `node scripts/smoke-tenancy.js` runs an end-to-end isolation check against a running backend and the real database (creates and removes a throwaway organization).
 
@@ -139,11 +140,20 @@ super@demo.com      / demo123  → /superadmin
 ## API security layers
 Every route passes through, in order (see `AppModule`):
 1. `JwtAuthGuard` (global): valid token, account active, clinic active. Opt out with `@Public()`.
-2. `RolesGuard` (global): `@Roles(...STAFF_ROLES)` / `@Roles(...ORG_ADMIN_ROLES)` on controllers or handlers. No `@Roles()` = any signed-in user.
-3. Ownership: controllers call `AccessControlService` (`assertSelfOrStaff`, `assertPatientProfileAccess`, `assertSelf`) so patients only reach their own user, profile, appointments, invoices, records and documents.
-4. `BranchScopeGuard` (global): staff with `restrict_to_branch` may not name another `branch_id`.
-5. Row-level security in PostgreSQL: tenant boundary plus branch scope (`app.branch_scope`), enforced even for raw SQL.
-Authorization attributes (role, active flags, branch) are read from the database per request through `UserAccessService` (60 s cache), so revoking access does not wait for token expiry. Admin endpoint: `PATCH /api/users/:id/assignment`.
+2. `RolesGuard` (global): only for platform routes, `@Roles('superadmin')`.
+3. `PermissionsGuard` (global): `@RequirePermissions('billing:write')` on a controller or handler; the caller's role must hold every listed permission. No decorator = any signed-in user (then step 4 applies).
+4. Ownership: controllers call `AccessControlService` (`assertSelfOrPermission`, `assertPatientProfileAccess(actor, profileId, permission)`, `assertSelf`) so patients only reach their own user, profile, appointments, invoices, records and documents, while staff need the named permission for other people's data.
+5. `BranchScopeGuard` (global): staff with `restrict_to_branch` may not name another `branch_id`.
+6. Row-level security in PostgreSQL: tenant boundary plus branch scope (`app.branch_scope`), enforced even for raw SQL.
+Authorization attributes (role, active flags, branch, the role's permissions) are read from the database per request through `UserAccessService` (60 s cache), so revoking access does not wait for token expiry. Admin endpoint: `PATCH /api/users/:id/assignment` (`role`, `branch_id`, `restrict_to_branch`, `is_active`).
+
+### Roles & permissions (`src/shared/authorization/`)
+- `permissions.ts` is the catalog: every capability of the API as `<area>:<action>` (`appointments:read`, `patients:delete`, `roles:manage`, …), grouped for display, plus the default roles. The catalog is code because endpoints are code; add a permission there when you add a capability, then guard the route with `@RequirePermissions()`.
+- Which role holds which permission is per-clinic data: tables `roles` (`organization_id`, `key`, `name`, `is_system`) and `role_permissions`, both under RLS. `users.role` stores the role key. `RolesService.ensureDefaults()` seeds admin / doctor / secretary / patient for a new clinic (on creation and lazily on first use).
+- `admin` always has every permission and `patient` none (both locked); doctor and secretary are editable; clinics can add custom roles. Deleting a role in use or a built-in role is refused.
+- API: `GET /api/permissions`, `GET /api/roles` (need `staff:read`); `POST/PATCH/DELETE /api/roles[/:key]` (need `roles:manage`); `/api/auth/me` returns the caller's `permissions` so the UI can hide what the role cannot do.
+- UI: clinic admins manage this at `/admin/roles` (`client-app/frontend/app/admin/roles/`, API wrapper in `lib/api/roles.ts`).
+- Tests: `permissions.guard.spec.ts`, `roles.service.spec.ts`, `access-control.service.spec.ts`; `scripts/smoke-tenancy.js` section 5 proves that editing a role changes what its holder can reach on the next request.
 
 ## Platform console (`super-admin-app/`)
 A separate operator application on the same database: `super-admin-app/backend` (NestJS, :5100) and `super-admin-app/frontend` (Next.js, :3100, same design system and copied UI primitives). It onboards clinics (organization + default branch + clinic profile + first admin with a password setup link into the clinic app), monitors all clinics, suspends/reactivates them, and manages platform admins (`superadmin` users with `organization_id NULL`). It has its own token (`PLATFORM_JWT_SECRET`, audience `platform`); clinic tokens are refused and vice versa. The Prisma client comes from the shared `client-app/backend/prisma/schema.prisma` via its second generator (`npm run prisma:generate` in `super-admin-app/backend`; keep `prisma` pinned to the clinic backend's version). Run both with `npm run dev:platform` from the repo root. Tests: `npm test` and `npm run smoke` in `super-admin-app/backend`; `npm run typecheck && npm run build` in `super-admin-app/frontend`. See `super-admin-app/README.md`.

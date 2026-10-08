@@ -16,10 +16,7 @@ import {
   ApiConsumes,
   ApiBody,
 } from '@nestjs/swagger';
-import {
-  ORG_ADMIN_ROLES,
-  Roles,
-} from '../../shared/common/decorators/roles.decorator';
+import { RequirePermissions } from '../../shared/authorization/permissions.decorator';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import { SupabaseStorageService } from '../../shared/storage/supabase-storage.service';
 import {
@@ -56,7 +53,7 @@ export class ClinicProfileController {
   }
 
   @Patch('logo')
-  @Roles(...ORG_ADMIN_ROLES)
+  @RequirePermissions('clinic:settings')
   @ApiOperation({ summary: 'Upload or replace the clinic logo' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({

@@ -21,6 +21,8 @@ export interface RequestUser {
   branch_id: string | null;
   /** Branch the user is confined to, or null for all branches. */
   branch_scope_id: string | null;
+  /** Permission keys of the user's role (see src/shared/authorization/permissions.ts). */
+  permissions: string[];
 }
 
 /**
@@ -93,5 +95,6 @@ export function userFromContext(): RequestUser {
     organization_id: tenant.organizationId?.toString() ?? null,
     branch_id: tenant.homeBranchId?.toString() ?? null,
     branch_scope_id: tenant.branchScopeId?.toString() ?? null,
+    permissions: [...tenant.permissions],
   };
 }

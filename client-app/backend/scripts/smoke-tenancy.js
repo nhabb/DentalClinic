@@ -13,7 +13,9 @@
  *      one's data, and the first one does not see the second one's staff;
  *   4. API layers: no token = 401, patient tokens cannot reach staff routes or
  *      other users' data, branch-restricted staff only see their branch, a
- *      deactivated account is rejected on its next request.
+ *      deactivated account is rejected on its next request;
+ *   5. roles & permissions: the admin edits what a role may do and the API
+ *      enforces it on the holder's very next request.
  *
  * Needs the demo accounts (doctor@demo.com / patient@demo.com / super@demo.com,
  * password demo123) and DEFAULT_ORGANIZATION_SLUG=brightsmile in backend/.env.
@@ -34,6 +36,7 @@ const SMOKE_EMAILS = [
   'smoke-patient@example.com',
 ];
 const SLOT_DATE = '2099-01-01';
+const SMOKE_ROLE_KEY = 'smoke-assistant';
 
 const results = [];
 const record = (name, ok, detail) =>
@@ -114,6 +117,7 @@ async function cleanup(ids) {
       SLOT_DATE,
     ]);
     await pg.query(`delete from users where email = any($1)`, [SMOKE_EMAILS]);
+    await pg.query(`delete from roles where key = $1`, [SMOKE_ROLE_KEY]);
     if (ids.branchId)
       await pg.query(`delete from branches where id = $1`, [ids.branchId]);
     const org = await pg.query(`select id from organizations where slug = $1`, [
@@ -126,6 +130,121 @@ async function cleanup(ids) {
   } finally {
     await pg.end();
   }
+}
+
+/**
+ * Roles & permissions (section 5). The secretary is moved to a custom role with
+ * a single permission; what she can reach must follow every edit the admin
+ * makes, without her logging in again.
+ */
+async function checkRolesAndPermissions({ admin, secretary, secretaryId }) {
+  const catalog = await api('GET', '/permissions', { token: admin });
+  record(
+    'permission catalog is served',
+    catalog.status === 200 && catalog.json?.some((g) => g.key === 'patients'),
+    `groups=${catalog.json?.length}`,
+  );
+  const roles = await api('GET', '/roles', { token: admin });
+  const adminRole = roles.json?.find?.((r) => r.key === 'admin');
+  record(
+    'default roles exist and admin is locked',
+    roles.status === 200 &&
+      adminRole?.locked === true &&
+      roles.json.some((r) => r.key === 'secretary'),
+    `roles=${roles.json?.map?.((r) => r.key).join(',')}`,
+  );
+  record(
+    'secretary cannot manage roles',
+    (
+      await api('POST', '/roles', {
+        token: secretary,
+        body: { key: 'x', name: 'x', permissions: [] },
+      })
+    ).status === 403,
+  );
+  record(
+    'secretary cannot delete patients',
+    (await api('DELETE', '/patients/999999', { token: secretary })).status ===
+      403,
+  );
+  record(
+    'admin permissions cannot be edited',
+    (
+      await api('PATCH', '/roles/admin', {
+        token: admin,
+        body: { permissions: ['billing:read'] },
+      })
+    ).status === 400,
+  );
+
+  const created = await api('POST', '/roles', {
+    token: admin,
+    body: {
+      key: SMOKE_ROLE_KEY,
+      name: 'Smoke Assistant',
+      permissions: ['appointments:read'],
+    },
+  });
+  record(
+    'admin creates a custom role',
+    created.status === 201 && created.json?.permissions?.length === 1,
+    `status ${created.status} ${created.json?.message ?? ''}`,
+  );
+  const moved = await api('PATCH', `/users/${secretaryId}/assignment`, {
+    token: admin,
+    body: { role: SMOKE_ROLE_KEY },
+  });
+  record(
+    'admin assigns the custom role',
+    moved.status === 200 && moved.json?.role === SMOKE_ROLE_KEY,
+  );
+  record(
+    'holder keeps what the role allows',
+    (await api('GET', '/appointment-slots?limit=1', { token: secretary }))
+      .status === 200,
+  );
+  record(
+    'holder loses what the role lacks',
+    (await api('GET', '/patients?limit=1', { token: secretary })).status ===
+      403,
+  );
+
+  const widened = await api('PATCH', `/roles/${SMOKE_ROLE_KEY}`, {
+    token: admin,
+    body: { permissions: ['appointments:read', 'patients:read'] },
+  });
+  record(
+    'admin adds a permission to the role',
+    widened.status === 200 && widened.json?.permissions?.length === 2,
+  );
+  record(
+    'holder gains it on the next request',
+    (await api('GET', '/patients?limit=1', { token: secretary })).status ===
+      200,
+  );
+  record(
+    'a role in use cannot be deleted',
+    (await api('DELETE', `/roles/${SMOKE_ROLE_KEY}`, { token: admin }))
+      .status === 409,
+  );
+  record(
+    'a user cannot be given an unknown role',
+    (
+      await api('PATCH', `/users/${secretaryId}/assignment`, {
+        token: admin,
+        body: { role: 'ghost' },
+      })
+    ).status === 400,
+  );
+  await api('PATCH', `/users/${secretaryId}/assignment`, {
+    token: admin,
+    body: { role: 'secretary' },
+  });
+  record(
+    'an unused custom role can be deleted',
+    (await api('DELETE', `/roles/${SMOKE_ROLE_KEY}`, { token: admin }))
+      .status === 200,
+  );
 }
 
 async function main() {
@@ -473,6 +592,12 @@ async function main() {
           ?.meta?.total ===
           totals.slots + 3,
       );
+      await checkRolesAndPermissions({
+        admin: t,
+        secretary: s,
+        secretaryId: tyreSec.json.id,
+      });
+
       await api('PATCH', `/users/${tyreSec.json.id}/assignment`, {
         token: t,
         body: { is_active: false },

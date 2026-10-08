@@ -1,4 +1,5 @@
 import { UserAccess, UserAccessService } from './user-access.service';
+import { ALL_PERMISSIONS } from '../authorization/permissions';
 
 const row = (over: Partial<Record<string, unknown>> = {}) => ({
   id: 7n,
@@ -13,24 +14,30 @@ const row = (over: Partial<Record<string, unknown>> = {}) => ({
 
 describe('UserAccessService', () => {
   let prisma: { users: { findUnique: jest.Mock } };
+  let roles: { permissionsFor: jest.Mock };
   let service: UserAccessService;
 
   beforeEach(() => {
     prisma = { users: { findUnique: jest.fn() } };
-    service = new UserAccessService(prisma as any);
+    roles = {
+      permissionsFor: jest.fn().mockResolvedValue(['appointments:read']),
+    };
+    service = new UserAccessService(prisma as any, roles as any);
   });
 
-  it('maps the user row to an access record', async () => {
+  it('maps the user row and the role permissions to an access record', async () => {
     prisma.users.findUnique.mockResolvedValue(row());
     await expect(service.load(7n)).resolves.toEqual<UserAccess>({
       userId: 7n,
       organizationId: 1n,
       organizationActive: true,
       role: 'doctor',
+      permissions: ['appointments:read'],
       isActive: true,
       homeBranchId: 3n,
       restrictToBranch: false,
     });
+    expect(roles.permissionsFor).toHaveBeenCalledWith(1n, 'doctor');
   });
 
   it('returns null for unknown users', async () => {
@@ -38,13 +45,15 @@ describe('UserAccessService', () => {
     await expect(service.load(99n)).resolves.toBeNull();
   });
 
-  it('treats platform accounts without an organization as active', async () => {
+  it('gives platform accounts no clinic permissions and treats them as active', async () => {
     prisma.users.findUnique.mockResolvedValue(
       row({ organization_id: null, organization: null, role: 'superadmin' }),
     );
     await expect(service.load(7n)).resolves.toMatchObject({
       organizationActive: true,
+      permissions: [],
     });
+    expect(roles.permissionsFor).not.toHaveBeenCalled();
   });
 
   it('caches lookups and forgets them on invalidate', async () => {
@@ -68,6 +77,7 @@ describe('UserAccessService', () => {
       organizationId: 1n,
       organizationActive: true,
       role: 'secretary',
+      permissions: [],
       isActive: true,
       homeBranchId: 5n,
       restrictToBranch: true,
@@ -76,14 +86,16 @@ describe('UserAccessService', () => {
 
     it('confines restricted non-admin staff to their home branch', () => {
       expect(UserAccessService.branchScopeOf(access({}))).toBe(5n);
+      expect(
+        UserAccessService.branchScopeOf(
+          access({ role: 'hygienist', permissions: [...ALL_PERMISSIONS] }),
+        ),
+      ).toBe(5n);
     });
 
-    it('never confines organization admins', () => {
+    it('never confines the administrator role', () => {
       expect(
         UserAccessService.branchScopeOf(access({ role: 'admin' })),
-      ).toBeNull();
-      expect(
-        UserAccessService.branchScopeOf(access({ role: 'superadmin' })),
       ).toBeNull();
     });
 

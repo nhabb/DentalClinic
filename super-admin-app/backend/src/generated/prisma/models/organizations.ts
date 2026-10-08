@@ -309,6 +309,8 @@ export type organizationsWhereInput = {
   treatment_invoices?: Prisma.Treatment_invoicesListRelationFilter
   invoice_line_items?: Prisma.Invoice_line_itemsListRelationFilter
   invoice_payments?: Prisma.Invoice_paymentsListRelationFilter
+  roles?: Prisma.RolesListRelationFilter
+  role_permissions?: Prisma.Role_permissionsListRelationFilter
 }
 
 export type organizationsOrderByWithRelationInput = {
@@ -344,6 +346,8 @@ export type organizationsOrderByWithRelationInput = {
   treatment_invoices?: Prisma.treatment_invoicesOrderByRelationAggregateInput
   invoice_line_items?: Prisma.invoice_line_itemsOrderByRelationAggregateInput
   invoice_payments?: Prisma.invoice_paymentsOrderByRelationAggregateInput
+  roles?: Prisma.rolesOrderByRelationAggregateInput
+  role_permissions?: Prisma.role_permissionsOrderByRelationAggregateInput
 }
 
 export type organizationsWhereUniqueInput = Prisma.AtLeast<{
@@ -382,6 +386,8 @@ export type organizationsWhereUniqueInput = Prisma.AtLeast<{
   treatment_invoices?: Prisma.Treatment_invoicesListRelationFilter
   invoice_line_items?: Prisma.Invoice_line_itemsListRelationFilter
   invoice_payments?: Prisma.Invoice_paymentsListRelationFilter
+  roles?: Prisma.RolesListRelationFilter
+  role_permissions?: Prisma.Role_permissionsListRelationFilter
 }, "id" | "slug">
 
 export type organizationsOrderByWithAggregationInput = {
@@ -461,6 +467,8 @@ export type organizationsCreateInput = {
   treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutOrganizationInput
   invoice_line_items?: Prisma.invoice_line_itemsCreateNestedManyWithoutOrganizationInput
   invoice_payments?: Prisma.invoice_paymentsCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateInput = {
@@ -496,6 +504,8 @@ export type organizationsUncheckedCreateInput = {
   treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutOrganizationInput
   invoice_line_items?: Prisma.invoice_line_itemsUncheckedCreateNestedManyWithoutOrganizationInput
   invoice_payments?: Prisma.invoice_paymentsUncheckedCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesUncheckedCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUpdateInput = {
@@ -531,6 +541,8 @@ export type organizationsUpdateInput = {
   treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutOrganizationNestedInput
   invoice_line_items?: Prisma.invoice_line_itemsUpdateManyWithoutOrganizationNestedInput
   invoice_payments?: Prisma.invoice_paymentsUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateInput = {
@@ -566,6 +578,8 @@ export type organizationsUncheckedUpdateInput = {
   treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutOrganizationNestedInput
   invoice_line_items?: Prisma.invoice_line_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
   invoice_payments?: Prisma.invoice_paymentsUncheckedUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUncheckedUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateManyInput = {
@@ -956,6 +970,34 @@ export type organizationsUpdateOneRequiredWithoutInvoice_paymentsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.organizationsUpdateToOneWithWhereWithoutInvoice_paymentsInput, Prisma.organizationsUpdateWithoutInvoice_paymentsInput>, Prisma.organizationsUncheckedUpdateWithoutInvoice_paymentsInput>
 }
 
+export type organizationsCreateNestedOneWithoutRolesInput = {
+  create?: Prisma.XOR<Prisma.organizationsCreateWithoutRolesInput, Prisma.organizationsUncheckedCreateWithoutRolesInput>
+  connectOrCreate?: Prisma.organizationsCreateOrConnectWithoutRolesInput
+  connect?: Prisma.organizationsWhereUniqueInput
+}
+
+export type organizationsUpdateOneRequiredWithoutRolesNestedInput = {
+  create?: Prisma.XOR<Prisma.organizationsCreateWithoutRolesInput, Prisma.organizationsUncheckedCreateWithoutRolesInput>
+  connectOrCreate?: Prisma.organizationsCreateOrConnectWithoutRolesInput
+  upsert?: Prisma.organizationsUpsertWithoutRolesInput
+  connect?: Prisma.organizationsWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.organizationsUpdateToOneWithWhereWithoutRolesInput, Prisma.organizationsUpdateWithoutRolesInput>, Prisma.organizationsUncheckedUpdateWithoutRolesInput>
+}
+
+export type organizationsCreateNestedOneWithoutRole_permissionsInput = {
+  create?: Prisma.XOR<Prisma.organizationsCreateWithoutRole_permissionsInput, Prisma.organizationsUncheckedCreateWithoutRole_permissionsInput>
+  connectOrCreate?: Prisma.organizationsCreateOrConnectWithoutRole_permissionsInput
+  connect?: Prisma.organizationsWhereUniqueInput
+}
+
+export type organizationsUpdateOneRequiredWithoutRole_permissionsNestedInput = {
+  create?: Prisma.XOR<Prisma.organizationsCreateWithoutRole_permissionsInput, Prisma.organizationsUncheckedCreateWithoutRole_permissionsInput>
+  connectOrCreate?: Prisma.organizationsCreateOrConnectWithoutRole_permissionsInput
+  upsert?: Prisma.organizationsUpsertWithoutRole_permissionsInput
+  connect?: Prisma.organizationsWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.organizationsUpdateToOneWithWhereWithoutRole_permissionsInput, Prisma.organizationsUpdateWithoutRole_permissionsInput>, Prisma.organizationsUncheckedUpdateWithoutRole_permissionsInput>
+}
+
 export type organizationsCreateWithoutBranchesInput = {
   id?: bigint | number
   name: string
@@ -988,6 +1030,8 @@ export type organizationsCreateWithoutBranchesInput = {
   treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutOrganizationInput
   invoice_line_items?: Prisma.invoice_line_itemsCreateNestedManyWithoutOrganizationInput
   invoice_payments?: Prisma.invoice_paymentsCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutBranchesInput = {
@@ -1022,6 +1066,8 @@ export type organizationsUncheckedCreateWithoutBranchesInput = {
   treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutOrganizationInput
   invoice_line_items?: Prisma.invoice_line_itemsUncheckedCreateNestedManyWithoutOrganizationInput
   invoice_payments?: Prisma.invoice_paymentsUncheckedCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesUncheckedCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutBranchesInput = {
@@ -1072,6 +1118,8 @@ export type organizationsUpdateWithoutBranchesInput = {
   treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutOrganizationNestedInput
   invoice_line_items?: Prisma.invoice_line_itemsUpdateManyWithoutOrganizationNestedInput
   invoice_payments?: Prisma.invoice_paymentsUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutBranchesInput = {
@@ -1106,6 +1154,8 @@ export type organizationsUncheckedUpdateWithoutBranchesInput = {
   treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutOrganizationNestedInput
   invoice_line_items?: Prisma.invoice_line_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
   invoice_payments?: Prisma.invoice_paymentsUncheckedUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUncheckedUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateWithoutAppointment_slotsInput = {
@@ -1140,6 +1190,8 @@ export type organizationsCreateWithoutAppointment_slotsInput = {
   treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutOrganizationInput
   invoice_line_items?: Prisma.invoice_line_itemsCreateNestedManyWithoutOrganizationInput
   invoice_payments?: Prisma.invoice_paymentsCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutAppointment_slotsInput = {
@@ -1174,6 +1226,8 @@ export type organizationsUncheckedCreateWithoutAppointment_slotsInput = {
   treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutOrganizationInput
   invoice_line_items?: Prisma.invoice_line_itemsUncheckedCreateNestedManyWithoutOrganizationInput
   invoice_payments?: Prisma.invoice_paymentsUncheckedCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesUncheckedCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutAppointment_slotsInput = {
@@ -1224,6 +1278,8 @@ export type organizationsUpdateWithoutAppointment_slotsInput = {
   treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutOrganizationNestedInput
   invoice_line_items?: Prisma.invoice_line_itemsUpdateManyWithoutOrganizationNestedInput
   invoice_payments?: Prisma.invoice_paymentsUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutAppointment_slotsInput = {
@@ -1258,6 +1314,8 @@ export type organizationsUncheckedUpdateWithoutAppointment_slotsInput = {
   treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutOrganizationNestedInput
   invoice_line_items?: Prisma.invoice_line_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
   invoice_payments?: Prisma.invoice_paymentsUncheckedUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUncheckedUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateWithoutAppointmentsInput = {
@@ -1292,6 +1350,8 @@ export type organizationsCreateWithoutAppointmentsInput = {
   treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutOrganizationInput
   invoice_line_items?: Prisma.invoice_line_itemsCreateNestedManyWithoutOrganizationInput
   invoice_payments?: Prisma.invoice_paymentsCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutAppointmentsInput = {
@@ -1326,6 +1386,8 @@ export type organizationsUncheckedCreateWithoutAppointmentsInput = {
   treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutOrganizationInput
   invoice_line_items?: Prisma.invoice_line_itemsUncheckedCreateNestedManyWithoutOrganizationInput
   invoice_payments?: Prisma.invoice_paymentsUncheckedCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesUncheckedCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutAppointmentsInput = {
@@ -1376,6 +1438,8 @@ export type organizationsUpdateWithoutAppointmentsInput = {
   treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutOrganizationNestedInput
   invoice_line_items?: Prisma.invoice_line_itemsUpdateManyWithoutOrganizationNestedInput
   invoice_payments?: Prisma.invoice_paymentsUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutAppointmentsInput = {
@@ -1410,6 +1474,8 @@ export type organizationsUncheckedUpdateWithoutAppointmentsInput = {
   treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutOrganizationNestedInput
   invoice_line_items?: Prisma.invoice_line_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
   invoice_payments?: Prisma.invoice_paymentsUncheckedUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUncheckedUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateWithoutAudit_logsInput = {
@@ -1444,6 +1510,8 @@ export type organizationsCreateWithoutAudit_logsInput = {
   treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutOrganizationInput
   invoice_line_items?: Prisma.invoice_line_itemsCreateNestedManyWithoutOrganizationInput
   invoice_payments?: Prisma.invoice_paymentsCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutAudit_logsInput = {
@@ -1478,6 +1546,8 @@ export type organizationsUncheckedCreateWithoutAudit_logsInput = {
   treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutOrganizationInput
   invoice_line_items?: Prisma.invoice_line_itemsUncheckedCreateNestedManyWithoutOrganizationInput
   invoice_payments?: Prisma.invoice_paymentsUncheckedCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesUncheckedCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutAudit_logsInput = {
@@ -1528,6 +1598,8 @@ export type organizationsUpdateWithoutAudit_logsInput = {
   treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutOrganizationNestedInput
   invoice_line_items?: Prisma.invoice_line_itemsUpdateManyWithoutOrganizationNestedInput
   invoice_payments?: Prisma.invoice_paymentsUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutAudit_logsInput = {
@@ -1562,6 +1634,8 @@ export type organizationsUncheckedUpdateWithoutAudit_logsInput = {
   treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutOrganizationNestedInput
   invoice_line_items?: Prisma.invoice_line_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
   invoice_payments?: Prisma.invoice_paymentsUncheckedUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUncheckedUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateWithoutClinic_profileInput = {
@@ -1596,6 +1670,8 @@ export type organizationsCreateWithoutClinic_profileInput = {
   treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutOrganizationInput
   invoice_line_items?: Prisma.invoice_line_itemsCreateNestedManyWithoutOrganizationInput
   invoice_payments?: Prisma.invoice_paymentsCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutClinic_profileInput = {
@@ -1630,6 +1706,8 @@ export type organizationsUncheckedCreateWithoutClinic_profileInput = {
   treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutOrganizationInput
   invoice_line_items?: Prisma.invoice_line_itemsUncheckedCreateNestedManyWithoutOrganizationInput
   invoice_payments?: Prisma.invoice_paymentsUncheckedCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesUncheckedCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutClinic_profileInput = {
@@ -1680,6 +1758,8 @@ export type organizationsUpdateWithoutClinic_profileInput = {
   treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutOrganizationNestedInput
   invoice_line_items?: Prisma.invoice_line_itemsUpdateManyWithoutOrganizationNestedInput
   invoice_payments?: Prisma.invoice_paymentsUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutClinic_profileInput = {
@@ -1714,6 +1794,8 @@ export type organizationsUncheckedUpdateWithoutClinic_profileInput = {
   treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutOrganizationNestedInput
   invoice_line_items?: Prisma.invoice_line_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
   invoice_payments?: Prisma.invoice_paymentsUncheckedUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUncheckedUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateWithoutInventory_itemsInput = {
@@ -1748,6 +1830,8 @@ export type organizationsCreateWithoutInventory_itemsInput = {
   treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutOrganizationInput
   invoice_line_items?: Prisma.invoice_line_itemsCreateNestedManyWithoutOrganizationInput
   invoice_payments?: Prisma.invoice_paymentsCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutInventory_itemsInput = {
@@ -1782,6 +1866,8 @@ export type organizationsUncheckedCreateWithoutInventory_itemsInput = {
   treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutOrganizationInput
   invoice_line_items?: Prisma.invoice_line_itemsUncheckedCreateNestedManyWithoutOrganizationInput
   invoice_payments?: Prisma.invoice_paymentsUncheckedCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesUncheckedCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutInventory_itemsInput = {
@@ -1832,6 +1918,8 @@ export type organizationsUpdateWithoutInventory_itemsInput = {
   treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutOrganizationNestedInput
   invoice_line_items?: Prisma.invoice_line_itemsUpdateManyWithoutOrganizationNestedInput
   invoice_payments?: Prisma.invoice_paymentsUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutInventory_itemsInput = {
@@ -1866,6 +1954,8 @@ export type organizationsUncheckedUpdateWithoutInventory_itemsInput = {
   treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutOrganizationNestedInput
   invoice_line_items?: Prisma.invoice_line_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
   invoice_payments?: Prisma.invoice_paymentsUncheckedUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUncheckedUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateWithoutInventory_movementsInput = {
@@ -1900,6 +1990,8 @@ export type organizationsCreateWithoutInventory_movementsInput = {
   treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutOrganizationInput
   invoice_line_items?: Prisma.invoice_line_itemsCreateNestedManyWithoutOrganizationInput
   invoice_payments?: Prisma.invoice_paymentsCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutInventory_movementsInput = {
@@ -1934,6 +2026,8 @@ export type organizationsUncheckedCreateWithoutInventory_movementsInput = {
   treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutOrganizationInput
   invoice_line_items?: Prisma.invoice_line_itemsUncheckedCreateNestedManyWithoutOrganizationInput
   invoice_payments?: Prisma.invoice_paymentsUncheckedCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesUncheckedCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutInventory_movementsInput = {
@@ -1984,6 +2078,8 @@ export type organizationsUpdateWithoutInventory_movementsInput = {
   treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutOrganizationNestedInput
   invoice_line_items?: Prisma.invoice_line_itemsUpdateManyWithoutOrganizationNestedInput
   invoice_payments?: Prisma.invoice_paymentsUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutInventory_movementsInput = {
@@ -2018,6 +2114,8 @@ export type organizationsUncheckedUpdateWithoutInventory_movementsInput = {
   treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutOrganizationNestedInput
   invoice_line_items?: Prisma.invoice_line_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
   invoice_payments?: Prisma.invoice_paymentsUncheckedUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUncheckedUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateWithoutNotificationsInput = {
@@ -2052,6 +2150,8 @@ export type organizationsCreateWithoutNotificationsInput = {
   treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutOrganizationInput
   invoice_line_items?: Prisma.invoice_line_itemsCreateNestedManyWithoutOrganizationInput
   invoice_payments?: Prisma.invoice_paymentsCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutNotificationsInput = {
@@ -2086,6 +2186,8 @@ export type organizationsUncheckedCreateWithoutNotificationsInput = {
   treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutOrganizationInput
   invoice_line_items?: Prisma.invoice_line_itemsUncheckedCreateNestedManyWithoutOrganizationInput
   invoice_payments?: Prisma.invoice_paymentsUncheckedCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesUncheckedCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutNotificationsInput = {
@@ -2136,6 +2238,8 @@ export type organizationsUpdateWithoutNotificationsInput = {
   treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutOrganizationNestedInput
   invoice_line_items?: Prisma.invoice_line_itemsUpdateManyWithoutOrganizationNestedInput
   invoice_payments?: Prisma.invoice_paymentsUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutNotificationsInput = {
@@ -2170,6 +2274,8 @@ export type organizationsUncheckedUpdateWithoutNotificationsInput = {
   treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutOrganizationNestedInput
   invoice_line_items?: Prisma.invoice_line_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
   invoice_payments?: Prisma.invoice_paymentsUncheckedUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUncheckedUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateWithoutPatient_documentsInput = {
@@ -2204,6 +2310,8 @@ export type organizationsCreateWithoutPatient_documentsInput = {
   treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutOrganizationInput
   invoice_line_items?: Prisma.invoice_line_itemsCreateNestedManyWithoutOrganizationInput
   invoice_payments?: Prisma.invoice_paymentsCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutPatient_documentsInput = {
@@ -2238,6 +2346,8 @@ export type organizationsUncheckedCreateWithoutPatient_documentsInput = {
   treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutOrganizationInput
   invoice_line_items?: Prisma.invoice_line_itemsUncheckedCreateNestedManyWithoutOrganizationInput
   invoice_payments?: Prisma.invoice_paymentsUncheckedCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesUncheckedCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutPatient_documentsInput = {
@@ -2288,6 +2398,8 @@ export type organizationsUpdateWithoutPatient_documentsInput = {
   treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutOrganizationNestedInput
   invoice_line_items?: Prisma.invoice_line_itemsUpdateManyWithoutOrganizationNestedInput
   invoice_payments?: Prisma.invoice_paymentsUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutPatient_documentsInput = {
@@ -2322,6 +2434,8 @@ export type organizationsUncheckedUpdateWithoutPatient_documentsInput = {
   treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutOrganizationNestedInput
   invoice_line_items?: Prisma.invoice_line_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
   invoice_payments?: Prisma.invoice_paymentsUncheckedUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUncheckedUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateWithoutPatient_profilesInput = {
@@ -2356,6 +2470,8 @@ export type organizationsCreateWithoutPatient_profilesInput = {
   treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutOrganizationInput
   invoice_line_items?: Prisma.invoice_line_itemsCreateNestedManyWithoutOrganizationInput
   invoice_payments?: Prisma.invoice_paymentsCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutPatient_profilesInput = {
@@ -2390,6 +2506,8 @@ export type organizationsUncheckedCreateWithoutPatient_profilesInput = {
   treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutOrganizationInput
   invoice_line_items?: Prisma.invoice_line_itemsUncheckedCreateNestedManyWithoutOrganizationInput
   invoice_payments?: Prisma.invoice_paymentsUncheckedCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesUncheckedCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutPatient_profilesInput = {
@@ -2440,6 +2558,8 @@ export type organizationsUpdateWithoutPatient_profilesInput = {
   treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutOrganizationNestedInput
   invoice_line_items?: Prisma.invoice_line_itemsUpdateManyWithoutOrganizationNestedInput
   invoice_payments?: Prisma.invoice_paymentsUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutPatient_profilesInput = {
@@ -2474,6 +2594,8 @@ export type organizationsUncheckedUpdateWithoutPatient_profilesInput = {
   treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutOrganizationNestedInput
   invoice_line_items?: Prisma.invoice_line_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
   invoice_payments?: Prisma.invoice_paymentsUncheckedUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUncheckedUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateWithoutPatient_recordsInput = {
@@ -2508,6 +2630,8 @@ export type organizationsCreateWithoutPatient_recordsInput = {
   treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutOrganizationInput
   invoice_line_items?: Prisma.invoice_line_itemsCreateNestedManyWithoutOrganizationInput
   invoice_payments?: Prisma.invoice_paymentsCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutPatient_recordsInput = {
@@ -2542,6 +2666,8 @@ export type organizationsUncheckedCreateWithoutPatient_recordsInput = {
   treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutOrganizationInput
   invoice_line_items?: Prisma.invoice_line_itemsUncheckedCreateNestedManyWithoutOrganizationInput
   invoice_payments?: Prisma.invoice_paymentsUncheckedCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesUncheckedCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutPatient_recordsInput = {
@@ -2592,6 +2718,8 @@ export type organizationsUpdateWithoutPatient_recordsInput = {
   treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutOrganizationNestedInput
   invoice_line_items?: Prisma.invoice_line_itemsUpdateManyWithoutOrganizationNestedInput
   invoice_payments?: Prisma.invoice_paymentsUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutPatient_recordsInput = {
@@ -2626,6 +2754,8 @@ export type organizationsUncheckedUpdateWithoutPatient_recordsInput = {
   treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutOrganizationNestedInput
   invoice_line_items?: Prisma.invoice_line_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
   invoice_payments?: Prisma.invoice_paymentsUncheckedUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUncheckedUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateWithoutUsersInput = {
@@ -2660,6 +2790,8 @@ export type organizationsCreateWithoutUsersInput = {
   treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutOrganizationInput
   invoice_line_items?: Prisma.invoice_line_itemsCreateNestedManyWithoutOrganizationInput
   invoice_payments?: Prisma.invoice_paymentsCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutUsersInput = {
@@ -2694,6 +2826,8 @@ export type organizationsUncheckedCreateWithoutUsersInput = {
   treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutOrganizationInput
   invoice_line_items?: Prisma.invoice_line_itemsUncheckedCreateNestedManyWithoutOrganizationInput
   invoice_payments?: Prisma.invoice_paymentsUncheckedCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesUncheckedCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutUsersInput = {
@@ -2744,6 +2878,8 @@ export type organizationsUpdateWithoutUsersInput = {
   treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutOrganizationNestedInput
   invoice_line_items?: Prisma.invoice_line_itemsUpdateManyWithoutOrganizationNestedInput
   invoice_payments?: Prisma.invoice_paymentsUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutUsersInput = {
@@ -2778,6 +2914,8 @@ export type organizationsUncheckedUpdateWithoutUsersInput = {
   treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutOrganizationNestedInput
   invoice_line_items?: Prisma.invoice_line_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
   invoice_payments?: Prisma.invoice_paymentsUncheckedUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUncheckedUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateWithoutExpensesInput = {
@@ -2812,6 +2950,8 @@ export type organizationsCreateWithoutExpensesInput = {
   treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutOrganizationInput
   invoice_line_items?: Prisma.invoice_line_itemsCreateNestedManyWithoutOrganizationInput
   invoice_payments?: Prisma.invoice_paymentsCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutExpensesInput = {
@@ -2846,6 +2986,8 @@ export type organizationsUncheckedCreateWithoutExpensesInput = {
   treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutOrganizationInput
   invoice_line_items?: Prisma.invoice_line_itemsUncheckedCreateNestedManyWithoutOrganizationInput
   invoice_payments?: Prisma.invoice_paymentsUncheckedCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesUncheckedCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutExpensesInput = {
@@ -2896,6 +3038,8 @@ export type organizationsUpdateWithoutExpensesInput = {
   treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutOrganizationNestedInput
   invoice_line_items?: Prisma.invoice_line_itemsUpdateManyWithoutOrganizationNestedInput
   invoice_payments?: Prisma.invoice_paymentsUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutExpensesInput = {
@@ -2930,6 +3074,8 @@ export type organizationsUncheckedUpdateWithoutExpensesInput = {
   treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutOrganizationNestedInput
   invoice_line_items?: Prisma.invoice_line_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
   invoice_payments?: Prisma.invoice_paymentsUncheckedUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUncheckedUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateWithoutExpense_paymentsInput = {
@@ -2964,6 +3110,8 @@ export type organizationsCreateWithoutExpense_paymentsInput = {
   treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutOrganizationInput
   invoice_line_items?: Prisma.invoice_line_itemsCreateNestedManyWithoutOrganizationInput
   invoice_payments?: Prisma.invoice_paymentsCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutExpense_paymentsInput = {
@@ -2998,6 +3146,8 @@ export type organizationsUncheckedCreateWithoutExpense_paymentsInput = {
   treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutOrganizationInput
   invoice_line_items?: Prisma.invoice_line_itemsUncheckedCreateNestedManyWithoutOrganizationInput
   invoice_payments?: Prisma.invoice_paymentsUncheckedCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesUncheckedCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutExpense_paymentsInput = {
@@ -3048,6 +3198,8 @@ export type organizationsUpdateWithoutExpense_paymentsInput = {
   treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutOrganizationNestedInput
   invoice_line_items?: Prisma.invoice_line_itemsUpdateManyWithoutOrganizationNestedInput
   invoice_payments?: Prisma.invoice_paymentsUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutExpense_paymentsInput = {
@@ -3082,6 +3234,8 @@ export type organizationsUncheckedUpdateWithoutExpense_paymentsInput = {
   treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutOrganizationNestedInput
   invoice_line_items?: Prisma.invoice_line_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
   invoice_payments?: Prisma.invoice_paymentsUncheckedUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUncheckedUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateWithoutTreatment_invoicesInput = {
@@ -3116,6 +3270,8 @@ export type organizationsCreateWithoutTreatment_invoicesInput = {
   expense_payments?: Prisma.expense_paymentsCreateNestedManyWithoutOrganizationInput
   invoice_line_items?: Prisma.invoice_line_itemsCreateNestedManyWithoutOrganizationInput
   invoice_payments?: Prisma.invoice_paymentsCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutTreatment_invoicesInput = {
@@ -3150,6 +3306,8 @@ export type organizationsUncheckedCreateWithoutTreatment_invoicesInput = {
   expense_payments?: Prisma.expense_paymentsUncheckedCreateNestedManyWithoutOrganizationInput
   invoice_line_items?: Prisma.invoice_line_itemsUncheckedCreateNestedManyWithoutOrganizationInput
   invoice_payments?: Prisma.invoice_paymentsUncheckedCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesUncheckedCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutTreatment_invoicesInput = {
@@ -3200,6 +3358,8 @@ export type organizationsUpdateWithoutTreatment_invoicesInput = {
   expense_payments?: Prisma.expense_paymentsUpdateManyWithoutOrganizationNestedInput
   invoice_line_items?: Prisma.invoice_line_itemsUpdateManyWithoutOrganizationNestedInput
   invoice_payments?: Prisma.invoice_paymentsUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutTreatment_invoicesInput = {
@@ -3234,6 +3394,8 @@ export type organizationsUncheckedUpdateWithoutTreatment_invoicesInput = {
   expense_payments?: Prisma.expense_paymentsUncheckedUpdateManyWithoutOrganizationNestedInput
   invoice_line_items?: Prisma.invoice_line_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
   invoice_payments?: Prisma.invoice_paymentsUncheckedUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUncheckedUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateWithoutInvoice_line_itemsInput = {
@@ -3268,6 +3430,8 @@ export type organizationsCreateWithoutInvoice_line_itemsInput = {
   expense_payments?: Prisma.expense_paymentsCreateNestedManyWithoutOrganizationInput
   treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutOrganizationInput
   invoice_payments?: Prisma.invoice_paymentsCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutInvoice_line_itemsInput = {
@@ -3302,6 +3466,8 @@ export type organizationsUncheckedCreateWithoutInvoice_line_itemsInput = {
   expense_payments?: Prisma.expense_paymentsUncheckedCreateNestedManyWithoutOrganizationInput
   treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutOrganizationInput
   invoice_payments?: Prisma.invoice_paymentsUncheckedCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesUncheckedCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutInvoice_line_itemsInput = {
@@ -3352,6 +3518,8 @@ export type organizationsUpdateWithoutInvoice_line_itemsInput = {
   expense_payments?: Prisma.expense_paymentsUpdateManyWithoutOrganizationNestedInput
   treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutOrganizationNestedInput
   invoice_payments?: Prisma.invoice_paymentsUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutInvoice_line_itemsInput = {
@@ -3386,6 +3554,8 @@ export type organizationsUncheckedUpdateWithoutInvoice_line_itemsInput = {
   expense_payments?: Prisma.expense_paymentsUncheckedUpdateManyWithoutOrganizationNestedInput
   treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutOrganizationNestedInput
   invoice_payments?: Prisma.invoice_paymentsUncheckedUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUncheckedUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateWithoutInvoice_paymentsInput = {
@@ -3420,6 +3590,8 @@ export type organizationsCreateWithoutInvoice_paymentsInput = {
   expense_payments?: Prisma.expense_paymentsCreateNestedManyWithoutOrganizationInput
   treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutOrganizationInput
   invoice_line_items?: Prisma.invoice_line_itemsCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutInvoice_paymentsInput = {
@@ -3454,6 +3626,8 @@ export type organizationsUncheckedCreateWithoutInvoice_paymentsInput = {
   expense_payments?: Prisma.expense_paymentsUncheckedCreateNestedManyWithoutOrganizationInput
   treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutOrganizationInput
   invoice_line_items?: Prisma.invoice_line_itemsUncheckedCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesUncheckedCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutInvoice_paymentsInput = {
@@ -3504,6 +3678,8 @@ export type organizationsUpdateWithoutInvoice_paymentsInput = {
   expense_payments?: Prisma.expense_paymentsUpdateManyWithoutOrganizationNestedInput
   treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutOrganizationNestedInput
   invoice_line_items?: Prisma.invoice_line_itemsUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutInvoice_paymentsInput = {
@@ -3538,6 +3714,328 @@ export type organizationsUncheckedUpdateWithoutInvoice_paymentsInput = {
   expense_payments?: Prisma.expense_paymentsUncheckedUpdateManyWithoutOrganizationNestedInput
   treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutOrganizationNestedInput
   invoice_line_items?: Prisma.invoice_line_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUncheckedUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUncheckedUpdateManyWithoutOrganizationNestedInput
+}
+
+export type organizationsCreateWithoutRolesInput = {
+  id?: bigint | number
+  name: string
+  slug: string
+  legal_name?: string | null
+  email?: string | null
+  phone?: string | null
+  website_url?: string | null
+  logo_url?: string | null
+  description?: string | null
+  timezone?: string
+  currency?: string
+  is_active?: boolean
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  created_at?: Date | string
+  updated_at?: Date | string
+  branches?: Prisma.branchesCreateNestedManyWithoutOrganizationInput
+  users?: Prisma.usersCreateNestedManyWithoutOrganizationInput
+  patient_profiles?: Prisma.patient_profilesCreateNestedManyWithoutOrganizationInput
+  appointment_slots?: Prisma.appointment_slotsCreateNestedManyWithoutOrganizationInput
+  appointments?: Prisma.appointmentsCreateNestedManyWithoutOrganizationInput
+  patient_records?: Prisma.patient_recordsCreateNestedManyWithoutOrganizationInput
+  patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutOrganizationInput
+  inventory_items?: Prisma.inventory_itemsCreateNestedManyWithoutOrganizationInput
+  inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutOrganizationInput
+  notifications?: Prisma.notificationsCreateNestedManyWithoutOrganizationInput
+  audit_logs?: Prisma.audit_logsCreateNestedManyWithoutOrganizationInput
+  clinic_profile?: Prisma.clinic_profileCreateNestedManyWithoutOrganizationInput
+  expenses?: Prisma.expensesCreateNestedManyWithoutOrganizationInput
+  expense_payments?: Prisma.expense_paymentsCreateNestedManyWithoutOrganizationInput
+  treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutOrganizationInput
+  invoice_line_items?: Prisma.invoice_line_itemsCreateNestedManyWithoutOrganizationInput
+  invoice_payments?: Prisma.invoice_paymentsCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsCreateNestedManyWithoutOrganizationInput
+}
+
+export type organizationsUncheckedCreateWithoutRolesInput = {
+  id?: bigint | number
+  name: string
+  slug: string
+  legal_name?: string | null
+  email?: string | null
+  phone?: string | null
+  website_url?: string | null
+  logo_url?: string | null
+  description?: string | null
+  timezone?: string
+  currency?: string
+  is_active?: boolean
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  created_at?: Date | string
+  updated_at?: Date | string
+  branches?: Prisma.branchesUncheckedCreateNestedManyWithoutOrganizationInput
+  users?: Prisma.usersUncheckedCreateNestedManyWithoutOrganizationInput
+  patient_profiles?: Prisma.patient_profilesUncheckedCreateNestedManyWithoutOrganizationInput
+  appointment_slots?: Prisma.appointment_slotsUncheckedCreateNestedManyWithoutOrganizationInput
+  appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutOrganizationInput
+  patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutOrganizationInput
+  patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutOrganizationInput
+  inventory_items?: Prisma.inventory_itemsUncheckedCreateNestedManyWithoutOrganizationInput
+  inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutOrganizationInput
+  notifications?: Prisma.notificationsUncheckedCreateNestedManyWithoutOrganizationInput
+  audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutOrganizationInput
+  clinic_profile?: Prisma.clinic_profileUncheckedCreateNestedManyWithoutOrganizationInput
+  expenses?: Prisma.expensesUncheckedCreateNestedManyWithoutOrganizationInput
+  expense_payments?: Prisma.expense_paymentsUncheckedCreateNestedManyWithoutOrganizationInput
+  treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutOrganizationInput
+  invoice_line_items?: Prisma.invoice_line_itemsUncheckedCreateNestedManyWithoutOrganizationInput
+  invoice_payments?: Prisma.invoice_paymentsUncheckedCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsUncheckedCreateNestedManyWithoutOrganizationInput
+}
+
+export type organizationsCreateOrConnectWithoutRolesInput = {
+  where: Prisma.organizationsWhereUniqueInput
+  create: Prisma.XOR<Prisma.organizationsCreateWithoutRolesInput, Prisma.organizationsUncheckedCreateWithoutRolesInput>
+}
+
+export type organizationsUpsertWithoutRolesInput = {
+  update: Prisma.XOR<Prisma.organizationsUpdateWithoutRolesInput, Prisma.organizationsUncheckedUpdateWithoutRolesInput>
+  create: Prisma.XOR<Prisma.organizationsCreateWithoutRolesInput, Prisma.organizationsUncheckedCreateWithoutRolesInput>
+  where?: Prisma.organizationsWhereInput
+}
+
+export type organizationsUpdateToOneWithWhereWithoutRolesInput = {
+  where?: Prisma.organizationsWhereInput
+  data: Prisma.XOR<Prisma.organizationsUpdateWithoutRolesInput, Prisma.organizationsUncheckedUpdateWithoutRolesInput>
+}
+
+export type organizationsUpdateWithoutRolesInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  legal_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  website_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  currency?: Prisma.StringFieldUpdateOperationsInput | string
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  branches?: Prisma.branchesUpdateManyWithoutOrganizationNestedInput
+  users?: Prisma.usersUpdateManyWithoutOrganizationNestedInput
+  patient_profiles?: Prisma.patient_profilesUpdateManyWithoutOrganizationNestedInput
+  appointment_slots?: Prisma.appointment_slotsUpdateManyWithoutOrganizationNestedInput
+  appointments?: Prisma.appointmentsUpdateManyWithoutOrganizationNestedInput
+  patient_records?: Prisma.patient_recordsUpdateManyWithoutOrganizationNestedInput
+  patient_documents?: Prisma.patient_documentsUpdateManyWithoutOrganizationNestedInput
+  inventory_items?: Prisma.inventory_itemsUpdateManyWithoutOrganizationNestedInput
+  inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutOrganizationNestedInput
+  notifications?: Prisma.notificationsUpdateManyWithoutOrganizationNestedInput
+  audit_logs?: Prisma.audit_logsUpdateManyWithoutOrganizationNestedInput
+  clinic_profile?: Prisma.clinic_profileUpdateManyWithoutOrganizationNestedInput
+  expenses?: Prisma.expensesUpdateManyWithoutOrganizationNestedInput
+  expense_payments?: Prisma.expense_paymentsUpdateManyWithoutOrganizationNestedInput
+  treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutOrganizationNestedInput
+  invoice_line_items?: Prisma.invoice_line_itemsUpdateManyWithoutOrganizationNestedInput
+  invoice_payments?: Prisma.invoice_paymentsUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUpdateManyWithoutOrganizationNestedInput
+}
+
+export type organizationsUncheckedUpdateWithoutRolesInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  legal_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  website_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  currency?: Prisma.StringFieldUpdateOperationsInput | string
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  branches?: Prisma.branchesUncheckedUpdateManyWithoutOrganizationNestedInput
+  users?: Prisma.usersUncheckedUpdateManyWithoutOrganizationNestedInput
+  patient_profiles?: Prisma.patient_profilesUncheckedUpdateManyWithoutOrganizationNestedInput
+  appointment_slots?: Prisma.appointment_slotsUncheckedUpdateManyWithoutOrganizationNestedInput
+  appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutOrganizationNestedInput
+  patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutOrganizationNestedInput
+  patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutOrganizationNestedInput
+  inventory_items?: Prisma.inventory_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
+  inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutOrganizationNestedInput
+  notifications?: Prisma.notificationsUncheckedUpdateManyWithoutOrganizationNestedInput
+  audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutOrganizationNestedInput
+  clinic_profile?: Prisma.clinic_profileUncheckedUpdateManyWithoutOrganizationNestedInput
+  expenses?: Prisma.expensesUncheckedUpdateManyWithoutOrganizationNestedInput
+  expense_payments?: Prisma.expense_paymentsUncheckedUpdateManyWithoutOrganizationNestedInput
+  treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutOrganizationNestedInput
+  invoice_line_items?: Prisma.invoice_line_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
+  invoice_payments?: Prisma.invoice_paymentsUncheckedUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUncheckedUpdateManyWithoutOrganizationNestedInput
+}
+
+export type organizationsCreateWithoutRole_permissionsInput = {
+  id?: bigint | number
+  name: string
+  slug: string
+  legal_name?: string | null
+  email?: string | null
+  phone?: string | null
+  website_url?: string | null
+  logo_url?: string | null
+  description?: string | null
+  timezone?: string
+  currency?: string
+  is_active?: boolean
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  created_at?: Date | string
+  updated_at?: Date | string
+  branches?: Prisma.branchesCreateNestedManyWithoutOrganizationInput
+  users?: Prisma.usersCreateNestedManyWithoutOrganizationInput
+  patient_profiles?: Prisma.patient_profilesCreateNestedManyWithoutOrganizationInput
+  appointment_slots?: Prisma.appointment_slotsCreateNestedManyWithoutOrganizationInput
+  appointments?: Prisma.appointmentsCreateNestedManyWithoutOrganizationInput
+  patient_records?: Prisma.patient_recordsCreateNestedManyWithoutOrganizationInput
+  patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutOrganizationInput
+  inventory_items?: Prisma.inventory_itemsCreateNestedManyWithoutOrganizationInput
+  inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutOrganizationInput
+  notifications?: Prisma.notificationsCreateNestedManyWithoutOrganizationInput
+  audit_logs?: Prisma.audit_logsCreateNestedManyWithoutOrganizationInput
+  clinic_profile?: Prisma.clinic_profileCreateNestedManyWithoutOrganizationInput
+  expenses?: Prisma.expensesCreateNestedManyWithoutOrganizationInput
+  expense_payments?: Prisma.expense_paymentsCreateNestedManyWithoutOrganizationInput
+  treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutOrganizationInput
+  invoice_line_items?: Prisma.invoice_line_itemsCreateNestedManyWithoutOrganizationInput
+  invoice_payments?: Prisma.invoice_paymentsCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesCreateNestedManyWithoutOrganizationInput
+}
+
+export type organizationsUncheckedCreateWithoutRole_permissionsInput = {
+  id?: bigint | number
+  name: string
+  slug: string
+  legal_name?: string | null
+  email?: string | null
+  phone?: string | null
+  website_url?: string | null
+  logo_url?: string | null
+  description?: string | null
+  timezone?: string
+  currency?: string
+  is_active?: boolean
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  created_at?: Date | string
+  updated_at?: Date | string
+  branches?: Prisma.branchesUncheckedCreateNestedManyWithoutOrganizationInput
+  users?: Prisma.usersUncheckedCreateNestedManyWithoutOrganizationInput
+  patient_profiles?: Prisma.patient_profilesUncheckedCreateNestedManyWithoutOrganizationInput
+  appointment_slots?: Prisma.appointment_slotsUncheckedCreateNestedManyWithoutOrganizationInput
+  appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutOrganizationInput
+  patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutOrganizationInput
+  patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutOrganizationInput
+  inventory_items?: Prisma.inventory_itemsUncheckedCreateNestedManyWithoutOrganizationInput
+  inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutOrganizationInput
+  notifications?: Prisma.notificationsUncheckedCreateNestedManyWithoutOrganizationInput
+  audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutOrganizationInput
+  clinic_profile?: Prisma.clinic_profileUncheckedCreateNestedManyWithoutOrganizationInput
+  expenses?: Prisma.expensesUncheckedCreateNestedManyWithoutOrganizationInput
+  expense_payments?: Prisma.expense_paymentsUncheckedCreateNestedManyWithoutOrganizationInput
+  treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutOrganizationInput
+  invoice_line_items?: Prisma.invoice_line_itemsUncheckedCreateNestedManyWithoutOrganizationInput
+  invoice_payments?: Prisma.invoice_paymentsUncheckedCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesUncheckedCreateNestedManyWithoutOrganizationInput
+}
+
+export type organizationsCreateOrConnectWithoutRole_permissionsInput = {
+  where: Prisma.organizationsWhereUniqueInput
+  create: Prisma.XOR<Prisma.organizationsCreateWithoutRole_permissionsInput, Prisma.organizationsUncheckedCreateWithoutRole_permissionsInput>
+}
+
+export type organizationsUpsertWithoutRole_permissionsInput = {
+  update: Prisma.XOR<Prisma.organizationsUpdateWithoutRole_permissionsInput, Prisma.organizationsUncheckedUpdateWithoutRole_permissionsInput>
+  create: Prisma.XOR<Prisma.organizationsCreateWithoutRole_permissionsInput, Prisma.organizationsUncheckedCreateWithoutRole_permissionsInput>
+  where?: Prisma.organizationsWhereInput
+}
+
+export type organizationsUpdateToOneWithWhereWithoutRole_permissionsInput = {
+  where?: Prisma.organizationsWhereInput
+  data: Prisma.XOR<Prisma.organizationsUpdateWithoutRole_permissionsInput, Prisma.organizationsUncheckedUpdateWithoutRole_permissionsInput>
+}
+
+export type organizationsUpdateWithoutRole_permissionsInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  legal_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  website_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  currency?: Prisma.StringFieldUpdateOperationsInput | string
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  branches?: Prisma.branchesUpdateManyWithoutOrganizationNestedInput
+  users?: Prisma.usersUpdateManyWithoutOrganizationNestedInput
+  patient_profiles?: Prisma.patient_profilesUpdateManyWithoutOrganizationNestedInput
+  appointment_slots?: Prisma.appointment_slotsUpdateManyWithoutOrganizationNestedInput
+  appointments?: Prisma.appointmentsUpdateManyWithoutOrganizationNestedInput
+  patient_records?: Prisma.patient_recordsUpdateManyWithoutOrganizationNestedInput
+  patient_documents?: Prisma.patient_documentsUpdateManyWithoutOrganizationNestedInput
+  inventory_items?: Prisma.inventory_itemsUpdateManyWithoutOrganizationNestedInput
+  inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutOrganizationNestedInput
+  notifications?: Prisma.notificationsUpdateManyWithoutOrganizationNestedInput
+  audit_logs?: Prisma.audit_logsUpdateManyWithoutOrganizationNestedInput
+  clinic_profile?: Prisma.clinic_profileUpdateManyWithoutOrganizationNestedInput
+  expenses?: Prisma.expensesUpdateManyWithoutOrganizationNestedInput
+  expense_payments?: Prisma.expense_paymentsUpdateManyWithoutOrganizationNestedInput
+  treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutOrganizationNestedInput
+  invoice_line_items?: Prisma.invoice_line_itemsUpdateManyWithoutOrganizationNestedInput
+  invoice_payments?: Prisma.invoice_paymentsUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUpdateManyWithoutOrganizationNestedInput
+}
+
+export type organizationsUncheckedUpdateWithoutRole_permissionsInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  legal_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  website_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  currency?: Prisma.StringFieldUpdateOperationsInput | string
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  branches?: Prisma.branchesUncheckedUpdateManyWithoutOrganizationNestedInput
+  users?: Prisma.usersUncheckedUpdateManyWithoutOrganizationNestedInput
+  patient_profiles?: Prisma.patient_profilesUncheckedUpdateManyWithoutOrganizationNestedInput
+  appointment_slots?: Prisma.appointment_slotsUncheckedUpdateManyWithoutOrganizationNestedInput
+  appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutOrganizationNestedInput
+  patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutOrganizationNestedInput
+  patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutOrganizationNestedInput
+  inventory_items?: Prisma.inventory_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
+  inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutOrganizationNestedInput
+  notifications?: Prisma.notificationsUncheckedUpdateManyWithoutOrganizationNestedInput
+  audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutOrganizationNestedInput
+  clinic_profile?: Prisma.clinic_profileUncheckedUpdateManyWithoutOrganizationNestedInput
+  expenses?: Prisma.expensesUncheckedUpdateManyWithoutOrganizationNestedInput
+  expense_payments?: Prisma.expense_paymentsUncheckedUpdateManyWithoutOrganizationNestedInput
+  treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutOrganizationNestedInput
+  invoice_line_items?: Prisma.invoice_line_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
+  invoice_payments?: Prisma.invoice_paymentsUncheckedUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 
@@ -3563,6 +4061,8 @@ export type OrganizationsCountOutputType = {
   treatment_invoices: number
   invoice_line_items: number
   invoice_payments: number
+  roles: number
+  role_permissions: number
 }
 
 export type OrganizationsCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -3583,6 +4083,8 @@ export type OrganizationsCountOutputTypeSelect<ExtArgs extends runtime.Types.Ext
   treatment_invoices?: boolean | OrganizationsCountOutputTypeCountTreatment_invoicesArgs
   invoice_line_items?: boolean | OrganizationsCountOutputTypeCountInvoice_line_itemsArgs
   invoice_payments?: boolean | OrganizationsCountOutputTypeCountInvoice_paymentsArgs
+  roles?: boolean | OrganizationsCountOutputTypeCountRolesArgs
+  role_permissions?: boolean | OrganizationsCountOutputTypeCountRole_permissionsArgs
 }
 
 /**
@@ -3714,6 +4216,20 @@ export type OrganizationsCountOutputTypeCountInvoice_paymentsArgs<ExtArgs extend
   where?: Prisma.invoice_paymentsWhereInput
 }
 
+/**
+ * OrganizationsCountOutputType without action
+ */
+export type OrganizationsCountOutputTypeCountRolesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.rolesWhereInput
+}
+
+/**
+ * OrganizationsCountOutputType without action
+ */
+export type OrganizationsCountOutputTypeCountRole_permissionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.role_permissionsWhereInput
+}
+
 
 export type organizationsSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -3748,6 +4264,8 @@ export type organizationsSelect<ExtArgs extends runtime.Types.Extensions.Interna
   treatment_invoices?: boolean | Prisma.organizations$treatment_invoicesArgs<ExtArgs>
   invoice_line_items?: boolean | Prisma.organizations$invoice_line_itemsArgs<ExtArgs>
   invoice_payments?: boolean | Prisma.organizations$invoice_paymentsArgs<ExtArgs>
+  roles?: boolean | Prisma.organizations$rolesArgs<ExtArgs>
+  role_permissions?: boolean | Prisma.organizations$role_permissionsArgs<ExtArgs>
   _count?: boolean | Prisma.OrganizationsCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["organizations"]>
 
@@ -3824,6 +4342,8 @@ export type organizationsInclude<ExtArgs extends runtime.Types.Extensions.Intern
   treatment_invoices?: boolean | Prisma.organizations$treatment_invoicesArgs<ExtArgs>
   invoice_line_items?: boolean | Prisma.organizations$invoice_line_itemsArgs<ExtArgs>
   invoice_payments?: boolean | Prisma.organizations$invoice_paymentsArgs<ExtArgs>
+  roles?: boolean | Prisma.organizations$rolesArgs<ExtArgs>
+  role_permissions?: boolean | Prisma.organizations$role_permissionsArgs<ExtArgs>
   _count?: boolean | Prisma.OrganizationsCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type organizationsIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -3849,6 +4369,8 @@ export type $organizationsPayload<ExtArgs extends runtime.Types.Extensions.Inter
     treatment_invoices: Prisma.$treatment_invoicesPayload<ExtArgs>[]
     invoice_line_items: Prisma.$invoice_line_itemsPayload<ExtArgs>[]
     invoice_payments: Prisma.$invoice_paymentsPayload<ExtArgs>[]
+    roles: Prisma.$rolesPayload<ExtArgs>[]
+    role_permissions: Prisma.$role_permissionsPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: bigint
@@ -4281,6 +4803,8 @@ export interface Prisma__organizationsClient<T, Null = never, ExtArgs extends ru
   treatment_invoices<T extends Prisma.organizations$treatment_invoicesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.organizations$treatment_invoicesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$treatment_invoicesPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   invoice_line_items<T extends Prisma.organizations$invoice_line_itemsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.organizations$invoice_line_itemsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$invoice_line_itemsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   invoice_payments<T extends Prisma.organizations$invoice_paymentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.organizations$invoice_paymentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$invoice_paymentsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  roles<T extends Prisma.organizations$rolesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.organizations$rolesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$rolesPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  role_permissions<T extends Prisma.organizations$role_permissionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.organizations$role_permissionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$role_permissionsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -5123,6 +5647,54 @@ export type organizations$invoice_paymentsArgs<ExtArgs extends runtime.Types.Ext
   take?: number
   skip?: number
   distinct?: Prisma.Invoice_paymentsScalarFieldEnum | Prisma.Invoice_paymentsScalarFieldEnum[]
+}
+
+/**
+ * organizations.roles
+ */
+export type organizations$rolesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the roles
+   */
+  select?: Prisma.rolesSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the roles
+   */
+  omit?: Prisma.rolesOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.rolesInclude<ExtArgs> | null
+  where?: Prisma.rolesWhereInput
+  orderBy?: Prisma.rolesOrderByWithRelationInput | Prisma.rolesOrderByWithRelationInput[]
+  cursor?: Prisma.rolesWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.RolesScalarFieldEnum | Prisma.RolesScalarFieldEnum[]
+}
+
+/**
+ * organizations.role_permissions
+ */
+export type organizations$role_permissionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the role_permissions
+   */
+  select?: Prisma.role_permissionsSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the role_permissions
+   */
+  omit?: Prisma.role_permissionsOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.role_permissionsInclude<ExtArgs> | null
+  where?: Prisma.role_permissionsWhereInput
+  orderBy?: Prisma.role_permissionsOrderByWithRelationInput | Prisma.role_permissionsOrderByWithRelationInput[]
+  cursor?: Prisma.role_permissionsWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.Role_permissionsScalarFieldEnum | Prisma.Role_permissionsScalarFieldEnum[]
 }
 
 /**

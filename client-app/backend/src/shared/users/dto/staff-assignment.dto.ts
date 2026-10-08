@@ -1,6 +1,11 @@
-import { IsBoolean, IsIn, IsInt, IsOptional } from 'class-validator';
+import {
+  IsBoolean,
+  IsInt,
+  IsOptional,
+  IsString,
+  Length,
+} from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { STAFF_ROLES } from '../../common/decorators/roles.decorator';
 
 /**
  * Admin-only changes to how a staff account is allowed to work: which branch is
@@ -20,9 +25,12 @@ export class StaffAssignmentDto {
   @IsBoolean()
   restrict_to_branch?: boolean;
 
-  @ApiPropertyOptional({ enum: STAFF_ROLES })
+  @ApiPropertyOptional({
+    description: 'A role key of this clinic (see GET /roles); not patient',
+  })
   @IsOptional()
-  @IsIn(STAFF_ROLES)
+  @IsString()
+  @Length(2, 40)
   role?: string;
 
   @ApiPropertyOptional({

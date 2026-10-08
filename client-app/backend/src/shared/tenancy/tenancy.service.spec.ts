@@ -15,6 +15,7 @@ describe('TenancyService', () => {
   let accountSetup: { issueAndSend: jest.Mock };
   let resolver: { invalidate: jest.Mock };
   let userAccess: { invalidate: jest.Mock };
+  let roles: { ensureDefaults: jest.Mock };
   let service: TenancyService;
 
   beforeEach(() => {
@@ -51,11 +52,13 @@ describe('TenancyService', () => {
     };
     resolver = { invalidate: jest.fn() };
     userAccess = { invalidate: jest.fn() };
+    roles = { ensureDefaults: jest.fn() };
     service = new TenancyService(
       prisma,
       accountSetup as any,
       resolver as any,
       userAccess as any,
+      roles as any,
     );
   });
 

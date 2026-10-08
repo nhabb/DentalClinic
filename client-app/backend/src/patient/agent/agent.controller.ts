@@ -3,10 +3,7 @@ import { ApiOperation, ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { IsArray, IsString, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { AgentService, ChatMessage } from './agent.service';
-import {
-  Roles,
-  STAFF_ROLES,
-} from '../../shared/common/decorators/roles.decorator';
+import { RequirePermissions } from '../../shared/authorization/permissions.decorator';
 
 class ChatMessageDto {
   @IsString() role: 'user' | 'assistant';
@@ -22,7 +19,7 @@ class ChatRequestDto {
 
 @ApiTags('Agent')
 @ApiBearerAuth()
-@Roles(...STAFF_ROLES)
+@RequirePermissions('agent:use')
 @Controller('agent')
 export class AgentController {
   constructor(private readonly agentService: AgentService) {}

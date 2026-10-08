@@ -46,7 +46,7 @@ export class PatientBillingController {
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
     @Query('limit', new DefaultValuePipe(50), ParseIntPipe) limit?: number,
   ) {
-    this.access.assertSelfOrStaff(req.user, userId);
+    this.access.assertSelfOrPermission(req.user, userId, 'billing:read');
     const profile = await this.patientsService.findByUserId(BigInt(userId));
     return this.billingService.findAll({
       patient_id: Number(profile.id),
@@ -65,7 +65,11 @@ export class PatientBillingController {
     @Param('id', ParseIntPipe) id: number,
   ) {
     const invoice = await this.billingService.findOne(BigInt(id));
-    await this.access.assertPatientProfileAccess(req.user, invoice.patient_id);
+    await this.access.assertPatientProfileAccess(
+      req.user,
+      invoice.patient_id,
+      'billing:read',
+    );
     return invoice;
   }
 }

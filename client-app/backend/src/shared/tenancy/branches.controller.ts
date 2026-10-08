@@ -15,7 +15,7 @@ import {
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
-import { ORG_ADMIN_ROLES, Roles } from '../common/decorators/roles.decorator';
+import { RequirePermissions } from '../authorization/permissions.decorator';
 import { TenancyService } from './tenancy.service';
 import { CreateBranchDto, UpdateBranchDto } from './dto/branch.dto';
 
@@ -41,21 +41,21 @@ export class BranchesController {
   }
 
   @Post()
-  @Roles(...ORG_ADMIN_ROLES)
+  @RequirePermissions('branches:manage')
   @ApiOperation({ summary: 'Open a new branch in the current organization' })
   create(@Body() dto: CreateBranchDto) {
     return this.tenancy.createBranch(dto);
   }
 
   @Patch(':id')
-  @Roles(...ORG_ADMIN_ROLES)
+  @RequirePermissions('branches:manage')
   @ApiOperation({ summary: 'Update a branch' })
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateBranchDto) {
     return this.tenancy.updateBranch(BigInt(id), dto);
   }
 
   @Patch(':id/default')
-  @Roles(...ORG_ADMIN_ROLES)
+  @RequirePermissions('branches:manage')
   @ApiOperation({
     summary:
       'Make a branch the default one for new slots, appointments and stock',
@@ -65,7 +65,7 @@ export class BranchesController {
   }
 
   @Delete(':id')
-  @Roles(...ORG_ADMIN_ROLES)
+  @RequirePermissions('branches:manage')
   @ApiOperation({
     summary: 'Delete a branch that has no data yet (otherwise deactivate it)',
   })

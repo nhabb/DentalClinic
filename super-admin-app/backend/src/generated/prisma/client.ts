@@ -130,3 +130,13 @@ export type invoice_line_items = Prisma.invoice_line_itemsModel
  * 
  */
 export type invoice_payments = Prisma.invoice_paymentsModel
+/**
+ * Model roles
+ * 
+ */
+export type roles = Prisma.rolesModel
+/**
+ * Model role_permissions
+ * 
+ */
+export type role_permissions = Prisma.role_permissionsModel

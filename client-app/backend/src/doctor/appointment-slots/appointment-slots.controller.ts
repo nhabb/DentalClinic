@@ -15,10 +15,7 @@ import {
   ApiOperation,
   ApiQuery,
 } from '@nestjs/swagger';
-import {
-  Roles,
-  STAFF_ROLES,
-} from '../../shared/common/decorators/roles.decorator';
+import { RequirePermissions } from '../../shared/authorization/permissions.decorator';
 import { AppointmentSlotsService } from './appointment-slots.service';
 import { CreateSlotDto } from './dto/create-slot.dto';
 
@@ -27,13 +24,14 @@ import { CreateSlotDto } from './dto/create-slot.dto';
  * through /patient/available-slots instead.
  */
 @ApiBearerAuth()
-@Roles(...STAFF_ROLES)
+@RequirePermissions('appointments:read')
 @ApiTags('Appointment Slots')
 @Controller('appointment-slots')
 export class AppointmentSlotsController {
   constructor(private readonly slotsService: AppointmentSlotsService) {}
 
   @Post('bulk')
+  @RequirePermissions('slots:manage')
   @ApiOperation({ summary: 'Create multiple slots from a time range' })
   createBulk(
     @Body()
@@ -50,6 +48,7 @@ export class AppointmentSlotsController {
   }
 
   @Post()
+  @RequirePermissions('slots:manage')
   @ApiOperation({ summary: 'Create a single available slot' })
   create(@Body() dto: CreateSlotDto) {
     return this.slotsService.create(dto);
@@ -114,6 +113,7 @@ export class AppointmentSlotsController {
   }
 
   @Delete(':id')
+  @RequirePermissions('slots:manage')
   @ApiOperation({ summary: 'Delete an unbooked slot' })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.slotsService.remove(BigInt(id));

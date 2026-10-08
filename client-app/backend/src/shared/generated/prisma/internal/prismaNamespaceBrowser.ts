@@ -68,7 +68,9 @@ export const ModelName = {
   expense_payments: 'expense_payments',
   treatment_invoices: 'treatment_invoices',
   invoice_line_items: 'invoice_line_items',
-  invoice_payments: 'invoice_payments'
+  invoice_payments: 'invoice_payments',
+  roles: 'roles',
+  role_permissions: 'role_permissions'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -414,6 +416,29 @@ export const Invoice_paymentsScalarFieldEnum = {
 } as const
 
 export type Invoice_paymentsScalarFieldEnum = (typeof Invoice_paymentsScalarFieldEnum)[keyof typeof Invoice_paymentsScalarFieldEnum]
+
+
+export const RolesScalarFieldEnum = {
+  id: 'id',
+  organization_id: 'organization_id',
+  key: 'key',
+  name: 'name',
+  description: 'description',
+  is_system: 'is_system',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+} as const
+
+export type RolesScalarFieldEnum = (typeof RolesScalarFieldEnum)[keyof typeof RolesScalarFieldEnum]
+
+
+export const Role_permissionsScalarFieldEnum = {
+  role_id: 'role_id',
+  organization_id: 'organization_id',
+  permission: 'permission'
+} as const
+
+export type Role_permissionsScalarFieldEnum = (typeof Role_permissionsScalarFieldEnum)[keyof typeof Role_permissionsScalarFieldEnum]
 
 
 export const SortOrder = {

@@ -68,6 +68,8 @@ model organizations {
   treatment_invoices  treatment_invoices[]
   invoice_line_items  invoice_line_items[]
   invoice_payments    invoice_payments[]
+  roles               roles[]
+  role_permissions    role_permissions[]
 
   @@index([is_active], map: "idx_organizations_is_active")
 }
@@ -514,4 +516,40 @@ model invoice_payments {
 
   @@index([invoice_id], map: "idx_invoice_payments_invoice_id")
   @@index([organization_id], map: "idx_invoice_payments_org")
+}
+
+// ─── Roles and permissions (per organization) ─────────────────────────────────
+//
+// users.role holds a role *key*; this table says what that key means in the
+// user's organization. The permission catalog itself lives in code
+// (src/shared/authorization/permissions.ts); role_permissions stores which keys
+// a role holds. `admin` always has every permission (enforced in code).
+
+model roles {
+  id               BigInt             @id @default(autoincrement())
+  organization_id  BigInt             @default(dbgenerated("app.current_org_id()"))
+  key              String             @db.VarChar
+  name             String             @db.VarChar
+  description      String?
+  /// Created by the backend (admin, doctor, secretary, patient); cannot be deleted.
+  is_system        Boolean            @default(false)
+  created_at       DateTime           @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime           @default(now()) @db.Timestamptz(6)
+  organization     organizations      @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  role_permissions role_permissions[]
+
+  @@unique([organization_id, key])
+  @@index([organization_id], map: "idx_roles_org")
+}
+
+model role_permissions {
+  role_id         BigInt
+  organization_id BigInt        @default(dbgenerated("app.current_org_id()"))
+  /// A key from the permission catalog, e.g. "appointments:write".
+  permission      String        @db.VarChar
+  role            roles         @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  organization    organizations @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([role_id, permission])
+  @@index([organization_id], map: "idx_role_permissions_org")
 }

@@ -8,7 +8,8 @@ import {
   Post,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { ORG_ADMIN_ROLES, Roles } from '../common/decorators/roles.decorator';
+import { Roles } from '../common/decorators/roles.decorator';
+import { RequirePermissions } from '../authorization/permissions.decorator';
 import { TenancyService } from './tenancy.service';
 import {
   CreateOrganizationDto,
@@ -31,7 +32,7 @@ export class OrganizationsController {
   }
 
   @Patch('me')
-  @Roles(...ORG_ADMIN_ROLES)
+  @RequirePermissions('clinic:settings')
   @ApiOperation({ summary: 'Update the current organization profile' })
   updateMine(@Body() dto: UpdateOrganizationDto) {
     return this.tenancy.updateCurrentOrganization(dto);

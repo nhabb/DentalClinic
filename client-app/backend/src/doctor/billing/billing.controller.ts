@@ -16,16 +16,13 @@ import {
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
-import {
-  Roles,
-  STAFF_ROLES,
-} from '../../shared/common/decorators/roles.decorator';
+import { RequirePermissions } from '../../shared/authorization/permissions.decorator';
 import { BillingService } from './billing.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { RecordPaymentDto } from './dto/record-payment.dto';
 
 @ApiBearerAuth()
-@Roles(...STAFF_ROLES)
+@RequirePermissions('billing:read')
 @ApiTags('Billing')
 @Controller('billing')
 export class BillingController {
@@ -61,6 +58,7 @@ export class BillingController {
   }
 
   @Post('invoices')
+  @RequirePermissions('billing:write')
   @ApiOperation({
     summary: 'Create a treatment invoice with procedure line items',
   })
@@ -119,6 +117,7 @@ export class BillingController {
   }
 
   @Post('invoices/:id/payments')
+  @RequirePermissions('billing:write')
   @ApiOperation({
     summary: 'Record a payment (partial or full) against a treatment invoice',
   })
@@ -130,6 +129,7 @@ export class BillingController {
   }
 
   @Delete('invoices/:id')
+  @RequirePermissions('billing:delete')
   @ApiOperation({
     summary: 'Delete a treatment invoice and all its payments and line items',
   })

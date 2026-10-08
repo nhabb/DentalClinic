@@ -44,7 +44,7 @@ export class PatientAppointmentsController {
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
   ) {
-    this.access.assertSelfOrStaff(req.user, userId);
+    this.access.assertSelfOrPermission(req.user, userId, 'appointments:read');
     return this.service.getUpcoming(userId, page, limit);
   }
 
@@ -62,7 +62,7 @@ export class PatientAppointmentsController {
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
   ) {
-    this.access.assertSelfOrStaff(req.user, userId);
+    this.access.assertSelfOrPermission(req.user, userId, 'appointments:read');
     return this.service.getHistory(userId, page, limit);
   }
 
@@ -75,7 +75,7 @@ export class PatientAppointmentsController {
     @Query('user_id', ParseIntPipe) userId: number,
     @Body() dto: CancelAppointmentDto,
   ) {
-    this.access.assertSelfOrStaff(req.user, userId);
+    this.access.assertSelfOrPermission(req.user, userId, 'appointments:read');
     return this.service.cancel(userId, id, dto);
   }
 }

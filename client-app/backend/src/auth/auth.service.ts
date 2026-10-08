@@ -245,7 +245,8 @@ export class AuthService {
     return { user, token, is_new_user };
   }
 
-  async getMe(userId: number) {
+  /** The signed-in user; `permissions` lets the UI hide what the role cannot do. */
+  async getMe(userId: number, permissions: readonly string[] = []) {
     const user = await this.prisma.users.findUnique({
       where: { id: userId },
       select: {
@@ -271,6 +272,6 @@ export class AuthService {
     });
     if (!user) return null;
     const { password_hash, ...rest } = user;
-    return { ...rest, is_oauth: password_hash === 'oauth' };
+    return { ...rest, is_oauth: password_hash === 'oauth', permissions };
   }
 }

@@ -39,7 +39,7 @@ export class NotificationsController {
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
   ) {
-    this.access.assertSelfOrStaff(req.user, userId);
+    this.access.assertSelfOrPermission(req.user, userId, 'staff:manage');
     return this.notificationsService.findAll(BigInt(userId), page, limit);
   }
 
@@ -50,7 +50,7 @@ export class NotificationsController {
     @Req() req: { user: RequestUser },
     @Query('user_id', ParseIntPipe) userId: number,
   ) {
-    this.access.assertSelfOrStaff(req.user, userId);
+    this.access.assertSelfOrPermission(req.user, userId, 'staff:manage');
     return this.notificationsService.getUnreadCount(BigInt(userId));
   }
 
@@ -61,7 +61,7 @@ export class NotificationsController {
     @Req() req: { user: RequestUser },
     @Query('user_id', ParseIntPipe) userId: number,
   ) {
-    this.access.assertSelfOrStaff(req.user, userId);
+    this.access.assertSelfOrPermission(req.user, userId, 'staff:manage');
     return this.notificationsService.markAllRead(BigInt(userId));
   }
 
@@ -73,7 +73,7 @@ export class NotificationsController {
     @Param('id', ParseIntPipe) id: number,
     @Query('user_id', ParseIntPipe) userId: number,
   ) {
-    this.access.assertSelfOrStaff(req.user, userId);
+    this.access.assertSelfOrPermission(req.user, userId, 'staff:manage');
     return this.notificationsService.markRead(BigInt(id), BigInt(userId));
   }
 }

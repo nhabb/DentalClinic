@@ -77,10 +77,11 @@ export class AuthController {
   @Get('me')
   @ApiBearerAuth()
   @ApiOperation({
-    summary: 'The current user with their organization and home branch',
+    summary:
+      'The current user with their organization, home branch and permissions',
   })
   async getMe(@Request() req: { user: RequestUser }) {
-    return this.authService.getMe(Number(req.user.id));
+    return this.authService.getMe(Number(req.user.id), req.user.permissions);
   }
 
   @Post('logout')

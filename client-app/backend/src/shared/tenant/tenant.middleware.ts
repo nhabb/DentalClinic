@@ -1,6 +1,7 @@
 import { Injectable, Logger, NestMiddleware } from '@nestjs/common';
 import { NextFunction, Request, Response } from 'express';
 import { AppJwtPayload, bearerToken, verifyAppJwt } from '../common/app-jwt';
+import { ALL_PERMISSIONS } from '../authorization/permissions';
 import { TenantResolverService } from './tenant-resolver.service';
 import { UserAccessService } from './user-access.service';
 import {
@@ -95,6 +96,7 @@ export class TenantContextMiddleware implements NestMiddleware {
         userId: access.userId,
         role: access.role,
         accountStatus,
+        permissions: [...ALL_PERMISSIONS],
         system: scoped === null,
         source: 'jwt',
       };
@@ -107,6 +109,7 @@ export class TenantContextMiddleware implements NestMiddleware {
       userId: access.userId,
       role: access.role,
       accountStatus,
+      permissions: access.permissions,
       system: false,
       source: 'jwt',
     };

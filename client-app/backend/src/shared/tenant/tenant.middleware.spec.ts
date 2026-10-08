@@ -25,6 +25,7 @@ const accessOf = (over: Partial<UserAccess> = {}): UserAccess => ({
   isActive: true,
   homeBranchId: 3n,
   restrictToBranch: false,
+  permissions: ['appointments:read'],
   ...over,
 });
 
@@ -68,6 +69,7 @@ describe('TenantContextMiddleware', () => {
         userId: 10n,
         role: 'doctor',
         accountStatus: 'active',
+        permissions: ['appointments:read'],
         system: false,
         source: 'jwt',
       });
