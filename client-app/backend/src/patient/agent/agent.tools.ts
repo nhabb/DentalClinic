@@ -1,23 +1,48 @@
 import OpenAI from 'openai';
 
-export const AGENT_TOOLS: OpenAI.ChatCompletionTool[] = [
-  // ── Raw Database Query (primary fallback) ─────────────────────
+/**
+ * Tools the clinic assistant can call. Every tool must be labelled with the
+ * permission it needs in agent-access.ts (TOOL_PERMISSIONS); the model only
+ * sees the tools the current user is allowed to use.
+ */
+export const AGENT_TOOLS: OpenAI.ChatCompletionFunctionTool[] = [
+  // ── Permissions and roles ─────────────────────────────────────
+  {
+    type: 'function',
+    function: {
+      name: 'get_my_permissions',
+      description:
+        'What the current user is allowed to do: their role plus the permissions it holds and lacks, with labels. ' +
+        'Use it for questions like "what can I do?", "can I delete invoices?" or "why can\'t I see expenses?".',
+      parameters: { type: 'object', properties: {} },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'list_roles',
+      description:
+        'List every role of this clinic with its permissions and how many users hold it. ' +
+        'Use it for questions about what other roles (doctor, secretary, custom roles) can do, or which role to give someone.',
+      parameters: { type: 'object', properties: {} },
+    },
+  },
+
+  // ── Raw Database Query (fallback) ─────────────────────────────
   {
     type: 'function',
     function: {
       name: 'query_database',
       description:
-        'PRIMARY data access tool. Run any PostgreSQL SELECT against the clinic database. ' +
-        'Use this FIRST whenever: (1) a dedicated tool returns empty or incomplete results, ' +
-        '(2) the user asks about data not covered by other tools, ' +
-        '(3) you need to discover what values exist in a column (e.g. SELECT DISTINCT category FROM inventory_items), ' +
-        '(4) any aggregation, join, count, or custom filter is needed. ' +
-        'Never tell the user data does not exist without running this tool first. ' +
-        'Only SELECT statements are allowed — no mutations. ' +
+        'Run a PostgreSQL SELECT against the clinic database when no dedicated tool fits: ' +
+        'aggregations, joins, counts, custom filters, or discovering what values exist in a column ' +
+        '(e.g. SELECT DISTINCT category FROM inventory_items). ' +
+        'Only SELECT statements are allowed, and only over tables the current user may read: ' +
+        'a query touching a table outside their permissions is refused with the permission name. ' +
         'Table names: organizations, branches, appointments, appointment_slots, patient_profiles, ' +
         'patient_records, patient_documents, users, treatment_invoices, invoice_line_items, ' +
-        'invoice_payments, expenses, inventory_items, inventory_movements, notifications, ' +
-        'clinic_profile, audit_logs. Rows are already limited to the current clinic organization; ' +
+        'invoice_payments, expenses, expense_payments, inventory_items, inventory_movements, notifications, ' +
+        'clinic_profile, roles, role_permissions, audit_logs. Rows are already limited to the current clinic organization; ' +
         'branch_id identifies the clinic location (branches.name).',
       parameters: {
         type: 'object',

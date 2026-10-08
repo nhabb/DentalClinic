@@ -19,10 +19,10 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "routes": "ts-node scripts/route-inventory.ts",
-    "smoke:permissions": "node scripts/smoke-permissions.js"
+    "smoke:permissions": "node scripts/smoke-permissions.js",
+    "smoke:agent": "ts-node scripts/smoke-agent.ts"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.29.0",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.3",
     "@nestjs/core": "^11.0.1",
@@ -44,6 +44,7 @@
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "pg": "^8.20.0",
+    "pgsql-ast-parser": "^12.0.2",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
   },
