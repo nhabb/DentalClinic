@@ -22,6 +22,7 @@ import { apiFetch } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import { safeStorage } from "@/lib/browser-compat";
 import { useTranslation } from "@/lib/i18n";
+import { usePermissions } from "@/lib/permissions";
 import AdminSidebar from "@/components/ui/AdminSidebar";
 import { StatsCard } from "@/components/ui/StatsCard";
 import { ListToolbar } from "@/components/ui/ListToolbar";
@@ -146,6 +147,8 @@ async function readError(res: Response, fallback: string): Promise<string> {
 
 export default function ExpensesPage() {
   const router = useRouter();
+  // Only offer what this role's API permissions allow (the API refuses the rest anyway).
+  const { can } = usePermissions();
   const { t, language } = useTranslation();
   const locale = language === "ar" ? "ar-LB" : language === "fr" ? "fr-FR" : "en-US";
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -557,7 +560,7 @@ export default function ExpensesPage() {
             if (ok > 0) toast.success(`${ok} expense${ok > 1 ? "s" : ""} imported.`);
             if (fail > 0) toast.error(`${fail} row${fail > 1 ? "s" : ""} failed.`);
           }}
-          onAdd={handleOpenAdd}
+          onAdd={can("expenses:write") ? handleOpenAdd : undefined}
           addLabel={t("expenses.addExpense")}
           actions={[{ key: "analytics", label: "View analytics", icon: <FaDollarSign />, href: "/admin/expenses/analytics" }]}
         />
@@ -767,6 +770,7 @@ export default function ExpensesPage() {
                             >
                               <FaDollarSign />
                             </button>
+                            {can("expenses:write") && (
                             <button
                               onClick={() => handleOpenEdit(expense)}
                               title={t("expenses.editExpense")}
@@ -774,6 +778,8 @@ export default function ExpensesPage() {
                             >
                               <FaEdit />
                             </button>
+                            )}
+                            {can("expenses:write") && (
                             <button
                               onClick={() => handleDelete(expense.id)}
                               disabled={deletingId === expense.id}
@@ -785,6 +791,7 @@ export default function ExpensesPage() {
                                 <FaTrash />
                               )}
                             </button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -1012,6 +1019,7 @@ export default function ExpensesPage() {
                     />
                   </FormField>
                 </div>
+                {can("expenses:write") && (
                 <Button
                   className="w-full bg-brand hover:bg-brand/90"
                   onClick={handleRecordPayment}
@@ -1019,6 +1027,7 @@ export default function ExpensesPage() {
                 >
                   {t("expenses.recordPayment")}
                 </Button>
+                )}
               </div>
             ) : (
               <div className="flex items-center gap-2 rounded-xl bg-green-50 border border-green-100 px-4 py-3 text-sm font-medium text-green-700">
@@ -1048,6 +1057,7 @@ export default function ExpensesPage() {
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         <span className="text-sm font-semibold text-green-700">{formatAmount(p.amount)}</span>
+                        {can("expenses:write") && (
                         <button
                           onClick={() => handleDeletePayment(p.id)}
                           disabled={deletingPaymentId === p.id}
@@ -1060,6 +1070,7 @@ export default function ExpensesPage() {
                             <FaTrash className="text-xs" />
                           )}
                         </button>
+                        )}
                       </div>
                     </li>
                   ))}

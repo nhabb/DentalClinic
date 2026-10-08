@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { safeStorage } from "@/lib/browser-compat";
 import { supabase } from "@/lib/supabase/client";
 import { useTranslation } from "@/lib/i18n";
+import { usePermissions } from "@/lib/permissions";
 import AdminSidebar from "@/components/ui/AdminSidebar";
 import { StatsCard } from "@/components/ui/StatsCard";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
@@ -85,6 +86,8 @@ interface Doctor {
 
 export default function AppointmentsManagement() {
   const router = useRouter();
+  // Only offer what this role's API permissions allow (the API refuses the rest anyway).
+  const { can } = usePermissions();
   const { t, language } = useTranslation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -719,16 +722,18 @@ export default function AppointmentsManagement() {
           onImport={(rows) =>
             setAppointments((prev) => [...prev, ...(rows as Appointment[])])
           }
-          onAdd={openAddModal}
+          onAdd={can("appointments:write") ? openAddModal : undefined}
           addLabel={t("appointments.newAppointment")}
           actions={[
-            {
+            ...(can("slots:manage")
+              ? [{
               key: "availability",
               label: t("appointments.openAvailability"),
               icon: <FaClock />,
-              tone: "teal",
+              tone: "teal" as const,
               onClick: () => { setAvailabilityMsg(""); setExistingSlots([]); setAvailabilityDate(""); setTimeRanges([{ fromTime: "09:00", toTime: "17:00", slotDuration: 30 }]); if (userRole === "doctor" && currentDoctorDbId) setSelectedAvailabilityDoctorId(currentDoctorDbId); setShowAvailabilityModal(true); },
-            },
+            }]
+              : []),
             {
               key: "my-slots",
               label: t("appointments.mySlots"),
@@ -910,7 +915,7 @@ export default function AppointmentsManagement() {
 
                           {/* Actions */}
                           <div className="flex items-center gap-2">
-                            {apt.status === "scheduled" && (
+                            {can("appointments:write") && apt.status === "scheduled" && (
                               <Button
                                 size="sm"
                                 className="bg-blue-600 hover:bg-blue-700"
@@ -919,7 +924,7 @@ export default function AppointmentsManagement() {
                                 <FaCheckCircle className="mr-1 rtl:mr-0 rtl:ml-1" /> {t("appointments.confirmAppt")}
                               </Button>
                             )}
-                            {(apt.status === "confirmed" || apt.status === "scheduled") && (
+                            {can("appointments:write") && (apt.status === "confirmed" || apt.status === "scheduled") && (
                               <Button
                                 size="sm"
                                 className="bg-green-600 hover:bg-green-700"
@@ -952,6 +957,7 @@ export default function AppointmentsManagement() {
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-44">
+                                  {can("appointments:write") && (
                                   <DropdownMenuItem
                                     onClick={() => {
                                       setPostponeApptId(apt.id);
@@ -961,12 +967,15 @@ export default function AppointmentsManagement() {
                                   >
                                     <FaCalendarPlus className="text-brand" /> {t("appointments.postpone")}
                                   </DropdownMenuItem>
+                                  )}
+                                  {can("appointments:write") && (
                                   <DropdownMenuItem
                                     onClick={() => handleCancelAppointment(apt.id)}
                                     className="text-red-600 focus:text-red-600"
                                   >
                                     <FaBan className="text-red-500" /> {t("appointments.cancelAppt")}
                                   </DropdownMenuItem>
+                                  )}
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             )}
@@ -1104,6 +1113,7 @@ export default function AppointmentsManagement() {
                       {s.isBooked ? (
                         <span className="text-blue-400 text-[10px] ml-1">{t("appointments.booked")}</span>
                       ) : (
+                        can("slots:manage") && (
                         <button
                           onClick={() => handleDeleteSlot(s.id)}
                           className="ml-1 text-red-400 hover:text-red-600 leading-none"
@@ -1111,6 +1121,7 @@ export default function AppointmentsManagement() {
                         >
                           ×
                         </button>
+                        )
                       )}
                     </div>
                   ))}

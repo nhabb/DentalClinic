@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { safeStorage } from "@/lib/browser-compat";
 import { useTranslation } from "@/lib/i18n";
+import { usePermissions } from "@/lib/permissions";
 import AdminSidebar from "@/components/ui/AdminSidebar";
 import { StatsCard } from "@/components/ui/StatsCard";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -163,6 +164,8 @@ async function uploadItemImage(itemId: number, file: File): Promise<string | nul
 export default function InventoryManagement() {
   const router = useRouter();
   const { t } = useTranslation();
+  // Only offer what this role's API permissions allow (the API refuses the rest anyway).
+  const { can } = usePermissions();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
 
@@ -547,7 +550,7 @@ export default function InventoryManagement() {
             if (ok > 0) toast.success(`${ok} item${ok > 1 ? "s" : ""} imported.`);
             if (fail > 0) toast.error(`${fail} row${fail > 1 ? "s" : ""} failed — check browser console.`);
           }}
-          onAdd={() => setShowAddModal(true)}
+          onAdd={can("inventory:write") ? () => setShowAddModal(true) : undefined}
           addLabel={t("inventory.addItem")}
           actions={[{ key: "analytics", label: "View analytics", icon: <FaChartLine />, href: "/admin/inventory/analytics" }]}
         />
@@ -731,6 +734,7 @@ export default function InventoryManagement() {
                                   <FaCamera />
                                 )}
                               </button>
+                              {can("inventory:write") && (
                               <button
                                 type="button"
                                 title={t("common.edit")}
@@ -739,6 +743,8 @@ export default function InventoryManagement() {
                               >
                                 <FaEdit />
                               </button>
+                              )}
+                              {can("inventory:write") && (
                               <button
                                 type="button"
                                 title={t("common.delete")}
@@ -752,6 +758,7 @@ export default function InventoryManagement() {
                                   <FaTrash />
                                 )}
                               </button>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -851,6 +858,7 @@ export default function InventoryManagement() {
                 >
                   <FaCamera className="me-2" /> {t("inventory.uploadPhoto")}
                 </Button>
+                {can("inventory:write") && (
                 <Button
                   variant="outline"
                   className="ms-auto border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
@@ -859,6 +867,7 @@ export default function InventoryManagement() {
                 >
                   <FaTrash className="me-2" /> {t("common.delete")}
                 </Button>
+                )}
               </div>
 
               {/* Movement history */}

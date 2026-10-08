@@ -10,6 +10,7 @@ import { safeStorage } from "@/lib/browser-compat";
 import { supabase } from "@/lib/supabase/client";
 import AgentChat from "@/components/ui/AgentChat";
 import { CommandPalette } from "@/components/ui/CommandPalette";
+import { AdminScreenGuard } from "@/components/ui/AdminScreenGuard";
 
 export default function AdminLayout({
   children,
@@ -95,7 +96,7 @@ export default function AdminLayout({
 
   return (
     <>
-      {children}
+      <AdminScreenGuard>{children}</AdminScreenGuard>
       {showChat && <AgentChat doctorName={doctorName} doctorId={doctorId} />}
       {showChat && <CommandPalette />}
     </>

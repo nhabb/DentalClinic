@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { safeStorage } from "@/lib/browser-compat";
 import { useTranslation } from "@/lib/i18n";
+import { usePermissions } from "@/lib/permissions";
 import AdminSidebar from "@/components/ui/AdminSidebar";
 import { StatsCard } from "@/components/ui/StatsCard";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
@@ -321,6 +322,9 @@ export default function PatientsPage() {
   const [completing, setCompleting] = useState(false);
   const [removingRecordId, setRemovingRecordId] = useState<number | null>(null);
   const [payInvoice, setPayInvoice] = useState<PayInvoice | null>(null);
+  // Billing from the chart is billing: without billing:write, work is recorded unbilled and payments are hidden.
+  const { can } = usePermissions();
+  const canBill = can("billing:write");
   const [payForm, setPayForm] = useState<{ amount: string; method: (typeof PAYMENT_METHODS)[number]; notes: string }>({
     amount: "",
     method: "cash",
@@ -870,7 +874,7 @@ export default function PatientsPage() {
   // Only completed items with a price can be billed; each one can be left off
   // the invoice and billed later from the history (so one visit can end up
   // on several invoices, like on the billing page).
-  const isBillableWorkItem = (i: WorkItem) => i.status === "completed" && i.amount > 0;
+  const isBillableWorkItem = (i: WorkItem) => canBill && i.status === "completed" && i.amount > 0;
   const workBillableCount = workItems.filter(isBillableWorkItem).length;
   const workBilledItems = workItems.filter((i) => isBillableWorkItem(i) && i.bill);
   const workBilledCount = workBilledItems.length;
@@ -967,6 +971,7 @@ export default function PatientsPage() {
   };
 
   const completeAmount = (i: { amount: string; bill: boolean }) => {
+    if (!canBill) return 0;
     const n = parseFloat(i.amount);
     return i.bill && Number.isFinite(n) && n > 0 ? n : 0;
   };
@@ -1224,7 +1229,7 @@ export default function PatientsPage() {
             if (ok > 0) toast.success(`${ok} patient${ok > 1 ? "s" : ""} imported.`);
             if (fail > 0) toast.error(`${fail} row${fail > 1 ? "s" : ""} failed (missing email or duplicate).`);
           }}
-          onAdd={handleOpenAddPatient}
+          onAdd={can("patients:write") ? handleOpenAddPatient : undefined}
           addLabel={t("patients.addPatient")}
           actions={[{ key: "analytics", label: "View analytics", icon: <FaUsers />, href: "/admin/patients/analytics" }]}
         />
@@ -1525,6 +1530,7 @@ export default function PatientsPage() {
               </div>
 
               <div className="px-6 pb-4 flex flex-wrap items-center gap-2">
+                {can("appointments:write") && (
                 <Button
                   size="sm"
                   className="bg-brand hover:bg-brand/90 whitespace-nowrap"
@@ -1532,9 +1538,12 @@ export default function PatientsPage() {
                 >
                   <FaCalendarPlus className="mr-2 rtl:mr-0 rtl:ml-2" /> {t("patients.bookAppointment")}
                 </Button>
+                )}
+                {can("patients:write") && (
                 <Button variant="outline" size="sm" className="whitespace-nowrap" onClick={() => handleOpenEditPatient(selectedPatient)}>
                   <FaEdit className="mr-2 rtl:mr-0 rtl:ml-2" /> {t("common.edit")}
                 </Button>
+                )}
                 {selectedPatient.email && (
                   <Button
                     variant="outline"
@@ -1552,6 +1561,7 @@ export default function PatientsPage() {
                     {t("patients.sendSetupLink")}
                   </Button>
                 )}
+                {can("patients:write") && (
                 <Button
                   variant="outline"
                   size="sm"
@@ -1564,7 +1574,9 @@ export default function PatientsPage() {
                   ) : null}
                   {selectedPatient.status === "active" ? "Set Inactive" : "Set Active"}
                 </Button>
+                )}
                 <div className="flex-1" />
+                {can("patients:delete") && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -1573,6 +1585,7 @@ export default function PatientsPage() {
                 >
                   <FaTrash className="mr-2 rtl:mr-0 rtl:ml-2" /> Delete
                 </Button>
+                )}
               </div>
             </div>
 
@@ -2035,6 +2048,7 @@ export default function PatientsPage() {
                                   </div>
                                 </div>
                               )}
+                              {can("records:write") && (
                               <Button
                                 className="w-full bg-brand hover:bg-brand/90"
                                 disabled={savingWork}
@@ -2044,6 +2058,7 @@ export default function PatientsPage() {
                                   <><span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />Saving...</>
                                 ) : t("dentalChart.saveWork")}
                               </Button>
+                              )}
                             </div>
                           )}
                         </div>
@@ -2060,10 +2075,12 @@ export default function PatientsPage() {
                                   <button type="button" onClick={() => setCompleteSelection([])} className="hover:text-gray-800">
                                     {t("dentalChart.clearSelection")}
                                   </button>
+                                  {can("records:write") && (
                                   <Button size="sm" className="bg-green-600 hover:bg-green-700 whitespace-nowrap" onClick={() => openCompleteModal(completeSelection)}>
                                     <FaCheckCircle className="mr-2 rtl:mr-0 rtl:ml-2" />
                                     {selectionHasPlanned ? t("dentalChart.markCompleted") : t("dentalChart.createInvoiceAction")} ({completeSelection.length})
                                   </Button>
+                                  )}
                                 </>
                               ) : (
                                 <span>{t("dentalChart.selectPlannedHint")}</span>
@@ -2160,7 +2177,7 @@ export default function PatientsPage() {
                                     </td>
                                     <td className="py-2.5 px-3">
                                       <div className="flex items-center justify-end gap-1.5">
-                                        {h.status === "planned" && (
+                                        {can("records:write") && h.status === "planned" && (
                                           <Button
                                             size="sm"
                                             variant="outline"
@@ -2170,7 +2187,7 @@ export default function PatientsPage() {
                                             <FaCheckCircle className="mr-1" /> {t("dentalChart.complete")}
                                           </Button>
                                         )}
-                                        {h.status === "completed" && !h.invoiceId && (
+                                        {can("records:write") && canBill && h.status === "completed" && !h.invoiceId && (
                                           <Button
                                             size="sm"
                                             variant="outline"
@@ -2181,7 +2198,7 @@ export default function PatientsPage() {
                                             <FaMoneyBillWave className="mr-1" /> {t("dentalChart.bill")}
                                           </Button>
                                         )}
-                                        {h.invoiceId && h.invoiceStatus !== "paid" && h.invoiceRemaining > 0 && (
+                                        {canBill && h.invoiceId && h.invoiceStatus !== "paid" && h.invoiceRemaining > 0 && (
                                           <Button
                                             size="sm"
                                             className="h-7 px-2 text-xs bg-brand hover:bg-brand/90 whitespace-nowrap"
@@ -2190,7 +2207,7 @@ export default function PatientsPage() {
                                             <FaMoneyBillWave className="mr-1" /> {t("dentalChart.pay")}
                                           </Button>
                                         )}
-                                        {(h.status === "planned" || h.status === "missing") && !h.invoiceId && (
+                                        {can("records:write") && (h.status === "planned" || h.status === "missing") && !h.invoiceId && (
                                           <button
                                             type="button"
                                             onClick={() => handleRemoveRecord(h.id)}
@@ -2235,6 +2252,7 @@ export default function PatientsPage() {
                           e.target.value = "";
                         }}
                       />
+                      {can("documents:write") && (
                       <Button
                         size="sm"
                         className="bg-brand hover:bg-brand/90"
@@ -2244,6 +2262,7 @@ export default function PatientsPage() {
                         <FaUpload className="mr-2" />
                         {uploadingDoc ? "Uploading..." : "Upload Document"}
                       </Button>
+                      )}
                     </div>
                   </div>
 
@@ -2286,6 +2305,7 @@ export default function PatientsPage() {
                                 <FaDownload />
                               </a>
                             )}
+                            {can("documents:write") && (
                             <button
                               onClick={() => handleDeleteDocument(doc.id)}
                               disabled={deletingDocId === doc.id}
@@ -2298,6 +2318,7 @@ export default function PatientsPage() {
                                 <FaTrash />
                               )}
                             </button>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -2427,6 +2448,7 @@ export default function PatientsPage() {
                       </p>
                     </div>
                     <div className="shrink-0 text-right rtl:text-left">
+                      {canBill && (
                       <label className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-700 cursor-pointer whitespace-nowrap mb-1.5">
                         <input
                           type="checkbox"
@@ -2437,7 +2459,8 @@ export default function PatientsPage() {
                         />
                         {t("dentalChart.addToInvoice")}
                       </label>
-                      {item.bill ? (
+                      )}
+                      {canBill && item.bill ? (
                         <div>
                           <label htmlFor={`complete-price-${item.id}`} className="block text-[11px] text-gray-500 mb-0.5">
                             {t("dentalChart.priceToBill")}

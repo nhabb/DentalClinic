@@ -3,6 +3,8 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Command } from "cmdk";
+import { usePermissions } from "@/lib/permissions";
+import { screenPermission } from "@/lib/adminAccess";
 import {
   FaChartLine,
   FaCalendarAlt,
@@ -31,6 +33,12 @@ const NAV_COMMANDS: NavCommand[] = [
   { key: "expenses", label: "Expenses", icon: FaMoneyBillWave, href: "/admin/expenses" },
 ];
 
+/** What each quick action needs; the screen it opens is checked too. */
+const ACTION_PERMISSION: Record<string, string> = {
+  "new-appointment": "appointments:write",
+  "new-patient": "patients:write",
+};
+
 const ACTION_COMMANDS: NavCommand[] = [
   { key: "new-appointment", label: "New appointment", icon: FaPlus, href: "/admin/appointments?new=1" },
   { key: "new-patient", label: "New patient", icon: FaPlus, href: "/admin/patients?new=1" },
@@ -44,6 +52,15 @@ const ACTION_COMMANDS: NavCommand[] = [
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
   const router = useRouter();
+  const { loading: permsLoading, can } = usePermissions();
+  const allowed = (href: string) => {
+    const needed = screenPermission(href.split("?")[0]);
+    return !needed || permsLoading || can(needed);
+  };
+  const navCommands = NAV_COMMANDS.filter((c) => allowed(c.href));
+  const actionCommands = ACTION_COMMANDS.filter(
+    (c) => allowed(c.href) && (permsLoading || !ACTION_PERMISSION[c.key] || can(ACTION_PERMISSION[c.key])),
+  );
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -95,7 +112,7 @@ export function CommandPalette() {
           heading="Navigate"
           className="px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-ink-400 [&_[cmdk-group-items]]:mt-1"
         >
-          {NAV_COMMANDS.map(({ key, label, icon: Icon, href }) => (
+          {navCommands.map(({ key, label, icon: Icon, href }) => (
             <Command.Item
               key={key}
               value={label}
@@ -114,7 +131,7 @@ export function CommandPalette() {
           heading="Quick actions"
           className="px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-ink-400 [&_[cmdk-group-items]]:mt-1"
         >
-          {ACTION_COMMANDS.map(({ key, label, icon: Icon, href }) => (
+          {actionCommands.map(({ key, label, icon: Icon, href }) => (
             <Command.Item
               key={key}
               value={label}

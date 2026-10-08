@@ -210,8 +210,11 @@ export class UpdateBranchDto {
 }
 
 export class CreateStaffDto extends OwnerInputDto {
-  @ApiPropertyOptional({ enum: ['admin', 'doctor', 'secretary'], default: 'admin' })
+  @ApiPropertyOptional({
+    default: 'admin',
+    description: 'A staff role key of the clinic (built-in or custom; see GET /organizations/:id/roles)',
+  })
   @IsOptional()
-  @IsIn(['admin', 'doctor', 'secretary'])
+  @Matches(/^[a-z][a-z0-9_-]{1,39}$/, { message: 'role must be a role key such as doctor or hygienist' })
   role?: string;
 }

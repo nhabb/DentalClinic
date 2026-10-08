@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "@/lib/i18n";
+import { usePermissions } from "@/lib/permissions";
+import { screenPermission } from "@/lib/adminAccess";
 import {
   FaTooth,
   FaChartLine,
@@ -84,6 +86,14 @@ export default function AdminSidebar({
   const [playEntrance] = useState(() => !sidebarHasAnimated);
 
   const activeSubId = DASHBOARD_SUB_ITEMS.find((s) => s.href === pathname)?.id ?? null;
+  // Sections the role may not open are not listed (lib/adminAccess.ts).
+  const { loading: permsLoading, can } = usePermissions();
+  const allowed = (href: string) => {
+    const needed = screenPermission(href);
+    return !needed || permsLoading || can(needed);
+  };
+  const visibleNav = navItems.filter((i) => allowed(i.href));
+  const visibleSub = DASHBOARD_SUB_ITEMS.filter((s) => allowed(s.href));
   const [dashboardExpanded, setDashboardExpanded] = useState(() => activeSubId !== null);
 
   useEffect(() => {
@@ -97,8 +107,8 @@ export default function AdminSidebar({
 
   /* The phone bar holds four destinations plus "More"; five is the most
    * that stays tappable at 360px. The rest move into the sheet. */
-  const barItems = navItems.filter((i) => BAR_IDS.includes(i.id));
-  const sheetItems = navItems.filter((i) => !BAR_IDS.includes(i.id));
+  const barItems = visibleNav.filter((i) => BAR_IDS.includes(i.id));
+  const sheetItems = visibleNav.filter((i) => !BAR_IDS.includes(i.id));
   const moreInBar = sheetItems.some((i) => i.id === activePage);
   const moreBadgeTotal = sheetItems.reduce((sum, i) => sum + (badgeFor(i.id) ?? 0), 0);
 
@@ -165,7 +175,7 @@ export default function AdminSidebar({
             playEntrance && "stagger",
           )}
         >
-          {navItems.map(({ id, href, icon: Icon, labelKey }) => {
+          {visibleNav.map(({ id, href, icon: Icon, labelKey }) => {
             const isActive = activePage === id;
             const badge = badgeFor(id);
             const isDashboard = id === "dashboard";
@@ -229,7 +239,7 @@ export default function AdminSidebar({
                 {/* Analytics sub-section, nested under Dashboard. */}
                 {isDashboard && sidebarOpen && dashboardExpanded && (
                   <ul className="ms-5 mt-1 space-y-0.5 border-s border-ink-200 ps-3">
-                    {DASHBOARD_SUB_ITEMS.map((s) => {
+                    {visibleSub.map((s) => {
                       const subActive = activeSubId === s.id;
                       return (
                         <li key={s.id}>

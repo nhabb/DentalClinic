@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { safeStorage } from "@/lib/browser-compat";
 import { useTranslation } from "@/lib/i18n";
+import { usePermissions } from "@/lib/permissions";
 import DashboardAnalytics, { type DashboardData } from "@/components/dashboard/DashboardAnalytics";
 import AdminSidebar from "@/components/ui/AdminSidebar";
 import { AdminPageHeader } from "@/components/ui/AdminPageHeader";
@@ -51,6 +52,8 @@ interface AdminUser {
 export default function AdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const router = useRouter();
+  // Only offer what this role's API permissions allow (the API refuses the rest anyway).
+  const { can } = usePermissions();
   const { t } = useTranslation();
   const [user, setUser] = useState<AdminUser | null>(null);
   const [userRole, setUserRole] = useState<string>("doctor");
@@ -422,12 +425,14 @@ export default function AdminDashboard() {
                                 >
                                   <FaCalendarPlus className="text-brand" /> {t("adminDashboard.postpone")}
                                 </DropdownMenuItem>
+                                {can("appointments:write") && (
                                 <DropdownMenuItem
                                   onClick={() => handleCancelAppointment(apt.id)}
                                   className="text-red-600 focus:text-red-600"
                                 >
                                   <FaBan className="text-red-500" /> Cancel
                                 </DropdownMenuItem>
+                                )}
                               </DropdownMenuContent>
                             </DropdownMenu>
                           )}
@@ -482,6 +487,7 @@ export default function AdminDashboard() {
               >
                 {t("common.cancel")}
               </button>
+              {(can("appointments:write") && can("slots:manage")) && (
               <button
                 onClick={handlePostponeSubmit}
                 disabled={!postponeDate || !postponeTime || postponeLoading}
@@ -489,6 +495,7 @@ export default function AdminDashboard() {
               >
                 {postponeLoading ? t("common.saving") : t("common.confirm")}
               </button>
+              )}
             </div>
           </div>
         </div>

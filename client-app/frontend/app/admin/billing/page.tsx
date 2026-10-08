@@ -8,6 +8,7 @@ import { formatDateBeirut } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { safeStorage } from "@/lib/browser-compat";
 import { useTranslation } from "@/lib/i18n";
+import { usePermissions } from "@/lib/permissions";
 import AdminSidebar from "@/components/ui/AdminSidebar";
 import { StatsCard } from "@/components/ui/StatsCard";
 import { AdminPageHeader } from "@/components/ui/AdminPageHeader";
@@ -113,6 +114,7 @@ export default function BillingPage() {
   const [createError, setCreateError] = useState("");
 
   // View / payment modal
+  const { can } = usePermissions();
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<TreatmentInvoice | null>(null);
   const [paymentForm, setPaymentForm] = useState({ amount: "", payment_method: "cash", notes: "" });
@@ -324,7 +326,7 @@ export default function BillingPage() {
         <AdminPageHeader
           title={t("billing.title")}
           subtitle={t("billing.subtitle")}
-          onAdd={() => { resetCreateModal(); setShowCreateModal(true); }}
+          onAdd={can("billing:write") ? () => { resetCreateModal(); setShowCreateModal(true); } : undefined}
           addLabel={t("billing.newInvoice")}
           actions={[
             { key: "dashboard", label: t("billing.goToDashboard"), icon: <FaChartLine />, href: "/admin" },
@@ -443,6 +445,7 @@ export default function BillingPage() {
                                 >
                                   <FaEye />
                                 </button>
+                                {can("billing:delete") && (
                                 <button
                                   onClick={() => handleDeleteInvoice(inv)}
                                   disabled={deletingId === inv.id}
@@ -455,6 +458,7 @@ export default function BillingPage() {
                                     <FaTrash className="text-sm" />
                                   )}
                                 </button>
+                                )}
                               </div>
                             </td>
                           </tr>
@@ -665,7 +669,7 @@ export default function BillingPage() {
             )}
 
             {/* Record payment — only when not fully paid */}
-            {selectedInvoice.status !== "paid" && (
+            {can("billing:write") && selectedInvoice.status !== "paid" && (
               <div className="border-t border-gray-200 pt-4">
                 <h4 className="font-semibold text-gray-800 mb-3">{t("billing.recordPayment")}</h4>
                 <div className="space-y-3">
