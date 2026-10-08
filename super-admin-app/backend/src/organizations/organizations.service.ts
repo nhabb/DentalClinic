@@ -1,7 +1,13 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { newPasswordSetup, unusablePasswordHash } from '../common/password-setup';
-import { CreateOrganizationDto, CreateStaffDto, UpdateOrganizationDto } from './dto/organization.dto';
+import {
+  CreateBranchDto,
+  CreateOrganizationDto,
+  CreateStaffDto,
+  UpdateBranchDto,
+  UpdateOrganizationDto,
+} from './dto/organization.dto';
 
 const STAFF_ROLES = ['doctor', 'secretary', 'admin'];
 
@@ -271,6 +277,80 @@ export class OrganizationsService {
       },
     });
     return { user, invite: { link: setup.link, expires_at: setup.expiresAt } };
+  }
+
+  // ── Branches ─────────────────────────────────────────────────────────────────
+
+  /** Open a branch for a clinic; the first branch, or one flagged default, becomes the default. */
+  async createBranch(organizationId: bigint, dto: CreateBranchDto) {
+    await this.requireOrganization(organizationId);
+    const existing = await this.prisma.branches.count({ where: { organization_id: organizationId } });
+    const makeDefault = dto.is_default === true || existing === 0;
+    const { is_default: _ignored, ...data } = dto;
+
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        if (makeDefault) await this.clearDefault(tx, organizationId);
+        return tx.branches.create({
+          data: { ...data, organization_id: organizationId, is_default: makeDefault },
+        });
+      });
+    } catch (err) {
+      throw this.branchNameConflict(err, dto.name);
+    }
+  }
+
+  async updateBranch(organizationId: bigint, branchId: bigint, dto: UpdateBranchDto) {
+    const branch = await this.requireBranch(organizationId, branchId);
+    if (dto.is_active === false && branch.is_default) {
+      throw new BadRequestException('Make another branch the default before deactivating this one');
+    }
+    try {
+      return await this.prisma.branches.update({
+        where: { id: branchId },
+        data: { ...dto, updated_at: new Date() },
+      });
+    } catch (err) {
+      throw this.branchNameConflict(err, dto.name ?? branch.name);
+    }
+  }
+
+  /** New slots, stock and invoices without an explicit branch land on the default one. */
+  async setDefaultBranch(organizationId: bigint, branchId: bigint) {
+    const branch = await this.requireBranch(organizationId, branchId);
+    if (!branch.is_active) throw new BadRequestException('An inactive branch cannot be the default');
+    return this.prisma.$transaction(async (tx) => {
+      await this.clearDefault(tx, organizationId);
+      return tx.branches.update({
+        where: { id: branchId },
+        data: { is_default: true, updated_at: new Date() },
+      });
+    });
+  }
+
+  private clearDefault(
+    tx: { branches: { updateMany: PrismaService['branches']['updateMany'] } },
+    organizationId: bigint,
+  ) {
+    return tx.branches.updateMany({
+      where: { organization_id: organizationId, is_default: true },
+      data: { is_default: false, updated_at: new Date() },
+    });
+  }
+
+  private async requireBranch(organizationId: bigint, branchId: bigint) {
+    const branch = await this.prisma.branches.findFirst({
+      where: { id: branchId, organization_id: organizationId },
+    });
+    if (!branch) throw new NotFoundException('Branch not found in this organization');
+    return branch;
+  }
+
+  /** Branch names are unique per organization (database constraint). */
+  private branchNameConflict(err: unknown, name: string): unknown {
+    return (err as { code?: string })?.code === 'P2002'
+      ? new ConflictException(`This clinic already has a branch named "${name}"`)
+      : err;
   }
 
   private async requireOrganization(id: bigint) {

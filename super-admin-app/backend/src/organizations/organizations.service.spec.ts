@@ -1,4 +1,4 @@
-import { ConflictException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { OrganizationsService } from './organizations.service';
 
 describe('OrganizationsService', () => {
@@ -150,6 +150,64 @@ describe('OrganizationsService', () => {
       prisma.organizations.findUnique.mockResolvedValue({ id: 1n });
       prisma.organizations.update.mockResolvedValue({ id: 1n, is_active: false });
       await expect(service.setActive(1n, false)).resolves.toMatchObject({ is_active: false });
+    });
+  });
+
+  describe('branches', () => {
+    beforeEach(() => {
+      prisma.organizations.findUnique.mockResolvedValue({ id: 1n });
+      prisma.branches.count = jest.fn();
+      prisma.branches.update = jest.fn();
+      prisma.tx.branches.updateMany = jest.fn();
+      prisma.tx.branches.update = jest.fn();
+    });
+
+    it('creates the first branch as the default', async () => {
+      prisma.branches.count.mockResolvedValue(0);
+      prisma.tx.branches.create.mockImplementation(async ({ data }: any) => ({ id: 3n, ...data }));
+      const branch = await service.createBranch(1n, { name: 'Beirut' });
+      expect(branch).toMatchObject({ organization_id: 1n, name: 'Beirut', is_default: true });
+      expect(prisma.tx.branches.updateMany).toHaveBeenCalled();
+    });
+
+    it('adds later branches as non-default unless asked, and moves the flag when asked', async () => {
+      prisma.branches.count.mockResolvedValue(1);
+      prisma.tx.branches.create.mockImplementation(async ({ data }: any) => ({ id: 4n, ...data }));
+      expect((await service.createBranch(1n, { name: 'Tyre' })).is_default).toBe(false);
+      expect(prisma.tx.branches.updateMany).not.toHaveBeenCalled();
+
+      await service.createBranch(1n, { name: 'Saida', is_default: true });
+      expect(prisma.tx.branches.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { organization_id: 1n, is_default: true } }),
+      );
+    });
+
+    it('reports a duplicate branch name as a conflict', async () => {
+      prisma.branches.count.mockResolvedValue(1);
+      prisma.tx.branches.create.mockRejectedValue({ code: 'P2002' });
+      await expect(service.createBranch(1n, { name: 'Tyre' })).rejects.toThrow(ConflictException);
+    });
+
+    it('refuses to deactivate the default branch and 404s outside the clinic', async () => {
+      prisma.branches.findFirst.mockResolvedValueOnce({
+        id: 3n,
+        name: 'Beirut',
+        is_default: true,
+        is_active: true,
+      });
+      await expect(service.updateBranch(1n, 3n, { is_active: false })).rejects.toThrow(BadRequestException);
+      prisma.branches.findFirst.mockResolvedValueOnce(null);
+      await expect(service.updateBranch(1n, 99n, { name: 'x' })).rejects.toThrow(NotFoundException);
+    });
+
+    it('makes an active branch the default and refuses an inactive one', async () => {
+      prisma.branches.findFirst.mockResolvedValueOnce({ id: 4n, is_default: false, is_active: true });
+      prisma.tx.branches.update.mockResolvedValue({ id: 4n, is_default: true });
+      await expect(service.setDefaultBranch(1n, 4n)).resolves.toMatchObject({ is_default: true });
+      expect(prisma.tx.branches.updateMany).toHaveBeenCalled();
+
+      prisma.branches.findFirst.mockResolvedValueOnce({ id: 5n, is_default: false, is_active: false });
+      await expect(service.setDefaultBranch(1n, 5n)).rejects.toThrow(BadRequestException);
     });
   });
 

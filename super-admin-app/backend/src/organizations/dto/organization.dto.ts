@@ -159,6 +159,56 @@ export class SetActiveDto {
   is_active: boolean;
 }
 
+export class CreateBranchDto extends BranchInputDto {
+  @ApiPropertyOptional({ description: 'Make it the branch new rows default to' })
+  @IsOptional()
+  @IsBoolean()
+  is_default?: boolean;
+}
+
+export class UpdateBranchDto {
+  @ApiPropertyOptional({ example: 'Tyre Branch' })
+  @IsOptional()
+  @IsString()
+  @Length(1, 150)
+  name?: string;
+
+  @ApiPropertyOptional({ example: 'TYR' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  code?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  address?: string;
+
+  @ApiPropertyOptional({ example: 'Tyre' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  city?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(30)
+  phone?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  opening_hours?: string;
+
+  @ApiPropertyOptional({ description: 'Inactive branches take no new slots, appointments or stock' })
+  @IsOptional()
+  @IsBoolean()
+  is_active?: boolean;
+}
+
 export class CreateStaffDto extends OwnerInputDto {
   @ApiPropertyOptional({ enum: ['admin', 'doctor', 'secretary'], default: 'admin' })
   @IsOptional()

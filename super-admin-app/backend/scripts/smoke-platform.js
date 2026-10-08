@@ -161,6 +161,46 @@ async function main() {
       token: t,
     });
     record('resend owner invite', reinvite.status === 201 && reinvite.json?.invite?.link);
+    const branch = await api('POST', `/organizations/${id}/branches`, {
+      token: t,
+      body: { name: 'Saida Branch', city: 'Saida', code: 'SAI' },
+    });
+    record(
+      'open a second branch',
+      branch.status === 201 && branch.json?.is_default === false,
+      `status ${branch.status} ${branch.json?.message ?? ''}`,
+    );
+    record(
+      'duplicate branch name rejected',
+      (await api('POST', `/organizations/${id}/branches`, { token: t, body: { name: 'Saida Branch' } }))
+        .status === 409,
+    );
+    const madeDefault = await api('PATCH', `/organizations/${id}/branches/${branch.json?.id}/default`, {
+      token: t,
+    });
+    record(
+      'make the new branch the default',
+      madeDefault.status === 200 && madeDefault.json?.is_default === true,
+    );
+    const afterDefault = await api('GET', `/organizations/${id}`, { token: t });
+    record(
+      'exactly one default branch',
+      afterDefault.json?.branches?.filter((b) => b.is_default).length === 1,
+    );
+    record(
+      'cannot deactivate the default branch',
+      (
+        await api('PATCH', `/organizations/${id}/branches/${branch.json?.id}`, {
+          token: t,
+          body: { is_active: false },
+        })
+      ).status === 400,
+    );
+    const renamed = await api('PATCH', `/organizations/${id}/branches/${branch.json?.id}`, {
+      token: t,
+      body: { name: 'Saida Main', phone: '+961 7 000 000' },
+    });
+    record('edit a branch', renamed.status === 200 && renamed.json?.name === 'Saida Main');
 
     const suspended = await api('PATCH', `/organizations/${id}/active`, {
       token: t,

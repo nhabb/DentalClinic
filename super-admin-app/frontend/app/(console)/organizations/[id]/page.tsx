@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { FaUsers, FaCalendarCheck, FaFileInvoiceDollar, FaMoneyBillWave, FaMapMarkerAlt, FaUserMd, FaPlus, FaPaperPlane, FaBan, FaCheck } from "react-icons/fa";
 import { PageHeader } from "@/components/console/PageHeader";
@@ -97,7 +97,7 @@ export default function ClinicDetailPage() {
 
         <div role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`}>
           {tab === "overview" && <OverviewTab org={org} />}
-          {tab === "branches" && <BranchesTab branches={org.branches} />}
+          {tab === "branches" && <BranchesTab org={org} onChanged={reload} />}
           {tab === "staff" && <StaffTab org={org} onChanged={reload} />}
           {tab === "settings" && <SettingsTab org={org} onChanged={reload} />}
         </div>
@@ -202,7 +202,24 @@ function Row({ label, value }: { label: string; value: string | null }) {
 
 // ── Branches ──────────────────────────────────────────────────────────────────
 
-function BranchesTab({ branches }: { branches: Branch[] }) {
+function BranchesTab({ org, onChanged }: { org: OrganizationDetail; onChanged: () => void }) {
+  const [editing, setEditing] = useState<Branch | "new" | null>(null);
+
+  const run = async (label: string, action: () => Promise<unknown>) => {
+    try {
+      await action();
+      toast.success(label);
+      onChanged();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Request failed");
+    }
+  };
+  const makeDefault = (b: Branch) => run(`${b.name} is now the default branch`, () => patch(`/organizations/${org.id}/branches/${b.id}/default`, {}));
+  const toggleActive = (b: Branch) =>
+    run(b.is_active ? `${b.name} deactivated` : `${b.name} reactivated`, () =>
+      patch(`/organizations/${org.id}/branches/${b.id}`, { is_active: !b.is_active }),
+    );
+
   const columns: Column<Branch>[] = [
     {
       key: "name",
@@ -219,12 +236,186 @@ function BranchesTab({ branches }: { branches: Branch[] }) {
     { key: "address", header: "Address", render: (b) => b.address ?? "—" },
     { key: "phone", header: "Phone", render: (b) => b.phone ?? "—" },
     { key: "status", header: "Status", render: (b) => <ActiveBadge active={b.is_active} /> },
+    {
+      key: "actions",
+      header: "",
+      align: "end",
+      render: (b) => (
+        <span className="inline-flex gap-1">
+          <Button variant="ghost" size="sm" onClick={() => setEditing(b)}>
+            Edit
+          </Button>
+          {!b.is_default && b.is_active && (
+            <Button variant="ghost" size="sm" onClick={() => makeDefault(b)}>
+              Make default
+            </Button>
+          )}
+          {!b.is_default && (
+            <Button variant="ghost" size="sm" onClick={() => toggleActive(b)}>
+              {b.is_active ? "Deactivate" : "Reactivate"}
+            </Button>
+          )}
+        </span>
+      ),
+    },
   ];
+
   return (
-    <Card>
-      <CardHeader title="Branches" subtitle="Clinic admins manage branches from their own admin panel" icon={<FaMapMarkerAlt />} />
-      <DataTable columns={columns} rows={branches} rowKey={(b) => b.id} empty={<EmptyState icon={FaMapMarkerAlt} title="No branches" />} />
-    </Card>
+    <>
+      <Card>
+        <CardHeader
+          title="Branches"
+          subtitle="Clinic locations. New slots, stock and invoices land on the default branch unless told otherwise."
+          icon={<FaMapMarkerAlt />}
+          action={
+            <Button size="sm" onClick={() => setEditing("new")}>
+              <FaPlus /> Add branch
+            </Button>
+          }
+        />
+        <DataTable
+          columns={columns}
+          rows={org.branches}
+          rowKey={(b) => b.id}
+          empty={
+            <EmptyState
+              icon={FaMapMarkerAlt}
+              title="No branches"
+              action={<Button onClick={() => setEditing("new")}>Add branch</Button>}
+            />
+          }
+        />
+      </Card>
+      <BranchModal
+        organizationId={org.id}
+        branch={editing === "new" ? null : editing}
+        isOpen={editing !== null}
+        onClose={() => setEditing(null)}
+        onSaved={onChanged}
+      />
+    </>
+  );
+}
+
+const emptyBranchForm = { name: "", code: "", city: "", address: "", phone: "", opening_hours: "", is_default: false };
+
+/** Create (branch = null) or edit a branch. */
+function BranchModal({
+  organizationId,
+  branch,
+  isOpen,
+  onClose,
+  onSaved,
+}: {
+  organizationId: string;
+  branch: Branch | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [form, setForm] = useState(emptyBranchForm);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const set = (key: keyof typeof form, value: string | boolean) => setForm((f) => ({ ...f, [key]: value }));
+
+  // Load the branch into the form each time the modal opens.
+  useEffect(() => {
+    if (!isOpen) return;
+    setError("");
+    setForm(
+      branch
+        ? {
+            name: branch.name,
+            code: branch.code ?? "",
+            city: branch.city ?? "",
+            address: branch.address ?? "",
+            phone: branch.phone ?? "",
+            opening_hours: branch.opening_hours ?? "",
+            is_default: branch.is_default,
+          }
+        : emptyBranchForm,
+    );
+  }, [isOpen, branch]);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    setError("");
+    const orUndefined = (v: string) => (v.trim() ? v.trim() : undefined);
+    const details = {
+      name: form.name.trim(),
+      code: orUndefined(form.code),
+      city: orUndefined(form.city),
+      address: orUndefined(form.address),
+      phone: orUndefined(form.phone),
+      opening_hours: orUndefined(form.opening_hours),
+    };
+    try {
+      if (branch) {
+        await patch(`/organizations/${organizationId}/branches/${branch.id}`, details);
+        toast.success("Branch saved");
+      } else {
+        await post(`/organizations/${organizationId}/branches`, { ...details, is_default: form.is_default });
+        toast.success("Branch opened");
+      }
+      onClose();
+      onSaved();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Request failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={branch ? `Edit ${branch.name}` : "Add branch"}
+      description={branch ? undefined : "A new clinic location for this organization."}
+      footer={
+        <div className="flex justify-end gap-2">
+          <Button variant="ghost" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit" form="branch-form" disabled={busy}>
+            {busy ? "Saving…" : branch ? "Save changes" : "Open branch"}
+          </Button>
+        </div>
+      }
+    >
+      <form id="branch-form" onSubmit={submit} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {error && (
+          <div className="sm:col-span-2">
+            <ErrorNote message={error} />
+          </div>
+        )}
+        <FormField label="Branch name" required className="sm:col-span-2">
+          <Input required value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="Tyre Branch" />
+        </FormField>
+        <FormField label="Code" hint="Short label shown on documents">
+          <Input value={form.code} maxLength={20} onChange={(e) => set("code", e.target.value.toUpperCase())} placeholder="TYR" />
+        </FormField>
+        <FormField label="City">
+          <Input value={form.city} onChange={(e) => set("city", e.target.value)} placeholder="Tyre" />
+        </FormField>
+        <FormField label="Address" className="sm:col-span-2">
+          <Input value={form.address} onChange={(e) => set("address", e.target.value)} placeholder="Al Bass Street, Tyre" />
+        </FormField>
+        <FormField label="Phone">
+          <Input value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+961 7 123 456" />
+        </FormField>
+        <FormField label="Opening hours">
+          <Input value={form.opening_hours} onChange={(e) => set("opening_hours", e.target.value)} placeholder="Mon-Sat 9:00-17:00" />
+        </FormField>
+        {!branch && (
+          <label className="flex items-center gap-2 text-sm text-ink-700 sm:col-span-2">
+            <input type="checkbox" checked={form.is_default} onChange={(e) => set("is_default", e.target.checked)} className="size-4 accent-brand-600" />
+            Make this the default branch
+          </label>
+        )}
+      </form>
+    </Modal>
   );
 }
 

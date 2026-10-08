@@ -2,9 +2,11 @@ import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post } from '@nestjs
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { OrganizationsService } from './organizations.service';
 import {
+  CreateBranchDto,
   CreateOrganizationDto,
   CreateStaffDto,
   SetActiveDto,
+  UpdateBranchDto,
   UpdateOrganizationDto,
 } from './dto/organization.dto';
 
@@ -54,5 +56,29 @@ export class OrganizationsController {
   @ApiOperation({ summary: 'Issue a new password setup link for a clinic user' })
   resendInvite(@Param('id', ParseIntPipe) id: number, @Param('userId', ParseIntPipe) userId: number) {
     return this.organizations.resendInvite(BigInt(id), BigInt(userId));
+  }
+
+  // ── Branches ───────────────────────────────────────────────────────────────
+
+  @Post(':id/branches')
+  @ApiOperation({ summary: 'Open a new branch (clinic location) for a clinic' })
+  createBranch(@Param('id', ParseIntPipe) id: number, @Body() dto: CreateBranchDto) {
+    return this.organizations.createBranch(BigInt(id), dto);
+  }
+
+  @Patch(':id/branches/:branchId')
+  @ApiOperation({ summary: 'Update a branch (details, active flag)' })
+  updateBranch(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('branchId', ParseIntPipe) branchId: number,
+    @Body() dto: UpdateBranchDto,
+  ) {
+    return this.organizations.updateBranch(BigInt(id), BigInt(branchId), dto);
+  }
+
+  @Patch(':id/branches/:branchId/default')
+  @ApiOperation({ summary: 'Make a branch the default for new slots, stock and invoices' })
+  setDefaultBranch(@Param('id', ParseIntPipe) id: number, @Param('branchId', ParseIntPipe) branchId: number) {
+    return this.organizations.setDefaultBranch(BigInt(id), BigInt(branchId));
   }
 }
