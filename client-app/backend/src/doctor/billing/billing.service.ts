@@ -1,7 +1,8 @@
 import {
+  BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
-  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
@@ -29,6 +30,23 @@ const invoiceInclude = {
     orderBy: { created_at: 'asc' as const },
   },
 };
+
+// Tolerance for floating point comparisons on 2-decimal money values.
+const EPSILON = 0.005;
+
+const round2 = (n: number): number => Math.round(n * 100) / 100;
+
+type InvoiceStatus = 'open' | 'partial' | 'paid';
+
+/** The status an invoice's payments imply. */
+export function deriveInvoiceStatus(
+  total: number,
+  paid: number,
+): InvoiceStatus {
+  if (total - paid <= EPSILON) return 'paid';
+  if (paid > EPSILON) return 'partial';
+  return 'open';
+}
 
 @Injectable()
 export class BillingService {
@@ -136,6 +154,11 @@ export class BillingService {
       where: { id },
     });
     if (!invoice) throw new NotFoundException('Treatment invoice not found');
+    if (Number(invoice.amount_paid) > 0) {
+      throw new ConflictException(
+        'This invoice has recorded payments and cannot be deleted: money received must stay on the books',
+      );
+    }
     await this.prisma.treatment_invoices.delete({ where: { id } });
     return { success: true };
   }
@@ -508,45 +531,63 @@ export class BillingService {
     return rows;
   }
 
+  /**
+   * Money received is recorded in exactly one place, invoice_payments. The
+   * invoice's totals are re-derived from that table inside one transaction
+   * with the invoice row locked, so two payments posted at the same moment (a
+   * double click, two desks) cannot both pass the balance check or leave the
+   * totals out of step with the payments. The database enforces the same rule
+   * with constraints and a trigger (migration 20261009010000_payment_integrity).
+   */
   async recordPayment(invoiceId: bigint, dto: RecordPaymentDto) {
-    const invoice = await this.findOne(invoiceId);
-
-    const remaining = Number(invoice.remaining_amount);
-    if (dto.amount > remaining + 0.001) {
-      throw new BadRequestException(
-        `Payment amount (${dto.amount}) exceeds remaining balance (${remaining})`,
-      );
+    const amount = round2(dto.amount);
+    if (amount <= 0) {
+      throw new BadRequestException('Payment amount must be positive');
     }
 
-    const new_amount_paid = Number(invoice.amount_paid) + dto.amount;
-    const new_remaining = Math.max(
-      0,
-      Number(invoice.total_amount) - new_amount_paid,
-    );
-    const status =
-      new_remaining <= 0 ? 'paid' : new_amount_paid > 0 ? 'partial' : 'open';
+    return this.prisma.$transaction(async (tx) => {
+      const [locked] = await tx.$queryRaw<
+        { id: bigint; total_amount: unknown }[]
+      >`SELECT id, total_amount FROM treatment_invoices WHERE id = ${invoiceId} FOR UPDATE`;
+      if (!locked) throw new NotFoundException('Treatment invoice not found');
 
-    await this.prisma.invoice_payments.create({
-      data: {
-        invoice_id: invoiceId,
-        amount: dto.amount,
-        payment_method: dto.payment_method,
-        notes: dto.notes,
-        created_by: dto.created_by ? BigInt(dto.created_by) : null,
-      },
+      const total = Number(locked.total_amount);
+      const paidSoFar = await tx.invoice_payments.aggregate({
+        where: { invoice_id: invoiceId },
+        _sum: { amount: true },
+      });
+      const alreadyPaid = Number(paidSoFar._sum.amount ?? 0);
+      const remaining = round2(total - alreadyPaid);
+      if (remaining <= EPSILON) {
+        throw new BadRequestException('This invoice is already fully paid');
+      }
+      if (amount > remaining + EPSILON) {
+        throw new BadRequestException(
+          `Payment amount (${amount}) exceeds remaining balance (${remaining})`,
+        );
+      }
+
+      await tx.invoice_payments.create({
+        data: {
+          invoice_id: invoiceId,
+          amount,
+          payment_method: dto.payment_method,
+          notes: dto.notes,
+          created_by: dto.created_by ? BigInt(dto.created_by) : null,
+        },
+      });
+
+      const paid = round2(alreadyPaid + amount);
+      return tx.treatment_invoices.update({
+        where: { id: invoiceId },
+        data: {
+          amount_paid: paid,
+          remaining_amount: round2(total - paid),
+          status: deriveInvoiceStatus(total, paid),
+          updated_at: new Date(),
+        },
+        include: invoiceInclude,
+      });
     });
-
-    const updatedInvoice = await this.prisma.treatment_invoices.update({
-      where: { id: invoiceId },
-      data: {
-        amount_paid: new_amount_paid,
-        remaining_amount: new_remaining,
-        status,
-        updated_at: new Date(),
-      },
-      include: invoiceInclude,
-    });
-
-    return updatedInvoice;
   }
 }

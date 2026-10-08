@@ -209,65 +209,57 @@ export class ExpensesService {
     });
   }
 
+  /**
+   * Money paid out is recorded in exactly one place, expense_payments. The
+   * expense's running total is re-derived from that table inside one
+   * transaction with the expense row locked, so two payments posted at the
+   * same moment cannot both pass the balance check or leave the total out of
+   * step. The database enforces the same rule with a constraint and a trigger
+   * (migration 20261009010000_payment_integrity).
+   */
   async recordPayment(expenseId: bigint, dto: RecordExpensePaymentDto) {
-    const expense = await this.findOne(expenseId);
-    const amount = Number(expense.amount);
-    const paid = Number(expense.amount_paid);
-    const remaining = round2(Math.max(0, amount - paid));
-
-    if (remaining <= 0) {
-      throw new BadRequestException('This expense is already fully paid');
-    }
-    if (dto.amount > remaining + EPSILON) {
-      throw new BadRequestException(
-        `Payment amount (${dto.amount}) exceeds the remaining balance (${remaining})`,
-      );
+    const paying = round2(dto.amount);
+    if (paying <= 0) {
+      throw new BadRequestException('Payment amount must be positive');
     }
 
-    const newPaid = round2(paid + dto.amount);
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const [locked] = await tx.$queryRaw<
+        { id: bigint; amount: unknown }[]
+      >`SELECT id, amount FROM expenses WHERE id = ${expenseId} FOR UPDATE`;
+      if (!locked) throw new NotFoundException('Expense not found');
 
-    // Nested create keeps the payment row and the running total in one atomic write.
-    const updated = await this.prisma.expenses.update({
-      where: { id: expenseId },
-      data: {
-        amount_paid: newPaid,
-        status: deriveStatus(amount, newPaid),
-        updated_at: new Date(),
-        payments: {
-          create: {
-            amount: round2(dto.amount),
-            payment_method: dto.payment_method ?? 'cash',
-            notes: dto.notes,
-            ...(dto.payment_date
-              ? { payment_date: toDateOnly(dto.payment_date) }
-              : {}),
-            created_by: dto.created_by ? BigInt(dto.created_by) : null,
-          },
+      const amount = Number(locked.amount);
+      const paidSoFar = await tx.expense_payments.aggregate({
+        where: { expense_id: expenseId },
+        _sum: { amount: true },
+      });
+      const alreadyPaid = Number(paidSoFar._sum.amount ?? 0);
+      const remaining = round2(Math.max(0, amount - alreadyPaid));
+      if (remaining <= EPSILON) {
+        throw new BadRequestException('This expense is already fully paid');
+      }
+      if (paying > remaining + EPSILON) {
+        throw new BadRequestException(
+          `Payment amount (${paying}) exceeds the remaining balance (${remaining})`,
+        );
+      }
+
+      await tx.expense_payments.create({
+        data: {
+          expense_id: expenseId,
+          amount: paying,
+          payment_method: dto.payment_method ?? 'cash',
+          notes: dto.notes,
+          ...(dto.payment_date
+            ? { payment_date: toDateOnly(dto.payment_date) }
+            : {}),
+          created_by: dto.created_by ? BigInt(dto.created_by) : null,
         },
-      },
-      include: {
-        ...expenseInclude,
-        payments: { include: paymentInclude, orderBy: paymentOrder },
-      },
-    });
-    return withRemaining(updated);
-  }
+      });
 
-  async deletePayment(expenseId: bigint, paymentId: bigint) {
-    const expense = await this.findOne(expenseId);
-    const payment = await this.prisma.expense_payments.findFirst({
-      where: { id: paymentId, expense_id: expenseId },
-    });
-    if (!payment) throw new NotFoundException('Payment not found');
-
-    const amount = Number(expense.amount);
-    const newPaid = round2(
-      Math.max(0, Number(expense.amount_paid) - Number(payment.amount)),
-    );
-
-    const [, updated] = await this.prisma.$transaction([
-      this.prisma.expense_payments.delete({ where: { id: paymentId } }),
-      this.prisma.expenses.update({
+      const newPaid = round2(alreadyPaid + paying);
+      return tx.expenses.update({
         where: { id: expenseId },
         data: {
           amount_paid: newPaid,
@@ -278,8 +270,43 @@ export class ExpensesService {
           ...expenseInclude,
           payments: { include: paymentInclude, orderBy: paymentOrder },
         },
-      }),
-    ]);
+      });
+    });
+    return withRemaining(updated);
+  }
+
+  async deletePayment(expenseId: bigint, paymentId: bigint) {
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const [locked] = await tx.$queryRaw<
+        { id: bigint; amount: unknown }[]
+      >`SELECT id, amount FROM expenses WHERE id = ${expenseId} FOR UPDATE`;
+      if (!locked) throw new NotFoundException('Expense not found');
+
+      const payment = await tx.expense_payments.findFirst({
+        where: { id: paymentId, expense_id: expenseId },
+      });
+      if (!payment) throw new NotFoundException('Payment not found');
+      await tx.expense_payments.delete({ where: { id: paymentId } });
+
+      const paidNow = await tx.expense_payments.aggregate({
+        where: { expense_id: expenseId },
+        _sum: { amount: true },
+      });
+      const amount = Number(locked.amount);
+      const newPaid = round2(Number(paidNow._sum.amount ?? 0));
+      return tx.expenses.update({
+        where: { id: expenseId },
+        data: {
+          amount_paid: newPaid,
+          status: deriveStatus(amount, newPaid),
+          updated_at: new Date(),
+        },
+        include: {
+          ...expenseInclude,
+          payments: { include: paymentInclude, orderBy: paymentOrder },
+        },
+      });
+    });
     return withRemaining(updated);
   }
 

@@ -1,0 +1,10 @@
+BEGIN;
+DROP TRIGGER IF EXISTS invoice_payments_sync_totals ON invoice_payments;
+DROP TRIGGER IF EXISTS expense_payments_sync_totals ON expense_payments;
+DROP FUNCTION IF EXISTS app.sync_invoice_totals();
+DROP FUNCTION IF EXISTS app.sync_expense_totals();
+ALTER TABLE treatment_invoices DROP CONSTRAINT IF EXISTS treatment_invoices_paid_within_total;
+ALTER TABLE expenses DROP CONSTRAINT IF EXISTS expenses_paid_within_amount;
+ALTER TABLE invoice_payments DROP CONSTRAINT IF EXISTS invoice_payments_amount_positive;
+ALTER TABLE expense_payments DROP CONSTRAINT IF EXISTS expense_payments_amount_positive;
+COMMIT;
