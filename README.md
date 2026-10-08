@@ -60,11 +60,11 @@ git clone <repo-url>
 cd DentalClinic
 
 # 2. Configure frontend environment
-cp frontend/.env.example frontend/.env.local
+cp client-app/frontend/.env.example client-app/frontend/.env.local
 # Fill in: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, NEXT_PUBLIC_API_URL
 
 # 3. Configure backend environment
-cp backend/.env.example backend/.env
+cp client-app/backend/.env.example client-app/backend/.env
 # Fill in: DATABASE_URL, DIRECT_URL, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, OPENAI_API_KEY
 
 # 4. (Optional) Copy Docker env template
@@ -325,7 +325,7 @@ clinic_profile                 (clinic metadata, singleton)
 
 #### Module 3 — ORM (Minor, 1pt) ✅
 
-- Prisma v7.6.0 with a fully typed schema (`backend/prisma/schema.prisma`).
+- Prisma v7.6.0 with a fully typed schema (`client-app/backend/prisma/schema.prisma`).
 - 15 models with all relations expressed via Prisma relation fields.
 - Migrations via `npx prisma migrate dev`.
 - PostgreSQL adapter (`@prisma/adapter-pg`) for Supabase compatibility.

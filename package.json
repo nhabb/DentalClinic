@@ -2,10 +2,13 @@
   "name": "dentalclinic",
   "private": true,
   "scripts": {
-    "dev": "concurrently -n frontend,backend -c cyan,magenta \"cd frontend && npm run dev\" \"cd backend && npm run start:dev\"",
-    "install:all": "cd frontend && npm install && cd ../backend && npm install",
+    "dev": "concurrently -n frontend,backend -c cyan,magenta \"cd client-app/frontend && npm run dev\" \"cd client-app/backend && npm run start:dev\"",
+    "install:all": "cd client-app/frontend && npm install && cd ../backend && npm install",
     "docker:up": "docker compose up --build",
-    "docker:down": "docker compose down"
+    "docker:down": "docker compose down",
+    "dev:client-app": "concurrently -n frontend,backend -c cyan,magenta \"cd client-app/frontend && npm run dev\" \"cd client-app/backend && npm run start:dev\"",
+    "dev:super-admin": "concurrently -n super-admin-api,super-admin-ui -c green,yellow \"cd super-admin-app/backend && npm run start:dev\" \"cd super-admin-app/frontend && npm run dev\"",
+    "install:super-admin": "cd super-admin-app/backend && npm install && cd ../frontend && npm install"
   },
   "devDependencies": {
     "concurrently": "^9.2.1"

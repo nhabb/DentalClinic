@@ -1,7 +1,7 @@
 # Frontend Revamp — Progress
 
 Branch: `feature/forntend-revamp`
-Scope: `frontend/` only (backend untouched). `components/dental/ToothModel3D.tsx` and the
+Scope: `client-app/frontend/` only (backend untouched). `components/dental/ToothModel3D.tsx` and the
 dashboard charts (`components/dashboard/DashboardAnalytics.tsx`, `TeethReport.tsx`) are
 **intentionally left visually as-is** per the brief — they were only touched where the
 global token rename mechanically passed through them (see below), not redesigned.

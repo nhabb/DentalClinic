@@ -1,0 +1,516 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/shared/generated/prisma"
+}
+
+// The platform console (super-admin-app/backend) shares this schema and database.
+// `prisma generate` (from either app) writes its client here as well.
+generator platformClient {
+  provider = "prisma-client"
+  output   = "../../../super-admin-app/backend/src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Multi-tenancy ────────────────────────────────────────────────────────────
+//
+// An `organizations` row is one tenant: a dental business (e.g. "BrightSmile").
+// A tenant owns one or more `branches`: the physical clinics (Beirut, Tyre, ...).
+//
+// Every tenant-owned table carries `organization_id`, and tables tied to a
+// location also carry `branch_id`. Both default to the request's tenant via the
+// `app.current_org_id()` / `app.default_branch_id()` SQL functions, which read
+// per-connection settings that the backend sets for each request
+// (see src/shared/tenant/). PostgreSQL row-level security policies on every
+// table use the same setting, so a connection scoped to tenant A can never read
+// or write tenant B's rows, even through raw SQL.
+//
+// Not expressible in Prisma (lives only in prisma/migrations/*multi_tenant_rls*):
+//   - the `app` schema helper functions and the RLS policies
+//   - the `dental_app` database role the backend switches into
+//   - the partial unique index "one default branch per organization"
+
+model organizations {
+  id          BigInt   @id @default(autoincrement())
+  name        String   @db.VarChar
+  /// URL-safe identifier used to pick a tenant on unauthenticated requests
+  /// (X-Organization header, host subdomain, or DEFAULT_ORGANIZATION_SLUG).
+  slug        String   @unique @db.VarChar
+  legal_name  String?  @db.VarChar
+  email       String?  @db.VarChar
+  phone       String?  @db.VarChar
+  website_url String?
+  logo_url    String?
+  description String?
+  timezone    String   @default("Asia/Beirut") @db.VarChar
+  currency    String   @default("USD") @db.VarChar
+  is_active   Boolean  @default(true)
+  settings    Json     @default("{}")
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime @default(now()) @db.Timestamptz(6)
+
+  branches            branches[]
+  users               users[]
+  patient_profiles    patient_profiles[]
+  appointment_slots   appointment_slots[]
+  appointments        appointments[]
+  patient_records     patient_records[]
+  patient_documents   patient_documents[]
+  inventory_items     inventory_items[]
+  inventory_movements inventory_movements[]
+  notifications       notifications[]
+  audit_logs          audit_logs[]
+  clinic_profile      clinic_profile[]
+  expenses            expenses[]
+  expense_payments    expense_payments[]
+  treatment_invoices  treatment_invoices[]
+  invoice_line_items  invoice_line_items[]
+  invoice_payments    invoice_payments[]
+
+  @@index([is_active], map: "idx_organizations_is_active")
+}
+
+/// A physical clinic location belonging to an organization (e.g. Beirut, Tyre).
+model branches {
+  id              BigInt   @id @default(autoincrement())
+  organization_id BigInt   @default(dbgenerated("app.current_org_id()"))
+  name            String   @db.VarChar
+  code            String?  @db.VarChar
+  address         String?
+  city            String?  @db.VarChar
+  governate       String?  @db.VarChar
+  phone           String?  @db.VarChar
+  email           String?  @db.VarChar
+  opening_hours   String?
+  timezone        String?  @db.VarChar
+  /// Exactly one default branch per organization (enforced by a partial unique
+  /// index in SQL). Rows created without an explicit branch land here.
+  is_default      Boolean  @default(false)
+  is_active       Boolean  @default(true)
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime @default(now()) @db.Timestamptz(6)
+
+  organization       organizations        @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users              users[]
+  appointment_slots  appointment_slots[]
+  appointments       appointments[]
+  patient_records    patient_records[]
+  patient_documents  patient_documents[]
+  inventory_items    inventory_items[]
+  clinic_profile     clinic_profile[]
+  expenses           expenses[]
+  treatment_invoices treatment_invoices[]
+
+  @@unique([organization_id, name])
+  @@index([organization_id], map: "idx_branches_org")
+}
+
+// ─── Domain tables ────────────────────────────────────────────────────────────
+
+model appointment_slots {
+  id              BigInt         @id @default(autoincrement())
+  organization_id BigInt         @default(dbgenerated("app.current_org_id()"))
+  branch_id       BigInt         @default(dbgenerated("app.default_branch_id()"))
+  doctor_id       BigInt
+  slot_date       DateTime       @db.Date
+  start_time      DateTime       @db.Time(6)
+  end_time        DateTime       @db.Time(6)
+  is_booked       Boolean        @default(false)
+  created_at      DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime       @default(now()) @db.Timestamptz(6)
+  organization    organizations  @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  branch          branches       @relation(fields: [branch_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  users           users          @relation(fields: [doctor_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  appointments    appointments[]
+
+  @@index([slot_date], map: "idx_slots_date")
+  @@index([doctor_id], map: "idx_slots_doctor_id")
+  @@index([is_booked], map: "idx_slots_is_booked")
+  @@index([organization_id], map: "idx_slots_org")
+  @@index([organization_id, branch_id, slot_date], map: "idx_slots_org_branch_date")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model appointments {
+  id                                   BigInt             @id @default(autoincrement())
+  organization_id                      BigInt             @default(dbgenerated("app.current_org_id()"))
+  branch_id                            BigInt             @default(dbgenerated("app.default_branch_id()"))
+  patient_id                           BigInt
+  appointment_date                     DateTime           @db.Date
+  start_time                           DateTime           @db.Time(6)
+  end_time                             DateTime           @db.Time(6)
+  status                               String             @default("pending")
+  reason                               String?
+  notes                                String?
+  created_by                           BigInt?
+  created_at                           DateTime           @default(now()) @db.Timestamptz(6)
+  updated_at                           DateTime           @default(now()) @db.Timestamptz(6)
+  doctor_id                            BigInt
+  slot_id                              BigInt?
+  organization                         organizations      @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  branch                               branches           @relation(fields: [branch_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  users_appointments_created_byTousers users?             @relation("appointments_created_byTousers", fields: [created_by], references: [id], onUpdate: NoAction)
+  users_appointments_doctor_idTousers  users              @relation("appointments_doctor_idTousers", fields: [doctor_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "appointments_doctor_fkey")
+  patient_profiles                     patient_profiles   @relation(fields: [patient_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "appointments_patient_fkey")
+  appointment_slots                    appointment_slots? @relation(fields: [slot_id], references: [id], onUpdate: NoAction)
+  patient_records                      patient_records[]
+
+  @@index([appointment_date], map: "idx_appointments_date")
+  @@index([doctor_id], map: "idx_appointments_doctor_id")
+  @@index([patient_id], map: "idx_appointments_patient_id")
+  @@index([status], map: "idx_appointments_status")
+  @@index([patient_id, status], map: "idx_appointments_patient_status")
+  @@index([organization_id], map: "idx_appointments_org")
+  @@index([organization_id, branch_id, appointment_date], map: "idx_appointments_org_branch_date")
+}
+
+model audit_logs {
+  id              BigInt        @id @default(autoincrement())
+  organization_id BigInt        @default(dbgenerated("app.current_org_id()"))
+  user_id         BigInt?
+  action          String
+  table_name      String
+  record_id       BigInt?
+  old_data        Json?
+  new_data        Json?
+  created_at      DateTime      @default(now()) @db.Timestamptz(6)
+  organization    organizations @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  users           users?        @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "audit_logs_user_fkey")
+
+  @@index([table_name], map: "idx_audit_logs_table_name")
+  @@index([user_id], map: "idx_audit_logs_user_id")
+  @@index([organization_id], map: "idx_audit_logs_org")
+}
+
+/// Public-facing clinic information. One row per organization (branch_id NULL)
+/// and optionally one per branch for location-specific details.
+model clinic_profile {
+  id              BigInt        @id @default(autoincrement())
+  organization_id BigInt        @default(dbgenerated("app.current_org_id()"))
+  branch_id       BigInt?
+  name            String        @db.VarChar
+  phone           String?       @db.VarChar
+  email           String?       @db.VarChar
+  address         String?
+  website_url     String?
+  logo_url        String?
+  description     String?
+  opening_hours   String?
+  created_at      DateTime      @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime      @default(now()) @db.Timestamptz(6)
+  organization    organizations @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  branch          branches?     @relation(fields: [branch_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@index([organization_id], map: "idx_clinic_profile_org")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model inventory_items {
+  id                  BigInt                @id @default(autoincrement())
+  organization_id     BigInt                @default(dbgenerated("app.current_org_id()"))
+  /// Stock is tracked per branch; the same SKU may exist at several branches.
+  branch_id           BigInt                @default(dbgenerated("app.default_branch_id()"))
+  name                String                @db.VarChar
+  category            String?               @db.VarChar
+  description         String?
+  sku                 String?               @db.VarChar
+  quantity            Int                   @default(0)
+  minimum_quantity    Int                   @default(0)
+  unit                String?               @default("piece") @db.VarChar
+  cost_price          Decimal?              @default(0) @db.Decimal(12, 2)
+  image_url           String?               @db.VarChar
+  created_at          DateTime              @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime              @default(now()) @db.Timestamptz(6)
+  organization        organizations         @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  branch              branches              @relation(fields: [branch_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  inventory_movements inventory_movements[]
+
+  @@unique([branch_id, sku])
+  @@index([name], map: "idx_inventory_items_name")
+  @@index([organization_id], map: "idx_inventory_items_org")
+  @@index([organization_id, branch_id], map: "idx_inventory_items_org_branch")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model inventory_movements {
+  id              BigInt          @id @default(autoincrement())
+  organization_id BigInt          @default(dbgenerated("app.current_org_id()"))
+  item_id         BigInt
+  movement_type   String
+  quantity        Int
+  note            String?
+  performed_by    BigInt?
+  created_at      DateTime        @default(now()) @db.Timestamptz(6)
+  organization    organizations   @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  inventory_items inventory_items @relation(fields: [item_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "inventory_movements_item_fkey")
+  users           users?          @relation(fields: [performed_by], references: [id], onUpdate: NoAction)
+
+  @@index([created_at], map: "idx_inventory_movements_created_at")
+  @@index([item_id], map: "idx_inventory_movements_item_id")
+  @@index([organization_id], map: "idx_inventory_movements_org")
+}
+
+model notifications {
+  id              BigInt        @id @default(autoincrement())
+  organization_id BigInt        @default(dbgenerated("app.current_org_id()"))
+  user_id         BigInt
+  title           String
+  message         String
+  type            String
+  is_read         Boolean       @default(false)
+  created_at      DateTime      @default(now()) @db.Timestamptz(6)
+  organization    organizations @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  users           users         @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([is_read], map: "idx_notifications_is_read")
+  @@index([user_id], map: "idx_notifications_user_id")
+  @@index([organization_id], map: "idx_notifications_org")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model patient_documents {
+  id               BigInt           @id @default(autoincrement())
+  organization_id  BigInt           @default(dbgenerated("app.current_org_id()"))
+  branch_id        BigInt?          @default(dbgenerated("app.default_branch_id()"))
+  patient_id       BigInt
+  record_id        BigInt?
+  file_name        String           @db.VarChar
+  file_path        String
+  document_type    String?
+  uploaded_by      BigInt?
+  uploaded_at      DateTime         @default(now()) @db.Timestamptz(6)
+  organization     organizations    @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  branch           branches?        @relation(fields: [branch_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  patient_profiles patient_profiles @relation(fields: [patient_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "patient_documents_patient_fkey")
+  patient_records  patient_records? @relation(fields: [record_id], references: [id], onUpdate: NoAction, map: "patient_documents_record_fkey")
+  users            users?           @relation(fields: [uploaded_by], references: [id], onUpdate: NoAction)
+
+  @@index([patient_id], map: "idx_patient_documents_patient_id")
+  @@index([record_id], map: "idx_patient_documents_record_id")
+  @@index([organization_id], map: "idx_patient_documents_org")
+}
+
+model patient_profiles {
+  id                      BigInt               @id @default(autoincrement())
+  organization_id         BigInt               @default(dbgenerated("app.current_org_id()"))
+  user_id                 BigInt               @unique
+  emergency_contact_name  String?              @db.VarChar
+  emergency_contact_phone String?              @db.VarChar
+  blood_type              String?              @db.VarChar
+  allergies               String?
+  medical_notes           String?
+  created_at              DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime             @default(now()) @db.Timestamptz(6)
+  city                    String?              @db.VarChar
+  current_medications     String?
+  governate               String?              @db.VarChar
+  insurance_policy        String?              @db.VarChar
+  insurance_provider      String?              @db.VarChar
+  profile_complete        Boolean              @default(false)
+  photo_url               String?
+  organization            organizations        @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  appointments            appointments[]
+  patient_documents       patient_documents[]
+  users                   users                @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "patient_profiles_user_fkey")
+  patient_records         patient_records[]
+  treatment_invoices      treatment_invoices[]
+
+  @@index([user_id], map: "idx_patient_profiles_user_id")
+  @@index([organization_id], map: "idx_patient_profiles_org")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model patient_records {
+  id                BigInt              @id @default(autoincrement())
+  organization_id   BigInt              @default(dbgenerated("app.current_org_id()"))
+  branch_id         BigInt?             @default(dbgenerated("app.default_branch_id()"))
+  patient_id        BigInt
+  appointment_id    BigInt?
+  record_type       String              @default("general_note")
+  title             String              @db.VarChar
+  description       String
+  tooth_number      String?
+  treatment_date    DateTime?           @db.Date
+  created_by        BigInt?
+  invoice_id        BigInt?
+  quoted_amount     Decimal?            @db.Decimal(10, 2)
+  created_at        DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime            @default(now()) @db.Timestamptz(6)
+  organization      organizations       @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  branch            branches?           @relation(fields: [branch_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  patient_documents patient_documents[]
+  invoice           treatment_invoices? @relation(fields: [invoice_id], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "patient_records_invoice_id_fkey")
+  appointments      appointments?       @relation(fields: [appointment_id], references: [id], onUpdate: NoAction, map: "patient_records_appointment_fkey")
+  users             users?              @relation(fields: [created_by], references: [id], onUpdate: NoAction)
+  patient_profiles  patient_profiles    @relation(fields: [patient_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "patient_records_patient_fkey")
+
+  @@index([appointment_id], map: "idx_patient_records_appointment_id")
+  @@index([patient_id], map: "idx_patient_records_patient_id")
+  @@index([record_type], map: "idx_patient_records_type")
+  @@index([invoice_id], map: "idx_patient_records_invoice_id")
+  @@index([organization_id], map: "idx_patient_records_org")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model users {
+  id                                          BigInt                @id @default(autoincrement())
+  /// Tenant the account belongs to. NULL only for platform-level `superadmin`
+  /// accounts, which are not bound to any organization.
+  organization_id                             BigInt?               @default(dbgenerated("app.current_org_id()"))
+  /// Home branch for staff (where their slots are created by default). NULL means
+  /// the user works across all branches of the organization.
+  branch_id                                   BigInt?
+  /// When true (and branch_id is set), non-admin staff only see and touch rows of
+  /// their home branch; enforced by RLS and by BranchScopeGuard.
+  restrict_to_branch                          Boolean               @default(false)
+  email                                       String?               @unique @db.VarChar
+  password_hash                               String
+  first_name                                  String                @db.VarChar
+  last_name                                   String                @db.VarChar
+  phone                                       String?               @db.VarChar
+  date_of_birth                               DateTime?             @db.Date
+  gender                                      String?
+  address                                     String?
+  role                                        String                @default("patient")
+  is_active                                   Boolean               @default(true)
+  avatar_url                                  String?
+  must_set_password                           Boolean               @default(false)
+  password_setup_token_hash                   String?               @db.VarChar
+  password_setup_expires_at                   DateTime?             @db.Timestamptz(6)
+  password_setup_sent_at                      DateTime?             @db.Timestamptz(6)
+  created_at                                  DateTime              @default(now()) @db.Timestamptz(6)
+  updated_at                                  DateTime              @default(now()) @db.Timestamptz(6)
+  organization                                organizations?        @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  branch                                      branches?             @relation(fields: [branch_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  appointment_slots                           appointment_slots[]
+  appointments_appointments_created_byTousers appointments[]        @relation("appointments_created_byTousers")
+  appointments_appointments_doctor_idTousers  appointments[]        @relation("appointments_doctor_idTousers")
+  audit_logs                                  audit_logs[]
+  inventory_movements                         inventory_movements[]
+  notifications                               notifications[]
+  patient_documents                           patient_documents[]
+  patient_profiles                            patient_profiles?
+  patient_records                             patient_records[]
+  expenses                                    expenses[]
+  expense_payments_created                    expense_payments[]   @relation("expense_payments_creator")
+  treatment_invoices_created                  treatment_invoices[] @relation("treatment_invoices_creator")
+  invoice_payments_created                    invoice_payments[]   @relation("invoice_payments_creator")
+
+  @@index([role], map: "idx_users_role")
+  @@index([organization_id], map: "idx_users_org")
+  @@index([organization_id, role], map: "idx_users_org_role")
+}
+
+
+model expenses {
+  id              BigInt   @id @default(autoincrement())
+  organization_id BigInt   @default(dbgenerated("app.current_org_id()"))
+  /// Branch the expense is attributed to; NULL for organization-wide costs.
+  branch_id       BigInt?  @default(dbgenerated("app.default_branch_id()"))
+  title           String   @db.VarChar
+  category        String   @default("other") @db.VarChar
+  status          String   @default("pending") @db.VarChar
+  amount          Decimal  @db.Decimal(10, 2)
+  amount_paid     Decimal  @default(0) @db.Decimal(10, 2)
+  description     String?
+  expense_date    DateTime @db.Date
+  created_by      BigInt?
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime @default(now()) @db.Timestamptz(6)
+
+  organization    organizations @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  branch          branches?     @relation(fields: [branch_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  creator         users?        @relation(fields: [created_by], references: [id], onUpdate: NoAction)
+  payments        expense_payments[]
+
+  @@index([expense_date], map: "idx_expenses_date")
+  @@index([category], map: "idx_expenses_category")
+  @@index([organization_id], map: "idx_expenses_org")
+  @@index([organization_id, branch_id], map: "idx_expenses_org_branch")
+}
+
+model expense_payments {
+  id              BigInt   @id @default(autoincrement())
+  organization_id BigInt   @default(dbgenerated("app.current_org_id()"))
+  expense_id      BigInt
+  amount          Decimal  @db.Decimal(10, 2)
+  payment_method  String   @default("cash") @db.VarChar
+  notes           String?
+  payment_date    DateTime @default(dbgenerated("CURRENT_DATE")) @db.Date
+  created_by      BigInt?
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+
+  organization    organizations @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  expense         expenses      @relation(fields: [expense_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  creator         users?        @relation("expense_payments_creator", fields: [created_by], references: [id], onUpdate: NoAction)
+
+  @@index([expense_id], map: "idx_expense_payments_expense_id")
+  @@index([organization_id], map: "idx_expense_payments_org")
+}
+
+model treatment_invoices {
+  id               BigInt               @id @default(autoincrement())
+  organization_id  BigInt               @default(dbgenerated("app.current_org_id()"))
+  /// Branch that issued the invoice.
+  branch_id        BigInt?              @default(dbgenerated("app.default_branch_id()"))
+  patient_id       BigInt
+  procedure_date   DateTime             @db.Date
+  notes            String?
+  total_amount     Decimal              @db.Decimal(10, 2)
+  amount_paid      Decimal              @default(0) @db.Decimal(10, 2)
+  remaining_amount Decimal              @db.Decimal(10, 2)
+  status           String               @default("open")
+  created_by       BigInt?
+  created_at       DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime             @default(now()) @db.Timestamptz(6)
+
+  organization     organizations        @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  branch           branches?            @relation(fields: [branch_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  patient          patient_profiles     @relation(fields: [patient_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  creator          users?               @relation("treatment_invoices_creator", fields: [created_by], references: [id], onUpdate: NoAction)
+  line_items       invoice_line_items[]
+  invoice_payments invoice_payments[]
+  patient_records  patient_records[]
+
+  @@index([patient_id], map: "idx_treatment_invoices_patient_id")
+  @@index([status], map: "idx_treatment_invoices_status")
+  @@index([created_at], map: "idx_treatment_invoices_created_at")
+  @@index([organization_id], map: "idx_treatment_invoices_org")
+  @@index([organization_id, branch_id], map: "idx_treatment_invoices_org_branch")
+}
+
+model invoice_line_items {
+  id              BigInt             @id @default(autoincrement())
+  organization_id BigInt             @default(dbgenerated("app.current_org_id()"))
+  invoice_id      BigInt
+  procedure_name  String             @db.VarChar
+  amount          Decimal            @db.Decimal(10, 2)
+  tooth_number    String?            @db.VarChar
+  created_at      DateTime           @default(now()) @db.Timestamptz(6)
+
+  organization    organizations      @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  invoice         treatment_invoices @relation(fields: [invoice_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([invoice_id], map: "idx_invoice_line_items_invoice_id")
+  @@index([organization_id], map: "idx_invoice_line_items_org")
+}
+
+model invoice_payments {
+  id              BigInt             @id @default(autoincrement())
+  organization_id BigInt             @default(dbgenerated("app.current_org_id()"))
+  invoice_id      BigInt
+  amount          Decimal            @db.Decimal(10, 2)
+  payment_method  String             @default("cash")
+  notes           String?
+  created_by      BigInt?
+  created_at      DateTime           @default(now()) @db.Timestamptz(6)
+
+  organization    organizations      @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  invoice         treatment_invoices @relation(fields: [invoice_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  creator         users?             @relation("invoice_payments_creator", fields: [created_by], references: [id], onUpdate: NoAction)
+
+  @@index([invoice_id], map: "idx_invoice_payments_invoice_id")
+  @@index([organization_id], map: "idx_invoice_payments_org")
+}

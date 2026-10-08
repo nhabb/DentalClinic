@@ -3,12 +3,12 @@ services:
   # ── Next.js frontend ──────────────────────────────────────────────────────────
   frontend:
     build:
-      context: ./frontend
+      context: ./clinic/frontend
       dockerfile: Dockerfile
       # No build args needed — .env.local is copied into the build context and
       # Next.js reads NEXT_PUBLIC_* from it directly during npm run build.
     env_file:
-      - ./frontend/.env.local
+      - ./clinic/frontend/.env.local
     restart: unless-stopped
     networks:
       - app-network
@@ -18,10 +18,10 @@ services:
   # ── NestJS backend ────────────────────────────────────────────────────────────
   backend:
     build:
-      context: ./backend
+      context: ./clinic/backend
       dockerfile: Dockerfile
     env_file:
-      - ./backend/.env
+      - ./clinic/backend/.env
     environment:
       NODE_ENV: production
     restart: unless-stopped
@@ -31,10 +31,10 @@ services:
   # ── Prisma Studio ─────────────────────────────────────────────────────────────
   prisma-studio:
     build:
-      context: ./backend
+      context: ./clinic/backend
       dockerfile: Dockerfile
     env_file:
-      - ./backend/.env
+      - ./clinic/backend/.env
     command: ["npx", "prisma", "studio", "--port", "5555", "--hostname", "0.0.0.0"]
     ports:
       - "5555:5555"
