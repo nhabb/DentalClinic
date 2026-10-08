@@ -326,6 +326,8 @@ export type patient_profilesWhereInput = {
   users?: Prisma.XOR<Prisma.UsersScalarRelationFilter, Prisma.usersWhereInput>
   patient_records?: Prisma.Patient_recordsListRelationFilter
   treatment_invoices?: Prisma.Treatment_invoicesListRelationFilter
+  specialist_consultations?: Prisma.Specialist_consultationsListRelationFilter
+  lab_orders?: Prisma.Lab_ordersListRelationFilter
 }
 
 export type patient_profilesOrderByWithRelationInput = {
@@ -352,6 +354,8 @@ export type patient_profilesOrderByWithRelationInput = {
   users?: Prisma.usersOrderByWithRelationInput
   patient_records?: Prisma.patient_recordsOrderByRelationAggregateInput
   treatment_invoices?: Prisma.treatment_invoicesOrderByRelationAggregateInput
+  specialist_consultations?: Prisma.specialist_consultationsOrderByRelationAggregateInput
+  lab_orders?: Prisma.lab_ordersOrderByRelationAggregateInput
 }
 
 export type patient_profilesWhereUniqueInput = Prisma.AtLeast<{
@@ -381,6 +385,8 @@ export type patient_profilesWhereUniqueInput = Prisma.AtLeast<{
   users?: Prisma.XOR<Prisma.UsersScalarRelationFilter, Prisma.usersWhereInput>
   patient_records?: Prisma.Patient_recordsListRelationFilter
   treatment_invoices?: Prisma.Treatment_invoicesListRelationFilter
+  specialist_consultations?: Prisma.Specialist_consultationsListRelationFilter
+  lab_orders?: Prisma.Lab_ordersListRelationFilter
 }, "id" | "user_id">
 
 export type patient_profilesOrderByWithAggregationInput = {
@@ -453,6 +459,8 @@ export type patient_profilesCreateInput = {
   users: Prisma.usersCreateNestedOneWithoutPatient_profilesInput
   patient_records?: Prisma.patient_recordsCreateNestedManyWithoutPatient_profilesInput
   treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutPatientInput
+  specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutPatientInput
+  lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutPatientInput
 }
 
 export type patient_profilesUncheckedCreateInput = {
@@ -477,6 +485,8 @@ export type patient_profilesUncheckedCreateInput = {
   patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutPatient_profilesInput
   patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutPatient_profilesInput
   treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutPatientInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutPatientInput
+  lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutPatientInput
 }
 
 export type patient_profilesUpdateInput = {
@@ -501,6 +511,8 @@ export type patient_profilesUpdateInput = {
   users?: Prisma.usersUpdateOneRequiredWithoutPatient_profilesNestedInput
   patient_records?: Prisma.patient_recordsUpdateManyWithoutPatient_profilesNestedInput
   treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutPatientNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutPatientNestedInput
+  lab_orders?: Prisma.lab_ordersUpdateManyWithoutPatientNestedInput
 }
 
 export type patient_profilesUncheckedUpdateInput = {
@@ -525,6 +537,8 @@ export type patient_profilesUncheckedUpdateInput = {
   patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutPatient_profilesNestedInput
   patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutPatient_profilesNestedInput
   treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutPatientNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutPatientNestedInput
+  lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutPatientNestedInput
 }
 
 export type patient_profilesCreateManyInput = {
@@ -807,6 +821,34 @@ export type patient_profilesUpdateOneRequiredWithoutTreatment_invoicesNestedInpu
   update?: Prisma.XOR<Prisma.XOR<Prisma.patient_profilesUpdateToOneWithWhereWithoutTreatment_invoicesInput, Prisma.patient_profilesUpdateWithoutTreatment_invoicesInput>, Prisma.patient_profilesUncheckedUpdateWithoutTreatment_invoicesInput>
 }
 
+export type patient_profilesCreateNestedOneWithoutSpecialist_consultationsInput = {
+  create?: Prisma.XOR<Prisma.patient_profilesCreateWithoutSpecialist_consultationsInput, Prisma.patient_profilesUncheckedCreateWithoutSpecialist_consultationsInput>
+  connectOrCreate?: Prisma.patient_profilesCreateOrConnectWithoutSpecialist_consultationsInput
+  connect?: Prisma.patient_profilesWhereUniqueInput
+}
+
+export type patient_profilesUpdateOneRequiredWithoutSpecialist_consultationsNestedInput = {
+  create?: Prisma.XOR<Prisma.patient_profilesCreateWithoutSpecialist_consultationsInput, Prisma.patient_profilesUncheckedCreateWithoutSpecialist_consultationsInput>
+  connectOrCreate?: Prisma.patient_profilesCreateOrConnectWithoutSpecialist_consultationsInput
+  upsert?: Prisma.patient_profilesUpsertWithoutSpecialist_consultationsInput
+  connect?: Prisma.patient_profilesWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.patient_profilesUpdateToOneWithWhereWithoutSpecialist_consultationsInput, Prisma.patient_profilesUpdateWithoutSpecialist_consultationsInput>, Prisma.patient_profilesUncheckedUpdateWithoutSpecialist_consultationsInput>
+}
+
+export type patient_profilesCreateNestedOneWithoutLab_ordersInput = {
+  create?: Prisma.XOR<Prisma.patient_profilesCreateWithoutLab_ordersInput, Prisma.patient_profilesUncheckedCreateWithoutLab_ordersInput>
+  connectOrCreate?: Prisma.patient_profilesCreateOrConnectWithoutLab_ordersInput
+  connect?: Prisma.patient_profilesWhereUniqueInput
+}
+
+export type patient_profilesUpdateOneRequiredWithoutLab_ordersNestedInput = {
+  create?: Prisma.XOR<Prisma.patient_profilesCreateWithoutLab_ordersInput, Prisma.patient_profilesUncheckedCreateWithoutLab_ordersInput>
+  connectOrCreate?: Prisma.patient_profilesCreateOrConnectWithoutLab_ordersInput
+  upsert?: Prisma.patient_profilesUpsertWithoutLab_ordersInput
+  connect?: Prisma.patient_profilesWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.patient_profilesUpdateToOneWithWhereWithoutLab_ordersInput, Prisma.patient_profilesUpdateWithoutLab_ordersInput>, Prisma.patient_profilesUncheckedUpdateWithoutLab_ordersInput>
+}
+
 export type patient_profilesCreateWithoutOrganizationInput = {
   id?: bigint | number
   emergency_contact_name?: string | null
@@ -828,6 +870,8 @@ export type patient_profilesCreateWithoutOrganizationInput = {
   users: Prisma.usersCreateNestedOneWithoutPatient_profilesInput
   patient_records?: Prisma.patient_recordsCreateNestedManyWithoutPatient_profilesInput
   treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutPatientInput
+  specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutPatientInput
+  lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutPatientInput
 }
 
 export type patient_profilesUncheckedCreateWithoutOrganizationInput = {
@@ -851,6 +895,8 @@ export type patient_profilesUncheckedCreateWithoutOrganizationInput = {
   patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutPatient_profilesInput
   patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutPatient_profilesInput
   treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutPatientInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutPatientInput
+  lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutPatientInput
 }
 
 export type patient_profilesCreateOrConnectWithoutOrganizationInput = {
@@ -923,6 +969,8 @@ export type patient_profilesCreateWithoutAppointmentsInput = {
   users: Prisma.usersCreateNestedOneWithoutPatient_profilesInput
   patient_records?: Prisma.patient_recordsCreateNestedManyWithoutPatient_profilesInput
   treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutPatientInput
+  specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutPatientInput
+  lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutPatientInput
 }
 
 export type patient_profilesUncheckedCreateWithoutAppointmentsInput = {
@@ -946,6 +994,8 @@ export type patient_profilesUncheckedCreateWithoutAppointmentsInput = {
   patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutPatient_profilesInput
   patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutPatient_profilesInput
   treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutPatientInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutPatientInput
+  lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutPatientInput
 }
 
 export type patient_profilesCreateOrConnectWithoutAppointmentsInput = {
@@ -985,6 +1035,8 @@ export type patient_profilesUpdateWithoutAppointmentsInput = {
   users?: Prisma.usersUpdateOneRequiredWithoutPatient_profilesNestedInput
   patient_records?: Prisma.patient_recordsUpdateManyWithoutPatient_profilesNestedInput
   treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutPatientNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutPatientNestedInput
+  lab_orders?: Prisma.lab_ordersUpdateManyWithoutPatientNestedInput
 }
 
 export type patient_profilesUncheckedUpdateWithoutAppointmentsInput = {
@@ -1008,6 +1060,8 @@ export type patient_profilesUncheckedUpdateWithoutAppointmentsInput = {
   patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutPatient_profilesNestedInput
   patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutPatient_profilesNestedInput
   treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutPatientNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutPatientNestedInput
+  lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutPatientNestedInput
 }
 
 export type patient_profilesCreateWithoutPatient_documentsInput = {
@@ -1031,6 +1085,8 @@ export type patient_profilesCreateWithoutPatient_documentsInput = {
   users: Prisma.usersCreateNestedOneWithoutPatient_profilesInput
   patient_records?: Prisma.patient_recordsCreateNestedManyWithoutPatient_profilesInput
   treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutPatientInput
+  specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutPatientInput
+  lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutPatientInput
 }
 
 export type patient_profilesUncheckedCreateWithoutPatient_documentsInput = {
@@ -1054,6 +1110,8 @@ export type patient_profilesUncheckedCreateWithoutPatient_documentsInput = {
   appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutPatient_profilesInput
   patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutPatient_profilesInput
   treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutPatientInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutPatientInput
+  lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutPatientInput
 }
 
 export type patient_profilesCreateOrConnectWithoutPatient_documentsInput = {
@@ -1093,6 +1151,8 @@ export type patient_profilesUpdateWithoutPatient_documentsInput = {
   users?: Prisma.usersUpdateOneRequiredWithoutPatient_profilesNestedInput
   patient_records?: Prisma.patient_recordsUpdateManyWithoutPatient_profilesNestedInput
   treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutPatientNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutPatientNestedInput
+  lab_orders?: Prisma.lab_ordersUpdateManyWithoutPatientNestedInput
 }
 
 export type patient_profilesUncheckedUpdateWithoutPatient_documentsInput = {
@@ -1116,6 +1176,8 @@ export type patient_profilesUncheckedUpdateWithoutPatient_documentsInput = {
   appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutPatient_profilesNestedInput
   patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutPatient_profilesNestedInput
   treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutPatientNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutPatientNestedInput
+  lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutPatientNestedInput
 }
 
 export type patient_profilesCreateWithoutPatient_recordsInput = {
@@ -1139,6 +1201,8 @@ export type patient_profilesCreateWithoutPatient_recordsInput = {
   patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutPatient_profilesInput
   users: Prisma.usersCreateNestedOneWithoutPatient_profilesInput
   treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutPatientInput
+  specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutPatientInput
+  lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutPatientInput
 }
 
 export type patient_profilesUncheckedCreateWithoutPatient_recordsInput = {
@@ -1162,6 +1226,8 @@ export type patient_profilesUncheckedCreateWithoutPatient_recordsInput = {
   appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutPatient_profilesInput
   patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutPatient_profilesInput
   treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutPatientInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutPatientInput
+  lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutPatientInput
 }
 
 export type patient_profilesCreateOrConnectWithoutPatient_recordsInput = {
@@ -1201,6 +1267,8 @@ export type patient_profilesUpdateWithoutPatient_recordsInput = {
   patient_documents?: Prisma.patient_documentsUpdateManyWithoutPatient_profilesNestedInput
   users?: Prisma.usersUpdateOneRequiredWithoutPatient_profilesNestedInput
   treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutPatientNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutPatientNestedInput
+  lab_orders?: Prisma.lab_ordersUpdateManyWithoutPatientNestedInput
 }
 
 export type patient_profilesUncheckedUpdateWithoutPatient_recordsInput = {
@@ -1224,6 +1292,8 @@ export type patient_profilesUncheckedUpdateWithoutPatient_recordsInput = {
   appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutPatient_profilesNestedInput
   patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutPatient_profilesNestedInput
   treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutPatientNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutPatientNestedInput
+  lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutPatientNestedInput
 }
 
 export type patient_profilesCreateWithoutUsersInput = {
@@ -1247,6 +1317,8 @@ export type patient_profilesCreateWithoutUsersInput = {
   patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutPatient_profilesInput
   patient_records?: Prisma.patient_recordsCreateNestedManyWithoutPatient_profilesInput
   treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutPatientInput
+  specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutPatientInput
+  lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutPatientInput
 }
 
 export type patient_profilesUncheckedCreateWithoutUsersInput = {
@@ -1270,6 +1342,8 @@ export type patient_profilesUncheckedCreateWithoutUsersInput = {
   patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutPatient_profilesInput
   patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutPatient_profilesInput
   treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutPatientInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutPatientInput
+  lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutPatientInput
 }
 
 export type patient_profilesCreateOrConnectWithoutUsersInput = {
@@ -1309,6 +1383,8 @@ export type patient_profilesUpdateWithoutUsersInput = {
   patient_documents?: Prisma.patient_documentsUpdateManyWithoutPatient_profilesNestedInput
   patient_records?: Prisma.patient_recordsUpdateManyWithoutPatient_profilesNestedInput
   treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutPatientNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutPatientNestedInput
+  lab_orders?: Prisma.lab_ordersUpdateManyWithoutPatientNestedInput
 }
 
 export type patient_profilesUncheckedUpdateWithoutUsersInput = {
@@ -1332,6 +1408,8 @@ export type patient_profilesUncheckedUpdateWithoutUsersInput = {
   patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutPatient_profilesNestedInput
   patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutPatient_profilesNestedInput
   treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutPatientNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutPatientNestedInput
+  lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutPatientNestedInput
 }
 
 export type patient_profilesCreateWithoutTreatment_invoicesInput = {
@@ -1355,6 +1433,8 @@ export type patient_profilesCreateWithoutTreatment_invoicesInput = {
   patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutPatient_profilesInput
   users: Prisma.usersCreateNestedOneWithoutPatient_profilesInput
   patient_records?: Prisma.patient_recordsCreateNestedManyWithoutPatient_profilesInput
+  specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutPatientInput
+  lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutPatientInput
 }
 
 export type patient_profilesUncheckedCreateWithoutTreatment_invoicesInput = {
@@ -1378,6 +1458,8 @@ export type patient_profilesUncheckedCreateWithoutTreatment_invoicesInput = {
   appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutPatient_profilesInput
   patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutPatient_profilesInput
   patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutPatient_profilesInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutPatientInput
+  lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutPatientInput
 }
 
 export type patient_profilesCreateOrConnectWithoutTreatment_invoicesInput = {
@@ -1417,6 +1499,8 @@ export type patient_profilesUpdateWithoutTreatment_invoicesInput = {
   patient_documents?: Prisma.patient_documentsUpdateManyWithoutPatient_profilesNestedInput
   users?: Prisma.usersUpdateOneRequiredWithoutPatient_profilesNestedInput
   patient_records?: Prisma.patient_recordsUpdateManyWithoutPatient_profilesNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutPatientNestedInput
+  lab_orders?: Prisma.lab_ordersUpdateManyWithoutPatientNestedInput
 }
 
 export type patient_profilesUncheckedUpdateWithoutTreatment_invoicesInput = {
@@ -1440,6 +1524,240 @@ export type patient_profilesUncheckedUpdateWithoutTreatment_invoicesInput = {
   appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutPatient_profilesNestedInput
   patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutPatient_profilesNestedInput
   patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutPatient_profilesNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutPatientNestedInput
+  lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutPatientNestedInput
+}
+
+export type patient_profilesCreateWithoutSpecialist_consultationsInput = {
+  id?: bigint | number
+  emergency_contact_name?: string | null
+  emergency_contact_phone?: string | null
+  blood_type?: string | null
+  allergies?: string | null
+  medical_notes?: string | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  city?: string | null
+  current_medications?: string | null
+  governate?: string | null
+  insurance_policy?: string | null
+  insurance_provider?: string | null
+  profile_complete?: boolean
+  photo_url?: string | null
+  organization?: Prisma.organizationsCreateNestedOneWithoutPatient_profilesInput
+  appointments?: Prisma.appointmentsCreateNestedManyWithoutPatient_profilesInput
+  patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutPatient_profilesInput
+  users: Prisma.usersCreateNestedOneWithoutPatient_profilesInput
+  patient_records?: Prisma.patient_recordsCreateNestedManyWithoutPatient_profilesInput
+  treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutPatientInput
+  lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutPatientInput
+}
+
+export type patient_profilesUncheckedCreateWithoutSpecialist_consultationsInput = {
+  id?: bigint | number
+  organization_id?: bigint | number
+  user_id: bigint | number
+  emergency_contact_name?: string | null
+  emergency_contact_phone?: string | null
+  blood_type?: string | null
+  allergies?: string | null
+  medical_notes?: string | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  city?: string | null
+  current_medications?: string | null
+  governate?: string | null
+  insurance_policy?: string | null
+  insurance_provider?: string | null
+  profile_complete?: boolean
+  photo_url?: string | null
+  appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutPatient_profilesInput
+  patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutPatient_profilesInput
+  patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutPatient_profilesInput
+  treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutPatientInput
+  lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutPatientInput
+}
+
+export type patient_profilesCreateOrConnectWithoutSpecialist_consultationsInput = {
+  where: Prisma.patient_profilesWhereUniqueInput
+  create: Prisma.XOR<Prisma.patient_profilesCreateWithoutSpecialist_consultationsInput, Prisma.patient_profilesUncheckedCreateWithoutSpecialist_consultationsInput>
+}
+
+export type patient_profilesUpsertWithoutSpecialist_consultationsInput = {
+  update: Prisma.XOR<Prisma.patient_profilesUpdateWithoutSpecialist_consultationsInput, Prisma.patient_profilesUncheckedUpdateWithoutSpecialist_consultationsInput>
+  create: Prisma.XOR<Prisma.patient_profilesCreateWithoutSpecialist_consultationsInput, Prisma.patient_profilesUncheckedCreateWithoutSpecialist_consultationsInput>
+  where?: Prisma.patient_profilesWhereInput
+}
+
+export type patient_profilesUpdateToOneWithWhereWithoutSpecialist_consultationsInput = {
+  where?: Prisma.patient_profilesWhereInput
+  data: Prisma.XOR<Prisma.patient_profilesUpdateWithoutSpecialist_consultationsInput, Prisma.patient_profilesUncheckedUpdateWithoutSpecialist_consultationsInput>
+}
+
+export type patient_profilesUpdateWithoutSpecialist_consultationsInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  emergency_contact_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  blood_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  allergies?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  current_medications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  governate?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_complete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  organization?: Prisma.organizationsUpdateOneRequiredWithoutPatient_profilesNestedInput
+  appointments?: Prisma.appointmentsUpdateManyWithoutPatient_profilesNestedInput
+  patient_documents?: Prisma.patient_documentsUpdateManyWithoutPatient_profilesNestedInput
+  users?: Prisma.usersUpdateOneRequiredWithoutPatient_profilesNestedInput
+  patient_records?: Prisma.patient_recordsUpdateManyWithoutPatient_profilesNestedInput
+  treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutPatientNestedInput
+  lab_orders?: Prisma.lab_ordersUpdateManyWithoutPatientNestedInput
+}
+
+export type patient_profilesUncheckedUpdateWithoutSpecialist_consultationsInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  user_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  emergency_contact_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  blood_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  allergies?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  current_medications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  governate?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_complete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutPatient_profilesNestedInput
+  patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutPatient_profilesNestedInput
+  patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutPatient_profilesNestedInput
+  treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutPatientNestedInput
+  lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutPatientNestedInput
+}
+
+export type patient_profilesCreateWithoutLab_ordersInput = {
+  id?: bigint | number
+  emergency_contact_name?: string | null
+  emergency_contact_phone?: string | null
+  blood_type?: string | null
+  allergies?: string | null
+  medical_notes?: string | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  city?: string | null
+  current_medications?: string | null
+  governate?: string | null
+  insurance_policy?: string | null
+  insurance_provider?: string | null
+  profile_complete?: boolean
+  photo_url?: string | null
+  organization?: Prisma.organizationsCreateNestedOneWithoutPatient_profilesInput
+  appointments?: Prisma.appointmentsCreateNestedManyWithoutPatient_profilesInput
+  patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutPatient_profilesInput
+  users: Prisma.usersCreateNestedOneWithoutPatient_profilesInput
+  patient_records?: Prisma.patient_recordsCreateNestedManyWithoutPatient_profilesInput
+  treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutPatientInput
+  specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutPatientInput
+}
+
+export type patient_profilesUncheckedCreateWithoutLab_ordersInput = {
+  id?: bigint | number
+  organization_id?: bigint | number
+  user_id: bigint | number
+  emergency_contact_name?: string | null
+  emergency_contact_phone?: string | null
+  blood_type?: string | null
+  allergies?: string | null
+  medical_notes?: string | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  city?: string | null
+  current_medications?: string | null
+  governate?: string | null
+  insurance_policy?: string | null
+  insurance_provider?: string | null
+  profile_complete?: boolean
+  photo_url?: string | null
+  appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutPatient_profilesInput
+  patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutPatient_profilesInput
+  patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutPatient_profilesInput
+  treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutPatientInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutPatientInput
+}
+
+export type patient_profilesCreateOrConnectWithoutLab_ordersInput = {
+  where: Prisma.patient_profilesWhereUniqueInput
+  create: Prisma.XOR<Prisma.patient_profilesCreateWithoutLab_ordersInput, Prisma.patient_profilesUncheckedCreateWithoutLab_ordersInput>
+}
+
+export type patient_profilesUpsertWithoutLab_ordersInput = {
+  update: Prisma.XOR<Prisma.patient_profilesUpdateWithoutLab_ordersInput, Prisma.patient_profilesUncheckedUpdateWithoutLab_ordersInput>
+  create: Prisma.XOR<Prisma.patient_profilesCreateWithoutLab_ordersInput, Prisma.patient_profilesUncheckedCreateWithoutLab_ordersInput>
+  where?: Prisma.patient_profilesWhereInput
+}
+
+export type patient_profilesUpdateToOneWithWhereWithoutLab_ordersInput = {
+  where?: Prisma.patient_profilesWhereInput
+  data: Prisma.XOR<Prisma.patient_profilesUpdateWithoutLab_ordersInput, Prisma.patient_profilesUncheckedUpdateWithoutLab_ordersInput>
+}
+
+export type patient_profilesUpdateWithoutLab_ordersInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  emergency_contact_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  blood_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  allergies?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  current_medications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  governate?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_complete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  organization?: Prisma.organizationsUpdateOneRequiredWithoutPatient_profilesNestedInput
+  appointments?: Prisma.appointmentsUpdateManyWithoutPatient_profilesNestedInput
+  patient_documents?: Prisma.patient_documentsUpdateManyWithoutPatient_profilesNestedInput
+  users?: Prisma.usersUpdateOneRequiredWithoutPatient_profilesNestedInput
+  patient_records?: Prisma.patient_recordsUpdateManyWithoutPatient_profilesNestedInput
+  treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutPatientNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutPatientNestedInput
+}
+
+export type patient_profilesUncheckedUpdateWithoutLab_ordersInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  user_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  emergency_contact_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  blood_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  allergies?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  current_medications?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  governate?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_policy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  insurance_provider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_complete?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  photo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutPatient_profilesNestedInput
+  patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutPatient_profilesNestedInput
+  patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutPatient_profilesNestedInput
+  treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutPatientNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutPatientNestedInput
 }
 
 export type patient_profilesCreateManyOrganizationInput = {
@@ -1482,6 +1800,8 @@ export type patient_profilesUpdateWithoutOrganizationInput = {
   users?: Prisma.usersUpdateOneRequiredWithoutPatient_profilesNestedInput
   patient_records?: Prisma.patient_recordsUpdateManyWithoutPatient_profilesNestedInput
   treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutPatientNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutPatientNestedInput
+  lab_orders?: Prisma.lab_ordersUpdateManyWithoutPatientNestedInput
 }
 
 export type patient_profilesUncheckedUpdateWithoutOrganizationInput = {
@@ -1505,6 +1825,8 @@ export type patient_profilesUncheckedUpdateWithoutOrganizationInput = {
   patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutPatient_profilesNestedInput
   patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutPatient_profilesNestedInput
   treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutPatientNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutPatientNestedInput
+  lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutPatientNestedInput
 }
 
 export type patient_profilesUncheckedUpdateManyWithoutOrganizationInput = {
@@ -1536,6 +1858,8 @@ export type Patient_profilesCountOutputType = {
   patient_documents: number
   patient_records: number
   treatment_invoices: number
+  specialist_consultations: number
+  lab_orders: number
 }
 
 export type Patient_profilesCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1543,6 +1867,8 @@ export type Patient_profilesCountOutputTypeSelect<ExtArgs extends runtime.Types.
   patient_documents?: boolean | Patient_profilesCountOutputTypeCountPatient_documentsArgs
   patient_records?: boolean | Patient_profilesCountOutputTypeCountPatient_recordsArgs
   treatment_invoices?: boolean | Patient_profilesCountOutputTypeCountTreatment_invoicesArgs
+  specialist_consultations?: boolean | Patient_profilesCountOutputTypeCountSpecialist_consultationsArgs
+  lab_orders?: boolean | Patient_profilesCountOutputTypeCountLab_ordersArgs
 }
 
 /**
@@ -1583,6 +1909,20 @@ export type Patient_profilesCountOutputTypeCountTreatment_invoicesArgs<ExtArgs e
   where?: Prisma.treatment_invoicesWhereInput
 }
 
+/**
+ * Patient_profilesCountOutputType without action
+ */
+export type Patient_profilesCountOutputTypeCountSpecialist_consultationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.specialist_consultationsWhereInput
+}
+
+/**
+ * Patient_profilesCountOutputType without action
+ */
+export type Patient_profilesCountOutputTypeCountLab_ordersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.lab_ordersWhereInput
+}
+
 
 export type patient_profilesSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1608,6 +1948,8 @@ export type patient_profilesSelect<ExtArgs extends runtime.Types.Extensions.Inte
   users?: boolean | Prisma.usersDefaultArgs<ExtArgs>
   patient_records?: boolean | Prisma.patient_profiles$patient_recordsArgs<ExtArgs>
   treatment_invoices?: boolean | Prisma.patient_profiles$treatment_invoicesArgs<ExtArgs>
+  specialist_consultations?: boolean | Prisma.patient_profiles$specialist_consultationsArgs<ExtArgs>
+  lab_orders?: boolean | Prisma.patient_profiles$lab_ordersArgs<ExtArgs>
   _count?: boolean | Prisma.Patient_profilesCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["patient_profiles"]>
 
@@ -1683,6 +2025,8 @@ export type patient_profilesInclude<ExtArgs extends runtime.Types.Extensions.Int
   users?: boolean | Prisma.usersDefaultArgs<ExtArgs>
   patient_records?: boolean | Prisma.patient_profiles$patient_recordsArgs<ExtArgs>
   treatment_invoices?: boolean | Prisma.patient_profiles$treatment_invoicesArgs<ExtArgs>
+  specialist_consultations?: boolean | Prisma.patient_profiles$specialist_consultationsArgs<ExtArgs>
+  lab_orders?: boolean | Prisma.patient_profiles$lab_ordersArgs<ExtArgs>
   _count?: boolean | Prisma.Patient_profilesCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type patient_profilesIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1703,6 +2047,8 @@ export type $patient_profilesPayload<ExtArgs extends runtime.Types.Extensions.In
     users: Prisma.$usersPayload<ExtArgs>
     patient_records: Prisma.$patient_recordsPayload<ExtArgs>[]
     treatment_invoices: Prisma.$treatment_invoicesPayload<ExtArgs>[]
+    specialist_consultations: Prisma.$specialist_consultationsPayload<ExtArgs>[]
+    lab_orders: Prisma.$lab_ordersPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: bigint
@@ -2122,6 +2468,8 @@ export interface Prisma__patient_profilesClient<T, Null = never, ExtArgs extends
   users<T extends Prisma.usersDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.usersDefaultArgs<ExtArgs>>): Prisma.Prisma__usersClient<runtime.Types.Result.GetResult<Prisma.$usersPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   patient_records<T extends Prisma.patient_profiles$patient_recordsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.patient_profiles$patient_recordsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$patient_recordsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   treatment_invoices<T extends Prisma.patient_profiles$treatment_invoicesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.patient_profiles$treatment_invoicesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$treatment_invoicesPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  specialist_consultations<T extends Prisma.patient_profiles$specialist_consultationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.patient_profiles$specialist_consultationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$specialist_consultationsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  lab_orders<T extends Prisma.patient_profiles$lab_ordersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.patient_profiles$lab_ordersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$lab_ordersPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2662,6 +3010,54 @@ export type patient_profiles$treatment_invoicesArgs<ExtArgs extends runtime.Type
   take?: number
   skip?: number
   distinct?: Prisma.Treatment_invoicesScalarFieldEnum | Prisma.Treatment_invoicesScalarFieldEnum[]
+}
+
+/**
+ * patient_profiles.specialist_consultations
+ */
+export type patient_profiles$specialist_consultationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the specialist_consultations
+   */
+  select?: Prisma.specialist_consultationsSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the specialist_consultations
+   */
+  omit?: Prisma.specialist_consultationsOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.specialist_consultationsInclude<ExtArgs> | null
+  where?: Prisma.specialist_consultationsWhereInput
+  orderBy?: Prisma.specialist_consultationsOrderByWithRelationInput | Prisma.specialist_consultationsOrderByWithRelationInput[]
+  cursor?: Prisma.specialist_consultationsWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.Specialist_consultationsScalarFieldEnum | Prisma.Specialist_consultationsScalarFieldEnum[]
+}
+
+/**
+ * patient_profiles.lab_orders
+ */
+export type patient_profiles$lab_ordersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the lab_orders
+   */
+  select?: Prisma.lab_ordersSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the lab_orders
+   */
+  omit?: Prisma.lab_ordersOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.lab_ordersInclude<ExtArgs> | null
+  where?: Prisma.lab_ordersWhereInput
+  orderBy?: Prisma.lab_ordersOrderByWithRelationInput | Prisma.lab_ordersOrderByWithRelationInput[]
+  cursor?: Prisma.lab_ordersWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.Lab_ordersScalarFieldEnum | Prisma.Lab_ordersScalarFieldEnum[]
 }
 
 /**

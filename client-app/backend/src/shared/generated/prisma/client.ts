@@ -140,3 +140,26 @@ export type roles = Prisma.rolesModel
  * 
  */
 export type role_permissions = Prisma.role_permissionsModel
+/**
+ * Model specialists
+ * Outside doctors a clinic asks for help on certain cases.
+ */
+export type specialists = Prisma.specialistsModel
+/**
+ * Model specialist_consultations
+ * A case on which an outside specialist was asked to help.
+ * status: requested | scheduled | completed | cancelled
+ */
+export type specialist_consultations = Prisma.specialist_consultationsModel
+/**
+ * Model dental_labs
+ * Dental laboratories a clinic sends work to.
+ */
+export type dental_labs = Prisma.dental_labsModel
+/**
+ * Model lab_orders
+ * Work sent to a lab for a case.
+ * work_type: crown | bridge | denture | implant | aligner | retainer | veneer | other
+ * status: ordered | sent | received | fitted | cancelled
+ */
+export type lab_orders = Prisma.lab_ordersModel

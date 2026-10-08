@@ -423,4 +423,70 @@ export const AGENT_TOOLS: OpenAI.ChatCompletionFunctionTool[] = [
       },
     },
   },
+
+  // ── Specialists and lab ───────────────────────────────────────
+  {
+    type: 'function',
+    function: {
+      name: 'list_consultations',
+      description:
+        'List cases on which an outside specialist was asked to help: who, why, status, date, fee, outcome.',
+      parameters: {
+        type: 'object',
+        properties: {
+          patient_id: { type: 'number', description: 'Patient profile ID' },
+          specialist_id: { type: 'number', description: 'Specialist ID' },
+          status: {
+            type: 'string',
+            enum: ['requested', 'scheduled', 'completed', 'cancelled'],
+          },
+          from: {
+            type: 'string',
+            description: 'Consultation date from, YYYY-MM-DD',
+          },
+          to: {
+            type: 'string',
+            description: 'Consultation date to, YYYY-MM-DD',
+          },
+          page: { type: 'number' },
+          limit: { type: 'number' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'list_lab_orders',
+      description:
+        'List work sent to dental labs (crowns, dentures, aligners, …): lab, patient, teeth, status, due and received dates, cost. Use overdue: true for work still at the lab past its due date.',
+      parameters: {
+        type: 'object',
+        properties: {
+          patient_id: { type: 'number', description: 'Patient profile ID' },
+          lab_id: { type: 'number', description: 'Lab ID' },
+          status: {
+            type: 'string',
+            enum: ['ordered', 'sent', 'received', 'fitted', 'cancelled'],
+          },
+          work_type: {
+            type: 'string',
+            enum: [
+              'crown',
+              'bridge',
+              'denture',
+              'implant',
+              'aligner',
+              'retainer',
+              'veneer',
+              'other',
+            ],
+          },
+          overdue: { type: 'boolean', description: 'Only overdue orders' },
+          page: { type: 'number' },
+          limit: { type: 'number' },
+        },
+      },
+    },
+  },
 ];

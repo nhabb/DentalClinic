@@ -100,6 +100,8 @@ function build(turns: Completion[]) {
     billing as never,
     roles as never,
     prisma as never,
+    {} as never,
+    {} as never,
   );
   const service = new AgentService(
     users as never,

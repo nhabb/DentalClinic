@@ -45,7 +45,7 @@ npm run test:cov    # Coverage report
 ### Prisma (run from `client-app/backend/`)
 ```bash
 node scripts/apply-sql.js prisma/migrations/<folder>/migration.sql   # Apply a migration (see note)
-npx prisma generate       # Regenerate client after schema changes (generated client is committed)
+npx prisma generate       # Regenerate client after schema changes (generated client is committed; both generators are pinned to moduleFormat cjs + no import extension because tsconfig uses nodenext)
 npx prisma studio         # Open Prisma Studio GUI
 ```
 Do **not** run `prisma migrate dev`: the database has no `_prisma_migrations` history
@@ -103,9 +103,12 @@ Node version: **20** (see `.nvmrc`)
 | Notifications | `src/notifications/` |
 | Prisma (shared) | `src/prisma/` |
 | Authorization (roles & permissions) | `src/shared/authorization/` |
+| Specialists & consultations | `src/doctor/specialists/` |
+| Labs & lab orders | `src/doctor/lab/` |
+| Case links (patient/visit/record belong together) | `src/doctor/case-links/` |
 
 ### Database — PostgreSQL via Prisma
-Schema at `client-app/backend/prisma/schema.prisma`. Key tables: `organizations`, `branches`, `users`, `patient_profiles`, `appointments`, `appointment_slots`, `patient_records`, `patient_documents`, `inventory_items`, `inventory_movements`, `notifications`, `clinic_profile`, `audit_logs`, `treatment_invoices`, `expenses`.
+Schema at `client-app/backend/prisma/schema.prisma`. Key tables: `organizations`, `branches`, `users`, `patient_profiles`, `appointments`, `appointment_slots`, `patient_records`, `patient_documents`, `inventory_items`, `inventory_movements`, `notifications`, `clinic_profile`, `audit_logs`, `treatment_invoices`, `expenses`, `specialists`, `specialist_consultations`, `dental_labs`, `lab_orders`.
 
 ### Multi-tenancy (organizations → branches) and row-level security
 - `organizations` = tenant (one dental business); `branches` = its clinic locations (Beirut, Tyre…). Every tenant table has `organization_id`; location-bound tables (`appointment_slots`, `appointments`, `inventory_items`, plus optional on invoices/expenses/records/documents) have `branch_id`. Each organization has exactly one default branch.

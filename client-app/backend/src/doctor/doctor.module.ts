@@ -6,11 +6,13 @@ import { PatientRecordsModule } from './patient-records/patient-records.module';
 import { ExpensesModule } from './expenses/expenses.module';
 import { BillingModule } from './billing/billing.module';
 import { PatientWorkModule } from './patient-work/patient-work.module';
+import { SpecialistsModule } from './specialists/specialists.module';
+import { LabModule } from './lab/lab.module';
 
 /**
  * Doctor/Admin panel modules.
  * Dev scope: appointments, slots, inventory, patient records, payments, expenses, billing,
- * dental chart work.
+ * dental chart work, outside specialists, lab work.
  */
 @Module({
   imports: [
@@ -21,6 +23,8 @@ import { PatientWorkModule } from './patient-work/patient-work.module';
     ExpensesModule,
     BillingModule,
     PatientWorkModule,
+    SpecialistsModule,
+    LabModule,
   ],
 })
 export class DoctorModule {}

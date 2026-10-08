@@ -70,7 +70,11 @@ export const ModelName = {
   invoice_line_items: 'invoice_line_items',
   invoice_payments: 'invoice_payments',
   roles: 'roles',
-  role_permissions: 'role_permissions'
+  role_permissions: 'role_permissions',
+  specialists: 'specialists',
+  specialist_consultations: 'specialist_consultations',
+  dental_labs: 'dental_labs',
+  lab_orders: 'lab_orders'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -439,6 +443,88 @@ export const Role_permissionsScalarFieldEnum = {
 } as const
 
 export type Role_permissionsScalarFieldEnum = (typeof Role_permissionsScalarFieldEnum)[keyof typeof Role_permissionsScalarFieldEnum]
+
+
+export const SpecialistsScalarFieldEnum = {
+  id: 'id',
+  organization_id: 'organization_id',
+  name: 'name',
+  specialty: 'specialty',
+  phone: 'phone',
+  email: 'email',
+  clinic_name: 'clinic_name',
+  notes: 'notes',
+  is_active: 'is_active',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+} as const
+
+export type SpecialistsScalarFieldEnum = (typeof SpecialistsScalarFieldEnum)[keyof typeof SpecialistsScalarFieldEnum]
+
+
+export const Specialist_consultationsScalarFieldEnum = {
+  id: 'id',
+  organization_id: 'organization_id',
+  branch_id: 'branch_id',
+  patient_id: 'patient_id',
+  specialist_id: 'specialist_id',
+  appointment_id: 'appointment_id',
+  record_id: 'record_id',
+  requested_by: 'requested_by',
+  status: 'status',
+  consultation_date: 'consultation_date',
+  reason: 'reason',
+  outcome: 'outcome',
+  fee: 'fee',
+  notes: 'notes',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+} as const
+
+export type Specialist_consultationsScalarFieldEnum = (typeof Specialist_consultationsScalarFieldEnum)[keyof typeof Specialist_consultationsScalarFieldEnum]
+
+
+export const Dental_labsScalarFieldEnum = {
+  id: 'id',
+  organization_id: 'organization_id',
+  name: 'name',
+  phone: 'phone',
+  email: 'email',
+  address: 'address',
+  notes: 'notes',
+  is_active: 'is_active',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+} as const
+
+export type Dental_labsScalarFieldEnum = (typeof Dental_labsScalarFieldEnum)[keyof typeof Dental_labsScalarFieldEnum]
+
+
+export const Lab_ordersScalarFieldEnum = {
+  id: 'id',
+  organization_id: 'organization_id',
+  branch_id: 'branch_id',
+  patient_id: 'patient_id',
+  lab_id: 'lab_id',
+  appointment_id: 'appointment_id',
+  record_id: 'record_id',
+  ordered_by: 'ordered_by',
+  work_type: 'work_type',
+  description: 'description',
+  tooth_numbers: 'tooth_numbers',
+  shade: 'shade',
+  status: 'status',
+  sent_at: 'sent_at',
+  due_at: 'due_at',
+  received_at: 'received_at',
+  fitted_at: 'fitted_at',
+  cost: 'cost',
+  notes: 'notes',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+} as const
+
+export type Lab_ordersScalarFieldEnum = (typeof Lab_ordersScalarFieldEnum)[keyof typeof Lab_ordersScalarFieldEnum]
 
 
 export const SortOrder = {

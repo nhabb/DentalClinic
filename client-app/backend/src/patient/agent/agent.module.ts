@@ -11,6 +11,8 @@ import { UsersModule } from '../../shared/users/users.module';
 import { ExpensesModule } from '../../doctor/expenses/expenses.module';
 import { BillingModule } from '../../doctor/billing/billing.module';
 import { PrismaModule } from '../../shared/prisma/prisma.module';
+import { SpecialistsModule } from '../../doctor/specialists/specialists.module';
+import { LabModule } from '../../doctor/lab/lab.module';
 
 /**
  * The clinic AI assistant. The tools call the feature modules' own services,
@@ -26,6 +28,8 @@ import { PrismaModule } from '../../shared/prisma/prisma.module';
     ExpensesModule,
     BillingModule,
     PrismaModule,
+    SpecialistsModule,
+    LabModule,
   ],
   controllers: [AgentController],
   providers: [AgentService, ToolRunner, SchemaSummary],

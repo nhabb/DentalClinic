@@ -310,6 +310,8 @@ export type branchesWhereInput = {
   clinic_profile?: Prisma.Clinic_profileListRelationFilter
   expenses?: Prisma.ExpensesListRelationFilter
   treatment_invoices?: Prisma.Treatment_invoicesListRelationFilter
+  specialist_consultations?: Prisma.Specialist_consultationsListRelationFilter
+  lab_orders?: Prisma.Lab_ordersListRelationFilter
 }
 
 export type branchesOrderByWithRelationInput = {
@@ -338,6 +340,8 @@ export type branchesOrderByWithRelationInput = {
   clinic_profile?: Prisma.clinic_profileOrderByRelationAggregateInput
   expenses?: Prisma.expensesOrderByRelationAggregateInput
   treatment_invoices?: Prisma.treatment_invoicesOrderByRelationAggregateInput
+  specialist_consultations?: Prisma.specialist_consultationsOrderByRelationAggregateInput
+  lab_orders?: Prisma.lab_ordersOrderByRelationAggregateInput
 }
 
 export type branchesWhereUniqueInput = Prisma.AtLeast<{
@@ -370,6 +374,8 @@ export type branchesWhereUniqueInput = Prisma.AtLeast<{
   clinic_profile?: Prisma.Clinic_profileListRelationFilter
   expenses?: Prisma.ExpensesListRelationFilter
   treatment_invoices?: Prisma.Treatment_invoicesListRelationFilter
+  specialist_consultations?: Prisma.Specialist_consultationsListRelationFilter
+  lab_orders?: Prisma.Lab_ordersListRelationFilter
 }, "id" | "organization_id_name">
 
 export type branchesOrderByWithAggregationInput = {
@@ -441,6 +447,8 @@ export type branchesCreateInput = {
   clinic_profile?: Prisma.clinic_profileCreateNestedManyWithoutBranchInput
   expenses?: Prisma.expensesCreateNestedManyWithoutBranchInput
   treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutBranchInput
+  specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutBranchInput
+  lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutBranchInput
 }
 
 export type branchesUncheckedCreateInput = {
@@ -468,6 +476,8 @@ export type branchesUncheckedCreateInput = {
   clinic_profile?: Prisma.clinic_profileUncheckedCreateNestedManyWithoutBranchInput
   expenses?: Prisma.expensesUncheckedCreateNestedManyWithoutBranchInput
   treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutBranchInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutBranchInput
+  lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutBranchInput
 }
 
 export type branchesUpdateInput = {
@@ -495,6 +505,8 @@ export type branchesUpdateInput = {
   clinic_profile?: Prisma.clinic_profileUpdateManyWithoutBranchNestedInput
   expenses?: Prisma.expensesUpdateManyWithoutBranchNestedInput
   treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutBranchNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutBranchNestedInput
+  lab_orders?: Prisma.lab_ordersUpdateManyWithoutBranchNestedInput
 }
 
 export type branchesUncheckedUpdateInput = {
@@ -522,6 +534,8 @@ export type branchesUncheckedUpdateInput = {
   clinic_profile?: Prisma.clinic_profileUncheckedUpdateManyWithoutBranchNestedInput
   expenses?: Prisma.expensesUncheckedUpdateManyWithoutBranchNestedInput
   treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutBranchNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutBranchNestedInput
+  lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutBranchNestedInput
 }
 
 export type branchesCreateManyInput = {
@@ -846,6 +860,38 @@ export type branchesUpdateOneWithoutTreatment_invoicesNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.branchesUpdateToOneWithWhereWithoutTreatment_invoicesInput, Prisma.branchesUpdateWithoutTreatment_invoicesInput>, Prisma.branchesUncheckedUpdateWithoutTreatment_invoicesInput>
 }
 
+export type branchesCreateNestedOneWithoutSpecialist_consultationsInput = {
+  create?: Prisma.XOR<Prisma.branchesCreateWithoutSpecialist_consultationsInput, Prisma.branchesUncheckedCreateWithoutSpecialist_consultationsInput>
+  connectOrCreate?: Prisma.branchesCreateOrConnectWithoutSpecialist_consultationsInput
+  connect?: Prisma.branchesWhereUniqueInput
+}
+
+export type branchesUpdateOneWithoutSpecialist_consultationsNestedInput = {
+  create?: Prisma.XOR<Prisma.branchesCreateWithoutSpecialist_consultationsInput, Prisma.branchesUncheckedCreateWithoutSpecialist_consultationsInput>
+  connectOrCreate?: Prisma.branchesCreateOrConnectWithoutSpecialist_consultationsInput
+  upsert?: Prisma.branchesUpsertWithoutSpecialist_consultationsInput
+  disconnect?: Prisma.branchesWhereInput | boolean
+  delete?: Prisma.branchesWhereInput | boolean
+  connect?: Prisma.branchesWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.branchesUpdateToOneWithWhereWithoutSpecialist_consultationsInput, Prisma.branchesUpdateWithoutSpecialist_consultationsInput>, Prisma.branchesUncheckedUpdateWithoutSpecialist_consultationsInput>
+}
+
+export type branchesCreateNestedOneWithoutLab_ordersInput = {
+  create?: Prisma.XOR<Prisma.branchesCreateWithoutLab_ordersInput, Prisma.branchesUncheckedCreateWithoutLab_ordersInput>
+  connectOrCreate?: Prisma.branchesCreateOrConnectWithoutLab_ordersInput
+  connect?: Prisma.branchesWhereUniqueInput
+}
+
+export type branchesUpdateOneWithoutLab_ordersNestedInput = {
+  create?: Prisma.XOR<Prisma.branchesCreateWithoutLab_ordersInput, Prisma.branchesUncheckedCreateWithoutLab_ordersInput>
+  connectOrCreate?: Prisma.branchesCreateOrConnectWithoutLab_ordersInput
+  upsert?: Prisma.branchesUpsertWithoutLab_ordersInput
+  disconnect?: Prisma.branchesWhereInput | boolean
+  delete?: Prisma.branchesWhereInput | boolean
+  connect?: Prisma.branchesWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.branchesUpdateToOneWithWhereWithoutLab_ordersInput, Prisma.branchesUpdateWithoutLab_ordersInput>, Prisma.branchesUncheckedUpdateWithoutLab_ordersInput>
+}
+
 export type branchesCreateWithoutOrganizationInput = {
   id?: bigint | number
   name: string
@@ -870,6 +916,8 @@ export type branchesCreateWithoutOrganizationInput = {
   clinic_profile?: Prisma.clinic_profileCreateNestedManyWithoutBranchInput
   expenses?: Prisma.expensesCreateNestedManyWithoutBranchInput
   treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutBranchInput
+  specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutBranchInput
+  lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutBranchInput
 }
 
 export type branchesUncheckedCreateWithoutOrganizationInput = {
@@ -896,6 +944,8 @@ export type branchesUncheckedCreateWithoutOrganizationInput = {
   clinic_profile?: Prisma.clinic_profileUncheckedCreateNestedManyWithoutBranchInput
   expenses?: Prisma.expensesUncheckedCreateNestedManyWithoutBranchInput
   treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutBranchInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutBranchInput
+  lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutBranchInput
 }
 
 export type branchesCreateOrConnectWithoutOrganizationInput = {
@@ -969,6 +1019,8 @@ export type branchesCreateWithoutAppointment_slotsInput = {
   clinic_profile?: Prisma.clinic_profileCreateNestedManyWithoutBranchInput
   expenses?: Prisma.expensesCreateNestedManyWithoutBranchInput
   treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutBranchInput
+  specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutBranchInput
+  lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutBranchInput
 }
 
 export type branchesUncheckedCreateWithoutAppointment_slotsInput = {
@@ -995,6 +1047,8 @@ export type branchesUncheckedCreateWithoutAppointment_slotsInput = {
   clinic_profile?: Prisma.clinic_profileUncheckedCreateNestedManyWithoutBranchInput
   expenses?: Prisma.expensesUncheckedCreateNestedManyWithoutBranchInput
   treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutBranchInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutBranchInput
+  lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutBranchInput
 }
 
 export type branchesCreateOrConnectWithoutAppointment_slotsInput = {
@@ -1037,6 +1091,8 @@ export type branchesUpdateWithoutAppointment_slotsInput = {
   clinic_profile?: Prisma.clinic_profileUpdateManyWithoutBranchNestedInput
   expenses?: Prisma.expensesUpdateManyWithoutBranchNestedInput
   treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutBranchNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutBranchNestedInput
+  lab_orders?: Prisma.lab_ordersUpdateManyWithoutBranchNestedInput
 }
 
 export type branchesUncheckedUpdateWithoutAppointment_slotsInput = {
@@ -1063,6 +1119,8 @@ export type branchesUncheckedUpdateWithoutAppointment_slotsInput = {
   clinic_profile?: Prisma.clinic_profileUncheckedUpdateManyWithoutBranchNestedInput
   expenses?: Prisma.expensesUncheckedUpdateManyWithoutBranchNestedInput
   treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutBranchNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutBranchNestedInput
+  lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutBranchNestedInput
 }
 
 export type branchesCreateWithoutAppointmentsInput = {
@@ -1089,6 +1147,8 @@ export type branchesCreateWithoutAppointmentsInput = {
   clinic_profile?: Prisma.clinic_profileCreateNestedManyWithoutBranchInput
   expenses?: Prisma.expensesCreateNestedManyWithoutBranchInput
   treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutBranchInput
+  specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutBranchInput
+  lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutBranchInput
 }
 
 export type branchesUncheckedCreateWithoutAppointmentsInput = {
@@ -1115,6 +1175,8 @@ export type branchesUncheckedCreateWithoutAppointmentsInput = {
   clinic_profile?: Prisma.clinic_profileUncheckedCreateNestedManyWithoutBranchInput
   expenses?: Prisma.expensesUncheckedCreateNestedManyWithoutBranchInput
   treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutBranchInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutBranchInput
+  lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutBranchInput
 }
 
 export type branchesCreateOrConnectWithoutAppointmentsInput = {
@@ -1157,6 +1219,8 @@ export type branchesUpdateWithoutAppointmentsInput = {
   clinic_profile?: Prisma.clinic_profileUpdateManyWithoutBranchNestedInput
   expenses?: Prisma.expensesUpdateManyWithoutBranchNestedInput
   treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutBranchNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutBranchNestedInput
+  lab_orders?: Prisma.lab_ordersUpdateManyWithoutBranchNestedInput
 }
 
 export type branchesUncheckedUpdateWithoutAppointmentsInput = {
@@ -1183,6 +1247,8 @@ export type branchesUncheckedUpdateWithoutAppointmentsInput = {
   clinic_profile?: Prisma.clinic_profileUncheckedUpdateManyWithoutBranchNestedInput
   expenses?: Prisma.expensesUncheckedUpdateManyWithoutBranchNestedInput
   treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutBranchNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutBranchNestedInput
+  lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutBranchNestedInput
 }
 
 export type branchesCreateWithoutClinic_profileInput = {
@@ -1209,6 +1275,8 @@ export type branchesCreateWithoutClinic_profileInput = {
   inventory_items?: Prisma.inventory_itemsCreateNestedManyWithoutBranchInput
   expenses?: Prisma.expensesCreateNestedManyWithoutBranchInput
   treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutBranchInput
+  specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutBranchInput
+  lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutBranchInput
 }
 
 export type branchesUncheckedCreateWithoutClinic_profileInput = {
@@ -1235,6 +1303,8 @@ export type branchesUncheckedCreateWithoutClinic_profileInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedCreateNestedManyWithoutBranchInput
   expenses?: Prisma.expensesUncheckedCreateNestedManyWithoutBranchInput
   treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutBranchInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutBranchInput
+  lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutBranchInput
 }
 
 export type branchesCreateOrConnectWithoutClinic_profileInput = {
@@ -1277,6 +1347,8 @@ export type branchesUpdateWithoutClinic_profileInput = {
   inventory_items?: Prisma.inventory_itemsUpdateManyWithoutBranchNestedInput
   expenses?: Prisma.expensesUpdateManyWithoutBranchNestedInput
   treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutBranchNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutBranchNestedInput
+  lab_orders?: Prisma.lab_ordersUpdateManyWithoutBranchNestedInput
 }
 
 export type branchesUncheckedUpdateWithoutClinic_profileInput = {
@@ -1303,6 +1375,8 @@ export type branchesUncheckedUpdateWithoutClinic_profileInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedUpdateManyWithoutBranchNestedInput
   expenses?: Prisma.expensesUncheckedUpdateManyWithoutBranchNestedInput
   treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutBranchNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutBranchNestedInput
+  lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutBranchNestedInput
 }
 
 export type branchesCreateWithoutInventory_itemsInput = {
@@ -1329,6 +1403,8 @@ export type branchesCreateWithoutInventory_itemsInput = {
   clinic_profile?: Prisma.clinic_profileCreateNestedManyWithoutBranchInput
   expenses?: Prisma.expensesCreateNestedManyWithoutBranchInput
   treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutBranchInput
+  specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutBranchInput
+  lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutBranchInput
 }
 
 export type branchesUncheckedCreateWithoutInventory_itemsInput = {
@@ -1355,6 +1431,8 @@ export type branchesUncheckedCreateWithoutInventory_itemsInput = {
   clinic_profile?: Prisma.clinic_profileUncheckedCreateNestedManyWithoutBranchInput
   expenses?: Prisma.expensesUncheckedCreateNestedManyWithoutBranchInput
   treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutBranchInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutBranchInput
+  lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutBranchInput
 }
 
 export type branchesCreateOrConnectWithoutInventory_itemsInput = {
@@ -1397,6 +1475,8 @@ export type branchesUpdateWithoutInventory_itemsInput = {
   clinic_profile?: Prisma.clinic_profileUpdateManyWithoutBranchNestedInput
   expenses?: Prisma.expensesUpdateManyWithoutBranchNestedInput
   treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutBranchNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutBranchNestedInput
+  lab_orders?: Prisma.lab_ordersUpdateManyWithoutBranchNestedInput
 }
 
 export type branchesUncheckedUpdateWithoutInventory_itemsInput = {
@@ -1423,6 +1503,8 @@ export type branchesUncheckedUpdateWithoutInventory_itemsInput = {
   clinic_profile?: Prisma.clinic_profileUncheckedUpdateManyWithoutBranchNestedInput
   expenses?: Prisma.expensesUncheckedUpdateManyWithoutBranchNestedInput
   treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutBranchNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutBranchNestedInput
+  lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutBranchNestedInput
 }
 
 export type branchesCreateWithoutPatient_documentsInput = {
@@ -1449,6 +1531,8 @@ export type branchesCreateWithoutPatient_documentsInput = {
   clinic_profile?: Prisma.clinic_profileCreateNestedManyWithoutBranchInput
   expenses?: Prisma.expensesCreateNestedManyWithoutBranchInput
   treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutBranchInput
+  specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutBranchInput
+  lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutBranchInput
 }
 
 export type branchesUncheckedCreateWithoutPatient_documentsInput = {
@@ -1475,6 +1559,8 @@ export type branchesUncheckedCreateWithoutPatient_documentsInput = {
   clinic_profile?: Prisma.clinic_profileUncheckedCreateNestedManyWithoutBranchInput
   expenses?: Prisma.expensesUncheckedCreateNestedManyWithoutBranchInput
   treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutBranchInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutBranchInput
+  lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutBranchInput
 }
 
 export type branchesCreateOrConnectWithoutPatient_documentsInput = {
@@ -1517,6 +1603,8 @@ export type branchesUpdateWithoutPatient_documentsInput = {
   clinic_profile?: Prisma.clinic_profileUpdateManyWithoutBranchNestedInput
   expenses?: Prisma.expensesUpdateManyWithoutBranchNestedInput
   treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutBranchNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutBranchNestedInput
+  lab_orders?: Prisma.lab_ordersUpdateManyWithoutBranchNestedInput
 }
 
 export type branchesUncheckedUpdateWithoutPatient_documentsInput = {
@@ -1543,6 +1631,8 @@ export type branchesUncheckedUpdateWithoutPatient_documentsInput = {
   clinic_profile?: Prisma.clinic_profileUncheckedUpdateManyWithoutBranchNestedInput
   expenses?: Prisma.expensesUncheckedUpdateManyWithoutBranchNestedInput
   treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutBranchNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutBranchNestedInput
+  lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutBranchNestedInput
 }
 
 export type branchesCreateWithoutPatient_recordsInput = {
@@ -1569,6 +1659,8 @@ export type branchesCreateWithoutPatient_recordsInput = {
   clinic_profile?: Prisma.clinic_profileCreateNestedManyWithoutBranchInput
   expenses?: Prisma.expensesCreateNestedManyWithoutBranchInput
   treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutBranchInput
+  specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutBranchInput
+  lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutBranchInput
 }
 
 export type branchesUncheckedCreateWithoutPatient_recordsInput = {
@@ -1595,6 +1687,8 @@ export type branchesUncheckedCreateWithoutPatient_recordsInput = {
   clinic_profile?: Prisma.clinic_profileUncheckedCreateNestedManyWithoutBranchInput
   expenses?: Prisma.expensesUncheckedCreateNestedManyWithoutBranchInput
   treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutBranchInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutBranchInput
+  lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutBranchInput
 }
 
 export type branchesCreateOrConnectWithoutPatient_recordsInput = {
@@ -1637,6 +1731,8 @@ export type branchesUpdateWithoutPatient_recordsInput = {
   clinic_profile?: Prisma.clinic_profileUpdateManyWithoutBranchNestedInput
   expenses?: Prisma.expensesUpdateManyWithoutBranchNestedInput
   treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutBranchNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutBranchNestedInput
+  lab_orders?: Prisma.lab_ordersUpdateManyWithoutBranchNestedInput
 }
 
 export type branchesUncheckedUpdateWithoutPatient_recordsInput = {
@@ -1663,6 +1759,8 @@ export type branchesUncheckedUpdateWithoutPatient_recordsInput = {
   clinic_profile?: Prisma.clinic_profileUncheckedUpdateManyWithoutBranchNestedInput
   expenses?: Prisma.expensesUncheckedUpdateManyWithoutBranchNestedInput
   treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutBranchNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutBranchNestedInput
+  lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutBranchNestedInput
 }
 
 export type branchesCreateWithoutUsersInput = {
@@ -1689,6 +1787,8 @@ export type branchesCreateWithoutUsersInput = {
   clinic_profile?: Prisma.clinic_profileCreateNestedManyWithoutBranchInput
   expenses?: Prisma.expensesCreateNestedManyWithoutBranchInput
   treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutBranchInput
+  specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutBranchInput
+  lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutBranchInput
 }
 
 export type branchesUncheckedCreateWithoutUsersInput = {
@@ -1715,6 +1815,8 @@ export type branchesUncheckedCreateWithoutUsersInput = {
   clinic_profile?: Prisma.clinic_profileUncheckedCreateNestedManyWithoutBranchInput
   expenses?: Prisma.expensesUncheckedCreateNestedManyWithoutBranchInput
   treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutBranchInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutBranchInput
+  lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutBranchInput
 }
 
 export type branchesCreateOrConnectWithoutUsersInput = {
@@ -1757,6 +1859,8 @@ export type branchesUpdateWithoutUsersInput = {
   clinic_profile?: Prisma.clinic_profileUpdateManyWithoutBranchNestedInput
   expenses?: Prisma.expensesUpdateManyWithoutBranchNestedInput
   treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutBranchNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutBranchNestedInput
+  lab_orders?: Prisma.lab_ordersUpdateManyWithoutBranchNestedInput
 }
 
 export type branchesUncheckedUpdateWithoutUsersInput = {
@@ -1783,6 +1887,8 @@ export type branchesUncheckedUpdateWithoutUsersInput = {
   clinic_profile?: Prisma.clinic_profileUncheckedUpdateManyWithoutBranchNestedInput
   expenses?: Prisma.expensesUncheckedUpdateManyWithoutBranchNestedInput
   treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutBranchNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutBranchNestedInput
+  lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutBranchNestedInput
 }
 
 export type branchesCreateWithoutExpensesInput = {
@@ -1809,6 +1915,8 @@ export type branchesCreateWithoutExpensesInput = {
   inventory_items?: Prisma.inventory_itemsCreateNestedManyWithoutBranchInput
   clinic_profile?: Prisma.clinic_profileCreateNestedManyWithoutBranchInput
   treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutBranchInput
+  specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutBranchInput
+  lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutBranchInput
 }
 
 export type branchesUncheckedCreateWithoutExpensesInput = {
@@ -1835,6 +1943,8 @@ export type branchesUncheckedCreateWithoutExpensesInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedCreateNestedManyWithoutBranchInput
   clinic_profile?: Prisma.clinic_profileUncheckedCreateNestedManyWithoutBranchInput
   treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutBranchInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutBranchInput
+  lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutBranchInput
 }
 
 export type branchesCreateOrConnectWithoutExpensesInput = {
@@ -1877,6 +1987,8 @@ export type branchesUpdateWithoutExpensesInput = {
   inventory_items?: Prisma.inventory_itemsUpdateManyWithoutBranchNestedInput
   clinic_profile?: Prisma.clinic_profileUpdateManyWithoutBranchNestedInput
   treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutBranchNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutBranchNestedInput
+  lab_orders?: Prisma.lab_ordersUpdateManyWithoutBranchNestedInput
 }
 
 export type branchesUncheckedUpdateWithoutExpensesInput = {
@@ -1903,6 +2015,8 @@ export type branchesUncheckedUpdateWithoutExpensesInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedUpdateManyWithoutBranchNestedInput
   clinic_profile?: Prisma.clinic_profileUncheckedUpdateManyWithoutBranchNestedInput
   treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutBranchNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutBranchNestedInput
+  lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutBranchNestedInput
 }
 
 export type branchesCreateWithoutTreatment_invoicesInput = {
@@ -1929,6 +2043,8 @@ export type branchesCreateWithoutTreatment_invoicesInput = {
   inventory_items?: Prisma.inventory_itemsCreateNestedManyWithoutBranchInput
   clinic_profile?: Prisma.clinic_profileCreateNestedManyWithoutBranchInput
   expenses?: Prisma.expensesCreateNestedManyWithoutBranchInput
+  specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutBranchInput
+  lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutBranchInput
 }
 
 export type branchesUncheckedCreateWithoutTreatment_invoicesInput = {
@@ -1955,6 +2071,8 @@ export type branchesUncheckedCreateWithoutTreatment_invoicesInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedCreateNestedManyWithoutBranchInput
   clinic_profile?: Prisma.clinic_profileUncheckedCreateNestedManyWithoutBranchInput
   expenses?: Prisma.expensesUncheckedCreateNestedManyWithoutBranchInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutBranchInput
+  lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutBranchInput
 }
 
 export type branchesCreateOrConnectWithoutTreatment_invoicesInput = {
@@ -1997,6 +2115,8 @@ export type branchesUpdateWithoutTreatment_invoicesInput = {
   inventory_items?: Prisma.inventory_itemsUpdateManyWithoutBranchNestedInput
   clinic_profile?: Prisma.clinic_profileUpdateManyWithoutBranchNestedInput
   expenses?: Prisma.expensesUpdateManyWithoutBranchNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutBranchNestedInput
+  lab_orders?: Prisma.lab_ordersUpdateManyWithoutBranchNestedInput
 }
 
 export type branchesUncheckedUpdateWithoutTreatment_invoicesInput = {
@@ -2023,6 +2143,264 @@ export type branchesUncheckedUpdateWithoutTreatment_invoicesInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedUpdateManyWithoutBranchNestedInput
   clinic_profile?: Prisma.clinic_profileUncheckedUpdateManyWithoutBranchNestedInput
   expenses?: Prisma.expensesUncheckedUpdateManyWithoutBranchNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutBranchNestedInput
+  lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutBranchNestedInput
+}
+
+export type branchesCreateWithoutSpecialist_consultationsInput = {
+  id?: bigint | number
+  name: string
+  code?: string | null
+  address?: string | null
+  city?: string | null
+  governate?: string | null
+  phone?: string | null
+  email?: string | null
+  opening_hours?: string | null
+  timezone?: string | null
+  is_default?: boolean
+  is_active?: boolean
+  created_at?: Date | string
+  updated_at?: Date | string
+  organization?: Prisma.organizationsCreateNestedOneWithoutBranchesInput
+  users?: Prisma.usersCreateNestedManyWithoutBranchInput
+  appointment_slots?: Prisma.appointment_slotsCreateNestedManyWithoutBranchInput
+  appointments?: Prisma.appointmentsCreateNestedManyWithoutBranchInput
+  patient_records?: Prisma.patient_recordsCreateNestedManyWithoutBranchInput
+  patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutBranchInput
+  inventory_items?: Prisma.inventory_itemsCreateNestedManyWithoutBranchInput
+  clinic_profile?: Prisma.clinic_profileCreateNestedManyWithoutBranchInput
+  expenses?: Prisma.expensesCreateNestedManyWithoutBranchInput
+  treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutBranchInput
+  lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutBranchInput
+}
+
+export type branchesUncheckedCreateWithoutSpecialist_consultationsInput = {
+  id?: bigint | number
+  organization_id?: bigint | number
+  name: string
+  code?: string | null
+  address?: string | null
+  city?: string | null
+  governate?: string | null
+  phone?: string | null
+  email?: string | null
+  opening_hours?: string | null
+  timezone?: string | null
+  is_default?: boolean
+  is_active?: boolean
+  created_at?: Date | string
+  updated_at?: Date | string
+  users?: Prisma.usersUncheckedCreateNestedManyWithoutBranchInput
+  appointment_slots?: Prisma.appointment_slotsUncheckedCreateNestedManyWithoutBranchInput
+  appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutBranchInput
+  patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutBranchInput
+  patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutBranchInput
+  inventory_items?: Prisma.inventory_itemsUncheckedCreateNestedManyWithoutBranchInput
+  clinic_profile?: Prisma.clinic_profileUncheckedCreateNestedManyWithoutBranchInput
+  expenses?: Prisma.expensesUncheckedCreateNestedManyWithoutBranchInput
+  treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutBranchInput
+  lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutBranchInput
+}
+
+export type branchesCreateOrConnectWithoutSpecialist_consultationsInput = {
+  where: Prisma.branchesWhereUniqueInput
+  create: Prisma.XOR<Prisma.branchesCreateWithoutSpecialist_consultationsInput, Prisma.branchesUncheckedCreateWithoutSpecialist_consultationsInput>
+}
+
+export type branchesUpsertWithoutSpecialist_consultationsInput = {
+  update: Prisma.XOR<Prisma.branchesUpdateWithoutSpecialist_consultationsInput, Prisma.branchesUncheckedUpdateWithoutSpecialist_consultationsInput>
+  create: Prisma.XOR<Prisma.branchesCreateWithoutSpecialist_consultationsInput, Prisma.branchesUncheckedCreateWithoutSpecialist_consultationsInput>
+  where?: Prisma.branchesWhereInput
+}
+
+export type branchesUpdateToOneWithWhereWithoutSpecialist_consultationsInput = {
+  where?: Prisma.branchesWhereInput
+  data: Prisma.XOR<Prisma.branchesUpdateWithoutSpecialist_consultationsInput, Prisma.branchesUncheckedUpdateWithoutSpecialist_consultationsInput>
+}
+
+export type branchesUpdateWithoutSpecialist_consultationsInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  governate?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  opening_hours?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  is_default?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  organization?: Prisma.organizationsUpdateOneRequiredWithoutBranchesNestedInput
+  users?: Prisma.usersUpdateManyWithoutBranchNestedInput
+  appointment_slots?: Prisma.appointment_slotsUpdateManyWithoutBranchNestedInput
+  appointments?: Prisma.appointmentsUpdateManyWithoutBranchNestedInput
+  patient_records?: Prisma.patient_recordsUpdateManyWithoutBranchNestedInput
+  patient_documents?: Prisma.patient_documentsUpdateManyWithoutBranchNestedInput
+  inventory_items?: Prisma.inventory_itemsUpdateManyWithoutBranchNestedInput
+  clinic_profile?: Prisma.clinic_profileUpdateManyWithoutBranchNestedInput
+  expenses?: Prisma.expensesUpdateManyWithoutBranchNestedInput
+  treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutBranchNestedInput
+  lab_orders?: Prisma.lab_ordersUpdateManyWithoutBranchNestedInput
+}
+
+export type branchesUncheckedUpdateWithoutSpecialist_consultationsInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  governate?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  opening_hours?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  is_default?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  users?: Prisma.usersUncheckedUpdateManyWithoutBranchNestedInput
+  appointment_slots?: Prisma.appointment_slotsUncheckedUpdateManyWithoutBranchNestedInput
+  appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutBranchNestedInput
+  patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutBranchNestedInput
+  patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutBranchNestedInput
+  inventory_items?: Prisma.inventory_itemsUncheckedUpdateManyWithoutBranchNestedInput
+  clinic_profile?: Prisma.clinic_profileUncheckedUpdateManyWithoutBranchNestedInput
+  expenses?: Prisma.expensesUncheckedUpdateManyWithoutBranchNestedInput
+  treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutBranchNestedInput
+  lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutBranchNestedInput
+}
+
+export type branchesCreateWithoutLab_ordersInput = {
+  id?: bigint | number
+  name: string
+  code?: string | null
+  address?: string | null
+  city?: string | null
+  governate?: string | null
+  phone?: string | null
+  email?: string | null
+  opening_hours?: string | null
+  timezone?: string | null
+  is_default?: boolean
+  is_active?: boolean
+  created_at?: Date | string
+  updated_at?: Date | string
+  organization?: Prisma.organizationsCreateNestedOneWithoutBranchesInput
+  users?: Prisma.usersCreateNestedManyWithoutBranchInput
+  appointment_slots?: Prisma.appointment_slotsCreateNestedManyWithoutBranchInput
+  appointments?: Prisma.appointmentsCreateNestedManyWithoutBranchInput
+  patient_records?: Prisma.patient_recordsCreateNestedManyWithoutBranchInput
+  patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutBranchInput
+  inventory_items?: Prisma.inventory_itemsCreateNestedManyWithoutBranchInput
+  clinic_profile?: Prisma.clinic_profileCreateNestedManyWithoutBranchInput
+  expenses?: Prisma.expensesCreateNestedManyWithoutBranchInput
+  treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutBranchInput
+  specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutBranchInput
+}
+
+export type branchesUncheckedCreateWithoutLab_ordersInput = {
+  id?: bigint | number
+  organization_id?: bigint | number
+  name: string
+  code?: string | null
+  address?: string | null
+  city?: string | null
+  governate?: string | null
+  phone?: string | null
+  email?: string | null
+  opening_hours?: string | null
+  timezone?: string | null
+  is_default?: boolean
+  is_active?: boolean
+  created_at?: Date | string
+  updated_at?: Date | string
+  users?: Prisma.usersUncheckedCreateNestedManyWithoutBranchInput
+  appointment_slots?: Prisma.appointment_slotsUncheckedCreateNestedManyWithoutBranchInput
+  appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutBranchInput
+  patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutBranchInput
+  patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutBranchInput
+  inventory_items?: Prisma.inventory_itemsUncheckedCreateNestedManyWithoutBranchInput
+  clinic_profile?: Prisma.clinic_profileUncheckedCreateNestedManyWithoutBranchInput
+  expenses?: Prisma.expensesUncheckedCreateNestedManyWithoutBranchInput
+  treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutBranchInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutBranchInput
+}
+
+export type branchesCreateOrConnectWithoutLab_ordersInput = {
+  where: Prisma.branchesWhereUniqueInput
+  create: Prisma.XOR<Prisma.branchesCreateWithoutLab_ordersInput, Prisma.branchesUncheckedCreateWithoutLab_ordersInput>
+}
+
+export type branchesUpsertWithoutLab_ordersInput = {
+  update: Prisma.XOR<Prisma.branchesUpdateWithoutLab_ordersInput, Prisma.branchesUncheckedUpdateWithoutLab_ordersInput>
+  create: Prisma.XOR<Prisma.branchesCreateWithoutLab_ordersInput, Prisma.branchesUncheckedCreateWithoutLab_ordersInput>
+  where?: Prisma.branchesWhereInput
+}
+
+export type branchesUpdateToOneWithWhereWithoutLab_ordersInput = {
+  where?: Prisma.branchesWhereInput
+  data: Prisma.XOR<Prisma.branchesUpdateWithoutLab_ordersInput, Prisma.branchesUncheckedUpdateWithoutLab_ordersInput>
+}
+
+export type branchesUpdateWithoutLab_ordersInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  governate?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  opening_hours?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  is_default?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  organization?: Prisma.organizationsUpdateOneRequiredWithoutBranchesNestedInput
+  users?: Prisma.usersUpdateManyWithoutBranchNestedInput
+  appointment_slots?: Prisma.appointment_slotsUpdateManyWithoutBranchNestedInput
+  appointments?: Prisma.appointmentsUpdateManyWithoutBranchNestedInput
+  patient_records?: Prisma.patient_recordsUpdateManyWithoutBranchNestedInput
+  patient_documents?: Prisma.patient_documentsUpdateManyWithoutBranchNestedInput
+  inventory_items?: Prisma.inventory_itemsUpdateManyWithoutBranchNestedInput
+  clinic_profile?: Prisma.clinic_profileUpdateManyWithoutBranchNestedInput
+  expenses?: Prisma.expensesUpdateManyWithoutBranchNestedInput
+  treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutBranchNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutBranchNestedInput
+}
+
+export type branchesUncheckedUpdateWithoutLab_ordersInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  governate?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  opening_hours?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  is_default?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  users?: Prisma.usersUncheckedUpdateManyWithoutBranchNestedInput
+  appointment_slots?: Prisma.appointment_slotsUncheckedUpdateManyWithoutBranchNestedInput
+  appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutBranchNestedInput
+  patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutBranchNestedInput
+  patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutBranchNestedInput
+  inventory_items?: Prisma.inventory_itemsUncheckedUpdateManyWithoutBranchNestedInput
+  clinic_profile?: Prisma.clinic_profileUncheckedUpdateManyWithoutBranchNestedInput
+  expenses?: Prisma.expensesUncheckedUpdateManyWithoutBranchNestedInput
+  treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutBranchNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutBranchNestedInput
 }
 
 export type branchesCreateManyOrganizationInput = {
@@ -2066,6 +2444,8 @@ export type branchesUpdateWithoutOrganizationInput = {
   clinic_profile?: Prisma.clinic_profileUpdateManyWithoutBranchNestedInput
   expenses?: Prisma.expensesUpdateManyWithoutBranchNestedInput
   treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutBranchNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutBranchNestedInput
+  lab_orders?: Prisma.lab_ordersUpdateManyWithoutBranchNestedInput
 }
 
 export type branchesUncheckedUpdateWithoutOrganizationInput = {
@@ -2092,6 +2472,8 @@ export type branchesUncheckedUpdateWithoutOrganizationInput = {
   clinic_profile?: Prisma.clinic_profileUncheckedUpdateManyWithoutBranchNestedInput
   expenses?: Prisma.expensesUncheckedUpdateManyWithoutBranchNestedInput
   treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutBranchNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutBranchNestedInput
+  lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutBranchNestedInput
 }
 
 export type branchesUncheckedUpdateManyWithoutOrganizationInput = {
@@ -2126,6 +2508,8 @@ export type BranchesCountOutputType = {
   clinic_profile: number
   expenses: number
   treatment_invoices: number
+  specialist_consultations: number
+  lab_orders: number
 }
 
 export type BranchesCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2138,6 +2522,8 @@ export type BranchesCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensio
   clinic_profile?: boolean | BranchesCountOutputTypeCountClinic_profileArgs
   expenses?: boolean | BranchesCountOutputTypeCountExpensesArgs
   treatment_invoices?: boolean | BranchesCountOutputTypeCountTreatment_invoicesArgs
+  specialist_consultations?: boolean | BranchesCountOutputTypeCountSpecialist_consultationsArgs
+  lab_orders?: boolean | BranchesCountOutputTypeCountLab_ordersArgs
 }
 
 /**
@@ -2213,6 +2599,20 @@ export type BranchesCountOutputTypeCountTreatment_invoicesArgs<ExtArgs extends r
   where?: Prisma.treatment_invoicesWhereInput
 }
 
+/**
+ * BranchesCountOutputType without action
+ */
+export type BranchesCountOutputTypeCountSpecialist_consultationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.specialist_consultationsWhereInput
+}
+
+/**
+ * BranchesCountOutputType without action
+ */
+export type BranchesCountOutputTypeCountLab_ordersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.lab_ordersWhereInput
+}
+
 
 export type branchesSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -2240,6 +2640,8 @@ export type branchesSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   clinic_profile?: boolean | Prisma.branches$clinic_profileArgs<ExtArgs>
   expenses?: boolean | Prisma.branches$expensesArgs<ExtArgs>
   treatment_invoices?: boolean | Prisma.branches$treatment_invoicesArgs<ExtArgs>
+  specialist_consultations?: boolean | Prisma.branches$specialist_consultationsArgs<ExtArgs>
+  lab_orders?: boolean | Prisma.branches$lab_ordersArgs<ExtArgs>
   _count?: boolean | Prisma.BranchesCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["branches"]>
 
@@ -2311,6 +2713,8 @@ export type branchesInclude<ExtArgs extends runtime.Types.Extensions.InternalArg
   clinic_profile?: boolean | Prisma.branches$clinic_profileArgs<ExtArgs>
   expenses?: boolean | Prisma.branches$expensesArgs<ExtArgs>
   treatment_invoices?: boolean | Prisma.branches$treatment_invoicesArgs<ExtArgs>
+  specialist_consultations?: boolean | Prisma.branches$specialist_consultationsArgs<ExtArgs>
+  lab_orders?: boolean | Prisma.branches$lab_ordersArgs<ExtArgs>
   _count?: boolean | Prisma.BranchesCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type branchesIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2333,6 +2737,8 @@ export type $branchesPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     clinic_profile: Prisma.$clinic_profilePayload<ExtArgs>[]
     expenses: Prisma.$expensesPayload<ExtArgs>[]
     treatment_invoices: Prisma.$treatment_invoicesPayload<ExtArgs>[]
+    specialist_consultations: Prisma.$specialist_consultationsPayload<ExtArgs>[]
+    lab_orders: Prisma.$lab_ordersPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: bigint
@@ -2758,6 +3164,8 @@ export interface Prisma__branchesClient<T, Null = never, ExtArgs extends runtime
   clinic_profile<T extends Prisma.branches$clinic_profileArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.branches$clinic_profileArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$clinic_profilePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   expenses<T extends Prisma.branches$expensesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.branches$expensesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$expensesPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   treatment_invoices<T extends Prisma.branches$treatment_invoicesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.branches$treatment_invoicesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$treatment_invoicesPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  specialist_consultations<T extends Prisma.branches$specialist_consultationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.branches$specialist_consultationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$specialist_consultationsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  lab_orders<T extends Prisma.branches$lab_ordersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.branches$lab_ordersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$lab_ordersPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -3416,6 +3824,54 @@ export type branches$treatment_invoicesArgs<ExtArgs extends runtime.Types.Extens
   take?: number
   skip?: number
   distinct?: Prisma.Treatment_invoicesScalarFieldEnum | Prisma.Treatment_invoicesScalarFieldEnum[]
+}
+
+/**
+ * branches.specialist_consultations
+ */
+export type branches$specialist_consultationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the specialist_consultations
+   */
+  select?: Prisma.specialist_consultationsSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the specialist_consultations
+   */
+  omit?: Prisma.specialist_consultationsOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.specialist_consultationsInclude<ExtArgs> | null
+  where?: Prisma.specialist_consultationsWhereInput
+  orderBy?: Prisma.specialist_consultationsOrderByWithRelationInput | Prisma.specialist_consultationsOrderByWithRelationInput[]
+  cursor?: Prisma.specialist_consultationsWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.Specialist_consultationsScalarFieldEnum | Prisma.Specialist_consultationsScalarFieldEnum[]
+}
+
+/**
+ * branches.lab_orders
+ */
+export type branches$lab_ordersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the lab_orders
+   */
+  select?: Prisma.lab_ordersSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the lab_orders
+   */
+  omit?: Prisma.lab_ordersOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.lab_ordersInclude<ExtArgs> | null
+  where?: Prisma.lab_ordersWhereInput
+  orderBy?: Prisma.lab_ordersOrderByWithRelationInput | Prisma.lab_ordersOrderByWithRelationInput[]
+  cursor?: Prisma.lab_ordersWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.Lab_ordersScalarFieldEnum | Prisma.Lab_ordersScalarFieldEnum[]
 }
 
 /**

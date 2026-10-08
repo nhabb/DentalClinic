@@ -53,6 +53,10 @@ export const TOOL_PERMISSIONS: Readonly<Record<string, string | null>> = {
   list_expenses: 'expenses:read',
   get_expenses_analytics: 'expenses:read',
 
+  // Specialists and lab (read-only)
+  list_consultations: 'specialists:read',
+  list_lab_orders: 'lab:read',
+
   // Raw SQL: allowed for everyone, but each table it touches is checked below.
   query_database: null,
 };
@@ -79,6 +83,10 @@ export const TABLE_PERMISSIONS: Readonly<Record<string, string | null>> = {
   roles: 'roles:manage',
   role_permissions: 'roles:manage',
   audit_logs: 'staff:manage',
+  specialists: 'specialists:read',
+  specialist_consultations: 'specialists:read',
+  dental_labs: 'lab:read',
+  lab_orders: 'lab:read',
 };
 
 /** Real table names, so a WITH query cannot borrow one (see sql-policy.ts). */

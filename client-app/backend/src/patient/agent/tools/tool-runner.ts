@@ -8,12 +8,15 @@ import { ExpensesService } from '../../../doctor/expenses/expenses.service';
 import { BillingService } from '../../../doctor/billing/billing.service';
 import { RolesService } from '../../../shared/authorization/roles.service';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
+import { ConsultationsService } from '../../../doctor/specialists/consultations.service';
+import { LabOrdersService } from '../../../doctor/lab/lab-orders.service';
 import type { RequestUser } from '../../../shared/common/guards/jwt-auth.guard';
 import { toolDenial } from '../agent-access';
 import { isDatabasePermissionRefusal } from '../guarded-select';
 import type { ToolArgs } from '../tool-args';
 import { appointmentTools } from './appointment.tools';
 import { billingTools } from './billing.tools';
+import { caseTools } from './cases.tools';
 import { expenseTools } from './expense.tools';
 import { inventoryTools } from './inventory.tools';
 import { patientTools } from './patient.tools';
@@ -45,6 +48,8 @@ export class ToolRunner {
     billing: BillingService,
     roles: RolesService,
     prisma: PrismaService,
+    consultations: ConsultationsService,
+    labOrders: LabOrdersService,
   ) {
     this.handlers = new Map(
       Object.entries({
@@ -55,6 +60,7 @@ export class ToolRunner {
         ...teamTools(users),
         ...billingTools(billing),
         ...expenseTools(expenses),
+        ...caseTools(consultations, labOrders),
         ...sqlTools(prisma),
       }),
     );

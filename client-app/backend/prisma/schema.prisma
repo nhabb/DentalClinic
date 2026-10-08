@@ -1,13 +1,17 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../src/shared/generated/prisma"
+  provider            = "prisma-client"
+  output              = "../src/shared/generated/prisma"
+  moduleFormat        = "cjs"
+  importFileExtension = ""
 }
 
 // The platform console (super-admin-app/backend) shares this schema and database.
 // `prisma generate` (from either app) writes its client here as well.
 generator platformClient {
-  provider = "prisma-client"
-  output   = "../../../super-admin-app/backend/src/generated/prisma"
+  provider            = "prisma-client"
+  output              = "../../../super-admin-app/backend/src/generated/prisma"
+  moduleFormat        = "cjs"
+  importFileExtension = ""
 }
 
 datasource db {
@@ -71,6 +75,11 @@ model organizations {
   roles               roles[]
   role_permissions    role_permissions[]
 
+  specialists              specialists[]
+  specialist_consultations specialist_consultations[]
+  dental_labs              dental_labs[]
+  lab_orders               lab_orders[]
+
   @@index([is_active], map: "idx_organizations_is_active")
 }
 
@@ -104,6 +113,9 @@ model branches {
   clinic_profile     clinic_profile[]
   expenses           expenses[]
   treatment_invoices treatment_invoices[]
+
+  specialist_consultations specialist_consultations[]
+  lab_orders               lab_orders[]
 
   @@unique([organization_id, name])
   @@index([organization_id], map: "idx_branches_org")
@@ -158,6 +170,9 @@ model appointments {
   patient_profiles                     patient_profiles   @relation(fields: [patient_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "appointments_patient_fkey")
   appointment_slots                    appointment_slots? @relation(fields: [slot_id], references: [id], onUpdate: NoAction)
   patient_records                      patient_records[]
+
+  specialist_consultations specialist_consultations[]
+  lab_orders               lab_orders[]
 
   @@index([appointment_date], map: "idx_appointments_date")
   @@index([doctor_id], map: "idx_appointments_doctor_id")
@@ -320,6 +335,9 @@ model patient_profiles {
   patient_records         patient_records[]
   treatment_invoices      treatment_invoices[]
 
+  specialist_consultations specialist_consultations[]
+  lab_orders               lab_orders[]
+
   @@index([user_id], map: "idx_patient_profiles_user_id")
   @@index([organization_id], map: "idx_patient_profiles_org")
 }
@@ -348,6 +366,9 @@ model patient_records {
   appointments      appointments?       @relation(fields: [appointment_id], references: [id], onUpdate: NoAction, map: "patient_records_appointment_fkey")
   users             users?              @relation(fields: [created_by], references: [id], onUpdate: NoAction)
   patient_profiles  patient_profiles    @relation(fields: [patient_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "patient_records_patient_fkey")
+
+  specialist_consultations specialist_consultations[]
+  lab_orders               lab_orders[]
 
   @@index([appointment_id], map: "idx_patient_records_appointment_id")
   @@index([patient_id], map: "idx_patient_records_patient_id")
@@ -397,15 +418,17 @@ model users {
   patient_profiles                            patient_profiles?
   patient_records                             patient_records[]
   expenses                                    expenses[]
-  expense_payments_created                    expense_payments[]   @relation("expense_payments_creator")
-  treatment_invoices_created                  treatment_invoices[] @relation("treatment_invoices_creator")
-  invoice_payments_created                    invoice_payments[]   @relation("invoice_payments_creator")
+  expense_payments_created                    expense_payments[]    @relation("expense_payments_creator")
+  treatment_invoices_created                  treatment_invoices[]  @relation("treatment_invoices_creator")
+  invoice_payments_created                    invoice_payments[]    @relation("invoice_payments_creator")
+
+  specialist_consultations_requested specialist_consultations[] @relation("specialist_consultations_requester")
+  lab_orders_ordered                 lab_orders[]               @relation("lab_orders_orderer")
 
   @@index([role], map: "idx_users_role")
   @@index([organization_id], map: "idx_users_org")
   @@index([organization_id, role], map: "idx_users_org_role")
 }
-
 
 model expenses {
   id              BigInt   @id @default(autoincrement())
@@ -423,10 +446,10 @@ model expenses {
   created_at      DateTime @default(now()) @db.Timestamptz(6)
   updated_at      DateTime @default(now()) @db.Timestamptz(6)
 
-  organization    organizations @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
-  branch          branches?     @relation(fields: [branch_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
-  creator         users?        @relation(fields: [created_by], references: [id], onUpdate: NoAction)
-  payments        expense_payments[]
+  organization organizations      @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  branch       branches?          @relation(fields: [branch_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  creator      users?             @relation(fields: [created_by], references: [id], onUpdate: NoAction)
+  payments     expense_payments[]
 
   @@index([expense_date], map: "idx_expenses_date")
   @@index([category], map: "idx_expenses_category")
@@ -445,29 +468,29 @@ model expense_payments {
   created_by      BigInt?
   created_at      DateTime @default(now()) @db.Timestamptz(6)
 
-  organization    organizations @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
-  expense         expenses      @relation(fields: [expense_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  creator         users?        @relation("expense_payments_creator", fields: [created_by], references: [id], onUpdate: NoAction)
+  organization organizations @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  expense      expenses      @relation(fields: [expense_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  creator      users?        @relation("expense_payments_creator", fields: [created_by], references: [id], onUpdate: NoAction)
 
   @@index([expense_id], map: "idx_expense_payments_expense_id")
   @@index([organization_id], map: "idx_expense_payments_org")
 }
 
 model treatment_invoices {
-  id               BigInt               @id @default(autoincrement())
-  organization_id  BigInt               @default(dbgenerated("app.current_org_id()"))
+  id               BigInt   @id @default(autoincrement())
+  organization_id  BigInt   @default(dbgenerated("app.current_org_id()"))
   /// Branch that issued the invoice.
-  branch_id        BigInt?              @default(dbgenerated("app.default_branch_id()"))
+  branch_id        BigInt?  @default(dbgenerated("app.default_branch_id()"))
   patient_id       BigInt
-  procedure_date   DateTime             @db.Date
+  procedure_date   DateTime @db.Date
   notes            String?
-  total_amount     Decimal              @db.Decimal(10, 2)
-  amount_paid      Decimal              @default(0) @db.Decimal(10, 2)
-  remaining_amount Decimal              @db.Decimal(10, 2)
-  status           String               @default("open")
+  total_amount     Decimal  @db.Decimal(10, 2)
+  amount_paid      Decimal  @default(0) @db.Decimal(10, 2)
+  remaining_amount Decimal  @db.Decimal(10, 2)
+  status           String   @default("open")
   created_by       BigInt?
-  created_at       DateTime             @default(now()) @db.Timestamptz(6)
-  updated_at       DateTime             @default(now()) @db.Timestamptz(6)
+  created_at       DateTime @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime @default(now()) @db.Timestamptz(6)
 
   organization     organizations        @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
   branch           branches?            @relation(fields: [branch_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
@@ -485,34 +508,34 @@ model treatment_invoices {
 }
 
 model invoice_line_items {
-  id              BigInt             @id @default(autoincrement())
-  organization_id BigInt             @default(dbgenerated("app.current_org_id()"))
+  id              BigInt   @id @default(autoincrement())
+  organization_id BigInt   @default(dbgenerated("app.current_org_id()"))
   invoice_id      BigInt
-  procedure_name  String             @db.VarChar
-  amount          Decimal            @db.Decimal(10, 2)
-  tooth_number    String?            @db.VarChar
-  created_at      DateTime           @default(now()) @db.Timestamptz(6)
+  procedure_name  String   @db.VarChar
+  amount          Decimal  @db.Decimal(10, 2)
+  tooth_number    String?  @db.VarChar
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
 
-  organization    organizations      @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
-  invoice         treatment_invoices @relation(fields: [invoice_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  organization organizations      @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  invoice      treatment_invoices @relation(fields: [invoice_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([invoice_id], map: "idx_invoice_line_items_invoice_id")
   @@index([organization_id], map: "idx_invoice_line_items_org")
 }
 
 model invoice_payments {
-  id              BigInt             @id @default(autoincrement())
-  organization_id BigInt             @default(dbgenerated("app.current_org_id()"))
+  id              BigInt   @id @default(autoincrement())
+  organization_id BigInt   @default(dbgenerated("app.current_org_id()"))
   invoice_id      BigInt
-  amount          Decimal            @db.Decimal(10, 2)
-  payment_method  String             @default("cash")
+  amount          Decimal  @db.Decimal(10, 2)
+  payment_method  String   @default("cash")
   notes           String?
   created_by      BigInt?
-  created_at      DateTime           @default(now()) @db.Timestamptz(6)
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
 
-  organization    organizations      @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
-  invoice         treatment_invoices @relation(fields: [invoice_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  creator         users?             @relation("invoice_payments_creator", fields: [created_by], references: [id], onUpdate: NoAction)
+  organization organizations      @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  invoice      treatment_invoices @relation(fields: [invoice_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  creator      users?             @relation("invoice_payments_creator", fields: [created_by], references: [id], onUpdate: NoAction)
 
   @@index([invoice_id], map: "idx_invoice_payments_invoice_id")
   @@index([organization_id], map: "idx_invoice_payments_org")
@@ -552,4 +575,134 @@ model role_permissions {
 
   @@id([role_id, permission])
   @@index([organization_id], map: "idx_role_permissions_org")
+}
+
+// ─── Outside specialists and lab work (per organization) ─────────────────────
+//
+// A clinic sometimes asks an outside doctor to help on a case, and sends work
+// (crowns, dentures, …) to a dental lab. Both are tracked per patient, with an
+// optional link to the visit and the clinical record. See migration
+// 20261009000000_specialists_and_lab.
+
+/// Outside doctors a clinic asks for help on certain cases.
+model specialists {
+  id              BigInt   @id @default(autoincrement())
+  organization_id BigInt   @default(dbgenerated("app.current_org_id()"))
+  name            String   @db.VarChar
+  specialty       String   @db.VarChar
+  phone           String?  @db.VarChar
+  email           String?  @db.VarChar
+  clinic_name     String?  @db.VarChar
+  notes           String?
+  is_active       Boolean  @default(true)
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime @default(now()) @db.Timestamptz(6)
+
+  organization  organizations              @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  consultations specialist_consultations[]
+
+  @@index([organization_id], map: "idx_specialists_org")
+}
+
+/// A case on which an outside specialist was asked to help.
+/// status: requested | scheduled | completed | cancelled
+model specialist_consultations {
+  id                BigInt    @id @default(autoincrement())
+  organization_id   BigInt    @default(dbgenerated("app.current_org_id()"))
+  /// Branch of the case; NULL for organization-wide.
+  branch_id         BigInt?   @default(dbgenerated("app.default_branch_id()"))
+  patient_id        BigInt
+  specialist_id     BigInt
+  appointment_id    BigInt?
+  record_id         BigInt?
+  /// Staff member who asked for the consultation.
+  requested_by      BigInt?
+  status            String    @default("requested") @db.VarChar
+  consultation_date DateTime? @db.Date
+  reason            String
+  outcome           String?
+  /// Specialist's fee, for reporting; billed to the patient as usual.
+  fee               Decimal?  @db.Decimal(10, 2)
+  notes             String?
+  created_at        DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime  @default(now()) @db.Timestamptz(6)
+
+  organization organizations    @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  branch       branches?        @relation(fields: [branch_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  patient      patient_profiles @relation(fields: [patient_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  specialist   specialists      @relation(fields: [specialist_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  appointment  appointments?    @relation(fields: [appointment_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  record       patient_records? @relation(fields: [record_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  requester    users?           @relation("specialist_consultations_requester", fields: [requested_by], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@index([organization_id], map: "idx_specialist_consultations_org")
+  @@index([organization_id, branch_id], map: "idx_specialist_consultations_org_branch")
+  @@index([patient_id], map: "idx_specialist_consultations_patient")
+  @@index([specialist_id], map: "idx_specialist_consultations_specialist")
+  @@index([status], map: "idx_specialist_consultations_status")
+}
+
+/// Dental laboratories a clinic sends work to.
+model dental_labs {
+  id              BigInt   @id @default(autoincrement())
+  organization_id BigInt   @default(dbgenerated("app.current_org_id()"))
+  name            String   @db.VarChar
+  phone           String?  @db.VarChar
+  email           String?  @db.VarChar
+  address         String?
+  notes           String?
+  is_active       Boolean  @default(true)
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime @default(now()) @db.Timestamptz(6)
+
+  organization organizations @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  lab_orders   lab_orders[]
+
+  @@index([organization_id], map: "idx_dental_labs_org")
+}
+
+/// Work sent to a lab for a case.
+/// work_type: crown | bridge | denture | implant | aligner | retainer | veneer | other
+/// status: ordered | sent | received | fitted | cancelled
+model lab_orders {
+  id              BigInt    @id @default(autoincrement())
+  organization_id BigInt    @default(dbgenerated("app.current_org_id()"))
+  /// Branch of the case; NULL for organization-wide.
+  branch_id       BigInt?   @default(dbgenerated("app.default_branch_id()"))
+  patient_id      BigInt
+  lab_id          BigInt
+  appointment_id  BigInt?
+  record_id       BigInt?
+  /// Staff member who placed the order.
+  ordered_by      BigInt?
+  work_type       String    @db.VarChar
+  description     String?
+  /// Teeth concerned, e.g. "14,15" (same notation as patient_records.tooth_number).
+  tooth_numbers   String?   @db.VarChar
+  shade           String?   @db.VarChar
+  status          String    @default("ordered") @db.VarChar
+  sent_at         DateTime? @db.Date
+  due_at          DateTime? @db.Date
+  received_at     DateTime? @db.Date
+  fitted_at       DateTime? @db.Date
+  /// Lab's charge, for reporting; billed to the patient as usual.
+  cost            Decimal?  @db.Decimal(10, 2)
+  notes           String?
+  created_at      DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime  @default(now()) @db.Timestamptz(6)
+
+  organization organizations    @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  branch       branches?        @relation(fields: [branch_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  patient      patient_profiles @relation(fields: [patient_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  lab          dental_labs      @relation(fields: [lab_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  appointment  appointments?    @relation(fields: [appointment_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  record       patient_records? @relation(fields: [record_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  orderer      users?           @relation("lab_orders_orderer", fields: [ordered_by], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@index([organization_id], map: "idx_lab_orders_org")
+  @@index([organization_id, branch_id], map: "idx_lab_orders_org_branch")
+  @@index([patient_id], map: "idx_lab_orders_patient")
+  @@index([lab_id], map: "idx_lab_orders_lab")
+  @@index([status], map: "idx_lab_orders_status")
+  @@index([due_at], map: "idx_lab_orders_due")
 }
