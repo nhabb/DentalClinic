@@ -149,7 +149,11 @@ async function main() {
   };
   const sql = (q: string) =>
     tools.run(user, 'query_database', new ToolArgs({ sql: q }));
-  const parse = (s: string) => JSON.parse(s) as { error?: string };
+  const parse = (s: string) =>
+    JSON.parse(s) as { error?: string; rows?: unknown[] };
+  // query_database answers { rows, truncated, coverage } (see result-coverage.ts).
+  const rowsOf = (r: { rows?: unknown[] }): unknown[] =>
+    Array.isArray(r.rows) ? r.rows : [];
 
   await runWithTenant(ctx, async () => {
     for (const [q, expected] of HOSTILE) {
@@ -162,16 +166,16 @@ async function main() {
     }
     for (const q of LEGIT) {
       const r = parse(await sql(q));
-      const rows = Array.isArray(r) ? (r as unknown[]) : [];
+      const rows = rowsOf(r);
       record(
         `allowed: ${q}`,
-        !r.error && Array.isArray(r),
+        !r.error && Array.isArray(r.rows),
         r.error ?? JSON.stringify(rows.slice(0, 2)),
       );
     }
-    const orgs = parse(
-      await sql('SELECT id::int AS id FROM organizations'),
-    ) as unknown as { id: number }[];
+    const orgs = rowsOf(
+      parse(await sql('SELECT id::int AS id FROM organizations')),
+    ) as { id: number }[];
     record(
       'tenant: only own organization visible via SQL',
       Array.isArray(orgs) && orgs.length === 1 && orgs[0].id === Number(orgId),

@@ -54,6 +54,15 @@ describe('buildSystemPrompt', () => {
     expect(prompt()).toMatch(/Do not try another tool or query_database/);
   });
 
+  it('requires partial lists to be announced with their numbers', () => {
+    const text = prompt();
+    expect(text).toContain('every list result carries a "coverage" field');
+    expect(text).toContain(
+      'Never present a partial list as if it were everything',
+    );
+    expect(text).toContain('say how many you left out and give the full count');
+  });
+
   it('tells the model that missing permission is not missing data', () => {
     expect(prompt()).toContain(
       'A missing permission means you cannot see that data, not that it does not exist.',

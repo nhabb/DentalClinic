@@ -1,6 +1,6 @@
 import type { PrismaService } from '../../../shared/prisma/prisma.service';
 import { redactSensitiveFields, sqlDenial } from '../agent-access';
-import { MAX_ROWS, runGuardedSelect } from '../guarded-select';
+import { runGuardedSelect } from '../guarded-select';
 import { ToolRefusedError, type ToolHandlers } from './tool-handler';
 
 /**
@@ -20,13 +20,8 @@ export function sqlTools(prisma: PrismaService): ToolHandlers {
         sql,
         user.role === 'superadmin' ? '*' : user.permissions,
       );
-      const data = redactSensitiveFields(rows);
-      if (!truncated) return data;
-      return {
-        rows: data,
-        truncated: true,
-        note: `Only the first ${MAX_ROWS} rows are shown; narrow the query.`,
-      };
+      // { rows, truncated } so the runner can attach coverage (see result-coverage.ts).
+      return { rows: redactSensitiveFields(rows), truncated };
     },
   };
 }

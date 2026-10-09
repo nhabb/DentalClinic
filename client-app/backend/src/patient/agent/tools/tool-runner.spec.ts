@@ -63,6 +63,26 @@ describe('ToolRunner.run', () => {
     expect(JSON.parse(out)).toEqual({ id: 42, total_amount: '10' });
   });
 
+  it('annotates a paged result so the model knows it is partial', async () => {
+    const { runner, billing } = build();
+    billing.findOne.mockResolvedValueOnce({
+      data: [{ id: 1n }, { id: 2n }],
+      meta: { total: 9, page: 1, limit: 2, totalPages: 5 },
+    });
+    const out = JSON.parse(
+      await runner.run(secretary, 'get_invoice', new ToolArgs({ id: 1 })),
+    ) as {
+      coverage: {
+        complete: boolean;
+        shown: number;
+        total: number;
+        note: string;
+      };
+    };
+    expect(out.coverage).toMatchObject({ complete: false, shown: 2, total: 9 });
+    expect(out.coverage.note).toContain('showing 2 of 9 (page 1 of 5)');
+  });
+
   it('refuses a tool the role lacks the permission for, without calling it', async () => {
     const { runner, roles } = build();
     const out = await runner.run(secretary, 'list_roles', new ToolArgs({}));

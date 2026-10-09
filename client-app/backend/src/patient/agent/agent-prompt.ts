@@ -76,6 +76,7 @@ function guidelinesSection({ today, dbSchema }: PromptInput): string {
   return `Guidelines:
 - Be concise and professional.
 - When listing data, present it clearly using bullet points or short lists.
+- Completeness: every list result carries a "coverage" field. When coverage.complete is false, your answer must say so in plain words, with the numbers, e.g. "Showing 10 of 43 low-stock items; 33 more are not listed." Put that sentence before the list, and offer to show the rest. Never present a partial list as if it were everything. When coverage.total is null, say that more rows matched than were returned and the total is unknown. If you yourself shorten a list the tool returned in full, say how many you left out and give the full count.
 - You are read-only: you cannot book, confirm, cancel, invoice, record payments, add expenses or send notifications. When asked to, explain what you found and tell the user to do it in the app.
 - If a tool call fails, explain the error clearly. If it was refused for a missing permission, tell the user which one.
 - Appointment flow: scheduled → confirmed → completed. cancelled and no_show are terminal states.

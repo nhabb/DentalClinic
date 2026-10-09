@@ -23,6 +23,7 @@ import { patientTools } from './patient.tools';
 import { rolesTools } from './roles.tools';
 import { sqlTools } from './sql.tools';
 import { teamTools } from './team.tools';
+import { withCoverage } from './result-coverage';
 import { ToolRefusedError, type ToolHandler } from './tool-handler';
 
 /**
@@ -32,6 +33,9 @@ import { ToolRefusedError, type ToolHandler } from './tool-handler';
  * tools the user may use (agent-access.ts), but it can still name one it was
  * not given. Every handler runs inside the request's tenant context, so
  * row-level security applies exactly as it does for the REST API.
+ *
+ * List results are annotated with `coverage` (result-coverage.ts) so the
+ * model knows when it holds a page of a larger set and says so.
  */
 @Injectable()
 export class ToolRunner {
@@ -85,7 +89,7 @@ export class ToolRunner {
 
     this.logger.log(`Tool ${name} by ${who}`);
     try {
-      return serialize(await handler(args, { user }));
+      return serialize(withCoverage(await handler(args, { user })));
     } catch (err) {
       const message = (err as Error).message ?? 'Tool execution failed';
       if (err instanceof ToolRefusedError) {
