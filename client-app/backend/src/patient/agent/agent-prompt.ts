@@ -19,6 +19,7 @@ export function buildSystemPrompt(input: PromptInput): string {
     permissionsSection(input.user),
     securitySection(),
     guidelinesSection(input),
+    clinicalSection(),
     financialSection(input.user),
   ].join('\n\n');
 }
@@ -86,6 +87,21 @@ function guidelinesSection({ today, dbSchema }: PromptInput): string {
   4. Always with the exact column names from the schema below — never guess column names.
 Database schema (table: columns):
 ${dbSchema}`;
+}
+
+/**
+ * What the clinical tables mean, in the app's own words. The schema gives the
+ * model column names only; without this it reads a date on a planned record
+ * as "scheduled" and invents a status the app does not have.
+ */
+function clinicalSection(): string {
+  return `Clinical records vocabulary (use these terms exactly; never invent others):
+- Dental work on the chart has exactly three statuses: completed (done), planned (proposed, not done yet), missing (the tooth is absent). There is no "scheduled", "pending" or "in progress" work status.
+- patient_records.record_type maps to them: "treatment" = completed work, "treatment_plan" = planned work, "missing_tooth" = missing tooth, "general_note" = a free-text note, not work on a tooth. Any other type counts as completed work.
+- A planned record's treatment_date is the date entered when it was planned. It does not mean an appointment exists and it does not change the status: planned work stays "planned" until it is recorded as completed, whatever its date.
+- "Scheduled" belongs to appointments only (appointments.status). To know whether planned work has an appointment, look at the appointment linked by patient_records.appointment_id, not at the date.
+- quoted_amount on a record is the price agreed when the work was planned; it is not a payment and not an invoice.
+- When asked what a status or term means, explain it from this list. If a term is not here, say the app does not use it.`;
 }
 
 const BILLING_READ = 'billing:read';

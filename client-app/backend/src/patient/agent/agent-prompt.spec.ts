@@ -85,6 +85,42 @@ describe('buildSystemPrompt', () => {
     expect(text).not.toContain('Use list_invoices and get_invoice');
   });
 
+  it('defines the three work statuses and forbids invented ones', () => {
+    const text = prompt();
+    expect(text).toContain('Clinical records vocabulary');
+    expect(text).toContain(
+      'exactly three statuses: completed (done), planned (proposed, not done yet), missing (the tooth is absent)',
+    );
+    expect(text).toContain(
+      'There is no "scheduled", "pending" or "in progress" work status.',
+    );
+  });
+
+  it('maps every record_type the app writes to its meaning', () => {
+    const text = prompt();
+    expect(text).toContain('"treatment" = completed work');
+    expect(text).toContain('"treatment_plan" = planned work');
+    expect(text).toContain('"missing_tooth" = missing tooth');
+    expect(text).toContain('"general_note" = a free-text note');
+  });
+
+  it('keeps scheduling with appointments and dates off the work status', () => {
+    const text = prompt();
+    expect(text).toContain('"Scheduled" belongs to appointments only');
+    expect(text).toContain(
+      'planned work stays "planned" until it is recorded as completed, whatever its date',
+    );
+    expect(text).toContain('patient_records.appointment_id, not at the date');
+  });
+
+  it('shows the vocabulary to every user, with or without billing', () => {
+    const noBilling = prompt({
+      user: { ...doctor, permissions: ['agent:use', 'records:read'] },
+    });
+    expect(noBilling).toContain('Clinical records vocabulary');
+    expect(noBilling).toContain('it is not a payment and not an invoice');
+  });
+
   it('a superadmin keeps the financial guidance without an explicit grant', () => {
     const text = prompt({
       user: { ...doctor, role: 'superadmin', permissions: ['agent:use'] },

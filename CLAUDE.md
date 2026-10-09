@@ -53,6 +53,10 @@ Do **not** run `prisma migrate dev`: the database has no `_prisma_migrations` hi
 migration. Write the SQL into a new `prisma/migrations/<timestamp>_<name>/migration.sql`,
 apply it with `scripts/apply-sql.js` (whole file in one round trip, so `BEGIN`/`COMMIT`
 in the file makes it atomic), update `schema.prisma`, then `npx prisma generate`.
+Every table and column carries a Postgres comment describing what it means and its allowed
+values (migration `20261009120000_table_and_column_comments`, re-runnable). The AI assistant
+reads them at startup (`src/patient/agent/schema-summary.ts`), so when you add a table or
+column, add its `COMMENT ON` to that file and re-apply it.
 
 ## Environment Setup
 
