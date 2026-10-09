@@ -4,6 +4,10 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
+import {
+  searchWithFallback,
+  textSearchTiers,
+} from '../../shared/common/text-search';
 import { SupabaseStorageService } from '../../shared/storage/supabase-storage.service';
 import { CreateInventoryItemDto } from './dto/create-item.dto';
 import { UpdateInventoryItemDto } from './dto/update-item.dto';
@@ -103,50 +107,50 @@ export class InventoryService {
     } = filters;
     const skip = (page - 1) * limit;
 
-    const where: any = {};
-    if (branch_id) where.branch_id = BigInt(branch_id);
-    if (category) where.category = { equals: category, mode: 'insensitive' };
-    if (search) {
-      where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { sku: { contains: search, mode: 'insensitive' } },
-      ];
-    }
-    // low stock: quantity <= minimum_quantity
-    if (low_stock_only) {
-      where.AND = [
-        ...(where.AND ?? []),
-        {
-          quantity: {
-            lte: this.prisma.inventory_items.fields.minimum_quantity,
-          },
-        },
-      ];
-    }
+    const base: Record<string, unknown> = {};
+    if (branch_id) base.branch_id = BigInt(branch_id);
+    if (category) base.category = { equals: category, mode: 'insensitive' };
 
-    // Prisma doesn't support column-to-column comparisons in where natively,
-    // so for low_stock_only we use a raw filter after fetch if needed.
-    let data = await this.prisma.inventory_items.findMany({
-      where: low_stock_only ? { ...where, AND: undefined } : where,
-      orderBy: { name: 'asc' },
-      skip: low_stock_only ? undefined : skip,
-      take: low_stock_only ? undefined : limit,
-    });
+    // Search by name or sku, loosening word by word when the phrase as typed
+    // matches nothing (see text-search.ts). meta.searchTier reports the tier.
+    const tiers = textSearchTiers(search, ['name', 'sku']);
 
-    if (low_stock_only) {
-      data = data.filter((item) => item.quantity <= item.minimum_quantity);
-      const total = data.length;
-      const paginated = data.slice(skip, skip + limit);
-      return {
-        data: paginated,
-        meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
-      };
-    }
+    // Prisma cannot compare two columns in a where clause, so low stock is
+    // filtered in memory after fetching every matching item.
+    const { rows, total, searchTier } = await searchWithFallback(
+      tiers,
+      async (match) => {
+        const where = { ...base, ...match };
+        if (low_stock_only) {
+          const items = await this.prisma.inventory_items.findMany({
+            where,
+            orderBy: { name: 'asc' },
+          });
+          const low = items.filter((i) => i.quantity <= i.minimum_quantity);
+          return { rows: low.slice(skip, skip + limit), total: low.length };
+        }
+        const [rows, total] = await Promise.all([
+          this.prisma.inventory_items.findMany({
+            where,
+            orderBy: { name: 'asc' },
+            skip,
+            take: limit,
+          }),
+          this.prisma.inventory_items.count({ where }),
+        ]);
+        return { rows, total };
+      },
+    );
 
-    const total = await this.prisma.inventory_items.count({ where });
     return {
-      data,
-      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+      data: rows,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+        searchTier,
+      },
     };
   }
 

@@ -170,6 +170,7 @@ A separate operator application on the same database: `super-admin-app/backend` 
 
 ## Key Conventions
 - Use `class-validator` DTOs for all NestJS controller inputs
+- Free-text `search` parameters go through `src/shared/common/text-search.ts` (`personSearchTiers` for first/last names, `textSearchTiers` for plain columns, run with `searchWithFallback`): the query loosens tier by tier (exact → all words → any word) and `meta.searchTier` tells the client and the AI assistant how loose the match was. Do not hand-roll `contains` filters for a new search.
 - shadcn/ui components are in `components/ui/` — add new ones with `npx shadcn@latest add <component>`
 - Path alias `@/*` maps to each frontend's own root (`client-app/frontend`, `super-admin-app/frontend`)
 - Backend output dir is `client-app/backend/dist/`; never edit generated files in `client-app/backend/src/generated/`

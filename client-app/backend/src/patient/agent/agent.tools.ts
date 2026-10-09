@@ -125,7 +125,8 @@ export const AGENT_TOOLS: OpenAI.ChatCompletionFunctionTool[] = [
     type: 'function',
     function: {
       name: 'list_patients',
-      description: 'List all patients with optional search by name.',
+      description:
+        'List all patients with optional search by name. The search loosens automatically: meta.searchTier is "exact" when the name matched as typed and "any-word" when only part of it matched (likely a typo in the stored name or the question) — then say which patient you found and that the name differs.',
       parameters: {
         type: 'object',
         properties: {

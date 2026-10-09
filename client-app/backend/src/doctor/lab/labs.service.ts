@@ -4,6 +4,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
+import {
+  searchWithFallback,
+  textSearchTiers,
+} from '../../shared/common/text-search';
 import { CreateLabDto } from './dto/create-lab.dto';
 import { UpdateLabDto } from './dto/update-lab.dto';
 
@@ -19,24 +23,34 @@ export class LabsService {
     limit?: number;
   }) {
     const { search, active, page = 1, limit = 20 } = filters;
-    const where = {
-      ...(active !== undefined ? { is_active: active } : {}),
-      ...(search
-        ? { name: { contains: search, mode: 'insensitive' as const } }
-        : {}),
-    };
-    const [data, total] = await Promise.all([
-      this.prisma.dental_labs.findMany({
-        where,
-        orderBy: [{ is_active: 'desc' }, { name: 'asc' }],
-        skip: (page - 1) * limit,
-        take: limit,
-      }),
-      this.prisma.dental_labs.count({ where }),
-    ]);
+    const base = active !== undefined ? { is_active: active } : {};
+    // Name search loosens word by word when the phrase matches nothing
+    // (see text-search.ts); meta.searchTier reports which tier matched.
+    const { rows, total, searchTier } = await searchWithFallback(
+      textSearchTiers(search, ['name']),
+      async (match) => {
+        const where = { ...base, ...match };
+        const [rows, total] = await Promise.all([
+          this.prisma.dental_labs.findMany({
+            where,
+            orderBy: [{ is_active: 'desc' }, { name: 'asc' }],
+            skip: (page - 1) * limit,
+            take: limit,
+          }),
+          this.prisma.dental_labs.count({ where }),
+        ]);
+        return { rows, total };
+      },
+    );
     return {
-      data,
-      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+      data: rows,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+        searchTier,
+      },
     };
   }
 

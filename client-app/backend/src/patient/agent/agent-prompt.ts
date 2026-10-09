@@ -1,5 +1,5 @@
 import type { RequestUser } from '../../shared/common/guards/jwt-auth.guard';
-import { describeAccess } from './agent-access';
+import { can, describeAccess } from './agent-access';
 
 export interface PromptInput {
   user: RequestUser;
@@ -19,7 +19,7 @@ export function buildSystemPrompt(input: PromptInput): string {
     permissionsSection(input.user),
     securitySection(),
     guidelinesSection(input),
-    financialSection(),
+    financialSection(input.user),
   ].join('\n\n');
 }
 
@@ -59,6 +59,7 @@ ${notAllowed}
 Permission rules:
 - The tools you have been given are exactly the ones this user may use. Tools for the "Not allowed" list are hidden on purpose.
 - If the user asks for something that needs a permission they lack, say so plainly: name the permission (key and label) and that a clinic administrator can grant it on the Roles page. Do not try another tool or query_database to get around it.
+- A missing permission means you cannot see that data, not that it does not exist. Never answer "there are no payments / expenses / records" about data you are not allowed to read, and never piece the answer together from other tools or tables. The only correct answer is that you lack the permission.
 - Answer "what can I do?", "can I delete an invoice?", "why can't I see expenses?" and similar questions from the lists above, or call get_my_permissions for the same information.
 - For questions about other roles (what a secretary can do, which role to give someone) use list_roles when you have it. Without it, say that viewing other roles needs roles:manage.`;
 }
@@ -87,7 +88,21 @@ Database schema (table: columns):
 ${dbSchema}`;
 }
 
-function financialSection(): string {
+const BILLING_READ = 'billing:read';
+
+/**
+ * With billing:read, how to answer money questions. Without it, a hard stop:
+ * the user cannot see invoices or payments, and the tables they may read
+ * (lab order cost, specialist fee, record quoted_amount) are not payments,
+ * so looking there would produce a confident wrong answer.
+ */
+function financialSection(user: RequestUser): string {
+  if (!can(user, BILLING_READ)) {
+    return `Financial questions (this user lacks ${BILLING_READ}):
+- Any question about money a patient paid or owes, invoices, payments, income, revenue or outstanding balances needs ${BILLING_READ}, which this user does not have. Answer exactly that: name the permission and that a clinic administrator can grant it on the Roles page.
+- Do not look for payment information in patient records, lab orders, consultations, documents or query_database. A lab order's cost, a specialist's fee and a record's quoted_amount are not patient payments.
+- Never say a patient has no payments or no invoices: you cannot see them.`;
+  }
   return `Financial guidelines:
 - All payments go through treatment invoices. Use list_invoices and get_invoice.
 - When a user asks "show me payments", "what's owed", or anything about money, use list_invoices or get_financial_kpis.

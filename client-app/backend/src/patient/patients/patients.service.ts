@@ -7,6 +7,10 @@ import {
 import { randomBytes } from 'crypto';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../shared/prisma/prisma.service';
+import {
+  personSearchTiers,
+  searchWithFallback,
+} from '../../shared/common/text-search';
 import { SupabaseStorageService } from '../../shared/storage/supabase-storage.service';
 import { UpdatePatientProfileDto } from './dto/update-patient-profile.dto';
 import { CreatePatientDto } from './dto/create-patient.dto';
@@ -188,83 +192,48 @@ export class PatientsService {
     },
   };
 
+  /**
+   * Staff listing with an optional name search. The search degrades in tiers
+   * (see text-search.ts): "Fatima Nasser" first has to map onto first/last
+   * name; if nothing matches, any word in any name field will do, so a typo in
+   * one part of the name still finds the patient. `meta.searchTier` says
+   * which tier produced the rows.
+   */
   async findAll(page = 1, limit = 20, search?: string) {
     const skip = (page - 1) * limit;
+    const tiers = personSearchTiers(search, {
+      first: 'first_name',
+      last: 'last_name',
+      extra: ['email'],
+    });
 
-    let where: any = undefined;
-    if (search) {
-      const words = search.trim().split(/\s+/);
-      if (words.length >= 2) {
-        where = {
-          users: {
-            OR: [
-              {
-                AND: [
-                  {
-                    first_name: {
-                      contains: words[0],
-                      mode: 'insensitive' as const,
-                    },
-                  },
-                  {
-                    last_name: {
-                      contains: words.slice(1).join(' '),
-                      mode: 'insensitive' as const,
-                    },
-                  },
-                ],
-              },
-              {
-                AND: [
-                  {
-                    first_name: {
-                      contains: words[words.length - 1],
-                      mode: 'insensitive' as const,
-                    },
-                  },
-                  {
-                    last_name: {
-                      contains: words.slice(0, -1).join(' '),
-                      mode: 'insensitive' as const,
-                    },
-                  },
-                ],
-              },
-              ...words.map((w) => ({
-                email: { contains: w, mode: 'insensitive' as const },
-              })),
-            ],
-          },
-        };
-      } else {
-        where = {
-          users: {
-            OR: [
-              {
-                first_name: { contains: search, mode: 'insensitive' as const },
-              },
-              { last_name: { contains: search, mode: 'insensitive' as const } },
-              { email: { contains: search, mode: 'insensitive' as const } },
-            ],
-          },
-        };
-      }
-    }
-
-    const [data, total] = await Promise.all([
-      this.prisma.patient_profiles.findMany({
-        where,
-        select: this.patientSelect,
-        skip,
-        take: limit,
-        orderBy: { created_at: 'desc' },
-      }),
-      this.prisma.patient_profiles.count({ where }),
-    ]);
+    const { rows, total, searchTier } = await searchWithFallback(
+      tiers,
+      async (users) => {
+        const where = users ? { users } : undefined;
+        const [rows, total] = await Promise.all([
+          this.prisma.patient_profiles.findMany({
+            where,
+            select: this.patientSelect,
+            skip,
+            take: limit,
+            orderBy: { created_at: 'desc' },
+          }),
+          this.prisma.patient_profiles.count({ where }),
+        ]);
+        return { rows, total };
+      },
+    );
 
     return {
-      data,
-      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+      data: rows,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+        searchTier,
+      },
     };
   }
 

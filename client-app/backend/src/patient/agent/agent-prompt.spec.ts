@@ -54,6 +54,44 @@ describe('buildSystemPrompt', () => {
     expect(prompt()).toMatch(/Do not try another tool or query_database/);
   });
 
+  it('tells the model that missing permission is not missing data', () => {
+    expect(prompt()).toContain(
+      'A missing permission means you cannot see that data, not that it does not exist.',
+    );
+  });
+
+  it('gives financial guidance to a user with billing:read', () => {
+    const text = prompt();
+    expect(text).toContain('Financial guidelines:');
+    expect(text).toContain('Use list_invoices and get_invoice');
+    expect(text).not.toContain('this user lacks billing:read');
+  });
+
+  it('replaces financial guidance with a hard stop without billing:read', () => {
+    const text = prompt({
+      user: {
+        ...doctor,
+        permissions: ['agent:use', 'records:read', 'lab:read'],
+      },
+    });
+    expect(text).toContain(
+      'Financial questions (this user lacks billing:read)',
+    );
+    expect(text).toContain(
+      'Never say a patient has no payments or no invoices',
+    );
+    expect(text).toContain('are not patient payments');
+    expect(text).not.toContain('Financial guidelines:');
+    expect(text).not.toContain('Use list_invoices and get_invoice');
+  });
+
+  it('a superadmin keeps the financial guidance without an explicit grant', () => {
+    const text = prompt({
+      user: { ...doctor, role: 'superadmin', permissions: ['agent:use'] },
+    });
+    expect(text).toContain('Financial guidelines:');
+  });
+
   it('includes the schema and today’s date', () => {
     const text = prompt();
     expect(text).toContain('appointments: id (bigint)');
