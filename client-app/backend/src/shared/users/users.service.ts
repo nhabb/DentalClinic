@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ConflictException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
@@ -13,6 +14,11 @@ import { UserAccessService } from '../tenant/user-access.service';
 import { ADMIN_ROLE_KEY, PATIENT_ROLE_KEY } from '../authorization/permissions';
 import { RolesService } from '../authorization/roles.service';
 import { uploadLimit, formatMb } from '../common/uploads/upload-limit';
+import {
+  AccountSetupService,
+  type InviteResult,
+} from '../account-setup/account-setup.service';
+import type { CreateStaffDto } from './dto/create-staff.dto';
 
 const PROFILE_BUCKET = 'profile-photos';
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -25,6 +31,7 @@ export class UsersService {
     private readonly storage: SupabaseStorageService,
     private readonly userAccess: UserAccessService,
     private readonly roles: RolesService,
+    private readonly accountSetup: AccountSetupService,
   ) {}
 
   async create(data: {
@@ -61,7 +68,7 @@ export class UsersService {
         first_name: data.first_name,
         last_name: data.last_name,
         phone: data.phone || null,
-        role: (data.role as any) || 'patient',
+        role: data.role || 'patient',
         password_hash,
         is_active: true,
       },
@@ -74,6 +81,74 @@ export class UsersService {
     }
 
     return user;
+  }
+
+  /**
+   * A staff account created by the clinic's own administrator. Unlike
+   * create(), an email that is already taken is a conflict, never a silent
+   * return of someone else's account; the password is unusable until the
+   * person follows the set-password link, which is emailed when SMTP is
+   * configured and otherwise handed back to show on screen.
+   */
+  async createStaff(dto: CreateStaffDto): Promise<{
+    user: {
+      id: bigint;
+      email: string | null;
+      first_name: string;
+      last_name: string;
+      phone: string | null;
+      role: string;
+      is_active: boolean;
+    };
+    invite: InviteResult;
+  }> {
+    const organization_id = requireOrganizationId();
+    const email = dto.email.trim().toLowerCase();
+
+    // Emails are unique across all clinics, so the lookup must see every tenant.
+    const taken = await runAsSystem(() =>
+      this.prisma.users.findUnique({ where: { email }, select: { id: true } }),
+    );
+    if (taken) {
+      throw new ConflictException(
+        `An account with the email ${email} already exists.`,
+      );
+    }
+
+    const password_hash = await bcrypt.hash(
+      Math.random().toString(36) + Date.now().toString(36),
+      10,
+    );
+    const user = await this.prisma.users.create({
+      data: {
+        organization_id,
+        branch_id: dto.branch_id ? BigInt(dto.branch_id) : null,
+        restrict_to_branch: Boolean(dto.restrict_to_branch && dto.branch_id),
+        email,
+        first_name: dto.first_name.trim(),
+        last_name: dto.last_name.trim(),
+        phone: dto.phone?.trim() || null,
+        role: dto.role,
+        password_hash,
+        must_set_password: true,
+        is_active: true,
+      },
+      select: {
+        id: true,
+        email: true,
+        first_name: true,
+        last_name: true,
+        phone: true,
+        role: true,
+        is_active: true,
+      },
+    });
+
+    const invite = await this.accountSetup.issueAndSend(
+      { id: user.id, email: user.email, first_name: user.first_name },
+      'staff',
+    );
+    return { user, invite };
   }
 
   async findById(id: bigint) {

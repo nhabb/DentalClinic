@@ -8,6 +8,7 @@
 //   DELETE /api/roles/:key           → { message }        (custom role nobody holds)
 //   GET    /api/users                → StaffMember[] (+ patients, filtered out here)
 //   PATCH  /api/users/:id/assignment → StaffMember         ({ role })
+//   POST   /api/users/staff          → StaffCreated        (account + set-password invite)
 //   GET    /api/auth/me              → { id, permissions: string[], ... }
 
 import { apiFetch } from "./client";
@@ -82,6 +83,25 @@ export async function fetchStaff(): Promise<StaffMember[]> {
 
 export const assignStaffRole = (userId: string, role: string) =>
   request<StaffMember>(`/api/users/${userId}/assignment`, json("PATCH", { role }));
+
+export type StaffInput = {
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone?: string;
+  role: string;
+};
+
+/** The new account and its one-time set-password link; emailed is false when SMTP is not configured. */
+export type StaffCreated = {
+  user: StaffMember;
+  invite: { link: string; emailed: boolean; email: string | null; expires_at: string };
+};
+
+export async function createStaff(input: StaffInput): Promise<StaffCreated> {
+  const created = await request<StaffCreated>("/api/users/staff", json("POST", input));
+  return { ...created, user: { ...created.user, id: String(created.user.id) } };
+}
 
 export type Me = { id: string; permissions: string[] };
 

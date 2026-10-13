@@ -22,6 +22,7 @@ import { useTranslation } from "@/lib/i18n";
 import {
   assignStaffRole,
   createRole,
+  createStaff,
   deleteRole,
   fetchMe,
   fetchPermissionCatalog,
@@ -31,8 +32,10 @@ import {
   type Me,
   type PermissionGroup,
   type Role,
+  type StaffInput,
   type StaffMember,
 } from "@/lib/api/roles";
+import { AddStaffModal } from "./components/AddStaffModal";
 import { RoleList } from "./components/RoleList";
 import { PermissionMatrix } from "./components/PermissionMatrix";
 import { RoleFormModal } from "./components/RoleFormModal";
@@ -59,6 +62,7 @@ export default function RolesPage() {
   const [saving, setSaving] = useState(false);
   const [busyUserId, setBusyUserId] = useState<string | null>(null);
   const [form, setForm] = useState<{ open: boolean; role: Role | null }>({ open: false, role: null });
+  const [addStaffOpen, setAddStaffOpen] = useState(false);
 
   const canManageRoles = me?.permissions.includes("roles:manage") ?? false;
   const canAssignStaff = me?.permissions.includes("staff:manage") ?? false;
@@ -159,6 +163,23 @@ export default function RolesPage() {
     }
   };
 
+  /** Creates the account; the modal then shows the set-password link when it could not be emailed. */
+  const addStaff = async (input: StaffInput) => {
+    setSaving(true);
+    try {
+      const created = await createStaff(input);
+      setStaff((list) => [created.user, ...list]);
+      await refreshRoles();
+      toast.success(t("roles.staffCreated"));
+      return created;
+    } catch (e) {
+      toast.error(errorMessage(e));
+      return null;
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const selectedRole = roles.find((r) => r.key === selectedKey) ?? null;
   const tabs = [
     { id: "roles" as const, label: t("roles.tabRoles"), count: roles.length },
@@ -178,8 +199,16 @@ export default function RolesPage() {
         <AdminPageHeader
           title={t("roles.title")}
           subtitle={t("roles.subtitle")}
-          onAdd={canManageRoles ? () => setForm({ open: true, role: null }) : undefined}
-          addLabel={t("roles.newRole")}
+          onAdd={
+            tab === "staff"
+              ? canAssignStaff
+                ? () => setAddStaffOpen(true)
+                : undefined
+              : canManageRoles
+                ? () => setForm({ open: true, role: null })
+                : undefined
+          }
+          addLabel={tab === "staff" ? t("roles.addStaff") : t("roles.newRole")}
         />
 
         <main className="flex-1 overflow-auto p-4 sm:p-8">
@@ -232,6 +261,14 @@ export default function RolesPage() {
           )}
         </main>
       </div>
+
+      <AddStaffModal
+        isOpen={addStaffOpen}
+        roles={roles}
+        saving={saving}
+        onClose={() => setAddStaffOpen(false)}
+        onSubmit={addStaff}
+      />
 
       <RoleFormModal
         isOpen={form.open}

@@ -951,6 +951,22 @@
     "you": "vous",
     "changeRole": "Changer le rôle",
     "roleUpdated": "Rôle mis à jour",
-    "noStaff": "Aucun compte du personnel"
+    "noStaff": "Aucun compte du personnel",
+    "addStaff": "Ajouter un membre",
+    "addStaffHint": "La personne reçoit un lien pour choisir son mot de passe.",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "phone": "Téléphone",
+    "roleHint": "Les rôles viennent de l’onglet Rôles ; les permissions suivent le rôle.",
+    "createAccount": "Créer le compte",
+    "staffCreated": "Compte créé",
+    "linkEmailed": "Un lien de création de mot de passe lui a été envoyé par e-mail.",
+    "linkNotEmailed": "L’e-mail n’est pas configuré sur le serveur : transmettez-lui ce lien vous-même :",
+    "setPasswordLink": "Lien de mot de passe",
+    "copyLink": "Copier le lien",
+    "linkCopied": "Lien copié",
+    "copyFailed": "Copie impossible ; sélectionnez le lien et copiez-le manuellement.",
+    "linkExpires": "Le lien expire le",
+    "done": "Terminé"
   }
 }

@@ -64,12 +64,19 @@ export class AccountSetupService {
     return { token, link: this.buildLink(token), expiresAt };
   }
 
-  /** Issue a token and email the link if the user has an email address. */
-  async issueAndSend(user: {
-    id: bigint;
-    email: string | null;
-    first_name: string;
-  }): Promise<InviteResult> {
+  /**
+   * Issue a token and email the link if the user has an email address.
+   * `kind` only changes the wording: staff are told they got a staff account,
+   * patients a patient account.
+   */
+  async issueAndSend(
+    user: {
+      id: bigint;
+      email: string | null;
+      first_name: string;
+    },
+    kind: 'patient' | 'staff' = 'patient',
+  ): Promise<InviteResult> {
     const { link, expiresAt } = await this.issue(user.id);
     let emailed = false;
     if (user.email) {
@@ -77,15 +84,15 @@ export class AccountSetupService {
       const clinic = escapeHtml(CLINIC_NAME);
       emailed = await this.mail.send({
         to: user.email,
-        subject: `Set up your ${CLINIC_NAME} patient account`,
+        subject: `Set up your ${CLINIC_NAME} ${kind} account`,
         text:
           `Hello ${user.first_name},\n\n` +
-          `${CLINIC_NAME} created a patient account for you. Use the link below to choose your password:\n\n` +
+          `${CLINIC_NAME} created a ${kind} account for you. Use the link below to choose your password:\n\n` +
           `${link}\n\n` +
           `This link expires in ${TOKEN_TTL_HOURS} hours. If you did not expect this email you can ignore it.`,
         html:
           `<p>Hello ${name},</p>` +
-          `<p>${clinic} created a patient account for you. Click the button below to choose your password.</p>` +
+          `<p>${clinic} created a ${kind} account for you. Click the button below to choose your password.</p>` +
           `<p><a href="${link}" style="display:inline-block;padding:12px 20px;background:#2563eb;color:#ffffff;border-radius:8px;text-decoration:none;font-weight:600">Set my password</a></p>` +
           `<p style="color:#6b7280;font-size:13px">Or copy this link: <a href="${link}">${link}</a><br/>` +
           `This link expires in ${TOKEN_TTL_HOURS} hours. If you did not expect this email you can ignore it.</p>`,

@@ -95,7 +95,7 @@ export class UsersController {
         `"${body.role}" is not a staff role of this clinic (see GET /roles)`,
       );
     }
-    return this.usersService.create(body);
+    return this.usersService.createStaff(body);
   }
 
   @Patch(':id/assignment')

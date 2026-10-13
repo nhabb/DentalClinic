@@ -951,6 +951,22 @@
     "you": "you",
     "changeRole": "Change role",
     "roleUpdated": "Role updated",
-    "noStaff": "No staff accounts yet"
+    "noStaff": "No staff accounts yet",
+    "addStaff": "Add staff",
+    "addStaffHint": "They receive a link to choose their password.",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "phone": "Phone",
+    "roleHint": "Roles come from the Roles tab; permissions follow the role.",
+    "createAccount": "Create account",
+    "staffCreated": "Staff account created",
+    "linkEmailed": "A set-password link was emailed to them.",
+    "linkNotEmailed": "Email is not configured on the server, so send them this link yourself:",
+    "setPasswordLink": "Set-password link",
+    "copyLink": "Copy link",
+    "linkCopied": "Link copied",
+    "copyFailed": "Could not copy; select the link and copy it manually.",
+    "linkExpires": "The link expires on",
+    "done": "Done"
   }
 }
