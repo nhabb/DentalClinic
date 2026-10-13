@@ -88,3 +88,58 @@ describe('UsersService.createStaff', () => {
     expect(create).not.toHaveBeenCalled();
   });
 });
+
+describe('UsersService.issueSetupLink', () => {
+  function build(user: Record<string, unknown> | null) {
+    const issueAndSend = jest.fn().mockResolvedValue({
+      link: 'http://localhost:3000/set-password?token=new',
+      emailed: false,
+      email: 'sam@clinic.com',
+      expires_at: new Date('2026-10-16T00:00:00Z'),
+    });
+    const prisma = { users: { findUnique: jest.fn().mockResolvedValue(user) } };
+    const service = new UsersService(
+      prisma as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      { issueAndSend } as never,
+    );
+    return { service, issueAndSend };
+  }
+  const sam = {
+    id: 5n,
+    email: 'sam@clinic.com',
+    first_name: 'Sam',
+    role: 'doctor',
+    is_active: true,
+  };
+
+  it('issues a staff link for an active staff account', async () => {
+    const { service, issueAndSend } = build(sam);
+    const invite = await service.issueSetupLink(5n, 1n);
+    expect(issueAndSend).toHaveBeenCalledWith(
+      { id: 5n, email: 'sam@clinic.com', first_name: 'Sam' },
+      'staff',
+    );
+    expect(invite.link).toContain('/set-password?token=');
+  });
+
+  it('words the email for patients', async () => {
+    const { service, issueAndSend } = build({ ...sam, role: 'patient' });
+    await service.issueSetupLink(5n, 1n);
+    expect(issueAndSend).toHaveBeenCalledWith(expect.anything(), 'patient');
+  });
+
+  it('refuses yourself, unknown and disabled accounts', async () => {
+    await expect(build(sam).service.issueSetupLink(5n, 5n)).rejects.toThrow(
+      /own password/,
+    );
+    await expect(build(null).service.issueSetupLink(5n, 1n)).rejects.toThrow(
+      /not found/,
+    );
+    await expect(
+      build({ ...sam, is_active: false }).service.issueSetupLink(5n, 1n),
+    ).rejects.toThrow(/disabled/);
+  });
+});

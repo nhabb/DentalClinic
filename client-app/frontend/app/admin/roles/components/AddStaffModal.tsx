@@ -1,13 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { FaCheck, FaCopy } from "react-icons/fa";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/Modal";
 import { FormField, inputClass } from "@/components/ui/FormField";
 import { useTranslation } from "@/lib/i18n";
 import { PATIENT_ROLE_KEY, type Role, type StaffCreated, type StaffInput } from "@/lib/api/roles";
+import { InviteLinkModal } from "./InviteLinkModal";
 
 type Props = {
   isOpen: boolean;
@@ -32,14 +31,12 @@ export function AddStaffModal({ isOpen, roles, saving, onClose, onSubmit }: Prop
   const staffRoles = roles.filter((r) => r.key !== PATIENT_ROLE_KEY);
   const [form, setForm] = useState<StaffInput>(empty);
   const [created, setCreated] = useState<StaffCreated | null>(null);
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
     const staff = roles.filter((r) => r.key !== PATIENT_ROLE_KEY);
     setForm({ ...empty, role: staff.find((r) => r.key !== "admin")?.key ?? staff[0]?.key ?? "" });
     setCreated(null);
-    setCopied(false);
   }, [isOpen, roles]);
 
   const valid =
@@ -61,57 +58,19 @@ export function AddStaffModal({ isOpen, roles, saving, onClose, onSubmit }: Prop
     if (result) setCreated(result);
   };
 
-  const copyLink = async () => {
-    if (!created) return;
-    try {
-      await navigator.clipboard.writeText(created.invite.link);
-      setCopied(true);
-      toast.success(t("roles.linkCopied"));
-    } catch {
-      toast.error(t("roles.copyFailed"));
-    }
-  };
-
   const field = (key: keyof StaffInput) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));
 
   if (created) {
     const { user, invite } = created;
     return (
-      <Modal
+      <InviteLinkModal
         isOpen={isOpen}
-        onClose={onClose}
         title={t("roles.staffCreated")}
         description={`${user.first_name} ${user.last_name} (${user.email})`}
-        footer={
-          <div className="flex justify-end">
-            <Button onClick={onClose}>{t("roles.done")}</Button>
-          </div>
-        }
-      >
-        {invite.emailed ? (
-          <p className="text-sm text-ink-700">{t("roles.linkEmailed")}</p>
-        ) : (
-          <div className="space-y-3">
-            <p className="text-sm text-ink-700">{t("roles.linkNotEmailed")}</p>
-            <div className="flex items-center gap-2">
-              <input
-                readOnly
-                aria-label={t("roles.setPasswordLink")}
-                className={`${inputClass} font-mono text-xs`}
-                value={invite.link}
-                onFocus={(e) => e.currentTarget.select()}
-              />
-              <Button variant="ghost" onClick={copyLink} aria-label={t("roles.copyLink")}>
-                {copied ? <FaCheck /> : <FaCopy />}
-              </Button>
-            </div>
-            <p className="text-xs text-ink-500">
-              {t("roles.linkExpires")} {new Date(invite.expires_at).toLocaleString()}
-            </p>
-          </div>
-        )}
-      </Modal>
+        invite={invite}
+        onClose={onClose}
+      />
     );
   }
 

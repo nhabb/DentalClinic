@@ -24,6 +24,7 @@ import {
   createRole,
   createStaff,
   deleteRole,
+  issueSetupLink,
   fetchMe,
   fetchPermissionCatalog,
   fetchRoles,
@@ -33,9 +34,11 @@ import {
   type PermissionGroup,
   type Role,
   type StaffInput,
+  type StaffInvite,
   type StaffMember,
 } from "@/lib/api/roles";
 import { AddStaffModal } from "./components/AddStaffModal";
+import { InviteLinkModal } from "./components/InviteLinkModal";
 import { RoleList } from "./components/RoleList";
 import { PermissionMatrix } from "./components/PermissionMatrix";
 import { RoleFormModal } from "./components/RoleFormModal";
@@ -63,6 +66,7 @@ export default function RolesPage() {
   const [busyUserId, setBusyUserId] = useState<string | null>(null);
   const [form, setForm] = useState<{ open: boolean; role: Role | null }>({ open: false, role: null });
   const [addStaffOpen, setAddStaffOpen] = useState(false);
+  const [sentLink, setSentLink] = useState<{ member: StaffMember; invite: StaffInvite } | null>(null);
 
   const canManageRoles = me?.permissions.includes("roles:manage") ?? false;
   const canAssignStaff = me?.permissions.includes("staff:manage") ?? false;
@@ -180,6 +184,20 @@ export default function RolesPage() {
     }
   };
 
+  /** A fresh set-password link, for a lost or expired one; shown to copy when it could not be emailed. */
+  const sendLink = async (member: StaffMember) => {
+    setBusyUserId(member.id);
+    try {
+      const invite = await issueSetupLink(member.id);
+      setSentLink({ member, invite });
+      toast.success(t("roles.linkIssued"));
+    } catch (e) {
+      toast.error(errorMessage(e));
+    } finally {
+      setBusyUserId(null);
+    }
+  };
+
   const selectedRole = roles.find((r) => r.key === selectedKey) ?? null;
   const tabs = [
     { id: "roles" as const, label: t("roles.tabRoles"), count: roles.length },
@@ -253,6 +271,7 @@ export default function RolesPage() {
                     selfId={me?.id ?? null}
                     busyUserId={busyUserId}
                     onAssign={assignRole}
+                    onSendLink={sendLink}
                     />
                   </Card>
                 </div>
@@ -261,6 +280,14 @@ export default function RolesPage() {
           )}
         </main>
       </div>
+
+      <InviteLinkModal
+        isOpen={sentLink !== null}
+        title={t("roles.linkIssued")}
+        description={sentLink ? `${sentLink.member.first_name} ${sentLink.member.last_name} (${sentLink.member.email})` : ""}
+        invite={sentLink?.invite ?? null}
+        onClose={() => setSentLink(null)}
+      />
 
       <AddStaffModal
         isOpen={addStaffOpen}

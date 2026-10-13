@@ -98,6 +98,20 @@ export class UsersController {
     return this.usersService.createStaff(body);
   }
 
+  @Post(':id/password-setup')
+  @RequirePermissions('staff:manage')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary:
+      'Issue a new set-password link for an account (emailed when SMTP is configured, otherwise returned to show)',
+  })
+  issueSetupLink(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: AuthedRequest,
+  ) {
+    return this.usersService.issueSetupLink(BigInt(id), BigInt(req.user.id));
+  }
+
   @Patch(':id/assignment')
   @RequirePermissions('staff:manage')
   @ApiBearerAuth()

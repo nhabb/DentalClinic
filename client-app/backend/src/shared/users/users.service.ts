@@ -151,6 +151,43 @@ export class UsersService {
     return { user, invite };
   }
 
+  /**
+   * A fresh set-password link for an account of this clinic, for when the
+   * first one was lost or expired. Replaces the previous link; the current
+   * password keeps working until the new link is used. Admins reset others,
+   * never themselves (they change their own password while signed in).
+   */
+  async issueSetupLink(id: bigint, actorId: bigint): Promise<InviteResult> {
+    if (id === actorId) {
+      throw new BadRequestException(
+        'Change your own password from your profile instead.',
+      );
+    }
+    const user = await this.prisma.users.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        email: true,
+        first_name: true,
+        role: true,
+        is_active: true,
+      },
+    });
+    if (!user) throw new NotFoundException(`User with ID ${id} not found`);
+    if (!user.is_active) {
+      throw new BadRequestException(
+        'This account is disabled; enable it before sending a link.',
+      );
+    }
+    if (!user.email) {
+      throw new BadRequestException('This account has no email address.');
+    }
+    return this.accountSetup.issueAndSend(
+      { id: user.id, email: user.email, first_name: user.first_name },
+      user.role === PATIENT_ROLE_KEY ? 'patient' : 'staff',
+    );
+  }
+
   async findById(id: bigint) {
     const user = await this.prisma.users.findUnique({
       where: { id },

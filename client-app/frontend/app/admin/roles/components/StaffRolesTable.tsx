@@ -1,6 +1,7 @@
 "use client";
 
-import { FaUserSlash } from "react-icons/fa";
+import { FaLink, FaUserSlash } from "react-icons/fa";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useTranslation } from "@/lib/i18n";
@@ -16,10 +17,12 @@ type Props = {
   selfId: string | null;
   busyUserId: string | null;
   onAssign: (user: StaffMember, role: string) => void;
+  /** Issue a fresh set-password link for the member (needs staff:manage). */
+  onSendLink: (user: StaffMember) => void;
 };
 
 /** Every staff account with its role, and a selector to move it to another role. */
-export function StaffRolesTable({ staff, roles, canAssign, selfId, busyUserId, onAssign }: Props) {
+export function StaffRolesTable({ staff, roles, canAssign, selfId, busyUserId, onAssign, onSendLink }: Props) {
   const { t } = useTranslation();
   const assignable = roles.filter((r) => r.key !== PATIENT_ROLE_KEY);
   const roleName = (key: string) => roles.find((r) => r.key === key)?.name ?? key;
@@ -37,6 +40,7 @@ export function StaffRolesTable({ staff, roles, canAssign, selfId, busyUserId, o
             <th className="px-4 py-3 text-start font-semibold">{t("roles.email")}</th>
             <th className="px-4 py-3 text-start font-semibold">{t("roles.role")}</th>
             <th className="px-4 py-3 text-start font-semibold">{t("roles.status")}</th>
+            {canAssign && <th className="px-4 py-3 text-end font-semibold">{t("common.actions")}</th>}
           </tr>
         </thead>
         <tbody className="divide-y divide-ink-100">
@@ -74,6 +78,21 @@ export function StaffRolesTable({ staff, roles, canAssign, selfId, busyUserId, o
                     {member.is_active ? t("roles.active") : t("roles.inactive")}
                   </Badge>
                 </td>
+                {canAssign && (
+                  <td className="px-4 py-3 text-end">
+                    {editable && member.is_active && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled={busyUserId === member.id}
+                        onClick={() => onSendLink(member)}
+                        title={t("roles.sendLinkHint")}
+                      >
+                        <FaLink className="me-1.5" /> {t("roles.sendLink")}
+                      </Button>
+                    )}
+                  </td>
+                )}
               </tr>
             );
           })}
