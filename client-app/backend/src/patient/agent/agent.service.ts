@@ -8,6 +8,7 @@ import { buildSystemPrompt } from './agent-prompt';
 import { SchemaSummary } from './schema-summary';
 import { ToolArgs } from './tool-args';
 import { ToolRunner } from './tools/tool-runner';
+import { UsageRecorder } from './usage-recorder';
 
 export interface ChatMessage {
   role: 'user' | 'assistant';
@@ -32,6 +33,7 @@ export class AgentService {
     private readonly users: UsersService,
     private readonly schema: SchemaSummary,
     private readonly tools: ToolRunner,
+    private readonly usage: UsageRecorder,
   ) {}
 
   /** Created on first use so the API key is only needed when someone chats. */
@@ -63,17 +65,27 @@ export class AgentService {
       ...messages.map((m) => ({ role: m.role, content: m.content })),
     ];
 
+    const startedAt = Date.now();
     let round = 1;
+    let promptTokens = 0;
+    let completionTokens = 0;
+    let toolCalls = 0;
+    const count = (r: OpenAI.ChatCompletion) => {
+      promptTokens += r.usage?.prompt_tokens ?? 0;
+      completionTokens += r.usage?.completion_tokens ?? 0;
+    };
     let response = await this.client.chat.completions.create({
       model: MODEL,
       tools,
       messages: conversation,
     });
     this.logRound(round, response);
+    count(response);
 
     // The model asks for tools until it has what it needs to answer.
     while (response.choices[0].finish_reason === 'tool_calls') {
       const assistantMessage = response.choices[0].message;
+      toolCalls += assistantMessage.tool_calls?.length ?? 0;
       const toolResults = await Promise.all(
         (assistantMessage.tool_calls ?? []).map(async (call) => ({
           role: 'tool' as const,
@@ -96,7 +108,17 @@ export class AgentService {
         messages: conversation,
       });
       this.logRound(++round, response);
+      count(response);
     }
+    await this.usage.record({
+      userId: BigInt(user.id),
+      model: MODEL,
+      promptTokens,
+      completionTokens,
+      rounds: round,
+      toolCalls,
+      durationMs: Date.now() - startedAt,
+    });
 
     const answer =
       response.choices[0].message.content ?? 'No response generated.';

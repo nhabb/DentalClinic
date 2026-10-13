@@ -151,3 +151,60 @@ export interface Role {
   permissions: string[];
   users_count: number;
 }
+
+/** Assistant token usage (GET /ai-usage). Costs are estimates from list prices. */
+export interface UsageTotals {
+  questions: number;
+  prompt_tokens: number;
+  completion_tokens: number;
+  estimated_cost_usd: number;
+}
+
+export interface ClinicUsage extends UsageTotals {
+  organization: { id: string; name: string; slug: string; is_active: boolean };
+  accounts: { total: number; staff: number; ai_users: number };
+  last_used_at: string | null;
+}
+
+export interface AccountUsage extends UsageTotals {
+  user: { id: string; first_name: string; last_name: string; email: string | null; role: string; is_active: boolean };
+  rounds: number;
+  tool_calls: number;
+  last_used_at: string | null;
+}
+
+export interface UsageOverview {
+  days: number;
+  since: string;
+  totals: UsageTotals & { clinics_using: number; accounts_using: number };
+  clinics: ClinicUsage[];
+}
+
+export interface ClinicUsageDetail {
+  days: number;
+  since: string;
+  organization: ClinicUsage["organization"];
+  totals: UsageTotals & { accounts_using: number };
+  accounts: AccountUsage[];
+}
+
+/** One answered question (GET /ai-usage/accounts/:userId). The text is never stored. */
+export interface QuestionUsage {
+  id: string;
+  asked_at: string;
+  model: string;
+  prompt_tokens: number;
+  completion_tokens: number;
+  rounds: number;
+  tool_calls: number;
+  duration_ms: number;
+  estimated_cost_usd: number;
+}
+
+export interface AccountUsageDetail {
+  days: number;
+  since: string;
+  user: AccountUsage["user"] & { organization: ClinicUsage["organization"] };
+  totals: UsageTotals;
+  questions: QuestionUsage[];
+}

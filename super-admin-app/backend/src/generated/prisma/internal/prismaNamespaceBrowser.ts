@@ -75,7 +75,8 @@ export const ModelName = {
   specialist_consultations: 'specialist_consultations',
   dental_labs: 'dental_labs',
   lab_orders: 'lab_orders',
-  agent_conversations: 'agent_conversations'
+  agent_conversations: 'agent_conversations',
+  agent_usage: 'agent_usage'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -538,6 +539,22 @@ export const Agent_conversationsScalarFieldEnum = {
 } as const
 
 export type Agent_conversationsScalarFieldEnum = (typeof Agent_conversationsScalarFieldEnum)[keyof typeof Agent_conversationsScalarFieldEnum]
+
+
+export const Agent_usageScalarFieldEnum = {
+  id: 'id',
+  organization_id: 'organization_id',
+  user_id: 'user_id',
+  model: 'model',
+  prompt_tokens: 'prompt_tokens',
+  completion_tokens: 'completion_tokens',
+  rounds: 'rounds',
+  tool_calls: 'tool_calls',
+  duration_ms: 'duration_ms',
+  created_at: 'created_at'
+} as const
+
+export type Agent_usageScalarFieldEnum = (typeof Agent_usageScalarFieldEnum)[keyof typeof Agent_usageScalarFieldEnum]
 
 
 export const SortOrder = {

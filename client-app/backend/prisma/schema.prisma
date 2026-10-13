@@ -66,6 +66,7 @@ model organizations {
   inventory_movements inventory_movements[]
   notifications       notifications[]
   agent_conversations                         agent_conversations[]
+  agent_usage                                 agent_usage[]
   audit_logs          audit_logs[]
   clinic_profile      clinic_profile[]
   expenses            expenses[]
@@ -416,6 +417,7 @@ model users {
   inventory_movements                         inventory_movements[]
   notifications                               notifications[]
   agent_conversation  agent_conversations?
+  agent_usage         agent_usage[]
   patient_documents                           patient_documents[]
   patient_profiles                            patient_profiles?
   patient_records                             patient_records[]
@@ -721,4 +723,23 @@ model agent_conversations {
   user            users         @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([organization_id], map: "idx_agent_conversations_org")
+}
+
+/// One row per AI assistant answer: tokens, rounds and tool calls, for the operator usage dashboard.
+model agent_usage {
+  id                BigInt        @id @default(autoincrement())
+  organization_id   BigInt        @default(dbgenerated("app.current_org_id()"))
+  user_id           BigInt
+  model             String        @db.VarChar
+  prompt_tokens     Int           @default(0)
+  completion_tokens Int           @default(0)
+  rounds            Int           @default(1)
+  tool_calls        Int           @default(0)
+  duration_ms       Int           @default(0)
+  created_at        DateTime      @default(now()) @db.Timestamptz(6)
+  organization      organizations @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  user              users         @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([organization_id, created_at], map: "idx_agent_usage_org_created")
+  @@index([user_id, created_at], map: "idx_agent_usage_user_created")
 }

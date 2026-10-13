@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { AgentController } from './agent.controller';
 import { AgentService } from './agent.service';
 import { ConversationStore } from './conversation-store';
+import { UsageRecorder } from './usage-recorder';
 import { SchemaSummary } from './schema-summary';
 import { ToolRunner } from './tools/tool-runner';
 import { AppointmentsModule } from '../../doctor/appointments/appointments.module';
@@ -33,6 +34,12 @@ import { LabModule } from '../../doctor/lab/lab.module';
     LabModule,
   ],
   controllers: [AgentController],
-  providers: [AgentService, ToolRunner, SchemaSummary, ConversationStore],
+  providers: [
+    AgentService,
+    ToolRunner,
+    SchemaSummary,
+    ConversationStore,
+    UsageRecorder,
+  ],
 })
 export class AgentModule {}

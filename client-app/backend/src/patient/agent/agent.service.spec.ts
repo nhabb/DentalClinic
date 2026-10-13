@@ -103,10 +103,12 @@ function build(turns: Completion[]) {
     {} as never,
     {} as never,
   );
+  const usage = { record: jest.fn().mockResolvedValue(undefined) };
   const service = new AgentService(
     users as never,
     { text: '  appointments: id (bigint)' } as never,
     runner,
+    usage as never,
   );
   // Replace the lazily created client with the scripted stub.
   (service as unknown as { openai: unknown }).openai = {
@@ -121,7 +123,7 @@ function build(turns: Completion[]) {
       error?: string;
     };
 
-  return { service, billing, roles, prisma, paramsOf, lastToolResult };
+  return { service, billing, roles, prisma, usage, paramsOf, lastToolResult };
 }
 
 const secretary = userWith('secretary', [
@@ -249,5 +251,34 @@ describe('AgentService.chat', () => {
     await service.chat([], secretary);
 
     expect(lastToolResult(1).error).toMatch(/"id" must be a whole-number id/);
+  });
+});
+
+describe('usage recording', () => {
+  const withUsage = (turn: Completion, prompt: number, completion: number) => ({
+    ...turn,
+    usage: { prompt_tokens: prompt, completion_tokens: completion },
+  });
+
+  it('records one row per answer with tokens summed over every round', async () => {
+    const { service, usage } = build([
+      withUsage(toolCallTurn('list_invoices', '{}'), 5000, 40) as Completion,
+      withUsage(finalTurn('two invoices'), 6000, 120) as Completion,
+    ]);
+    await service.chat(
+      [{ role: 'user', content: 'unpaid invoices?' }],
+      userWith('secretary', ['agent:use', 'billing:read']),
+    );
+    expect(usage.record).toHaveBeenCalledTimes(1);
+    expect(usage.record).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: 7n,
+        model: 'gpt-4o-mini',
+        promptTokens: 11000,
+        completionTokens: 160,
+        rounds: 2,
+        toolCalls: 1,
+      }),
+    );
   });
 });

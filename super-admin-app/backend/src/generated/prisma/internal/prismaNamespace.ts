@@ -408,7 +408,8 @@ export const ModelName = {
   specialist_consultations: 'specialist_consultations',
   dental_labs: 'dental_labs',
   lab_orders: 'lab_orders',
-  agent_conversations: 'agent_conversations'
+  agent_conversations: 'agent_conversations',
+  agent_usage: 'agent_usage'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -424,7 +425,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "organizations" | "branches" | "appointment_slots" | "appointments" | "audit_logs" | "clinic_profile" | "inventory_items" | "inventory_movements" | "notifications" | "patient_documents" | "patient_profiles" | "patient_records" | "users" | "expenses" | "expense_payments" | "treatment_invoices" | "invoice_line_items" | "invoice_payments" | "roles" | "role_permissions" | "specialists" | "specialist_consultations" | "dental_labs" | "lab_orders" | "agent_conversations"
+    modelProps: "organizations" | "branches" | "appointment_slots" | "appointments" | "audit_logs" | "clinic_profile" | "inventory_items" | "inventory_movements" | "notifications" | "patient_documents" | "patient_profiles" | "patient_records" | "users" | "expenses" | "expense_payments" | "treatment_invoices" | "invoice_line_items" | "invoice_payments" | "roles" | "role_permissions" | "specialists" | "specialist_consultations" | "dental_labs" | "lab_orders" | "agent_conversations" | "agent_usage"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -2278,6 +2279,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    agent_usage: {
+      payload: Prisma.$agent_usagePayload<ExtArgs>
+      fields: Prisma.agent_usageFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.agent_usageFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$agent_usagePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.agent_usageFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$agent_usagePayload>
+        }
+        findFirst: {
+          args: Prisma.agent_usageFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$agent_usagePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.agent_usageFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$agent_usagePayload>
+        }
+        findMany: {
+          args: Prisma.agent_usageFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$agent_usagePayload>[]
+        }
+        create: {
+          args: Prisma.agent_usageCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$agent_usagePayload>
+        }
+        createMany: {
+          args: Prisma.agent_usageCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.agent_usageCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$agent_usagePayload>[]
+        }
+        delete: {
+          args: Prisma.agent_usageDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$agent_usagePayload>
+        }
+        update: {
+          args: Prisma.agent_usageUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$agent_usagePayload>
+        }
+        deleteMany: {
+          args: Prisma.agent_usageDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.agent_usageUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.agent_usageUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$agent_usagePayload>[]
+        }
+        upsert: {
+          args: Prisma.agent_usageUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$agent_usagePayload>
+        }
+        aggregate: {
+          args: Prisma.Agent_usageAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAgent_usage>
+        }
+        groupBy: {
+          args: Prisma.agent_usageGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Agent_usageGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.agent_usageCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Agent_usageCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -2763,6 +2838,22 @@ export const Agent_conversationsScalarFieldEnum = {
 export type Agent_conversationsScalarFieldEnum = (typeof Agent_conversationsScalarFieldEnum)[keyof typeof Agent_conversationsScalarFieldEnum]
 
 
+export const Agent_usageScalarFieldEnum = {
+  id: 'id',
+  organization_id: 'organization_id',
+  user_id: 'user_id',
+  model: 'model',
+  prompt_tokens: 'prompt_tokens',
+  completion_tokens: 'completion_tokens',
+  rounds: 'rounds',
+  tool_calls: 'tool_calls',
+  duration_ms: 'duration_ms',
+  created_at: 'created_at'
+} as const
+
+export type Agent_usageScalarFieldEnum = (typeof Agent_usageScalarFieldEnum)[keyof typeof Agent_usageScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -3041,6 +3132,7 @@ export type GlobalOmitConfig = {
   dental_labs?: Prisma.dental_labsOmit
   lab_orders?: Prisma.lab_ordersOmit
   agent_conversations?: Prisma.agent_conversationsOmit
+  agent_usage?: Prisma.agent_usageOmit
 }
 
 /* Types for Logging */

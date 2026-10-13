@@ -10,6 +10,7 @@ import { MailModule } from './mail/mail.module';
 import { AuditModule } from './audit/audit.module';
 import { RolesModule } from './roles/roles.module';
 import { AccountsModule } from './accounts/accounts.module';
+import { AiUsageModule } from './ai-usage/ai-usage.module';
 
 /**
  * Platform console API.
@@ -30,6 +31,7 @@ import { AccountsModule } from './accounts/accounts.module';
     AdminsModule,
     RolesModule,
     AccountsModule,
+    AiUsageModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: PlatformAuthGuard }],
 })
