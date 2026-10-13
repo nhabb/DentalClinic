@@ -4,76 +4,50 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**BrightSmile Dental Clinic** — a dental practice management SaaS. Full-stack monorepo with a Next.js 16 frontend and NestJS backend, using Supabase for auth and PostgreSQL via Prisma.
+**BrightSmile Dental Clinic** — a dental practice management SaaS: Next.js 16 frontends and NestJS backends, using Supabase for auth and PostgreSQL via Prisma. **This repository holds the frontends only.**
+
+## Repositories & deployment
+
+The project is split across two GitHub repos that mirror the same folder layout:
+
+| Repo | Holds | Vercel project (team `dream-team-1a73`) |
+|------|-------|------------------------------------------|
+| `nhabb/DentalClinic` (this repo) | `client-app/frontend`, `super-admin-app/frontend` | `dentalclinic` → root `client-app/frontend` → https://brightsmileclinic.vercel.app |
+| `nhabb/BrightsmileClinicBack` | `client-app/backend`, `super-admin-app/backend` | `brightsmile-api` → root `client-app/backend` → https://brightsmile-api.vercel.app |
+
+- **Branches:** `main` = production; `PRE` = preview. A push to any branch other than `main` builds a Vercel preview URL; a push to `main` deploys to production.
+- **Clone both side by side** to run the full stack locally; the folder names are the same in both repos, so paths in docs match.
+- **Backend changes** (API, Prisma schema, migrations, RLS) go in `BrightsmileClinicBack` — see its `CLAUDE.md`. If a frontend change needs a new or changed endpoint, make it there or leave a note for the backend team.
+- **Super-admin apps** (`super-admin-app/*`) are not deployed to Vercel yet.
+- **Env vars** live in the Vercel projects (`vercel env pull` to sync). `NEXT_PUBLIC_API_URL` points the frontend at the backend (no `/api` suffix; the client adds paths).
+- **Vercel CLI deploys:** the CLI does **not** read `.gitignore`; `.vercelignore` is what keeps `.env*` files and keys out of uploads. Keep it when adding secret files. Prefer Git-triggered deploys (push a branch).
 
 ## Repository layout
 ```
-client-app/     the product clinics use (their staff and patients)
-  backend/    NestJS API, port 5000, multi-tenant with RLS
-  frontend/   Next.js app, port 3000
-super-admin-app/   the operator console (you): onboard and monitor every clinic
-  backend/    NestJS API, port 5100, platform-only login
-  frontend/   Next.js app, port 3100, same design system
-docker/     nginx reverse proxy config; docker-compose.yml at the root
+client-app/frontend/        Next.js app clinics use (staff and patients), port 3000
+super-admin-app/frontend/   operator console (onboard and monitor every clinic), port 3100, same design system
+docker/, docker-compose.yml full-stack local setup (expects the backends next to the frontends; currently stale)
 ```
-Both backends share one database and one Prisma schema (`client-app/backend/prisma`).
 
 ## Development Commands
 
-From the repo root: `npm run dev:clinic` (clinic API + app) or `npm run dev:platform` (platform API + console).
+From the repo root: `npm run dev` (clinic app) or `npm run dev:super-admin` (console); `npm run install:all` installs both.
 
-
-### Frontend (`client-app/frontend/` directory)
+### Frontend (`client-app/frontend/` or `super-admin-app/frontend/`)
 ```bash
-npm run dev       # Start Next.js dev server (localhost:3000)
+npm run dev       # Start Next.js dev server (localhost:3000 / 3100)
 npm run build     # Production build
 npm run lint      # ESLint
 ```
-
-### Backend (`client-app/backend/` directory)
-```bash
-npm run start:dev   # Start NestJS with file watch (port 5000)
-npm run start:debug # Debug mode with watch
-npm run build       # Compile TypeScript to dist/
-npm run lint        # ESLint with auto-fix
-npm run format      # Prettier formatting
-npm test            # Jest unit tests
-npm run test:e2e    # E2E tests
-npm run test:cov    # Coverage report
-```
-
-### Prisma (run from `client-app/backend/`)
-```bash
-node scripts/apply-sql.js prisma/migrations/<folder>/migration.sql   # Apply a migration (see note)
-npx prisma generate       # Regenerate client after schema changes (generated client is committed; both generators are pinned to moduleFormat cjs + no import extension because tsconfig uses nodenext)
-npx prisma studio         # Open Prisma Studio GUI
-```
-Do **not** run `prisma migrate dev`: the database has no `_prisma_migrations` history
-(it was evolved with `db push`/manual SQL), so it would try to replay every old
-migration. Write the SQL into a new `prisma/migrations/<timestamp>_<name>/migration.sql`,
-apply it with `scripts/apply-sql.js` (whole file in one round trip, so `BEGIN`/`COMMIT`
-in the file makes it atomic), update `schema.prisma`, then `npx prisma generate`.
-Every table and column carries a Postgres comment describing what it means and its allowed
-values (migration `20261009120000_table_and_column_comments`, re-runnable). The AI assistant
-reads them at startup (`src/patient/agent/schema-summary.ts`), so when you add a table or
-column, add its `COMMENT ON` to that file and re-apply it.
+`super-admin-app/frontend` also has `npm run typecheck`.
 
 ## Environment Setup
 
-**Frontend** (`.env.local`):
+**Frontend** (`.env.local`, see `.env.example` in each app):
 ```
 NEXT_PUBLIC_API_URL=http://localhost:5000
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-```
-
-**Backend** (`.env`, see `client-app/backend/.env.example`):
-```
-DATABASE_URL=postgresql://...
-DIRECT_URL=postgresql://...
-SUPABASE_URL=...
-SUPABASE_SERVICE_ROLE_KEY=...
-PORT=5000
 ```
 
 Node version: **20** (see `.nvmrc`)
@@ -88,47 +62,17 @@ Node version: **20** (see `.nvmrc`)
 - Internationalization via `lib/i18n/` — supports EN, AR, FR; use `useTranslation()` hook
 - Supabase client at `lib/supabase/client.ts`
 
-### Backend — NestJS 11
-- Global prefix: `/api`; Swagger docs at `http://localhost:5000/api/docs`
-- All routes protected by `JwtAuthGuard` (`client-app/backend/src/common/guards/`) which validates Supabase JWTs
-- Standardized error responses via `GlobalExceptionFilter` (`client-app/backend/src/common/filters/`)
-- Global `ValidationPipe` with `whitelist: true` and `forbidNonWhitelisted: true`
-
-**Feature modules** (each has controller + service + DTOs):
-| Module | Path |
-|--------|------|
-| Users | `src/users/` |
-| Patients | `src/patients/` |
-| Appointments | `src/appointments/` |
-| Appointment Slots | `src/appointment-slots/` |
-| Patient Records | `src/patient-records/` |
-| Patient Documents | `src/patient-documents/` |
-| Inventory | `src/inventory/` |
-| Notifications | `src/notifications/` |
-| Prisma (shared) | `src/prisma/` |
-| Authorization (roles & permissions) | `src/shared/authorization/` |
-| Specialists & consultations | `src/doctor/specialists/` |
-| Labs & lab orders | `src/doctor/lab/` |
-| Case links (patient/visit/record belong together) | `src/doctor/case-links/` |
-
-### Database — PostgreSQL via Prisma
-Schema at `client-app/backend/prisma/schema.prisma`. Key tables: `organizations`, `branches`, `users`, `patient_profiles`, `appointments`, `appointment_slots`, `patient_records`, `patient_documents`, `inventory_items`, `inventory_movements`, `notifications`, `clinic_profile`, `audit_logs`, `treatment_invoices`, `expenses`, `specialists`, `specialist_consultations`, `dental_labs`, `lab_orders`.
-
-### Multi-tenancy (organizations → branches) and row-level security
-- `organizations` = tenant (one dental business); `branches` = its clinic locations (Beirut, Tyre…). Every tenant table has `organization_id`; location-bound tables (`appointment_slots`, `appointments`, `inventory_items`, plus optional on invoices/expenses/records/documents) have `branch_id`. Each organization has exactly one default branch.
-- Tenant context: `TenantContextMiddleware` (`src/shared/tenant/`, registered with `app.use` in `main.ts`) reads the JWT (`org_id`, `branch_id` claims) or, for anonymous requests, the `X-Organization` header / host subdomain / `DEFAULT_ORGANIZATION_SLUG`, and stores it in AsyncLocalStorage.
-- Database enforcement: `TenantPool` (a `pg` Pool subclass used by `PrismaService`) runs `SET ROLE dental_app` and `set_config('app.current_org', …)` on every checked-out connection. RLS policies on every table only expose rows of that organization; `app.bypass_rls = on` (superadmin, login/invite lookups via `runAsSystem()`) sees everything. With no tenant, every table reads as empty. The Supabase `postgres` login bypasses RLS, which is why the role switch exists.
-- New rows get `organization_id`/`branch_id` from the SQL defaults `app.current_org_id()` / `app.default_branch_id()`, so services rarely set them. Set them explicitly only in scripts that connect as `postgres` (seed).
-- `src/shared/prisma/tenant-safety.extension.ts` rewrites `findUnique` to `findFirst` outside transactions: Prisma batches same-tick `findUnique` calls across requests into one statement, which would run under one tenant's RLS settings.
-- Prisma queries are lazy: always `await` them *inside* `runWithTenant` / `runAsSystem` (the helpers do this for you when you return the query from the callback). Returning the unawaited query to a caller outside the scope runs it with the caller's tenant.
-- Management API: `GET/PATCH /api/organizations/me`, `GET/POST/PATCH/DELETE /api/branches`, superadmin-only `GET/POST /api/organizations`. Platform-only routes use `@Roles('superadmin')` + `RolesGuard`; everything else uses permissions (below). A superadmin passes `X-Organization-Id` (or `X-Organization` slug) to act inside one tenant.
-- Requires a session-mode DB connection (direct `:5432` or Supavisor session mode); transaction-mode poolers would drop `SET ROLE` between statements.
-- Tests: `npm test` covers the tenancy layer (`src/shared/tenant/*.spec.ts`, `src/shared/prisma/*.spec.ts`, `src/shared/tenancy/*.spec.ts`). `node scripts/smoke-tenancy.js` runs an end-to-end isolation check against a running backend and the real database (creates and removes a throwaway organization).
-
 ### Authentication Flow
 1. User authenticates via Supabase (email/password or Google OAuth)
 2. Frontend stores session; `lib/api/client.ts` reads the Supabase session and injects `Authorization: Bearer <jwt>` on every API request
 3. Backend `JwtAuthGuard` validates the JWT against Supabase's service role key
+
+The platform console uses its own platform token (audience `platform`); clinic tokens are refused there and vice versa.
+
+### Permissions in the UI
+The API guards every route with a permission key (`<area>:<action>`, e.g. `billing:write`); `/api/auth/me` returns the caller's `permissions`. The admin UI mirrors the API: `lib/permissions.ts` (`usePermissions().can(key)`) and `lib/adminAccess.ts` (screen → permission; read by `AdminScreenGuard` in the admin layout, the sidebar and the command palette) hide screens and write buttons the role lacks. When the backend adds a route with `@RequirePermissions`, gate its button with `can(...)` too. Clinic admins manage roles at `/admin/roles` (`client-app/frontend/app/admin/roles/`, API wrapper in `lib/api/roles.ts`). Billing from the dental chart needs `billing:write`; without it the chart records work unbilled.
+
+Search endpoints loosen their match when nothing is found and report how loose it was in `meta.searchTier`; show that to the user rather than treating loose results as exact.
 
 ## Demo Accounts (for testing)
 ```
@@ -140,41 +84,9 @@ super@demo.com      / demo123  → /superadmin
 
 ## Working Rules (apply to every change)
 - **Review before you finish.** Re-read the diff for correctness, naming and leftovers; fix what you find.
-- **Test it.** Run `npx tsc --noEmit`, `npm test` and, for anything touching auth, tenancy or data access, `node scripts/smoke-tenancy.js` and `npm run smoke:permissions` against a running backend. Add unit tests for new logic.
-- **Readable, no spaghetti.** Small functions with one job, descriptive names, a short comment explaining *why* where the code is not obvious. No duplicated logic across controllers: shared rules live in one service.
-- **Organized in folders.** One concern per folder: `src/shared/tenant` (who the request acts for), `src/shared/access` (ownership rules), `src/shared/common/guards|decorators|filters` (cross-cutting HTTP pieces), `src/shared/tenancy` (organizations/branches API), feature modules under `src/doctor` and `src/patient`. New features get their own `module/controller/service/dto` set.
-
-## API security layers
-Every route passes through, in order (see `AppModule`):
-1. `JwtAuthGuard` (global): valid token, account active, clinic active. Opt out with `@Public()`.
-2. `RolesGuard` (global): only for platform routes, `@Roles('superadmin')`.
-3. `PermissionsGuard` (global): `@RequirePermissions('billing:write')` on a controller or handler; the caller's role must hold every listed permission. No decorator = any signed-in user (then step 4 applies).
-4. Ownership: controllers call `AccessControlService` (`assertSelfOrPermission`, `assertPatientProfileAccess(actor, profileId, permission)`, `assertSelf`) so patients only reach their own user, profile, appointments, invoices, records and documents, while staff need the named permission for other people's data.
-5. `BranchScopeGuard` (global): staff with `restrict_to_branch` may not name another `branch_id`.
-6. Row-level security in PostgreSQL: tenant boundary plus branch scope (`app.branch_scope`), enforced even for raw SQL.
-Authorization attributes (role, active flags, branch, the role's permissions) are read from the database per request through `UserAccessService` (60 s cache), so revoking access does not wait for token expiry. Admin endpoint: `PATCH /api/users/:id/assignment` (`role`, `branch_id`, `restrict_to_branch`, `is_active`).
-
-### Money
-Money received lives only in `invoice_payments` (via `POST /billing/invoices/:id/payments`); money paid out only in `expense_payments`. Invoices come from two places, the dental chart (`patient-work`, which links the records it bills so they cannot be billed twice) and the billing page, but payments always attach to an invoice. `BillingService.recordPayment` and the expenses equivalents run in one transaction with the row locked (`FOR UPDATE`) and re-derive the totals from the payments table, so simultaneous posts cannot overpay or desync. Migration `20261009010000_payment_integrity` makes the database enforce it too: positive payment amounts, `amount_paid` within the total with `remaining_amount = total - paid`, and triggers that recompute totals and status on every payment change. A paid invoice cannot be deleted. Tests: `billing.service.spec.ts`.
-
-### Roles & permissions (`src/shared/authorization/`)
-- `permissions.ts` is the catalog: every capability of the API as `<area>:<action>` (`appointments:read`, `patients:delete`, `roles:manage`, …), grouped for display, plus the default roles. The catalog is code because endpoints are code; add a permission there when you add a capability, then guard the route with `@RequirePermissions()`.
-- Which role holds which permission is per-clinic data: tables `roles` (`organization_id`, `key`, `name`, `is_system`) and `role_permissions`, both under RLS. `users.role` stores the role key. `RolesService.ensureDefaults()` seeds admin / doctor / secretary / patient for a new clinic (on creation and lazily on first use).
-- `admin` always has every permission and `patient` none (both locked); doctor and secretary are editable; clinics can add custom roles. Deleting a role in use or a built-in role is refused.
-- API: `GET /api/permissions`, `GET /api/roles` (need `staff:read`); `POST/PATCH/DELETE /api/roles[/:key]` (need `roles:manage`); `/api/auth/me` returns the caller's `permissions` so the UI can hide what the role cannot do.
-- UI: clinic admins manage this at `/admin/roles` (`client-app/frontend/app/admin/roles/`, API wrapper in `lib/api/roles.ts`). The admin UI mirrors the API: `lib/permissions.ts` (`usePermissions().can(key)`, from `/auth/me`) and `lib/adminAccess.ts` (screen → permission; read by `AdminScreenGuard` in the admin layout, the sidebar and the command palette) hide screens and write buttons the role lacks. When you add a route with `@RequirePermissions`, gate its button with `can(...)` too. Billing from the dental chart (`POST /patient-work[/complete]` with `create_invoice`) needs `billing:write`; without it the chart records work unbilled.
-- Tests: `permissions.guard.spec.ts`, `roles.service.spec.ts`, `access-control.service.spec.ts`; `scripts/smoke-tenancy.js` section 5 proves that editing a role changes what its holder can reach on the next request.
-- **Every route is covered.** `route-inventory.ts` reads the decorators of every `*.controller.ts` and `route-coverage.spec.ts` fails when a route has neither `@Public`, `@Roles` nor `@RequirePermissions` and is not in its `SELF_SERVICE_ROUTES` list (routes that check ownership in the handler; each entry names the check). `npm run routes -- --table` prints the inventory. `npm run smoke:permissions` (`scripts/smoke-permissions.js`) then calls every route of the running API as no-token / patient / staff-with-no-permission / clinic admin / superadmin inside a throwaway clinic and checks each answer against the declared protection (`ROUTE_FILTER=users` limits it). Run it after touching any controller.
-
-### AI assistant (`src/patient/agent/`)
-The assistant is read-only (it lists, reports and queries; it never books, cancels, invoices or notifies) and acts with the caller's permissions, never its own. `agent-access.ts` labels every tool (`TOOL_PERMISSIONS`) and every table the SQL tool may read (`TABLE_PERMISSIONS`) with a key from the catalog; the model only receives the tools the user's role holds, and `tools/tool-runner.ts` re-checks before running (handlers live in `tools/<area>.tools.ts`, one file per area; `agent.service.ts` only talks to OpenAI). `query_database` is judged from its syntax tree (`sql-policy.ts`, pgsql-ast-parser): one read-only statement, `public` tables only, allowlisted functions, no CTE named after a real table; then `guarded-select.ts` runs it on the tenant connection in a READ ONLY transaction as the database role `dental_agent`, with the caller's permission keys in the transaction-local setting `app.agent_permissions`: every clinic table has a RESTRICTIVE policy for that role that raises unless the required key is present (migration `20261008210000_agent_permissions_rls`), so the database itself enforces clinic, branch and role permissions; patient rows of `users` additionally need `patients:read` (migration `20261008230000_agent_users_patient_rows`). Rows are capped and the transaction is rolled back if any `app.*` setting changed. Text filters are not a boundary here: add rules to the policy or the database, not to a regex. Tests: `agent-access.spec.ts`, `sql-policy.spec.ts`, `guarded-select.spec.ts`, `agent.service.spec.ts` (stubbed OpenAI); `npm run smoke:agent` replays every known bypass against the real database as the demo secretary. A new tool or table without a label fails `agent-access.spec.ts`; changing `TABLE_PERMISSIONS` without a matching migration fails `agent-permissions-migration.spec.ts`.
-
-## Platform console (`super-admin-app/`)
-A separate operator application on the same database: `super-admin-app/backend` (NestJS, :5100) and `super-admin-app/frontend` (Next.js, :3100, same design system and copied UI primitives). It onboards clinics (organization + default branch + clinic profile + first admin with a password setup link into the clinic app), monitors all clinics, suspends/reactivates them, manages platform admins (`superadmin` users with `organization_id NULL`), and manages every clinic's accounts, roles and permissions: `GET /accounts` (cross-clinic search), `GET|PATCH /organizations/:id/accounts[/:userId]`, `POST .../accounts/:userId/password-reset` (new set-password link, emailed when SMTP_* is configured), `GET /permissions`, `GET|POST|PATCH|DELETE /organizations/:id/roles[/:key]`. The rules are the clinic app's (admin locked, patient none, built-in and in-use roles undeletable, a clinic keeps one active admin); `src/catalog/permissions.ts` is a copy of the clinic catalog kept identical by `permissions.sync.spec.ts`. Every change is written to the clinic's `audit_logs` as `platform.*`. It has its own token (`PLATFORM_JWT_SECRET`, audience `platform`); clinic tokens are refused and vice versa. The Prisma client comes from the shared `client-app/backend/prisma/schema.prisma` via its second generator (`npm run prisma:generate` in `super-admin-app/backend`; keep `prisma` pinned to the clinic backend's version). Run both with `npm run dev:platform` from the repo root. Tests: `npm test` and `npm run smoke` in `super-admin-app/backend`; `npm run typecheck && npm run build` in `super-admin-app/frontend`. See `super-admin-app/README.md`.
+- **Test it.** Run `npm run build` (and `npm run lint`) in the app you changed.
+- **Readable, no spaghetti.** Small components and functions with one job, descriptive names, a short comment explaining *why* where the code is not obvious.
 
 ## Key Conventions
-- Use `class-validator` DTOs for all NestJS controller inputs
-- Free-text `search` parameters go through `src/shared/common/text-search.ts` (`personSearchTiers` for first/last names, `textSearchTiers` for plain columns, run with `searchWithFallback`): the query loosens tier by tier (exact → all words → any word) and `meta.searchTier` tells the client and the AI assistant how loose the match was. Do not hand-roll `contains` filters for a new search.
 - shadcn/ui components are in `components/ui/` — add new ones with `npx shadcn@latest add <component>`
 - Path alias `@/*` maps to each frontend's own root (`client-app/frontend`, `super-admin-app/frontend`)
-- Backend output dir is `client-app/backend/dist/`; never edit generated files in `client-app/backend/src/generated/`
