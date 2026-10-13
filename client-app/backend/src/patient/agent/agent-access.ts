@@ -89,6 +89,31 @@ export const TABLE_PERMISSIONS: Readonly<Record<string, string | null>> = {
   lab_orders: 'lab:read',
 };
 
+/**
+ * Prices and costs need pricing:read on top of the table's own permission.
+ * The database enforces it for SQL: the assistant reads these tables through
+ * views (schema `agent`, migration 20261013200000_pricing_permission_and_agent_views)
+ * that return the column only when the transaction's permission list holds
+ * pricing:read. Tool results are filtered here with hidePricingFields().
+ * agent-pricing-views.spec.ts keeps this map and the views in step.
+ */
+export const PRICING_PERMISSION = 'pricing:read';
+
+export const PRICING_COLUMNS: Readonly<Record<string, readonly string[]>> = {
+  patient_records: ['quoted_amount'],
+  lab_orders: ['cost'],
+  specialist_consultations: ['fee'],
+  inventory_items: ['cost_price'],
+  inventory_movements: ['unit_cost'],
+};
+
+const PRICING_FIELDS: ReadonlySet<string> = new Set(
+  Object.values(PRICING_COLUMNS).flat(),
+);
+
+/** What a hidden price looks like to the model: unmistakably not "no price". */
+export const HIDDEN_PRICE = `[hidden: needs ${PRICING_PERMISSION}]`;
+
 /** Real table names, so a WITH query cannot borrow one (see sql-policy.ts). */
 const KNOWN_TABLES: ReadonlySet<string> = new Set(
   Object.keys(TABLE_PERMISSIONS),
@@ -158,6 +183,21 @@ export function redactSensitiveFields<T>(data: T): T {
   return data;
 }
 
+/** Replace price and cost fields anywhere in a tool result for a user without pricing:read. */
+export function hidePricingFields<T>(data: T): T {
+  if (Array.isArray(data)) return data.map(hidePricingFields) as T;
+  if (isPlainObject(data)) {
+    return Object.fromEntries(
+      Object.entries(data).map(([k, v]) =>
+        PRICING_FIELDS.has(k) && v !== null && v !== undefined
+          ? [k, HIDDEN_PRICE]
+          : [k, hidePricingFields(v)],
+      ),
+    ) as T;
+  }
+  return data;
+}
+
 // ── Raw SQL ──────────────────────────────────────────────────────────────────
 
 const SELECT_ONLY = /^\s*SELECT\b/i;
@@ -171,37 +211,76 @@ const SENSITIVE_SQL = new RegExp(
   'i',
 );
 
+/** One table the SQL reads, what reading it needs, and whether this user has it. */
+export interface TableCheck {
+  table: string;
+  /** Permission key, null when the table is open to all, undefined when unknown. */
+  permission: string | null | undefined;
+  granted: boolean;
+}
+
+export interface SqlCheck {
+  /** Why the SQL may not run, or null when it may. */
+  denial: string | null;
+  /** Empty when the SQL was refused before its tables could be read. */
+  tables: TableCheck[];
+}
+
 /**
- * Why the user may not run this SQL through query_database, or null when they
- * may. The shape of the statement (single read-only SELECT, known functions,
- * public tables) is judged from its syntax tree in sql-policy.ts; this adds
- * the credential-column rule and the per-table permission check.
+ * Whether the user may run this SQL through query_database, and the per-table
+ * check behind the answer (logged by the tool). The shape of the statement
+ * (single read-only SELECT, known functions, public tables) is judged from its
+ * syntax tree in sql-policy.ts; this adds the credential-column rule and the
+ * per-table permission check.
  */
-export function sqlDenial(user: RequestUser, sql: string): string | null {
-  if (!SELECT_ONLY.test(sql)) return 'Only SELECT queries are allowed.';
+export function checkSql(user: RequestUser, sql: string): SqlCheck {
+  if (!SELECT_ONLY.test(sql)) {
+    return { denial: 'Only SELECT queries are allowed.', tables: [] };
+  }
   if (SENSITIVE_SQL.test(sql)) {
-    return 'Query references restricted columns or schemas.';
+    return {
+      denial: 'Query references restricted columns or schemas.',
+      tables: [],
+    };
   }
 
   const analysis = analyzeSelect(sql, KNOWN_TABLES);
-  if (!analysis.ok) return analysis.reason;
+  if (!analysis.ok) return { denial: analysis.reason, tables: [] };
 
-  const unknown = analysis.tables.filter(
-    (t) => TABLE_PERMISSIONS[t] === undefined,
-  );
+  const tables: TableCheck[] = analysis.tables.map((table) => {
+    const permission = TABLE_PERMISSIONS[table];
+    return {
+      table,
+      permission,
+      granted: permission !== undefined && can(user, permission),
+    };
+  });
+
+  const unknown = tables.filter((t) => t.permission === undefined);
   if (unknown.length > 0) {
-    return `Query references tables the assistant may not read: ${unknown.join(', ')}.`;
+    return {
+      denial: `Query references tables the assistant may not read: ${unknown.map((t) => t.table).join(', ')}.`,
+      tables,
+    };
   }
 
   const missing = [
     ...new Set(
-      analysis.tables
-        .map((t) => TABLE_PERMISSIONS[t])
-        .filter((p): p is string => p !== null && !can(user, p)),
+      tables
+        .filter((t) => !t.granted)
+        .map((t) => t.permission)
+        .filter((p): p is string => typeof p === 'string'),
     ),
   ];
-  if (missing.length > 0) return missingPermissionMessage(missing, user);
-  return null;
+  return {
+    denial: missing.length > 0 ? missingPermissionMessage(missing, user) : null,
+    tables,
+  };
+}
+
+/** Why the user may not run this SQL through query_database, or null when they may. */
+export function sqlDenial(user: RequestUser, sql: string): string | null {
+  return checkSql(user, sql).denial;
 }
 
 // ── Describing permissions to the model and the user ────────────────────────

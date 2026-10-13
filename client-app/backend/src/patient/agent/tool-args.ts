@@ -23,6 +23,11 @@ export class ToolArgs {
     }
   }
 
+  /** The model's arguments as JSON, for the terminal log. */
+  toString(): string {
+    return JSON.stringify(this.raw);
+  }
+
   /** First present key wins: tools keep old argument names as aliases. */
   private first(keys: string[]): unknown {
     for (const key of keys) {

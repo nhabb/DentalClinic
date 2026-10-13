@@ -1,10 +1,14 @@
 /**
  * Runs the assistant's SELECT the way the database can vouch for it:
  *
- *   1. in a READ ONLY transaction,
+ *   1. in a READ ONLY transaction with a statement timeout, so PostgreSQL
+ *      itself cancels a heavy SELECT instead of leaving the connection busy,
  *   2. as the role `dental_agent`, whose restrictive RLS policies require the
  *      caller's permission keys (passed as a transaction-local setting) for
  *      every table they read: see migration 20261008210000_agent_permissions_rls,
+ *      with schema `agent` first on the search path, so tables whose price
+ *      columns need pricing:read resolve to the views that hide them
+ *      (migration 20261013200000_pricing_permission_and_agent_views),
  *   3. wrapped with a row cap,
  *   4. rolled back if the statement changed any session setting.
  *
@@ -20,6 +24,9 @@
 
 /** Database role the assistant's SELECT runs as (see the migration). */
 export const AGENT_DB_ROLE = 'dental_agent';
+
+/** Views that hide price columns without pricing:read live here; public is the fallback. */
+export const AGENT_SEARCH_PATH = 'agent, public';
 
 /** Transaction-local setting the agent policies read the permission list from. */
 export const AGENT_PERMISSIONS_SETTING = 'app.agent_permissions';
@@ -46,7 +53,11 @@ const SNAPSHOT_SQL =
 /** Rows handed to the model per query; more would not fit a useful answer. */
 export const MAX_ROWS = 200;
 
-/** Upper bound for one query, so a heavy SELECT cannot hold a tenant connection. */
+/**
+ * Upper bound for one query, so a heavy SELECT cannot hold a tenant connection.
+ * Set as statement_timeout inside the transaction: Prisma's own transaction
+ * timeout only stops waiting for the promise, the statement would keep running.
+ */
 export const QUERY_TIMEOUT_MS = 15_000;
 
 /** Permission keys are catalog entries like "billing:read"; anything else is dropped. */
@@ -94,7 +105,13 @@ export async function runGuardedSelect(
   return prisma.$transaction(
     async (tx) => {
       await tx.$executeRawUnsafe('SET TRANSACTION READ ONLY');
+      await tx.$executeRawUnsafe(
+        `SET LOCAL statement_timeout = ${QUERY_TIMEOUT_MS}`,
+      );
       await tx.$executeRawUnsafe(`SET LOCAL ROLE ${AGENT_DB_ROLE}`);
+      await tx.$executeRawUnsafe(
+        `SET LOCAL search_path = ${AGENT_SEARCH_PATH}`,
+      );
       await tx.$queryRawUnsafe(
         `SELECT set_config('${AGENT_PERMISSIONS_SETTING}', '${permissionList(permissions)}', true)`,
       );

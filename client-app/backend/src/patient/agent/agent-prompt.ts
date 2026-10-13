@@ -1,5 +1,10 @@
 import type { RequestUser } from '../../shared/common/guards/jwt-auth.guard';
-import { can, describeAccess } from './agent-access';
+import {
+  can,
+  describeAccess,
+  HIDDEN_PRICE,
+  PRICING_PERMISSION,
+} from './agent-access';
 
 export interface PromptInput {
   user: RequestUser;
@@ -21,6 +26,7 @@ export function buildSystemPrompt(input: PromptInput): string {
     guidelinesSection(input),
     clinicalSection(),
     financialSection(input.user),
+    pricingSection(input.user),
   ].join('\n\n');
 }
 
@@ -106,6 +112,22 @@ function clinicalSection(): string {
 }
 
 const BILLING_READ = 'billing:read';
+
+/**
+ * Prices and costs are a permission of their own: a role may see clinical
+ * records without seeing what was quoted, or stock without its cost price.
+ * Without it the database returns the column empty and tools show HIDDEN_PRICE,
+ * so the model must not read an empty price as "free" or "no price".
+ */
+function pricingSection(user: RequestUser): string {
+  if (can(user, PRICING_PERMISSION)) {
+    return `Prices and costs: this user may see treatment quoted amounts, lab order costs, specialist fees and stock cost prices (${PRICING_PERMISSION}). They are prices and costs, not payments: never present them as revenue or as what a patient paid.`;
+  }
+  return `Prices and costs (this user lacks ${PRICING_PERMISSION}):
+- Treatment quoted amounts, lab order costs, specialist fees and stock cost prices need ${PRICING_PERMISSION}, which this user does not have. The database returns those fields empty (NULL) and tools show "${HIDDEN_PRICE}".
+- When such a field is empty or hidden, say the user lacks the permission and that a clinic administrator can grant it on the Roles page. Never say a treatment has no price, a lab order has no cost or an item has no cost price.
+- Do not total or average these fields for this user: the result would be empty and misleading.`;
+}
 
 /**
  * With billing:read, how to answer money questions. Without it, a hard stop:

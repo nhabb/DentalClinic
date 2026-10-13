@@ -11,7 +11,13 @@ import { PrismaService } from '../../../shared/prisma/prisma.service';
 import { ConsultationsService } from '../../../doctor/specialists/consultations.service';
 import { LabOrdersService } from '../../../doctor/lab/lab-orders.service';
 import type { RequestUser } from '../../../shared/common/guards/jwt-auth.guard';
-import { toolDenial } from '../agent-access';
+import {
+  can,
+  hidePricingFields,
+  PRICING_PERMISSION,
+  toolDenial,
+} from '../agent-access';
+import { contentLogsEnabled, logText } from '../agent-log';
 import { isDatabasePermissionRefusal } from '../guarded-select';
 import type { ToolArgs } from '../tool-args';
 import { appointmentTools } from './appointment.tools';
@@ -88,8 +94,19 @@ export class ToolRunner {
     if (!handler) return errorResult(`Unknown tool "${name}".`);
 
     this.logger.log(`Tool ${name} by ${who}`);
+    const showContent = contentLogsEnabled();
+    if (showContent) this.logger.debug(`${name} args: ${args.toString()}`);
     try {
-      return serialize(withCoverage(await handler(args, { user })));
+      const data = await handler(args, { user });
+      const result = serialize(
+        withCoverage(
+          can(user, PRICING_PERMISSION) ? data : hidePricingFields(data),
+        ),
+      );
+      if (showContent) {
+        this.logger.debug(`${name} result: ${clip(logText(result))}`);
+      }
+      return result;
     } catch (err) {
       const message = (err as Error).message ?? 'Tool execution failed';
       if (err instanceof ToolRefusedError) {
@@ -103,6 +120,14 @@ export class ToolRunner {
       return errorResult(message);
     }
   }
+}
+
+/** Tool results can be pages of rows: keep the terminal readable. */
+const LOG_RESULT_MAX_CHARS = 4000;
+function clip(text: string): string {
+  return text.length <= LOG_RESULT_MAX_CHARS
+    ? text
+    : `${text.slice(0, LOG_RESULT_MAX_CHARS)}... [${text.length - LOG_RESULT_MAX_CHARS} more chars]`;
 }
 
 /** JSON for the model: Prisma returns BigInt ids, which JSON.stringify rejects. */

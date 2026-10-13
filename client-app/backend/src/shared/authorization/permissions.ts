@@ -67,6 +67,11 @@ export const PERMISSION_GROUPS: readonly PermissionGroup[] = [
         key: 'billing:read',
         label: 'View invoices, payments and financial reports',
       },
+      {
+        key: 'pricing:read',
+        label:
+          'View treatment prices, lab costs, specialist fees and stock costs',
+      },
       { key: 'billing:write', label: 'Create invoices and record payments' },
       { key: 'billing:delete', label: 'Delete invoices' },
     ],
@@ -174,6 +179,7 @@ export const DEFAULT_ROLES: readonly DefaultRole[] = [
       'documents:read',
       'documents:write',
       'billing:read',
+      'pricing:read',
       'billing:write',
       'inventory:read',
       'inventory:write',
@@ -200,6 +206,7 @@ export const DEFAULT_ROLES: readonly DefaultRole[] = [
       'records:read',
       'documents:read',
       'billing:read',
+      'pricing:read',
       'billing:write',
       'expenses:read',
       'expenses:write',

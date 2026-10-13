@@ -58,6 +58,15 @@ values (migration `20261009120000_table_and_column_comments`, re-runnable). The 
 reads them at startup (`src/patient/agent/schema-summary.ts`), so when you add a table or
 column, add its `COMMENT ON` to that file and re-apply it.
 
+The AI assistant's SQL tool reads as the database role `dental_agent` (migration
+`20261008210000_agent_permissions_rls`): a new table the assistant may read needs a
+`GRANT SELECT`, an `agent_permission` policy and an entry in `TABLE_PERMISSIONS`
+(`src/patient/agent/agent-access.ts`). Credential columns are kept out with column-level
+grants (`20261013190000_agent_users_column_grants`). A price or cost column needs the
+`pricing:read` permission: list it in `PRICING_COLUMNS` and give the table a view in schema
+`agent` that gates the column (`20261013200000_pricing_permission_and_agent_views`). The
+specs next to `agent-access.ts` fail when any of these drift.
+
 ## Environment Setup
 
 **Frontend** (`.env.local`):

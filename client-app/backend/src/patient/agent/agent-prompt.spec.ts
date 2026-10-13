@@ -143,3 +143,27 @@ describe('buildSystemPrompt', () => {
     expect(text).toContain("Today's date is 2026-10-08");
   });
 });
+
+describe('pricing section', () => {
+  it('tells a user with pricing:read that prices are not payments', () => {
+    const text = prompt({
+      user: {
+        ...doctor,
+        permissions: ['agent:use', 'records:read', 'pricing:read'],
+      },
+    });
+    expect(text).toContain('Prices and costs: this user may see');
+    expect(text).toContain('not payments');
+    expect(text).not.toContain('this user lacks pricing:read');
+  });
+
+  it('explains hidden prices to a user without pricing:read', () => {
+    const text = prompt({
+      user: { ...doctor, permissions: ['agent:use', 'records:read'] },
+    });
+    expect(text).toContain('Prices and costs (this user lacks pricing:read)');
+    expect(text).toContain('[hidden: needs pricing:read]');
+    expect(text).toContain('Never say a treatment has no price');
+    expect(text).not.toContain('Prices and costs: this user may see');
+  });
+});

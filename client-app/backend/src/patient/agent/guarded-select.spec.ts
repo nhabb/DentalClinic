@@ -6,6 +6,7 @@ import {
   isDatabasePermissionRefusal,
   permissionList,
   runGuardedSelect,
+  QUERY_TIMEOUT_MS,
 } from './guarded-select';
 
 /**
@@ -65,22 +66,24 @@ describe('runGuardedSelect', () => {
       rows: [{ n: 0 }, { n: 1 }, { n: 2 }],
       truncated: false,
     });
-    expect(db.log.slice(0, 3)).toEqual([
+    expect(db.log.slice(0, 5)).toEqual([
       'SET TRANSACTION READ ONLY',
+      `SET LOCAL statement_timeout = ${QUERY_TIMEOUT_MS}`,
       'SET LOCAL ROLE dental_agent',
+      'SET LOCAL search_path = agent, public',
       "SELECT set_config('app.agent_permissions', 'appointments:read,billing:read', true)",
     ]);
-    expect(db.log[4]).toBe(
+    expect(db.log[6]).toBe(
       `SELECT * FROM (SELECT count(*) FROM appointments) AS agent_query LIMIT ${MAX_ROWS + 1}`,
     );
-    // read-only, role, permissions, snapshot, query, snapshot
-    expect(db.log).toHaveLength(6);
+    // read-only, timeout, role, search path, permissions, snapshot, query, snapshot
+    expect(db.log).toHaveLength(8);
   });
 
   it('passes "*" through for superadmins', async () => {
     const db = fakeDatabase(start);
     await runGuardedSelect(db.prisma, 'SELECT 1', '*');
-    expect(db.log[2]).toBe(
+    expect(db.log[4]).toBe(
       "SELECT set_config('app.agent_permissions', '*', true)",
     );
   });
