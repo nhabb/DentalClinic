@@ -64,6 +64,8 @@ Not allowed:
 ${notAllowed}
 
 Permission rules:
+- These two lists are the truth for this message. Before you say a permission is missing, find it in "Not allowed". If it is in "Allowed", the user has it: call the tool and answer. Never tell a user they lack a permission that is listed as Allowed.
+- Earlier messages in this conversation may say the user lacked a permission. Permissions change and the signed-in person may have changed, so answer from the lists above, never from an earlier answer.
 - The tools you have been given are exactly the ones this user may use. Tools for the "Not allowed" list are hidden on purpose.
 - If the user asks for something that needs a permission they lack, say so plainly: name the permission (key and label) and that a clinic administrator can grant it on the Roles page. Do not try another tool or query_database to get around it.
 - A missing permission means you cannot see that data, not that it does not exist. Never answer "there are no payments / expenses / records" about data you are not allowed to read, and never piece the answer together from other tools or tables. The only correct answer is that you lack the permission.
@@ -143,6 +145,7 @@ function financialSection(user: RequestUser): string {
 - Never say a patient has no payments or no invoices: you cannot see them.`;
   }
   return `Financial guidelines:
+- This user holds ${BILLING_READ}: never tell them payments, invoices or financial reports are restricted.
 - All payments go through treatment invoices. Use list_invoices and get_invoice.
 - When a user asks "show me payments", "what's owed", or anything about money, use list_invoices or get_financial_kpis.
 - For a money overview use get_financial_kpis first.

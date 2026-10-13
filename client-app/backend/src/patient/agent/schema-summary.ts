@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
-import { isSensitiveColumn } from './agent-access';
+import { isSensitiveColumn, TABLE_PERMISSIONS } from './agent-access';
 
 /** One row of information_schema.columns plus the Postgres comments. */
 export interface ColumnRow {
@@ -30,7 +30,11 @@ export class SchemaSummary implements OnModuleInit {
 
   async onModuleInit() {
     try {
-      this.text = formatSchema(await this.load());
+      // Only tables the SQL tool may read: anything else (e.g. the chat store) is not for the model.
+      const rows = await this.load();
+      this.text = formatSchema(
+        rows.filter((r) => Object.hasOwn(TABLE_PERMISSIONS, r.table_name)),
+      );
     } catch (err) {
       // Not fatal: the model then works without column names until a restart.
       const e = err as Error & { code?: string; meta?: unknown };

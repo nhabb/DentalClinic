@@ -65,6 +65,7 @@ model organizations {
   inventory_items     inventory_items[]
   inventory_movements inventory_movements[]
   notifications       notifications[]
+  agent_conversations                         agent_conversations[]
   audit_logs          audit_logs[]
   clinic_profile      clinic_profile[]
   expenses            expenses[]
@@ -414,6 +415,7 @@ model users {
   audit_logs                                  audit_logs[]
   inventory_movements                         inventory_movements[]
   notifications                               notifications[]
+  agent_conversation  agent_conversations?
   patient_documents                           patient_documents[]
   patient_profiles                            patient_profiles?
   patient_records                             patient_records[]
@@ -705,4 +707,18 @@ model lab_orders {
   @@index([lab_id], map: "idx_lab_orders_lab")
   @@index([status], map: "idx_lab_orders_status")
   @@index([due_at], map: "idx_lab_orders_due")
+}
+
+/// The AI assistant chat of one signed-in person: one row per user, written by the API only.
+model agent_conversations {
+  id              BigInt        @id @default(autoincrement())
+  organization_id BigInt        @default(dbgenerated("app.current_org_id()"))
+  user_id         BigInt        @unique(map: "agent_conversations_user_id_key")
+  messages        Json          @default("[]")
+  created_at      DateTime      @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime      @default(now()) @db.Timestamptz(6)
+  organization    organizations @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  user            users         @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([organization_id], map: "idx_agent_conversations_org")
 }

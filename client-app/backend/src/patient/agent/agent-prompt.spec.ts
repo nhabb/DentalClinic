@@ -167,3 +167,20 @@ describe('pricing section', () => {
     expect(text).not.toContain('Prices and costs: this user may see');
   });
 });
+
+describe('permission lists beat conversation history', () => {
+  it('tells the model to answer from the lists, not from earlier refusals', () => {
+    const text = prompt();
+    expect(text).toContain('These two lists are the truth for this message');
+    expect(text).toContain('never from an earlier answer');
+    expect(text).toContain(
+      'Never tell a user they lack a permission that is listed as Allowed',
+    );
+  });
+
+  it('reminds the model that a billing user is never refused payments', () => {
+    expect(prompt()).toContain(
+      'This user holds billing:read: never tell them payments, invoices or financial reports are restricted.',
+    );
+  });
+});

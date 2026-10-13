@@ -302,6 +302,7 @@ export type organizationsWhereInput = {
   inventory_items?: Prisma.Inventory_itemsListRelationFilter
   inventory_movements?: Prisma.Inventory_movementsListRelationFilter
   notifications?: Prisma.NotificationsListRelationFilter
+  agent_conversations?: Prisma.Agent_conversationsListRelationFilter
   audit_logs?: Prisma.Audit_logsListRelationFilter
   clinic_profile?: Prisma.Clinic_profileListRelationFilter
   expenses?: Prisma.ExpensesListRelationFilter
@@ -343,6 +344,7 @@ export type organizationsOrderByWithRelationInput = {
   inventory_items?: Prisma.inventory_itemsOrderByRelationAggregateInput
   inventory_movements?: Prisma.inventory_movementsOrderByRelationAggregateInput
   notifications?: Prisma.notificationsOrderByRelationAggregateInput
+  agent_conversations?: Prisma.agent_conversationsOrderByRelationAggregateInput
   audit_logs?: Prisma.audit_logsOrderByRelationAggregateInput
   clinic_profile?: Prisma.clinic_profileOrderByRelationAggregateInput
   expenses?: Prisma.expensesOrderByRelationAggregateInput
@@ -387,6 +389,7 @@ export type organizationsWhereUniqueInput = Prisma.AtLeast<{
   inventory_items?: Prisma.Inventory_itemsListRelationFilter
   inventory_movements?: Prisma.Inventory_movementsListRelationFilter
   notifications?: Prisma.NotificationsListRelationFilter
+  agent_conversations?: Prisma.Agent_conversationsListRelationFilter
   audit_logs?: Prisma.Audit_logsListRelationFilter
   clinic_profile?: Prisma.Clinic_profileListRelationFilter
   expenses?: Prisma.ExpensesListRelationFilter
@@ -472,6 +475,7 @@ export type organizationsCreateInput = {
   inventory_items?: Prisma.inventory_itemsCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesCreateNestedManyWithoutOrganizationInput
@@ -513,6 +517,7 @@ export type organizationsUncheckedCreateInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsUncheckedCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileUncheckedCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesUncheckedCreateNestedManyWithoutOrganizationInput
@@ -554,6 +559,7 @@ export type organizationsUpdateInput = {
   inventory_items?: Prisma.inventory_itemsUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUpdateManyWithoutOrganizationNestedInput
@@ -595,6 +601,7 @@ export type organizationsUncheckedUpdateInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUncheckedUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUncheckedUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -1082,6 +1089,20 @@ export type organizationsUpdateOneRequiredWithoutLab_ordersNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.organizationsUpdateToOneWithWhereWithoutLab_ordersInput, Prisma.organizationsUpdateWithoutLab_ordersInput>, Prisma.organizationsUncheckedUpdateWithoutLab_ordersInput>
 }
 
+export type organizationsCreateNestedOneWithoutAgent_conversationsInput = {
+  create?: Prisma.XOR<Prisma.organizationsCreateWithoutAgent_conversationsInput, Prisma.organizationsUncheckedCreateWithoutAgent_conversationsInput>
+  connectOrCreate?: Prisma.organizationsCreateOrConnectWithoutAgent_conversationsInput
+  connect?: Prisma.organizationsWhereUniqueInput
+}
+
+export type organizationsUpdateOneRequiredWithoutAgent_conversationsNestedInput = {
+  create?: Prisma.XOR<Prisma.organizationsCreateWithoutAgent_conversationsInput, Prisma.organizationsUncheckedCreateWithoutAgent_conversationsInput>
+  connectOrCreate?: Prisma.organizationsCreateOrConnectWithoutAgent_conversationsInput
+  upsert?: Prisma.organizationsUpsertWithoutAgent_conversationsInput
+  connect?: Prisma.organizationsWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.organizationsUpdateToOneWithWhereWithoutAgent_conversationsInput, Prisma.organizationsUpdateWithoutAgent_conversationsInput>, Prisma.organizationsUncheckedUpdateWithoutAgent_conversationsInput>
+}
+
 export type organizationsCreateWithoutBranchesInput = {
   id?: bigint | number
   name: string
@@ -1107,6 +1128,7 @@ export type organizationsCreateWithoutBranchesInput = {
   inventory_items?: Prisma.inventory_itemsCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesCreateNestedManyWithoutOrganizationInput
@@ -1147,6 +1169,7 @@ export type organizationsUncheckedCreateWithoutBranchesInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsUncheckedCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileUncheckedCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesUncheckedCreateNestedManyWithoutOrganizationInput
@@ -1203,6 +1226,7 @@ export type organizationsUpdateWithoutBranchesInput = {
   inventory_items?: Prisma.inventory_itemsUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUpdateManyWithoutOrganizationNestedInput
@@ -1243,6 +1267,7 @@ export type organizationsUncheckedUpdateWithoutBranchesInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUncheckedUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUncheckedUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -1283,6 +1308,7 @@ export type organizationsCreateWithoutAppointment_slotsInput = {
   inventory_items?: Prisma.inventory_itemsCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesCreateNestedManyWithoutOrganizationInput
@@ -1323,6 +1349,7 @@ export type organizationsUncheckedCreateWithoutAppointment_slotsInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsUncheckedCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileUncheckedCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesUncheckedCreateNestedManyWithoutOrganizationInput
@@ -1379,6 +1406,7 @@ export type organizationsUpdateWithoutAppointment_slotsInput = {
   inventory_items?: Prisma.inventory_itemsUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUpdateManyWithoutOrganizationNestedInput
@@ -1419,6 +1447,7 @@ export type organizationsUncheckedUpdateWithoutAppointment_slotsInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUncheckedUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUncheckedUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -1459,6 +1488,7 @@ export type organizationsCreateWithoutAppointmentsInput = {
   inventory_items?: Prisma.inventory_itemsCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesCreateNestedManyWithoutOrganizationInput
@@ -1499,6 +1529,7 @@ export type organizationsUncheckedCreateWithoutAppointmentsInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsUncheckedCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileUncheckedCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesUncheckedCreateNestedManyWithoutOrganizationInput
@@ -1555,6 +1586,7 @@ export type organizationsUpdateWithoutAppointmentsInput = {
   inventory_items?: Prisma.inventory_itemsUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUpdateManyWithoutOrganizationNestedInput
@@ -1595,6 +1627,7 @@ export type organizationsUncheckedUpdateWithoutAppointmentsInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUncheckedUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUncheckedUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -1636,6 +1669,7 @@ export type organizationsCreateWithoutAudit_logsInput = {
   inventory_items?: Prisma.inventory_itemsCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesCreateNestedManyWithoutOrganizationInput
   expense_payments?: Prisma.expense_paymentsCreateNestedManyWithoutOrganizationInput
@@ -1676,6 +1710,7 @@ export type organizationsUncheckedCreateWithoutAudit_logsInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsUncheckedCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileUncheckedCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesUncheckedCreateNestedManyWithoutOrganizationInput
   expense_payments?: Prisma.expense_paymentsUncheckedCreateNestedManyWithoutOrganizationInput
@@ -1732,6 +1767,7 @@ export type organizationsUpdateWithoutAudit_logsInput = {
   inventory_items?: Prisma.inventory_itemsUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUpdateManyWithoutOrganizationNestedInput
   expense_payments?: Prisma.expense_paymentsUpdateManyWithoutOrganizationNestedInput
@@ -1772,6 +1808,7 @@ export type organizationsUncheckedUpdateWithoutAudit_logsInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUncheckedUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUncheckedUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUncheckedUpdateManyWithoutOrganizationNestedInput
   expense_payments?: Prisma.expense_paymentsUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -1812,6 +1849,7 @@ export type organizationsCreateWithoutClinic_profileInput = {
   inventory_items?: Prisma.inventory_itemsCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesCreateNestedManyWithoutOrganizationInput
   expense_payments?: Prisma.expense_paymentsCreateNestedManyWithoutOrganizationInput
@@ -1852,6 +1890,7 @@ export type organizationsUncheckedCreateWithoutClinic_profileInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsUncheckedCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesUncheckedCreateNestedManyWithoutOrganizationInput
   expense_payments?: Prisma.expense_paymentsUncheckedCreateNestedManyWithoutOrganizationInput
@@ -1908,6 +1947,7 @@ export type organizationsUpdateWithoutClinic_profileInput = {
   inventory_items?: Prisma.inventory_itemsUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUpdateManyWithoutOrganizationNestedInput
   expense_payments?: Prisma.expense_paymentsUpdateManyWithoutOrganizationNestedInput
@@ -1948,6 +1988,7 @@ export type organizationsUncheckedUpdateWithoutClinic_profileInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUncheckedUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUncheckedUpdateManyWithoutOrganizationNestedInput
   expense_payments?: Prisma.expense_paymentsUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -1987,6 +2028,7 @@ export type organizationsCreateWithoutInventory_itemsInput = {
   patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesCreateNestedManyWithoutOrganizationInput
@@ -2027,6 +2069,7 @@ export type organizationsUncheckedCreateWithoutInventory_itemsInput = {
   patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsUncheckedCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileUncheckedCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesUncheckedCreateNestedManyWithoutOrganizationInput
@@ -2083,6 +2126,7 @@ export type organizationsUpdateWithoutInventory_itemsInput = {
   patient_documents?: Prisma.patient_documentsUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUpdateManyWithoutOrganizationNestedInput
@@ -2123,6 +2167,7 @@ export type organizationsUncheckedUpdateWithoutInventory_itemsInput = {
   patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUncheckedUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUncheckedUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -2163,6 +2208,7 @@ export type organizationsCreateWithoutInventory_movementsInput = {
   patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutOrganizationInput
   inventory_items?: Prisma.inventory_itemsCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesCreateNestedManyWithoutOrganizationInput
@@ -2203,6 +2249,7 @@ export type organizationsUncheckedCreateWithoutInventory_movementsInput = {
   patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutOrganizationInput
   inventory_items?: Prisma.inventory_itemsUncheckedCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsUncheckedCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileUncheckedCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesUncheckedCreateNestedManyWithoutOrganizationInput
@@ -2259,6 +2306,7 @@ export type organizationsUpdateWithoutInventory_movementsInput = {
   patient_documents?: Prisma.patient_documentsUpdateManyWithoutOrganizationNestedInput
   inventory_items?: Prisma.inventory_itemsUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUpdateManyWithoutOrganizationNestedInput
@@ -2299,6 +2347,7 @@ export type organizationsUncheckedUpdateWithoutInventory_movementsInput = {
   patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutOrganizationNestedInput
   inventory_items?: Prisma.inventory_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUncheckedUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUncheckedUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -2339,6 +2388,7 @@ export type organizationsCreateWithoutNotificationsInput = {
   patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutOrganizationInput
   inventory_items?: Prisma.inventory_itemsCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesCreateNestedManyWithoutOrganizationInput
@@ -2379,6 +2429,7 @@ export type organizationsUncheckedCreateWithoutNotificationsInput = {
   patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutOrganizationInput
   inventory_items?: Prisma.inventory_itemsUncheckedCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileUncheckedCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesUncheckedCreateNestedManyWithoutOrganizationInput
@@ -2435,6 +2486,7 @@ export type organizationsUpdateWithoutNotificationsInput = {
   patient_documents?: Prisma.patient_documentsUpdateManyWithoutOrganizationNestedInput
   inventory_items?: Prisma.inventory_itemsUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUpdateManyWithoutOrganizationNestedInput
@@ -2475,6 +2527,7 @@ export type organizationsUncheckedUpdateWithoutNotificationsInput = {
   patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutOrganizationNestedInput
   inventory_items?: Prisma.inventory_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUncheckedUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -2515,6 +2568,7 @@ export type organizationsCreateWithoutPatient_documentsInput = {
   inventory_items?: Prisma.inventory_itemsCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesCreateNestedManyWithoutOrganizationInput
@@ -2555,6 +2609,7 @@ export type organizationsUncheckedCreateWithoutPatient_documentsInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsUncheckedCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileUncheckedCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesUncheckedCreateNestedManyWithoutOrganizationInput
@@ -2611,6 +2666,7 @@ export type organizationsUpdateWithoutPatient_documentsInput = {
   inventory_items?: Prisma.inventory_itemsUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUpdateManyWithoutOrganizationNestedInput
@@ -2651,6 +2707,7 @@ export type organizationsUncheckedUpdateWithoutPatient_documentsInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUncheckedUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUncheckedUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -2691,6 +2748,7 @@ export type organizationsCreateWithoutPatient_profilesInput = {
   inventory_items?: Prisma.inventory_itemsCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesCreateNestedManyWithoutOrganizationInput
@@ -2731,6 +2789,7 @@ export type organizationsUncheckedCreateWithoutPatient_profilesInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsUncheckedCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileUncheckedCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesUncheckedCreateNestedManyWithoutOrganizationInput
@@ -2787,6 +2846,7 @@ export type organizationsUpdateWithoutPatient_profilesInput = {
   inventory_items?: Prisma.inventory_itemsUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUpdateManyWithoutOrganizationNestedInput
@@ -2827,6 +2887,7 @@ export type organizationsUncheckedUpdateWithoutPatient_profilesInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUncheckedUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUncheckedUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -2867,6 +2928,7 @@ export type organizationsCreateWithoutPatient_recordsInput = {
   inventory_items?: Prisma.inventory_itemsCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesCreateNestedManyWithoutOrganizationInput
@@ -2907,6 +2969,7 @@ export type organizationsUncheckedCreateWithoutPatient_recordsInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsUncheckedCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileUncheckedCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesUncheckedCreateNestedManyWithoutOrganizationInput
@@ -2963,6 +3026,7 @@ export type organizationsUpdateWithoutPatient_recordsInput = {
   inventory_items?: Prisma.inventory_itemsUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUpdateManyWithoutOrganizationNestedInput
@@ -3003,6 +3067,7 @@ export type organizationsUncheckedUpdateWithoutPatient_recordsInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUncheckedUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUncheckedUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -3043,6 +3108,7 @@ export type organizationsCreateWithoutUsersInput = {
   inventory_items?: Prisma.inventory_itemsCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesCreateNestedManyWithoutOrganizationInput
@@ -3083,6 +3149,7 @@ export type organizationsUncheckedCreateWithoutUsersInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsUncheckedCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileUncheckedCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesUncheckedCreateNestedManyWithoutOrganizationInput
@@ -3139,6 +3206,7 @@ export type organizationsUpdateWithoutUsersInput = {
   inventory_items?: Prisma.inventory_itemsUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUpdateManyWithoutOrganizationNestedInput
@@ -3179,6 +3247,7 @@ export type organizationsUncheckedUpdateWithoutUsersInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUncheckedUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUncheckedUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -3220,6 +3289,7 @@ export type organizationsCreateWithoutExpensesInput = {
   inventory_items?: Prisma.inventory_itemsCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileCreateNestedManyWithoutOrganizationInput
   expense_payments?: Prisma.expense_paymentsCreateNestedManyWithoutOrganizationInput
@@ -3260,6 +3330,7 @@ export type organizationsUncheckedCreateWithoutExpensesInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsUncheckedCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileUncheckedCreateNestedManyWithoutOrganizationInput
   expense_payments?: Prisma.expense_paymentsUncheckedCreateNestedManyWithoutOrganizationInput
@@ -3316,6 +3387,7 @@ export type organizationsUpdateWithoutExpensesInput = {
   inventory_items?: Prisma.inventory_itemsUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUpdateManyWithoutOrganizationNestedInput
   expense_payments?: Prisma.expense_paymentsUpdateManyWithoutOrganizationNestedInput
@@ -3356,6 +3428,7 @@ export type organizationsUncheckedUpdateWithoutExpensesInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUncheckedUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUncheckedUpdateManyWithoutOrganizationNestedInput
   expense_payments?: Prisma.expense_paymentsUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -3396,6 +3469,7 @@ export type organizationsCreateWithoutExpense_paymentsInput = {
   inventory_items?: Prisma.inventory_itemsCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesCreateNestedManyWithoutOrganizationInput
@@ -3436,6 +3510,7 @@ export type organizationsUncheckedCreateWithoutExpense_paymentsInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsUncheckedCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileUncheckedCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesUncheckedCreateNestedManyWithoutOrganizationInput
@@ -3492,6 +3567,7 @@ export type organizationsUpdateWithoutExpense_paymentsInput = {
   inventory_items?: Prisma.inventory_itemsUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUpdateManyWithoutOrganizationNestedInput
@@ -3532,6 +3608,7 @@ export type organizationsUncheckedUpdateWithoutExpense_paymentsInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUncheckedUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUncheckedUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -3572,6 +3649,7 @@ export type organizationsCreateWithoutTreatment_invoicesInput = {
   inventory_items?: Prisma.inventory_itemsCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesCreateNestedManyWithoutOrganizationInput
@@ -3612,6 +3690,7 @@ export type organizationsUncheckedCreateWithoutTreatment_invoicesInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsUncheckedCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileUncheckedCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesUncheckedCreateNestedManyWithoutOrganizationInput
@@ -3668,6 +3747,7 @@ export type organizationsUpdateWithoutTreatment_invoicesInput = {
   inventory_items?: Prisma.inventory_itemsUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUpdateManyWithoutOrganizationNestedInput
@@ -3708,6 +3788,7 @@ export type organizationsUncheckedUpdateWithoutTreatment_invoicesInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUncheckedUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUncheckedUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -3748,6 +3829,7 @@ export type organizationsCreateWithoutInvoice_line_itemsInput = {
   inventory_items?: Prisma.inventory_itemsCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesCreateNestedManyWithoutOrganizationInput
@@ -3788,6 +3870,7 @@ export type organizationsUncheckedCreateWithoutInvoice_line_itemsInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsUncheckedCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileUncheckedCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesUncheckedCreateNestedManyWithoutOrganizationInput
@@ -3844,6 +3927,7 @@ export type organizationsUpdateWithoutInvoice_line_itemsInput = {
   inventory_items?: Prisma.inventory_itemsUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUpdateManyWithoutOrganizationNestedInput
@@ -3884,6 +3968,7 @@ export type organizationsUncheckedUpdateWithoutInvoice_line_itemsInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUncheckedUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUncheckedUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -3924,6 +4009,7 @@ export type organizationsCreateWithoutInvoice_paymentsInput = {
   inventory_items?: Prisma.inventory_itemsCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesCreateNestedManyWithoutOrganizationInput
@@ -3964,6 +4050,7 @@ export type organizationsUncheckedCreateWithoutInvoice_paymentsInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsUncheckedCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileUncheckedCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesUncheckedCreateNestedManyWithoutOrganizationInput
@@ -4020,6 +4107,7 @@ export type organizationsUpdateWithoutInvoice_paymentsInput = {
   inventory_items?: Prisma.inventory_itemsUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUpdateManyWithoutOrganizationNestedInput
@@ -4060,6 +4148,7 @@ export type organizationsUncheckedUpdateWithoutInvoice_paymentsInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUncheckedUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUncheckedUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -4100,6 +4189,7 @@ export type organizationsCreateWithoutRolesInput = {
   inventory_items?: Prisma.inventory_itemsCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesCreateNestedManyWithoutOrganizationInput
@@ -4140,6 +4230,7 @@ export type organizationsUncheckedCreateWithoutRolesInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsUncheckedCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileUncheckedCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesUncheckedCreateNestedManyWithoutOrganizationInput
@@ -4196,6 +4287,7 @@ export type organizationsUpdateWithoutRolesInput = {
   inventory_items?: Prisma.inventory_itemsUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUpdateManyWithoutOrganizationNestedInput
@@ -4236,6 +4328,7 @@ export type organizationsUncheckedUpdateWithoutRolesInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUncheckedUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUncheckedUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -4276,6 +4369,7 @@ export type organizationsCreateWithoutRole_permissionsInput = {
   inventory_items?: Prisma.inventory_itemsCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesCreateNestedManyWithoutOrganizationInput
@@ -4316,6 +4410,7 @@ export type organizationsUncheckedCreateWithoutRole_permissionsInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsUncheckedCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileUncheckedCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesUncheckedCreateNestedManyWithoutOrganizationInput
@@ -4372,6 +4467,7 @@ export type organizationsUpdateWithoutRole_permissionsInput = {
   inventory_items?: Prisma.inventory_itemsUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUpdateManyWithoutOrganizationNestedInput
@@ -4412,6 +4508,7 @@ export type organizationsUncheckedUpdateWithoutRole_permissionsInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUncheckedUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUncheckedUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -4452,6 +4549,7 @@ export type organizationsCreateWithoutSpecialistsInput = {
   inventory_items?: Prisma.inventory_itemsCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesCreateNestedManyWithoutOrganizationInput
@@ -4492,6 +4590,7 @@ export type organizationsUncheckedCreateWithoutSpecialistsInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsUncheckedCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileUncheckedCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesUncheckedCreateNestedManyWithoutOrganizationInput
@@ -4548,6 +4647,7 @@ export type organizationsUpdateWithoutSpecialistsInput = {
   inventory_items?: Prisma.inventory_itemsUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUpdateManyWithoutOrganizationNestedInput
@@ -4588,6 +4688,7 @@ export type organizationsUncheckedUpdateWithoutSpecialistsInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUncheckedUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUncheckedUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -4628,6 +4729,7 @@ export type organizationsCreateWithoutSpecialist_consultationsInput = {
   inventory_items?: Prisma.inventory_itemsCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesCreateNestedManyWithoutOrganizationInput
@@ -4668,6 +4770,7 @@ export type organizationsUncheckedCreateWithoutSpecialist_consultationsInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsUncheckedCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileUncheckedCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesUncheckedCreateNestedManyWithoutOrganizationInput
@@ -4724,6 +4827,7 @@ export type organizationsUpdateWithoutSpecialist_consultationsInput = {
   inventory_items?: Prisma.inventory_itemsUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUpdateManyWithoutOrganizationNestedInput
@@ -4764,6 +4868,7 @@ export type organizationsUncheckedUpdateWithoutSpecialist_consultationsInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUncheckedUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUncheckedUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -4804,6 +4909,7 @@ export type organizationsCreateWithoutDental_labsInput = {
   inventory_items?: Prisma.inventory_itemsCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesCreateNestedManyWithoutOrganizationInput
@@ -4844,6 +4950,7 @@ export type organizationsUncheckedCreateWithoutDental_labsInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsUncheckedCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileUncheckedCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesUncheckedCreateNestedManyWithoutOrganizationInput
@@ -4900,6 +5007,7 @@ export type organizationsUpdateWithoutDental_labsInput = {
   inventory_items?: Prisma.inventory_itemsUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUpdateManyWithoutOrganizationNestedInput
@@ -4940,6 +5048,7 @@ export type organizationsUncheckedUpdateWithoutDental_labsInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUncheckedUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUncheckedUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -4980,6 +5089,7 @@ export type organizationsCreateWithoutLab_ordersInput = {
   inventory_items?: Prisma.inventory_itemsCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesCreateNestedManyWithoutOrganizationInput
@@ -5020,6 +5130,7 @@ export type organizationsUncheckedCreateWithoutLab_ordersInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedCreateNestedManyWithoutOrganizationInput
   inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutOrganizationInput
   notifications?: Prisma.notificationsUncheckedCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedCreateNestedManyWithoutOrganizationInput
   audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutOrganizationInput
   clinic_profile?: Prisma.clinic_profileUncheckedCreateNestedManyWithoutOrganizationInput
   expenses?: Prisma.expensesUncheckedCreateNestedManyWithoutOrganizationInput
@@ -5076,6 +5187,7 @@ export type organizationsUpdateWithoutLab_ordersInput = {
   inventory_items?: Prisma.inventory_itemsUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUpdateManyWithoutOrganizationNestedInput
@@ -5116,6 +5228,7 @@ export type organizationsUncheckedUpdateWithoutLab_ordersInput = {
   inventory_items?: Prisma.inventory_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
   inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutOrganizationNestedInput
   notifications?: Prisma.notificationsUncheckedUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedUpdateManyWithoutOrganizationNestedInput
   audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutOrganizationNestedInput
   clinic_profile?: Prisma.clinic_profileUncheckedUpdateManyWithoutOrganizationNestedInput
   expenses?: Prisma.expensesUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -5128,6 +5241,186 @@ export type organizationsUncheckedUpdateWithoutLab_ordersInput = {
   specialists?: Prisma.specialistsUncheckedUpdateManyWithoutOrganizationNestedInput
   specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUncheckedUpdateManyWithoutOrganizationNestedInput
+}
+
+export type organizationsCreateWithoutAgent_conversationsInput = {
+  id?: bigint | number
+  name: string
+  slug: string
+  legal_name?: string | null
+  email?: string | null
+  phone?: string | null
+  website_url?: string | null
+  logo_url?: string | null
+  description?: string | null
+  timezone?: string
+  currency?: string
+  is_active?: boolean
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  created_at?: Date | string
+  updated_at?: Date | string
+  branches?: Prisma.branchesCreateNestedManyWithoutOrganizationInput
+  users?: Prisma.usersCreateNestedManyWithoutOrganizationInput
+  patient_profiles?: Prisma.patient_profilesCreateNestedManyWithoutOrganizationInput
+  appointment_slots?: Prisma.appointment_slotsCreateNestedManyWithoutOrganizationInput
+  appointments?: Prisma.appointmentsCreateNestedManyWithoutOrganizationInput
+  patient_records?: Prisma.patient_recordsCreateNestedManyWithoutOrganizationInput
+  patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutOrganizationInput
+  inventory_items?: Prisma.inventory_itemsCreateNestedManyWithoutOrganizationInput
+  inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutOrganizationInput
+  notifications?: Prisma.notificationsCreateNestedManyWithoutOrganizationInput
+  audit_logs?: Prisma.audit_logsCreateNestedManyWithoutOrganizationInput
+  clinic_profile?: Prisma.clinic_profileCreateNestedManyWithoutOrganizationInput
+  expenses?: Prisma.expensesCreateNestedManyWithoutOrganizationInput
+  expense_payments?: Prisma.expense_paymentsCreateNestedManyWithoutOrganizationInput
+  treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutOrganizationInput
+  invoice_line_items?: Prisma.invoice_line_itemsCreateNestedManyWithoutOrganizationInput
+  invoice_payments?: Prisma.invoice_paymentsCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsCreateNestedManyWithoutOrganizationInput
+  specialists?: Prisma.specialistsCreateNestedManyWithoutOrganizationInput
+  specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutOrganizationInput
+  dental_labs?: Prisma.dental_labsCreateNestedManyWithoutOrganizationInput
+  lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutOrganizationInput
+}
+
+export type organizationsUncheckedCreateWithoutAgent_conversationsInput = {
+  id?: bigint | number
+  name: string
+  slug: string
+  legal_name?: string | null
+  email?: string | null
+  phone?: string | null
+  website_url?: string | null
+  logo_url?: string | null
+  description?: string | null
+  timezone?: string
+  currency?: string
+  is_active?: boolean
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  created_at?: Date | string
+  updated_at?: Date | string
+  branches?: Prisma.branchesUncheckedCreateNestedManyWithoutOrganizationInput
+  users?: Prisma.usersUncheckedCreateNestedManyWithoutOrganizationInput
+  patient_profiles?: Prisma.patient_profilesUncheckedCreateNestedManyWithoutOrganizationInput
+  appointment_slots?: Prisma.appointment_slotsUncheckedCreateNestedManyWithoutOrganizationInput
+  appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutOrganizationInput
+  patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutOrganizationInput
+  patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutOrganizationInput
+  inventory_items?: Prisma.inventory_itemsUncheckedCreateNestedManyWithoutOrganizationInput
+  inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutOrganizationInput
+  notifications?: Prisma.notificationsUncheckedCreateNestedManyWithoutOrganizationInput
+  audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutOrganizationInput
+  clinic_profile?: Prisma.clinic_profileUncheckedCreateNestedManyWithoutOrganizationInput
+  expenses?: Prisma.expensesUncheckedCreateNestedManyWithoutOrganizationInput
+  expense_payments?: Prisma.expense_paymentsUncheckedCreateNestedManyWithoutOrganizationInput
+  treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutOrganizationInput
+  invoice_line_items?: Prisma.invoice_line_itemsUncheckedCreateNestedManyWithoutOrganizationInput
+  invoice_payments?: Prisma.invoice_paymentsUncheckedCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesUncheckedCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsUncheckedCreateNestedManyWithoutOrganizationInput
+  specialists?: Prisma.specialistsUncheckedCreateNestedManyWithoutOrganizationInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutOrganizationInput
+  dental_labs?: Prisma.dental_labsUncheckedCreateNestedManyWithoutOrganizationInput
+  lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutOrganizationInput
+}
+
+export type organizationsCreateOrConnectWithoutAgent_conversationsInput = {
+  where: Prisma.organizationsWhereUniqueInput
+  create: Prisma.XOR<Prisma.organizationsCreateWithoutAgent_conversationsInput, Prisma.organizationsUncheckedCreateWithoutAgent_conversationsInput>
+}
+
+export type organizationsUpsertWithoutAgent_conversationsInput = {
+  update: Prisma.XOR<Prisma.organizationsUpdateWithoutAgent_conversationsInput, Prisma.organizationsUncheckedUpdateWithoutAgent_conversationsInput>
+  create: Prisma.XOR<Prisma.organizationsCreateWithoutAgent_conversationsInput, Prisma.organizationsUncheckedCreateWithoutAgent_conversationsInput>
+  where?: Prisma.organizationsWhereInput
+}
+
+export type organizationsUpdateToOneWithWhereWithoutAgent_conversationsInput = {
+  where?: Prisma.organizationsWhereInput
+  data: Prisma.XOR<Prisma.organizationsUpdateWithoutAgent_conversationsInput, Prisma.organizationsUncheckedUpdateWithoutAgent_conversationsInput>
+}
+
+export type organizationsUpdateWithoutAgent_conversationsInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  legal_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  website_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  currency?: Prisma.StringFieldUpdateOperationsInput | string
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  branches?: Prisma.branchesUpdateManyWithoutOrganizationNestedInput
+  users?: Prisma.usersUpdateManyWithoutOrganizationNestedInput
+  patient_profiles?: Prisma.patient_profilesUpdateManyWithoutOrganizationNestedInput
+  appointment_slots?: Prisma.appointment_slotsUpdateManyWithoutOrganizationNestedInput
+  appointments?: Prisma.appointmentsUpdateManyWithoutOrganizationNestedInput
+  patient_records?: Prisma.patient_recordsUpdateManyWithoutOrganizationNestedInput
+  patient_documents?: Prisma.patient_documentsUpdateManyWithoutOrganizationNestedInput
+  inventory_items?: Prisma.inventory_itemsUpdateManyWithoutOrganizationNestedInput
+  inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutOrganizationNestedInput
+  notifications?: Prisma.notificationsUpdateManyWithoutOrganizationNestedInput
+  audit_logs?: Prisma.audit_logsUpdateManyWithoutOrganizationNestedInput
+  clinic_profile?: Prisma.clinic_profileUpdateManyWithoutOrganizationNestedInput
+  expenses?: Prisma.expensesUpdateManyWithoutOrganizationNestedInput
+  expense_payments?: Prisma.expense_paymentsUpdateManyWithoutOrganizationNestedInput
+  treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutOrganizationNestedInput
+  invoice_line_items?: Prisma.invoice_line_itemsUpdateManyWithoutOrganizationNestedInput
+  invoice_payments?: Prisma.invoice_paymentsUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUpdateManyWithoutOrganizationNestedInput
+  specialists?: Prisma.specialistsUpdateManyWithoutOrganizationNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutOrganizationNestedInput
+  dental_labs?: Prisma.dental_labsUpdateManyWithoutOrganizationNestedInput
+  lab_orders?: Prisma.lab_ordersUpdateManyWithoutOrganizationNestedInput
+}
+
+export type organizationsUncheckedUpdateWithoutAgent_conversationsInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  legal_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  website_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  currency?: Prisma.StringFieldUpdateOperationsInput | string
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  branches?: Prisma.branchesUncheckedUpdateManyWithoutOrganizationNestedInput
+  users?: Prisma.usersUncheckedUpdateManyWithoutOrganizationNestedInput
+  patient_profiles?: Prisma.patient_profilesUncheckedUpdateManyWithoutOrganizationNestedInput
+  appointment_slots?: Prisma.appointment_slotsUncheckedUpdateManyWithoutOrganizationNestedInput
+  appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutOrganizationNestedInput
+  patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutOrganizationNestedInput
+  patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutOrganizationNestedInput
+  inventory_items?: Prisma.inventory_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
+  inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutOrganizationNestedInput
+  notifications?: Prisma.notificationsUncheckedUpdateManyWithoutOrganizationNestedInput
+  audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutOrganizationNestedInput
+  clinic_profile?: Prisma.clinic_profileUncheckedUpdateManyWithoutOrganizationNestedInput
+  expenses?: Prisma.expensesUncheckedUpdateManyWithoutOrganizationNestedInput
+  expense_payments?: Prisma.expense_paymentsUncheckedUpdateManyWithoutOrganizationNestedInput
+  treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutOrganizationNestedInput
+  invoice_line_items?: Prisma.invoice_line_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
+  invoice_payments?: Prisma.invoice_paymentsUncheckedUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUncheckedUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUncheckedUpdateManyWithoutOrganizationNestedInput
+  specialists?: Prisma.specialistsUncheckedUpdateManyWithoutOrganizationNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutOrganizationNestedInput
+  dental_labs?: Prisma.dental_labsUncheckedUpdateManyWithoutOrganizationNestedInput
+  lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 
@@ -5146,6 +5439,7 @@ export type OrganizationsCountOutputType = {
   inventory_items: number
   inventory_movements: number
   notifications: number
+  agent_conversations: number
   audit_logs: number
   clinic_profile: number
   expenses: number
@@ -5172,6 +5466,7 @@ export type OrganizationsCountOutputTypeSelect<ExtArgs extends runtime.Types.Ext
   inventory_items?: boolean | OrganizationsCountOutputTypeCountInventory_itemsArgs
   inventory_movements?: boolean | OrganizationsCountOutputTypeCountInventory_movementsArgs
   notifications?: boolean | OrganizationsCountOutputTypeCountNotificationsArgs
+  agent_conversations?: boolean | OrganizationsCountOutputTypeCountAgent_conversationsArgs
   audit_logs?: boolean | OrganizationsCountOutputTypeCountAudit_logsArgs
   clinic_profile?: boolean | OrganizationsCountOutputTypeCountClinic_profileArgs
   expenses?: boolean | OrganizationsCountOutputTypeCountExpensesArgs
@@ -5265,6 +5560,13 @@ export type OrganizationsCountOutputTypeCountInventory_movementsArgs<ExtArgs ext
  */
 export type OrganizationsCountOutputTypeCountNotificationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.notificationsWhereInput
+}
+
+/**
+ * OrganizationsCountOutputType without action
+ */
+export type OrganizationsCountOutputTypeCountAgent_conversationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.agent_conversationsWhereInput
 }
 
 /**
@@ -5385,6 +5687,7 @@ export type organizationsSelect<ExtArgs extends runtime.Types.Extensions.Interna
   inventory_items?: boolean | Prisma.organizations$inventory_itemsArgs<ExtArgs>
   inventory_movements?: boolean | Prisma.organizations$inventory_movementsArgs<ExtArgs>
   notifications?: boolean | Prisma.organizations$notificationsArgs<ExtArgs>
+  agent_conversations?: boolean | Prisma.organizations$agent_conversationsArgs<ExtArgs>
   audit_logs?: boolean | Prisma.organizations$audit_logsArgs<ExtArgs>
   clinic_profile?: boolean | Prisma.organizations$clinic_profileArgs<ExtArgs>
   expenses?: boolean | Prisma.organizations$expensesArgs<ExtArgs>
@@ -5467,6 +5770,7 @@ export type organizationsInclude<ExtArgs extends runtime.Types.Extensions.Intern
   inventory_items?: boolean | Prisma.organizations$inventory_itemsArgs<ExtArgs>
   inventory_movements?: boolean | Prisma.organizations$inventory_movementsArgs<ExtArgs>
   notifications?: boolean | Prisma.organizations$notificationsArgs<ExtArgs>
+  agent_conversations?: boolean | Prisma.organizations$agent_conversationsArgs<ExtArgs>
   audit_logs?: boolean | Prisma.organizations$audit_logsArgs<ExtArgs>
   clinic_profile?: boolean | Prisma.organizations$clinic_profileArgs<ExtArgs>
   expenses?: boolean | Prisma.organizations$expensesArgs<ExtArgs>
@@ -5498,6 +5802,7 @@ export type $organizationsPayload<ExtArgs extends runtime.Types.Extensions.Inter
     inventory_items: Prisma.$inventory_itemsPayload<ExtArgs>[]
     inventory_movements: Prisma.$inventory_movementsPayload<ExtArgs>[]
     notifications: Prisma.$notificationsPayload<ExtArgs>[]
+    agent_conversations: Prisma.$agent_conversationsPayload<ExtArgs>[]
     audit_logs: Prisma.$audit_logsPayload<ExtArgs>[]
     clinic_profile: Prisma.$clinic_profilePayload<ExtArgs>[]
     expenses: Prisma.$expensesPayload<ExtArgs>[]
@@ -5936,6 +6241,7 @@ export interface Prisma__organizationsClient<T, Null = never, ExtArgs extends ru
   inventory_items<T extends Prisma.organizations$inventory_itemsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.organizations$inventory_itemsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$inventory_itemsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   inventory_movements<T extends Prisma.organizations$inventory_movementsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.organizations$inventory_movementsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$inventory_movementsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   notifications<T extends Prisma.organizations$notificationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.organizations$notificationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$notificationsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  agent_conversations<T extends Prisma.organizations$agent_conversationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.organizations$agent_conversationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$agent_conversationsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   audit_logs<T extends Prisma.organizations$audit_logsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.organizations$audit_logsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$audit_logsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   clinic_profile<T extends Prisma.organizations$clinic_profileArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.organizations$clinic_profileArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$clinic_profilePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   expenses<T extends Prisma.organizations$expensesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.organizations$expensesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$expensesPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -6623,6 +6929,30 @@ export type organizations$notificationsArgs<ExtArgs extends runtime.Types.Extens
   take?: number
   skip?: number
   distinct?: Prisma.NotificationsScalarFieldEnum | Prisma.NotificationsScalarFieldEnum[]
+}
+
+/**
+ * organizations.agent_conversations
+ */
+export type organizations$agent_conversationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the agent_conversations
+   */
+  select?: Prisma.agent_conversationsSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the agent_conversations
+   */
+  omit?: Prisma.agent_conversationsOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.agent_conversationsInclude<ExtArgs> | null
+  where?: Prisma.agent_conversationsWhereInput
+  orderBy?: Prisma.agent_conversationsOrderByWithRelationInput | Prisma.agent_conversationsOrderByWithRelationInput[]
+  cursor?: Prisma.agent_conversationsWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.Agent_conversationsScalarFieldEnum | Prisma.Agent_conversationsScalarFieldEnum[]
 }
 
 /**

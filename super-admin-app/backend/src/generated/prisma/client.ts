@@ -163,3 +163,8 @@ export type dental_labs = Prisma.dental_labsModel
  * status: ordered | sent | received | fitted | cancelled
  */
 export type lab_orders = Prisma.lab_ordersModel
+/**
+ * Model agent_conversations
+ * The AI assistant chat of one signed-in person: one row per user, written by the API only.
+ */
+export type agent_conversations = Prisma.agent_conversationsModel

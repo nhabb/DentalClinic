@@ -74,7 +74,8 @@ export const ModelName = {
   specialists: 'specialists',
   specialist_consultations: 'specialist_consultations',
   dental_labs: 'dental_labs',
-  lab_orders: 'lab_orders'
+  lab_orders: 'lab_orders',
+  agent_conversations: 'agent_conversations'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -525,6 +526,18 @@ export const Lab_ordersScalarFieldEnum = {
 } as const
 
 export type Lab_ordersScalarFieldEnum = (typeof Lab_ordersScalarFieldEnum)[keyof typeof Lab_ordersScalarFieldEnum]
+
+
+export const Agent_conversationsScalarFieldEnum = {
+  id: 'id',
+  organization_id: 'organization_id',
+  user_id: 'user_id',
+  messages: 'messages',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+} as const
+
+export type Agent_conversationsScalarFieldEnum = (typeof Agent_conversationsScalarFieldEnum)[keyof typeof Agent_conversationsScalarFieldEnum]
 
 
 export const SortOrder = {
