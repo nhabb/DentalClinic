@@ -8,8 +8,8 @@
  * BrightSmile design system — "Clinic Daylight"
  *
  * A warm, low-glare palette built to be restful to look at over a long
- * clinical shift: a linen canvas instead of cold white, warm greige
- * neutrals, and a clear clinical blue as the brand voice with terracotta
+ * clinical shift: a canvas with a faint tint of the brand blue instead
+ * of flat white, cool greys to match, and a clear clinical blue as the brand voice with terracotta
  * and honey as its companions. Success is a cool lagoon teal so it never
  * reads as the brand. There is deliberately no green and no purple.
  *
@@ -93,18 +93,18 @@
   --color-brick-900: #672821;
   --color-brick:     #b2372b;
 
-  /* ---- Ink: warm greige neutrals. The canvas and the type ------------ */
-  --color-ink-50:  #faf8f4;
-  --color-ink-100: #f4f1ea;
-  --color-ink-200: #e9e4d9;
-  --color-ink-300: #d9d2c4;
-  --color-ink-400: #b5ac9a;
-  --color-ink-500: #8d8474;
-  --color-ink-600: #6c6457;
-  --color-ink-700: #534c42;
-  --color-ink-800: #3b362f;
-  --color-ink-900: #272420;
-  --color-ink-950: #181612;
+  /* ---- Ink: cool neutrals with a faint blue tint. The canvas and the type */
+  --color-ink-50:  #f7f9fd;
+  --color-ink-100: #eef2f9;
+  --color-ink-200: #dfe6f1;
+  --color-ink-300: #c8d3e4;
+  --color-ink-400: #97a6bf;
+  --color-ink-500: #6d7d97;
+  --color-ink-600: #54627b;
+  --color-ink-700: #404c61;
+  --color-ink-800: #2e3747;
+  --color-ink-900: #1e2533;
+  --color-ink-950: #131823;
 
   /* ---- Accent blue: the same scale as the brand, kept as a name so
    *      older call sites keep working; use brand-* in new code
@@ -124,30 +124,30 @@
    * Re-pointed stock palettes. See the note at the top of the file.
    * ===================================================================== */
 
-  /* Cold greys -> warm greige ----------------------------------------- */
-  --color-gray-50:  #faf8f4;  --color-slate-50:  #faf8f4;
-  --color-gray-100: #f4f1ea;  --color-slate-100: #f4f1ea;
-  --color-gray-200: #e9e4d9;  --color-slate-200: #e9e4d9;
-  --color-gray-300: #d9d2c4;  --color-slate-300: #d9d2c4;
-  --color-gray-400: #b5ac9a;  --color-slate-400: #b5ac9a;
-  --color-gray-500: #8d8474;  --color-slate-500: #8d8474;
-  --color-gray-600: #6c6457;  --color-slate-600: #6c6457;
-  --color-gray-700: #534c42;  --color-slate-700: #534c42;
-  --color-gray-800: #3b362f;  --color-slate-800: #3b362f;
-  --color-gray-900: #272420;  --color-slate-900: #272420;
-  --color-gray-950: #181612;  --color-slate-950: #181612;
+  /* Stock greys -> ink ------------------------------------------------ */
+  --color-gray-50:  #f7f9fd;  --color-slate-50:  #f7f9fd;
+  --color-gray-100: #eef2f9;  --color-slate-100: #eef2f9;
+  --color-gray-200: #dfe6f1;  --color-slate-200: #dfe6f1;
+  --color-gray-300: #c8d3e4;  --color-slate-300: #c8d3e4;
+  --color-gray-400: #97a6bf;  --color-slate-400: #97a6bf;
+  --color-gray-500: #6d7d97;  --color-slate-500: #6d7d97;
+  --color-gray-600: #54627b;  --color-slate-600: #54627b;
+  --color-gray-700: #404c61;  --color-slate-700: #404c61;
+  --color-gray-800: #2e3747;  --color-slate-800: #2e3747;
+  --color-gray-900: #1e2533;  --color-slate-900: #1e2533;
+  --color-gray-950: #131823;  --color-slate-950: #131823;
 
-  --color-zinc-50:  #faf8f4;  --color-neutral-50:  #faf8f4;  --color-stone-50:  #faf8f4;
-  --color-zinc-100: #f4f1ea;  --color-neutral-100: #f4f1ea;  --color-stone-100: #f4f1ea;
-  --color-zinc-200: #e9e4d9;  --color-neutral-200: #e9e4d9;  --color-stone-200: #e9e4d9;
-  --color-zinc-300: #d9d2c4;  --color-neutral-300: #d9d2c4;  --color-stone-300: #d9d2c4;
-  --color-zinc-400: #b5ac9a;  --color-neutral-400: #b5ac9a;  --color-stone-400: #b5ac9a;
-  --color-zinc-500: #8d8474;  --color-neutral-500: #8d8474;  --color-stone-500: #8d8474;
-  --color-zinc-600: #6c6457;  --color-neutral-600: #6c6457;  --color-stone-600: #6c6457;
-  --color-zinc-700: #534c42;  --color-neutral-700: #534c42;  --color-stone-700: #534c42;
-  --color-zinc-800: #3b362f;  --color-neutral-800: #3b362f;  --color-stone-800: #3b362f;
-  --color-zinc-900: #272420;  --color-neutral-900: #272420;  --color-stone-900: #272420;
-  --color-zinc-950: #181612;  --color-neutral-950: #181612;  --color-stone-950: #181612;
+  --color-zinc-50:  #f7f9fd;  --color-neutral-50:  #f7f9fd;  --color-stone-50:  #f7f9fd;
+  --color-zinc-100: #eef2f9;  --color-neutral-100: #eef2f9;  --color-stone-100: #eef2f9;
+  --color-zinc-200: #dfe6f1;  --color-neutral-200: #dfe6f1;  --color-stone-200: #dfe6f1;
+  --color-zinc-300: #c8d3e4;  --color-neutral-300: #c8d3e4;  --color-stone-300: #c8d3e4;
+  --color-zinc-400: #97a6bf;  --color-neutral-400: #97a6bf;  --color-stone-400: #97a6bf;
+  --color-zinc-500: #6d7d97;  --color-neutral-500: #6d7d97;  --color-stone-500: #6d7d97;
+  --color-zinc-600: #54627b;  --color-neutral-600: #54627b;  --color-stone-600: #54627b;
+  --color-zinc-700: #404c61;  --color-neutral-700: #404c61;  --color-stone-700: #404c61;
+  --color-zinc-800: #2e3747;  --color-neutral-800: #2e3747;  --color-stone-800: #2e3747;
+  --color-zinc-900: #1e2533;  --color-neutral-900: #1e2533;  --color-stone-900: #1e2533;
+  --color-zinc-950: #131823;  --color-neutral-950: #131823;  --color-stone-950: #131823;
 
   /* Blues and cyans -> brand blue -------------------------------------- */
   --color-blue-50:  #eff6ff;  --color-sky-50:  #eff6ff;  --color-cyan-50:  #eff6ff;  --color-indigo-50:  #eff6ff;
@@ -241,7 +241,7 @@
   --color-dental-teal:      #60a5fa;
   --color-dental-purple:    #db8b61;
   --color-dental-green:     #41a8ad;
-  --color-dental-slate:     #8d8474;
+  --color-dental-slate:     #6d7d97;
   --color-auth-blue:        #1d4ed8;
   --color-auth-blue-dark:   #1e3a8a;
   --color-auth-blue-light:  #3b82f6;
@@ -252,16 +252,16 @@
   --font-display: var(--font-display-stack), Georgia, "Times New Roman", serif;
 
   /* ---- Elevation ----------------------------------------------------
-   * Warm-tinted and shallow. A grey-black shadow on a linen surface
+   * Cool-tinted and shallow. A blue-black shadow on the tinted surface
    * looks like dirt; tinting it with the ink colour keeps it clean.   */
-  --shadow-2xs: 0 1px 1px rgb(39 36 32 / 0.04);
-  --shadow-xs:  0 1px 2px rgb(39 36 32 / 0.05);
-  --shadow-sm:  0 1px 2px rgb(39 36 32 / 0.04), 0 2px 6px -1px rgb(39 36 32 / 0.06);
-  --shadow-md:  0 2px 4px rgb(39 36 32 / 0.04), 0 6px 14px -3px rgb(39 36 32 / 0.08);
-  --shadow-lg:  0 2px 6px rgb(39 36 32 / 0.04), 0 12px 24px -6px rgb(39 36 32 / 0.10);
-  --shadow-xl:  0 4px 10px rgb(39 36 32 / 0.05), 0 20px 40px -10px rgb(39 36 32 / 0.12);
-  --shadow-2xl: 0 8px 20px rgb(39 36 32 / 0.06), 0 32px 64px -16px rgb(39 36 32 / 0.18);
-  --shadow-lift: 0 4px 8px rgb(39 36 32 / 0.05), 0 18px 36px -10px rgb(39 36 32 / 0.16);
+  --shadow-2xs: 0 1px 1px rgb(30 37 51 / 0.04);
+  --shadow-xs:  0 1px 2px rgb(30 37 51 / 0.05);
+  --shadow-sm:  0 1px 2px rgb(30 37 51 / 0.04), 0 2px 6px -1px rgb(30 37 51 / 0.06);
+  --shadow-md:  0 2px 4px rgb(30 37 51 / 0.04), 0 6px 14px -3px rgb(30 37 51 / 0.08);
+  --shadow-lg:  0 2px 6px rgb(30 37 51 / 0.04), 0 12px 24px -6px rgb(30 37 51 / 0.10);
+  --shadow-xl:  0 4px 10px rgb(30 37 51 / 0.05), 0 20px 40px -10px rgb(30 37 51 / 0.12);
+  --shadow-2xl: 0 8px 20px rgb(30 37 51 / 0.06), 0 32px 64px -16px rgb(30 37 51 / 0.18);
+  --shadow-lift: 0 4px 8px rgb(30 37 51 / 0.05), 0 18px 36px -10px rgb(30 37 51 / 0.16);
   --shadow-glow: 0 0 0 1px rgb(38 107 73 / 0.12), 0 8px 24px -6px rgb(38 107 73 / 0.22);
 
   /* ---- Motion -------------------------------------------------------
@@ -290,69 +290,69 @@
 :root {
   --radius: 0.875rem;
 
-  --background:                 #faf8f4;
-  --foreground:                 #272420;
+  --background:                 #f7f9fd;
+  --foreground:                 #1e2533;
   --card:                       #ffffff;
-  --card-foreground:            #272420;
+  --card-foreground:            #1e2533;
   --popover:                    #ffffff;
-  --popover-foreground:         #272420;
+  --popover-foreground:         #1e2533;
   --primary:                    #2563eb;
-  --primary-foreground:         #faf8f4;
-  --secondary:                  #f4f1ea;
-  --secondary-foreground:       #3b362f;
-  --muted:                      #f4f1ea;
-  --muted-foreground:           #6c6457;
+  --primary-foreground:         #f7f9fd;
+  --secondary:                  #eef2f9;
+  --secondary-foreground:       #2e3747;
+  --muted:                      #eef2f9;
+  --muted-foreground:           #54627b;
   --accent:                     #faeadf;
   --accent-foreground:          #974b28;
   --destructive:                #cb4a3c;
   --destructive-foreground:     #ffffff;
-  --border:                     #e9e4d9;
-  --input:                      #e9e4d9;
+  --border:                     #dfe6f1;
+  --input:                      #dfe6f1;
   --ring:                       #60a5fa;
 
   --chart-1:                    #2563eb;
   --chart-2:                    #d2763c;
   --chart-3:                    #c7951c;
   --chart-4:                    #288d93;
-  --chart-5:                    #8d8474;
+  --chart-5:                    #6d7d97;
 
   --sidebar:                    #1e3a8a;
-  --sidebar-foreground:         #e9e4d9;
+  --sidebar-foreground:         #dfe6f1;
   --sidebar-primary:            #60a5fa;
   --sidebar-primary-foreground: #172554;
   --sidebar-accent:             #1d4ed8;
-  --sidebar-accent-foreground:  #faf8f4;
+  --sidebar-accent-foreground:  #f7f9fd;
   --sidebar-border:             rgba(233, 228, 217, 0.12);
   --sidebar-ring:               #60a5fa;
 }
 
 .dark {
-  --background:                 #181612;
-  --foreground:                 #f4f1ea;
-  --card:                       #272420;
-  --card-foreground:            #f4f1ea;
-  --popover:                    #272420;
-  --popover-foreground:         #f4f1ea;
+  --background:                 #131823;
+  --foreground:                 #eef2f9;
+  --card:                       #1e2533;
+  --card-foreground:            #eef2f9;
+  --popover:                    #1e2533;
+  --popover-foreground:         #eef2f9;
   --primary:                    #93c5fd;
   --primary-foreground:         #172554;
-  --secondary:                  #3b362f;
-  --secondary-foreground:       #f4f1ea;
-  --muted:                      #3b362f;
-  --muted-foreground:           #b5ac9a;
-  --accent:                     #534c42;
+  --secondary:                  #2e3747;
+  --secondary-foreground:       #eef2f9;
+  --muted:                      #2e3747;
+  --muted-foreground:           #97a6bf;
+  --accent:                     #404c61;
   --accent-foreground:          #f3d2bc;
   --destructive:                #dd766a;
-  --destructive-foreground:     #181612;
+  --destructive-foreground:     #131823;
   --border:                     rgba(244, 241, 234, 0.12);
   --input:                      rgba(244, 241, 234, 0.16);
   --ring:                       #60a5fa;
 
   --sidebar:                    #172554;
-  --sidebar-foreground:         #e9e4d9;
+  --sidebar-foreground:         #dfe6f1;
   --sidebar-primary:            #93c5fd;
   --sidebar-primary-foreground: #172554;
   --sidebar-accent:             #1e40af;
-  --sidebar-accent-foreground:  #faf8f4;
+  --sidebar-accent-foreground:  #f7f9fd;
   --sidebar-border:             rgba(233, 228, 217, 0.10);
   --sidebar-ring:               #60a5fa;
 }
@@ -507,7 +507,7 @@
   background:
     radial-gradient(60rem 30rem at 85% -10%, #faeadf 0%, transparent 60%),
     radial-gradient(45rem 28rem at 0% 0%, #eff6ff 0%, transparent 55%),
-    linear-gradient(180deg, #faf8f4 0%, #f4f1ea 100%);
+    linear-gradient(180deg, #f7f9fd 0%, #eef2f9 100%);
 }
 
 .gradient-premium {
@@ -529,10 +529,10 @@
   background: linear-gradient(140deg, #1d4ed8 0%, #2563eb 55%, #3b82f6 100%);
 }
 
-/* A hairline of linen texture for large flat panels — keeps big empty
+/* A hairline of texture for large flat panels — keeps big empty
  * areas from reading as a dead screen without adding visual noise. */
 .surface-grain {
-  background-image: radial-gradient(rgb(39 36 32 / 0.022) 1px, transparent 1px);
+  background-image: radial-gradient(rgb(30 37 51 / 0.022) 1px, transparent 1px);
   background-size: 18px 18px;
 }
 
@@ -658,7 +658,7 @@
     transform: scale(0.97);
   }
 
-  /* Loading placeholder that matches the linen surface. */
+  /* Loading placeholder that matches the canvas. */
   .skeleton {
     background-image: linear-gradient(
       90deg,

@@ -26,7 +26,12 @@ export function fetchClinicIdentity(): Promise<ClinicIdentity | null> {
         ? { name: me.organization.name as string, branch: (me.branch?.name as string | undefined) || null }
         : null,
     )
-    .catch(() => null);
+    .catch(() => null)
+    .then((v) => {
+      // A failed or unauthenticated request is not cached: the next header asks again.
+      if (!v) identity = null;
+      return v;
+    });
   return identity;
 }
 
