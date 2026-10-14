@@ -5,6 +5,7 @@ import Link from "next/link";
 import { FaTooth, FaArrowLeft } from "react-icons/fa";
 import { Avatar } from "@/components/ui/Avatar";
 import { fetchMyPhoto } from "@/lib/profilePhoto";
+import { useClinicIdentity } from "@/lib/clinic";
 import { supabase } from "@/lib/supabase/client";
 
 interface PatientPageHeaderProps {
@@ -16,6 +17,7 @@ export function PatientPageHeader({
   backHref = "/patient-dashboard",
   backLabel = "Back to Dashboard",
 }: PatientPageHeaderProps) {
+  const clinic = useClinicIdentity();
   const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined);
   const [name, setName] = useState("");
 
@@ -54,7 +56,10 @@ export function PatientPageHeader({
             <span className="flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 shadow-sm shadow-brand-700/20 transition-transform duration-200 group-hover:scale-105">
               <FaTooth className="text-lg text-white" />
             </span>
-            <span className="font-display text-xl font-bold text-ink-900">BrightSmile</span>
+            <span className="flex min-w-0 flex-col leading-tight">
+              <span className="truncate font-display text-xl font-bold text-ink-900">{clinic?.name ?? "\u00a0"}</span>
+              {clinic?.branch && <span className="truncate text-[11px] text-ink-400">{clinic.branch}</span>}
+            </span>
           </Link>
 
           <div className="flex items-center gap-3">

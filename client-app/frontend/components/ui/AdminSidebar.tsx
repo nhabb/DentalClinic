@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "@/lib/i18n";
 import { usePermissions } from "@/lib/permissions";
+import { useClinicIdentity } from "@/lib/clinic";
 import { screenPermission } from "@/lib/adminAccess";
 import {
   FaTooth,
@@ -82,6 +83,7 @@ export default function AdminSidebar({
 }: Props) {
   const { t } = useTranslation();
   const pathname = usePathname();
+  const clinic = useClinicIdentity();
   const [moreOpen, setMoreOpen] = useState(false);
   const [playEntrance] = useState(() => !sidebarHasAnimated);
 
@@ -148,11 +150,14 @@ export default function AdminSidebar({
             </span>
             {sidebarOpen && (
               <span className="min-w-0 animate-fade-in">
-                <span className="block truncate font-display text-lg font-bold leading-tight text-ink-900">
-                  BrightSmile
+                <span
+                  className="line-clamp-2 font-display text-[15px] font-bold leading-tight text-ink-900"
+                  title={clinic?.name}
+                >
+                  {clinic?.name ?? "\u00a0"}
                 </span>
-                <span className="block truncate text-[11px] text-ink-400">
-                  {subtitle ?? t("nav.adminPanel")}
+                <span className="block truncate text-[11px] text-ink-400" title={clinic?.branch ?? undefined}>
+                  {clinic?.branch ?? subtitle ?? t("nav.adminPanel")}
                 </span>
               </span>
             )}
