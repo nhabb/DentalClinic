@@ -75,6 +75,8 @@ export const TABLE_PERMISSIONS: Readonly<Record<string, string | null>> = {
   treatment_invoices: 'billing:read',
   invoice_line_items: 'billing:read',
   invoice_payments: 'billing:read',
+  quotes: 'billing:read',
+  quote_items: 'billing:read',
   expenses: 'expenses:read',
   expense_payments: 'expenses:read',
   inventory_items: 'inventory:read',
@@ -101,6 +103,8 @@ export const PRICING_PERMISSION = 'pricing:read';
 
 export const PRICING_COLUMNS: Readonly<Record<string, readonly string[]>> = {
   patient_records: ['quoted_amount'],
+  quotes: ['quoted_total'],
+  quote_items: ['quoted_amount'],
   lab_orders: ['cost'],
   specialist_consultations: ['fee'],
   inventory_items: ['cost_price'],

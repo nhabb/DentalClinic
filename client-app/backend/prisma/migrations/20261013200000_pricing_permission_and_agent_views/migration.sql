@@ -73,6 +73,9 @@ END $$;
 
 -- 4. The views: every column of the table, price columns gated on pricing:read.
 CREATE SCHEMA IF NOT EXISTS agent;
+-- The views are owned by dental_agent_views, and changing a view's owner needs
+-- the new owner to hold CREATE on the schema.
+GRANT CREATE, USAGE ON SCHEMA agent TO dental_agent_views;
 
 CREATE OR REPLACE VIEW agent.patient_records AS
 SELECT id, organization_id, branch_id, patient_id, appointment_id, record_type, title,

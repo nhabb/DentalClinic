@@ -65,8 +65,8 @@ model organizations {
   inventory_items     inventory_items[]
   inventory_movements inventory_movements[]
   notifications       notifications[]
-  agent_conversations                         agent_conversations[]
-  agent_usage                                 agent_usage[]
+  agent_conversations agent_conversations[]
+  agent_usage         agent_usage[]
   audit_logs          audit_logs[]
   clinic_profile      clinic_profile[]
   expenses            expenses[]
@@ -81,6 +81,8 @@ model organizations {
   specialist_consultations specialist_consultations[]
   dental_labs              dental_labs[]
   lab_orders               lab_orders[]
+  quotes                   quotes[]
+  quote_items              quote_items[]
 
   @@index([is_active], map: "idx_organizations_is_active")
 }
@@ -118,6 +120,7 @@ model branches {
 
   specialist_consultations specialist_consultations[]
   lab_orders               lab_orders[]
+  quotes                   quotes[]
 
   @@unique([organization_id, name])
   @@index([organization_id], map: "idx_branches_org")
@@ -339,6 +342,7 @@ model patient_profiles {
 
   specialist_consultations specialist_consultations[]
   lab_orders               lab_orders[]
+  quotes                   quotes[]
 
   @@index([user_id], map: "idx_patient_profiles_user_id")
   @@index([organization_id], map: "idx_patient_profiles_org")
@@ -371,6 +375,7 @@ model patient_records {
 
   specialist_consultations specialist_consultations[]
   lab_orders               lab_orders[]
+  quote_items              quote_items[]
 
   @@index([appointment_id], map: "idx_patient_records_appointment_id")
   @@index([patient_id], map: "idx_patient_records_patient_id")
@@ -416,8 +421,8 @@ model users {
   audit_logs                                  audit_logs[]
   inventory_movements                         inventory_movements[]
   notifications                               notifications[]
-  agent_conversation  agent_conversations?
-  agent_usage         agent_usage[]
+  agent_conversation                          agent_conversations?
+  agent_usage                                 agent_usage[]
   patient_documents                           patient_documents[]
   patient_profiles                            patient_profiles?
   patient_records                             patient_records[]
@@ -428,6 +433,8 @@ model users {
 
   specialist_consultations_requested specialist_consultations[] @relation("specialist_consultations_requester")
   lab_orders_ordered                 lab_orders[]               @relation("lab_orders_orderer")
+  treatment_invoices_cancelled       treatment_invoices[]       @relation("treatment_invoices_canceller")
+  quotes_created                     quotes[]                   @relation("quotes_creator")
 
   @@index([role], map: "idx_users_role")
   @@index([organization_id], map: "idx_users_org")
@@ -481,22 +488,30 @@ model expense_payments {
 }
 
 model treatment_invoices {
-  id               BigInt   @id @default(autoincrement())
-  organization_id  BigInt   @default(dbgenerated("app.current_org_id()"))
+  id               BigInt    @id @default(autoincrement())
+  organization_id  BigInt    @default(dbgenerated("app.current_org_id()"))
   /// Branch that issued the invoice.
-  branch_id        BigInt?  @default(dbgenerated("app.default_branch_id()"))
+  branch_id        BigInt?   @default(dbgenerated("app.default_branch_id()"))
   patient_id       BigInt
-  procedure_date   DateTime @db.Date
+  procedure_date   DateTime  @db.Date
   notes            String?
-  total_amount     Decimal  @db.Decimal(10, 2)
-  amount_paid      Decimal  @default(0) @db.Decimal(10, 2)
-  remaining_amount Decimal  @db.Decimal(10, 2)
-  status           String   @default("open")
+  total_amount     Decimal   @db.Decimal(10, 2)
+  amount_paid      Decimal   @default(0) @db.Decimal(10, 2)
+  remaining_amount Decimal   @db.Decimal(10, 2)
+  status           String    @default("open")
   created_by       BigInt?
-  created_at       DateTime @default(now()) @db.Timestamptz(6)
-  updated_at       DateTime @default(now()) @db.Timestamptz(6)
+  /// Set together with status = cancelled (voided): when, by whom and why.
+  cancelled_at     DateTime? @db.Timestamptz(6)
+  cancelled_by     BigInt?
+  cancel_reason    String?
+  /// The accepted quote this invoice was born from, if any.
+  quote_id         BigInt?
+  created_at       DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime  @default(now()) @db.Timestamptz(6)
 
   organization     organizations        @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  canceller        users?               @relation("treatment_invoices_canceller", fields: [cancelled_by], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  quote            quotes?              @relation(fields: [quote_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
   branch           branches?            @relation(fields: [branch_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
   patient          patient_profiles     @relation(fields: [patient_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   creator          users?               @relation("treatment_invoices_creator", fields: [created_by], references: [id], onUpdate: NoAction)
@@ -504,6 +519,7 @@ model treatment_invoices {
   invoice_payments invoice_payments[]
   patient_records  patient_records[]
 
+  @@index([quote_id], map: "idx_treatment_invoices_quote")
   @@index([patient_id], map: "idx_treatment_invoices_patient_id")
   @@index([status], map: "idx_treatment_invoices_status")
   @@index([created_at], map: "idx_treatment_invoices_created_at")
@@ -533,6 +549,10 @@ model invoice_payments {
   invoice_id      BigInt
   amount          Decimal  @db.Decimal(10, 2)
   payment_method  String   @default("cash")
+  /// payment (money received) | refund (money returned); a refund is a positive amount that reduces amount_paid.
+  kind            String   @default("payment")
+  /// Required for refunds.
+  reason          String?
   notes           String?
   created_by      BigInt?
   created_at      DateTime @default(now()) @db.Timestamptz(6)
@@ -742,4 +762,64 @@ model agent_usage {
 
   @@index([organization_id, created_at], map: "idx_agent_usage_org_created")
   @@index([user_id, created_at], map: "idx_agent_usage_user_created")
+}
+
+/// A priced treatment plan given to a patient: a numbered, versioned estimate of planned work.
+/// Not money: never counted as income or outstanding. draft -> sent -> accepted | declined | expired.
+model quotes {
+  id              BigInt               @id @default(autoincrement())
+  organization_id BigInt               @default(dbgenerated("app.current_org_id()"))
+  /// Branch the quote was prepared at; NULL for organization-wide.
+  branch_id       BigInt?              @default(dbgenerated("app.default_branch_id()"))
+  patient_id      BigInt
+  /// Version within this patient's sequence; a revision is a new row with version + 1.
+  version         Int                  @default(1)
+  /// The previous version this quote replaces.
+  supersedes_id   BigInt?
+  status          String               @default("draft")
+  /// Last day the quoted prices hold.
+  valid_until     DateTime?            @db.Date
+  /// Sum of the items (maintained by trigger).
+  quoted_total    Decimal              @default(0) @db.Decimal(10, 2)
+  notes           String?
+  created_by      BigInt?
+  sent_at         DateTime?            @db.Timestamptz(6)
+  accepted_at     DateTime?            @db.Timestamptz(6)
+  declined_at     DateTime?            @db.Timestamptz(6)
+  created_at      DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime             @default(now()) @db.Timestamptz(6)
+  organization    organizations        @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  branch          branches?            @relation(fields: [branch_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  patient         patient_profiles     @relation(fields: [patient_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  supersedes      quotes?              @relation("quote_versions", fields: [supersedes_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  revisions       quotes[]             @relation("quote_versions")
+  creator         users?               @relation("quotes_creator", fields: [created_by], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  items           quote_items[]
+  invoices        treatment_invoices[]
+
+  @@index([organization_id], map: "idx_quotes_org")
+  @@index([organization_id, branch_id], map: "idx_quotes_org_branch")
+  @@index([patient_id], map: "idx_quotes_patient")
+  @@index([status], map: "idx_quotes_status")
+}
+
+/// One priced line of a quote, usually one planned procedure on one tooth.
+model quote_items {
+  id              BigInt           @id @default(autoincrement())
+  organization_id BigInt           @default(dbgenerated("app.current_org_id()"))
+  quote_id        BigInt
+  /// The planned chart record this line prices, if it came from the chart.
+  record_id       BigInt?
+  procedure_name  String           @db.VarChar
+  tooth_number    String?
+  description     String?
+  quoted_amount   Decimal          @db.Decimal(10, 2)
+  created_at      DateTime         @default(now()) @db.Timestamptz(6)
+  organization    organizations    @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  quote           quotes           @relation(fields: [quote_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  record          patient_records? @relation(fields: [record_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@index([organization_id], map: "idx_quote_items_org")
+  @@index([quote_id], map: "idx_quote_items_quote")
+  @@index([record_id], map: "idx_quote_items_record")
 }

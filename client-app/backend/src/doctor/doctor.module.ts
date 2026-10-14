@@ -8,6 +8,7 @@ import { BillingModule } from './billing/billing.module';
 import { PatientWorkModule } from './patient-work/patient-work.module';
 import { SpecialistsModule } from './specialists/specialists.module';
 import { LabModule } from './lab/lab.module';
+import { QuotesModule } from './quotes/quotes.module';
 
 /**
  * Doctor/Admin panel modules.
@@ -25,6 +26,7 @@ import { LabModule } from './lab/lab.module';
     PatientWorkModule,
     SpecialistsModule,
     LabModule,
+    QuotesModule,
   ],
 })
 export class DoctorModule {}

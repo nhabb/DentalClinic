@@ -35,6 +35,8 @@ export type Treatment_invoicesAvgAggregateOutputType = {
   amount_paid: runtime.Decimal | null
   remaining_amount: runtime.Decimal | null
   created_by: number | null
+  cancelled_by: number | null
+  quote_id: number | null
 }
 
 export type Treatment_invoicesSumAggregateOutputType = {
@@ -46,6 +48,8 @@ export type Treatment_invoicesSumAggregateOutputType = {
   amount_paid: runtime.Decimal | null
   remaining_amount: runtime.Decimal | null
   created_by: bigint | null
+  cancelled_by: bigint | null
+  quote_id: bigint | null
 }
 
 export type Treatment_invoicesMinAggregateOutputType = {
@@ -60,6 +64,10 @@ export type Treatment_invoicesMinAggregateOutputType = {
   remaining_amount: runtime.Decimal | null
   status: string | null
   created_by: bigint | null
+  cancelled_at: Date | null
+  cancelled_by: bigint | null
+  cancel_reason: string | null
+  quote_id: bigint | null
   created_at: Date | null
   updated_at: Date | null
 }
@@ -76,6 +84,10 @@ export type Treatment_invoicesMaxAggregateOutputType = {
   remaining_amount: runtime.Decimal | null
   status: string | null
   created_by: bigint | null
+  cancelled_at: Date | null
+  cancelled_by: bigint | null
+  cancel_reason: string | null
+  quote_id: bigint | null
   created_at: Date | null
   updated_at: Date | null
 }
@@ -92,6 +104,10 @@ export type Treatment_invoicesCountAggregateOutputType = {
   remaining_amount: number
   status: number
   created_by: number
+  cancelled_at: number
+  cancelled_by: number
+  cancel_reason: number
+  quote_id: number
   created_at: number
   updated_at: number
   _all: number
@@ -107,6 +123,8 @@ export type Treatment_invoicesAvgAggregateInputType = {
   amount_paid?: true
   remaining_amount?: true
   created_by?: true
+  cancelled_by?: true
+  quote_id?: true
 }
 
 export type Treatment_invoicesSumAggregateInputType = {
@@ -118,6 +136,8 @@ export type Treatment_invoicesSumAggregateInputType = {
   amount_paid?: true
   remaining_amount?: true
   created_by?: true
+  cancelled_by?: true
+  quote_id?: true
 }
 
 export type Treatment_invoicesMinAggregateInputType = {
@@ -132,6 +152,10 @@ export type Treatment_invoicesMinAggregateInputType = {
   remaining_amount?: true
   status?: true
   created_by?: true
+  cancelled_at?: true
+  cancelled_by?: true
+  cancel_reason?: true
+  quote_id?: true
   created_at?: true
   updated_at?: true
 }
@@ -148,6 +172,10 @@ export type Treatment_invoicesMaxAggregateInputType = {
   remaining_amount?: true
   status?: true
   created_by?: true
+  cancelled_at?: true
+  cancelled_by?: true
+  cancel_reason?: true
+  quote_id?: true
   created_at?: true
   updated_at?: true
 }
@@ -164,6 +192,10 @@ export type Treatment_invoicesCountAggregateInputType = {
   remaining_amount?: true
   status?: true
   created_by?: true
+  cancelled_at?: true
+  cancelled_by?: true
+  cancel_reason?: true
+  quote_id?: true
   created_at?: true
   updated_at?: true
   _all?: true
@@ -267,6 +299,10 @@ export type Treatment_invoicesGroupByOutputType = {
   remaining_amount: runtime.Decimal
   status: string
   created_by: bigint | null
+  cancelled_at: Date | null
+  cancelled_by: bigint | null
+  cancel_reason: string | null
+  quote_id: bigint | null
   created_at: Date
   updated_at: Date
   _count: Treatment_invoicesCountAggregateOutputType | null
@@ -306,9 +342,15 @@ export type treatment_invoicesWhereInput = {
   remaining_amount?: Prisma.DecimalFilter<"treatment_invoices"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: Prisma.StringFilter<"treatment_invoices"> | string
   created_by?: Prisma.BigIntNullableFilter<"treatment_invoices"> | bigint | number | null
+  cancelled_at?: Prisma.DateTimeNullableFilter<"treatment_invoices"> | Date | string | null
+  cancelled_by?: Prisma.BigIntNullableFilter<"treatment_invoices"> | bigint | number | null
+  cancel_reason?: Prisma.StringNullableFilter<"treatment_invoices"> | string | null
+  quote_id?: Prisma.BigIntNullableFilter<"treatment_invoices"> | bigint | number | null
   created_at?: Prisma.DateTimeFilter<"treatment_invoices"> | Date | string
   updated_at?: Prisma.DateTimeFilter<"treatment_invoices"> | Date | string
   organization?: Prisma.XOR<Prisma.OrganizationsScalarRelationFilter, Prisma.organizationsWhereInput>
+  canceller?: Prisma.XOR<Prisma.UsersNullableScalarRelationFilter, Prisma.usersWhereInput> | null
+  quote?: Prisma.XOR<Prisma.QuotesNullableScalarRelationFilter, Prisma.quotesWhereInput> | null
   branch?: Prisma.XOR<Prisma.BranchesNullableScalarRelationFilter, Prisma.branchesWhereInput> | null
   patient?: Prisma.XOR<Prisma.Patient_profilesScalarRelationFilter, Prisma.patient_profilesWhereInput>
   creator?: Prisma.XOR<Prisma.UsersNullableScalarRelationFilter, Prisma.usersWhereInput> | null
@@ -329,9 +371,15 @@ export type treatment_invoicesOrderByWithRelationInput = {
   remaining_amount?: Prisma.SortOrder
   status?: Prisma.SortOrder
   created_by?: Prisma.SortOrderInput | Prisma.SortOrder
+  cancelled_at?: Prisma.SortOrderInput | Prisma.SortOrder
+  cancelled_by?: Prisma.SortOrderInput | Prisma.SortOrder
+  cancel_reason?: Prisma.SortOrderInput | Prisma.SortOrder
+  quote_id?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
   organization?: Prisma.organizationsOrderByWithRelationInput
+  canceller?: Prisma.usersOrderByWithRelationInput
+  quote?: Prisma.quotesOrderByWithRelationInput
   branch?: Prisma.branchesOrderByWithRelationInput
   patient?: Prisma.patient_profilesOrderByWithRelationInput
   creator?: Prisma.usersOrderByWithRelationInput
@@ -355,9 +403,15 @@ export type treatment_invoicesWhereUniqueInput = Prisma.AtLeast<{
   remaining_amount?: Prisma.DecimalFilter<"treatment_invoices"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: Prisma.StringFilter<"treatment_invoices"> | string
   created_by?: Prisma.BigIntNullableFilter<"treatment_invoices"> | bigint | number | null
+  cancelled_at?: Prisma.DateTimeNullableFilter<"treatment_invoices"> | Date | string | null
+  cancelled_by?: Prisma.BigIntNullableFilter<"treatment_invoices"> | bigint | number | null
+  cancel_reason?: Prisma.StringNullableFilter<"treatment_invoices"> | string | null
+  quote_id?: Prisma.BigIntNullableFilter<"treatment_invoices"> | bigint | number | null
   created_at?: Prisma.DateTimeFilter<"treatment_invoices"> | Date | string
   updated_at?: Prisma.DateTimeFilter<"treatment_invoices"> | Date | string
   organization?: Prisma.XOR<Prisma.OrganizationsScalarRelationFilter, Prisma.organizationsWhereInput>
+  canceller?: Prisma.XOR<Prisma.UsersNullableScalarRelationFilter, Prisma.usersWhereInput> | null
+  quote?: Prisma.XOR<Prisma.QuotesNullableScalarRelationFilter, Prisma.quotesWhereInput> | null
   branch?: Prisma.XOR<Prisma.BranchesNullableScalarRelationFilter, Prisma.branchesWhereInput> | null
   patient?: Prisma.XOR<Prisma.Patient_profilesScalarRelationFilter, Prisma.patient_profilesWhereInput>
   creator?: Prisma.XOR<Prisma.UsersNullableScalarRelationFilter, Prisma.usersWhereInput> | null
@@ -378,6 +432,10 @@ export type treatment_invoicesOrderByWithAggregationInput = {
   remaining_amount?: Prisma.SortOrder
   status?: Prisma.SortOrder
   created_by?: Prisma.SortOrderInput | Prisma.SortOrder
+  cancelled_at?: Prisma.SortOrderInput | Prisma.SortOrder
+  cancelled_by?: Prisma.SortOrderInput | Prisma.SortOrder
+  cancel_reason?: Prisma.SortOrderInput | Prisma.SortOrder
+  quote_id?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
   _count?: Prisma.treatment_invoicesCountOrderByAggregateInput
@@ -402,6 +460,10 @@ export type treatment_invoicesScalarWhereWithAggregatesInput = {
   remaining_amount?: Prisma.DecimalWithAggregatesFilter<"treatment_invoices"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: Prisma.StringWithAggregatesFilter<"treatment_invoices"> | string
   created_by?: Prisma.BigIntNullableWithAggregatesFilter<"treatment_invoices"> | bigint | number | null
+  cancelled_at?: Prisma.DateTimeNullableWithAggregatesFilter<"treatment_invoices"> | Date | string | null
+  cancelled_by?: Prisma.BigIntNullableWithAggregatesFilter<"treatment_invoices"> | bigint | number | null
+  cancel_reason?: Prisma.StringNullableWithAggregatesFilter<"treatment_invoices"> | string | null
+  quote_id?: Prisma.BigIntNullableWithAggregatesFilter<"treatment_invoices"> | bigint | number | null
   created_at?: Prisma.DateTimeWithAggregatesFilter<"treatment_invoices"> | Date | string
   updated_at?: Prisma.DateTimeWithAggregatesFilter<"treatment_invoices"> | Date | string
 }
@@ -414,9 +476,13 @@ export type treatment_invoicesCreateInput = {
   amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: string
+  cancelled_at?: Date | string | null
+  cancel_reason?: string | null
   created_at?: Date | string
   updated_at?: Date | string
   organization?: Prisma.organizationsCreateNestedOneWithoutTreatment_invoicesInput
+  canceller?: Prisma.usersCreateNestedOneWithoutTreatment_invoices_cancelledInput
+  quote?: Prisma.quotesCreateNestedOneWithoutInvoicesInput
   branch?: Prisma.branchesCreateNestedOneWithoutTreatment_invoicesInput
   patient: Prisma.patient_profilesCreateNestedOneWithoutTreatment_invoicesInput
   creator?: Prisma.usersCreateNestedOneWithoutTreatment_invoices_createdInput
@@ -437,6 +503,10 @@ export type treatment_invoicesUncheckedCreateInput = {
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: string
   created_by?: bigint | number | null
+  cancelled_at?: Date | string | null
+  cancelled_by?: bigint | number | null
+  cancel_reason?: string | null
+  quote_id?: bigint | number | null
   created_at?: Date | string
   updated_at?: Date | string
   line_items?: Prisma.invoice_line_itemsUncheckedCreateNestedManyWithoutInvoiceInput
@@ -452,9 +522,13 @@ export type treatment_invoicesUpdateInput = {
   amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  cancelled_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancel_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   organization?: Prisma.organizationsUpdateOneRequiredWithoutTreatment_invoicesNestedInput
+  canceller?: Prisma.usersUpdateOneWithoutTreatment_invoices_cancelledNestedInput
+  quote?: Prisma.quotesUpdateOneWithoutInvoicesNestedInput
   branch?: Prisma.branchesUpdateOneWithoutTreatment_invoicesNestedInput
   patient?: Prisma.patient_profilesUpdateOneRequiredWithoutTreatment_invoicesNestedInput
   creator?: Prisma.usersUpdateOneWithoutTreatment_invoices_createdNestedInput
@@ -475,6 +549,10 @@ export type treatment_invoicesUncheckedUpdateInput = {
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  cancelled_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancelled_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  cancel_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  quote_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   line_items?: Prisma.invoice_line_itemsUncheckedUpdateManyWithoutInvoiceNestedInput
@@ -494,6 +572,10 @@ export type treatment_invoicesCreateManyInput = {
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: string
   created_by?: bigint | number | null
+  cancelled_at?: Date | string | null
+  cancelled_by?: bigint | number | null
+  cancel_reason?: string | null
+  quote_id?: bigint | number | null
   created_at?: Date | string
   updated_at?: Date | string
 }
@@ -506,6 +588,8 @@ export type treatment_invoicesUpdateManyMutationInput = {
   amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  cancelled_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancel_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -522,6 +606,10 @@ export type treatment_invoicesUncheckedUpdateManyInput = {
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  cancelled_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancelled_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  cancel_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  quote_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -553,6 +641,10 @@ export type treatment_invoicesCountOrderByAggregateInput = {
   remaining_amount?: Prisma.SortOrder
   status?: Prisma.SortOrder
   created_by?: Prisma.SortOrder
+  cancelled_at?: Prisma.SortOrder
+  cancelled_by?: Prisma.SortOrder
+  cancel_reason?: Prisma.SortOrder
+  quote_id?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
 }
@@ -566,6 +658,8 @@ export type treatment_invoicesAvgOrderByAggregateInput = {
   amount_paid?: Prisma.SortOrder
   remaining_amount?: Prisma.SortOrder
   created_by?: Prisma.SortOrder
+  cancelled_by?: Prisma.SortOrder
+  quote_id?: Prisma.SortOrder
 }
 
 export type treatment_invoicesMaxOrderByAggregateInput = {
@@ -580,6 +674,10 @@ export type treatment_invoicesMaxOrderByAggregateInput = {
   remaining_amount?: Prisma.SortOrder
   status?: Prisma.SortOrder
   created_by?: Prisma.SortOrder
+  cancelled_at?: Prisma.SortOrder
+  cancelled_by?: Prisma.SortOrder
+  cancel_reason?: Prisma.SortOrder
+  quote_id?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
 }
@@ -596,6 +694,10 @@ export type treatment_invoicesMinOrderByAggregateInput = {
   remaining_amount?: Prisma.SortOrder
   status?: Prisma.SortOrder
   created_by?: Prisma.SortOrder
+  cancelled_at?: Prisma.SortOrder
+  cancelled_by?: Prisma.SortOrder
+  cancel_reason?: Prisma.SortOrder
+  quote_id?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
 }
@@ -609,6 +711,8 @@ export type treatment_invoicesSumOrderByAggregateInput = {
   amount_paid?: Prisma.SortOrder
   remaining_amount?: Prisma.SortOrder
   created_by?: Prisma.SortOrder
+  cancelled_by?: Prisma.SortOrder
+  quote_id?: Prisma.SortOrder
 }
 
 export type Treatment_invoicesScalarRelationFilter = {
@@ -765,10 +869,24 @@ export type treatment_invoicesCreateNestedManyWithoutCreatorInput = {
   connect?: Prisma.treatment_invoicesWhereUniqueInput | Prisma.treatment_invoicesWhereUniqueInput[]
 }
 
+export type treatment_invoicesCreateNestedManyWithoutCancellerInput = {
+  create?: Prisma.XOR<Prisma.treatment_invoicesCreateWithoutCancellerInput, Prisma.treatment_invoicesUncheckedCreateWithoutCancellerInput> | Prisma.treatment_invoicesCreateWithoutCancellerInput[] | Prisma.treatment_invoicesUncheckedCreateWithoutCancellerInput[]
+  connectOrCreate?: Prisma.treatment_invoicesCreateOrConnectWithoutCancellerInput | Prisma.treatment_invoicesCreateOrConnectWithoutCancellerInput[]
+  createMany?: Prisma.treatment_invoicesCreateManyCancellerInputEnvelope
+  connect?: Prisma.treatment_invoicesWhereUniqueInput | Prisma.treatment_invoicesWhereUniqueInput[]
+}
+
 export type treatment_invoicesUncheckedCreateNestedManyWithoutCreatorInput = {
   create?: Prisma.XOR<Prisma.treatment_invoicesCreateWithoutCreatorInput, Prisma.treatment_invoicesUncheckedCreateWithoutCreatorInput> | Prisma.treatment_invoicesCreateWithoutCreatorInput[] | Prisma.treatment_invoicesUncheckedCreateWithoutCreatorInput[]
   connectOrCreate?: Prisma.treatment_invoicesCreateOrConnectWithoutCreatorInput | Prisma.treatment_invoicesCreateOrConnectWithoutCreatorInput[]
   createMany?: Prisma.treatment_invoicesCreateManyCreatorInputEnvelope
+  connect?: Prisma.treatment_invoicesWhereUniqueInput | Prisma.treatment_invoicesWhereUniqueInput[]
+}
+
+export type treatment_invoicesUncheckedCreateNestedManyWithoutCancellerInput = {
+  create?: Prisma.XOR<Prisma.treatment_invoicesCreateWithoutCancellerInput, Prisma.treatment_invoicesUncheckedCreateWithoutCancellerInput> | Prisma.treatment_invoicesCreateWithoutCancellerInput[] | Prisma.treatment_invoicesUncheckedCreateWithoutCancellerInput[]
+  connectOrCreate?: Prisma.treatment_invoicesCreateOrConnectWithoutCancellerInput | Prisma.treatment_invoicesCreateOrConnectWithoutCancellerInput[]
+  createMany?: Prisma.treatment_invoicesCreateManyCancellerInputEnvelope
   connect?: Prisma.treatment_invoicesWhereUniqueInput | Prisma.treatment_invoicesWhereUniqueInput[]
 }
 
@@ -786,6 +904,20 @@ export type treatment_invoicesUpdateManyWithoutCreatorNestedInput = {
   deleteMany?: Prisma.treatment_invoicesScalarWhereInput | Prisma.treatment_invoicesScalarWhereInput[]
 }
 
+export type treatment_invoicesUpdateManyWithoutCancellerNestedInput = {
+  create?: Prisma.XOR<Prisma.treatment_invoicesCreateWithoutCancellerInput, Prisma.treatment_invoicesUncheckedCreateWithoutCancellerInput> | Prisma.treatment_invoicesCreateWithoutCancellerInput[] | Prisma.treatment_invoicesUncheckedCreateWithoutCancellerInput[]
+  connectOrCreate?: Prisma.treatment_invoicesCreateOrConnectWithoutCancellerInput | Prisma.treatment_invoicesCreateOrConnectWithoutCancellerInput[]
+  upsert?: Prisma.treatment_invoicesUpsertWithWhereUniqueWithoutCancellerInput | Prisma.treatment_invoicesUpsertWithWhereUniqueWithoutCancellerInput[]
+  createMany?: Prisma.treatment_invoicesCreateManyCancellerInputEnvelope
+  set?: Prisma.treatment_invoicesWhereUniqueInput | Prisma.treatment_invoicesWhereUniqueInput[]
+  disconnect?: Prisma.treatment_invoicesWhereUniqueInput | Prisma.treatment_invoicesWhereUniqueInput[]
+  delete?: Prisma.treatment_invoicesWhereUniqueInput | Prisma.treatment_invoicesWhereUniqueInput[]
+  connect?: Prisma.treatment_invoicesWhereUniqueInput | Prisma.treatment_invoicesWhereUniqueInput[]
+  update?: Prisma.treatment_invoicesUpdateWithWhereUniqueWithoutCancellerInput | Prisma.treatment_invoicesUpdateWithWhereUniqueWithoutCancellerInput[]
+  updateMany?: Prisma.treatment_invoicesUpdateManyWithWhereWithoutCancellerInput | Prisma.treatment_invoicesUpdateManyWithWhereWithoutCancellerInput[]
+  deleteMany?: Prisma.treatment_invoicesScalarWhereInput | Prisma.treatment_invoicesScalarWhereInput[]
+}
+
 export type treatment_invoicesUncheckedUpdateManyWithoutCreatorNestedInput = {
   create?: Prisma.XOR<Prisma.treatment_invoicesCreateWithoutCreatorInput, Prisma.treatment_invoicesUncheckedCreateWithoutCreatorInput> | Prisma.treatment_invoicesCreateWithoutCreatorInput[] | Prisma.treatment_invoicesUncheckedCreateWithoutCreatorInput[]
   connectOrCreate?: Prisma.treatment_invoicesCreateOrConnectWithoutCreatorInput | Prisma.treatment_invoicesCreateOrConnectWithoutCreatorInput[]
@@ -797,6 +929,20 @@ export type treatment_invoicesUncheckedUpdateManyWithoutCreatorNestedInput = {
   connect?: Prisma.treatment_invoicesWhereUniqueInput | Prisma.treatment_invoicesWhereUniqueInput[]
   update?: Prisma.treatment_invoicesUpdateWithWhereUniqueWithoutCreatorInput | Prisma.treatment_invoicesUpdateWithWhereUniqueWithoutCreatorInput[]
   updateMany?: Prisma.treatment_invoicesUpdateManyWithWhereWithoutCreatorInput | Prisma.treatment_invoicesUpdateManyWithWhereWithoutCreatorInput[]
+  deleteMany?: Prisma.treatment_invoicesScalarWhereInput | Prisma.treatment_invoicesScalarWhereInput[]
+}
+
+export type treatment_invoicesUncheckedUpdateManyWithoutCancellerNestedInput = {
+  create?: Prisma.XOR<Prisma.treatment_invoicesCreateWithoutCancellerInput, Prisma.treatment_invoicesUncheckedCreateWithoutCancellerInput> | Prisma.treatment_invoicesCreateWithoutCancellerInput[] | Prisma.treatment_invoicesUncheckedCreateWithoutCancellerInput[]
+  connectOrCreate?: Prisma.treatment_invoicesCreateOrConnectWithoutCancellerInput | Prisma.treatment_invoicesCreateOrConnectWithoutCancellerInput[]
+  upsert?: Prisma.treatment_invoicesUpsertWithWhereUniqueWithoutCancellerInput | Prisma.treatment_invoicesUpsertWithWhereUniqueWithoutCancellerInput[]
+  createMany?: Prisma.treatment_invoicesCreateManyCancellerInputEnvelope
+  set?: Prisma.treatment_invoicesWhereUniqueInput | Prisma.treatment_invoicesWhereUniqueInput[]
+  disconnect?: Prisma.treatment_invoicesWhereUniqueInput | Prisma.treatment_invoicesWhereUniqueInput[]
+  delete?: Prisma.treatment_invoicesWhereUniqueInput | Prisma.treatment_invoicesWhereUniqueInput[]
+  connect?: Prisma.treatment_invoicesWhereUniqueInput | Prisma.treatment_invoicesWhereUniqueInput[]
+  update?: Prisma.treatment_invoicesUpdateWithWhereUniqueWithoutCancellerInput | Prisma.treatment_invoicesUpdateWithWhereUniqueWithoutCancellerInput[]
+  updateMany?: Prisma.treatment_invoicesUpdateManyWithWhereWithoutCancellerInput | Prisma.treatment_invoicesUpdateManyWithWhereWithoutCancellerInput[]
   deleteMany?: Prisma.treatment_invoicesScalarWhereInput | Prisma.treatment_invoicesScalarWhereInput[]
 }
 
@@ -828,6 +974,48 @@ export type treatment_invoicesUpdateOneRequiredWithoutInvoice_paymentsNestedInpu
   update?: Prisma.XOR<Prisma.XOR<Prisma.treatment_invoicesUpdateToOneWithWhereWithoutInvoice_paymentsInput, Prisma.treatment_invoicesUpdateWithoutInvoice_paymentsInput>, Prisma.treatment_invoicesUncheckedUpdateWithoutInvoice_paymentsInput>
 }
 
+export type treatment_invoicesCreateNestedManyWithoutQuoteInput = {
+  create?: Prisma.XOR<Prisma.treatment_invoicesCreateWithoutQuoteInput, Prisma.treatment_invoicesUncheckedCreateWithoutQuoteInput> | Prisma.treatment_invoicesCreateWithoutQuoteInput[] | Prisma.treatment_invoicesUncheckedCreateWithoutQuoteInput[]
+  connectOrCreate?: Prisma.treatment_invoicesCreateOrConnectWithoutQuoteInput | Prisma.treatment_invoicesCreateOrConnectWithoutQuoteInput[]
+  createMany?: Prisma.treatment_invoicesCreateManyQuoteInputEnvelope
+  connect?: Prisma.treatment_invoicesWhereUniqueInput | Prisma.treatment_invoicesWhereUniqueInput[]
+}
+
+export type treatment_invoicesUncheckedCreateNestedManyWithoutQuoteInput = {
+  create?: Prisma.XOR<Prisma.treatment_invoicesCreateWithoutQuoteInput, Prisma.treatment_invoicesUncheckedCreateWithoutQuoteInput> | Prisma.treatment_invoicesCreateWithoutQuoteInput[] | Prisma.treatment_invoicesUncheckedCreateWithoutQuoteInput[]
+  connectOrCreate?: Prisma.treatment_invoicesCreateOrConnectWithoutQuoteInput | Prisma.treatment_invoicesCreateOrConnectWithoutQuoteInput[]
+  createMany?: Prisma.treatment_invoicesCreateManyQuoteInputEnvelope
+  connect?: Prisma.treatment_invoicesWhereUniqueInput | Prisma.treatment_invoicesWhereUniqueInput[]
+}
+
+export type treatment_invoicesUpdateManyWithoutQuoteNestedInput = {
+  create?: Prisma.XOR<Prisma.treatment_invoicesCreateWithoutQuoteInput, Prisma.treatment_invoicesUncheckedCreateWithoutQuoteInput> | Prisma.treatment_invoicesCreateWithoutQuoteInput[] | Prisma.treatment_invoicesUncheckedCreateWithoutQuoteInput[]
+  connectOrCreate?: Prisma.treatment_invoicesCreateOrConnectWithoutQuoteInput | Prisma.treatment_invoicesCreateOrConnectWithoutQuoteInput[]
+  upsert?: Prisma.treatment_invoicesUpsertWithWhereUniqueWithoutQuoteInput | Prisma.treatment_invoicesUpsertWithWhereUniqueWithoutQuoteInput[]
+  createMany?: Prisma.treatment_invoicesCreateManyQuoteInputEnvelope
+  set?: Prisma.treatment_invoicesWhereUniqueInput | Prisma.treatment_invoicesWhereUniqueInput[]
+  disconnect?: Prisma.treatment_invoicesWhereUniqueInput | Prisma.treatment_invoicesWhereUniqueInput[]
+  delete?: Prisma.treatment_invoicesWhereUniqueInput | Prisma.treatment_invoicesWhereUniqueInput[]
+  connect?: Prisma.treatment_invoicesWhereUniqueInput | Prisma.treatment_invoicesWhereUniqueInput[]
+  update?: Prisma.treatment_invoicesUpdateWithWhereUniqueWithoutQuoteInput | Prisma.treatment_invoicesUpdateWithWhereUniqueWithoutQuoteInput[]
+  updateMany?: Prisma.treatment_invoicesUpdateManyWithWhereWithoutQuoteInput | Prisma.treatment_invoicesUpdateManyWithWhereWithoutQuoteInput[]
+  deleteMany?: Prisma.treatment_invoicesScalarWhereInput | Prisma.treatment_invoicesScalarWhereInput[]
+}
+
+export type treatment_invoicesUncheckedUpdateManyWithoutQuoteNestedInput = {
+  create?: Prisma.XOR<Prisma.treatment_invoicesCreateWithoutQuoteInput, Prisma.treatment_invoicesUncheckedCreateWithoutQuoteInput> | Prisma.treatment_invoicesCreateWithoutQuoteInput[] | Prisma.treatment_invoicesUncheckedCreateWithoutQuoteInput[]
+  connectOrCreate?: Prisma.treatment_invoicesCreateOrConnectWithoutQuoteInput | Prisma.treatment_invoicesCreateOrConnectWithoutQuoteInput[]
+  upsert?: Prisma.treatment_invoicesUpsertWithWhereUniqueWithoutQuoteInput | Prisma.treatment_invoicesUpsertWithWhereUniqueWithoutQuoteInput[]
+  createMany?: Prisma.treatment_invoicesCreateManyQuoteInputEnvelope
+  set?: Prisma.treatment_invoicesWhereUniqueInput | Prisma.treatment_invoicesWhereUniqueInput[]
+  disconnect?: Prisma.treatment_invoicesWhereUniqueInput | Prisma.treatment_invoicesWhereUniqueInput[]
+  delete?: Prisma.treatment_invoicesWhereUniqueInput | Prisma.treatment_invoicesWhereUniqueInput[]
+  connect?: Prisma.treatment_invoicesWhereUniqueInput | Prisma.treatment_invoicesWhereUniqueInput[]
+  update?: Prisma.treatment_invoicesUpdateWithWhereUniqueWithoutQuoteInput | Prisma.treatment_invoicesUpdateWithWhereUniqueWithoutQuoteInput[]
+  updateMany?: Prisma.treatment_invoicesUpdateManyWithWhereWithoutQuoteInput | Prisma.treatment_invoicesUpdateManyWithWhereWithoutQuoteInput[]
+  deleteMany?: Prisma.treatment_invoicesScalarWhereInput | Prisma.treatment_invoicesScalarWhereInput[]
+}
+
 export type treatment_invoicesCreateWithoutOrganizationInput = {
   id?: bigint | number
   procedure_date: Date | string
@@ -836,8 +1024,12 @@ export type treatment_invoicesCreateWithoutOrganizationInput = {
   amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: string
+  cancelled_at?: Date | string | null
+  cancel_reason?: string | null
   created_at?: Date | string
   updated_at?: Date | string
+  canceller?: Prisma.usersCreateNestedOneWithoutTreatment_invoices_cancelledInput
+  quote?: Prisma.quotesCreateNestedOneWithoutInvoicesInput
   branch?: Prisma.branchesCreateNestedOneWithoutTreatment_invoicesInput
   patient: Prisma.patient_profilesCreateNestedOneWithoutTreatment_invoicesInput
   creator?: Prisma.usersCreateNestedOneWithoutTreatment_invoices_createdInput
@@ -857,6 +1049,10 @@ export type treatment_invoicesUncheckedCreateWithoutOrganizationInput = {
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: string
   created_by?: bigint | number | null
+  cancelled_at?: Date | string | null
+  cancelled_by?: bigint | number | null
+  cancel_reason?: string | null
+  quote_id?: bigint | number | null
   created_at?: Date | string
   updated_at?: Date | string
   line_items?: Prisma.invoice_line_itemsUncheckedCreateNestedManyWithoutInvoiceInput
@@ -905,6 +1101,10 @@ export type treatment_invoicesScalarWhereInput = {
   remaining_amount?: Prisma.DecimalFilter<"treatment_invoices"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: Prisma.StringFilter<"treatment_invoices"> | string
   created_by?: Prisma.BigIntNullableFilter<"treatment_invoices"> | bigint | number | null
+  cancelled_at?: Prisma.DateTimeNullableFilter<"treatment_invoices"> | Date | string | null
+  cancelled_by?: Prisma.BigIntNullableFilter<"treatment_invoices"> | bigint | number | null
+  cancel_reason?: Prisma.StringNullableFilter<"treatment_invoices"> | string | null
+  quote_id?: Prisma.BigIntNullableFilter<"treatment_invoices"> | bigint | number | null
   created_at?: Prisma.DateTimeFilter<"treatment_invoices"> | Date | string
   updated_at?: Prisma.DateTimeFilter<"treatment_invoices"> | Date | string
 }
@@ -917,9 +1117,13 @@ export type treatment_invoicesCreateWithoutBranchInput = {
   amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: string
+  cancelled_at?: Date | string | null
+  cancel_reason?: string | null
   created_at?: Date | string
   updated_at?: Date | string
   organization?: Prisma.organizationsCreateNestedOneWithoutTreatment_invoicesInput
+  canceller?: Prisma.usersCreateNestedOneWithoutTreatment_invoices_cancelledInput
+  quote?: Prisma.quotesCreateNestedOneWithoutInvoicesInput
   patient: Prisma.patient_profilesCreateNestedOneWithoutTreatment_invoicesInput
   creator?: Prisma.usersCreateNestedOneWithoutTreatment_invoices_createdInput
   line_items?: Prisma.invoice_line_itemsCreateNestedManyWithoutInvoiceInput
@@ -938,6 +1142,10 @@ export type treatment_invoicesUncheckedCreateWithoutBranchInput = {
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: string
   created_by?: bigint | number | null
+  cancelled_at?: Date | string | null
+  cancelled_by?: bigint | number | null
+  cancel_reason?: string | null
+  quote_id?: bigint | number | null
   created_at?: Date | string
   updated_at?: Date | string
   line_items?: Prisma.invoice_line_itemsUncheckedCreateNestedManyWithoutInvoiceInput
@@ -979,9 +1187,13 @@ export type treatment_invoicesCreateWithoutPatientInput = {
   amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: string
+  cancelled_at?: Date | string | null
+  cancel_reason?: string | null
   created_at?: Date | string
   updated_at?: Date | string
   organization?: Prisma.organizationsCreateNestedOneWithoutTreatment_invoicesInput
+  canceller?: Prisma.usersCreateNestedOneWithoutTreatment_invoices_cancelledInput
+  quote?: Prisma.quotesCreateNestedOneWithoutInvoicesInput
   branch?: Prisma.branchesCreateNestedOneWithoutTreatment_invoicesInput
   creator?: Prisma.usersCreateNestedOneWithoutTreatment_invoices_createdInput
   line_items?: Prisma.invoice_line_itemsCreateNestedManyWithoutInvoiceInput
@@ -1000,6 +1212,10 @@ export type treatment_invoicesUncheckedCreateWithoutPatientInput = {
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: string
   created_by?: bigint | number | null
+  cancelled_at?: Date | string | null
+  cancelled_by?: bigint | number | null
+  cancel_reason?: string | null
+  quote_id?: bigint | number | null
   created_at?: Date | string
   updated_at?: Date | string
   line_items?: Prisma.invoice_line_itemsUncheckedCreateNestedManyWithoutInvoiceInput
@@ -1041,9 +1257,13 @@ export type treatment_invoicesCreateWithoutPatient_recordsInput = {
   amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: string
+  cancelled_at?: Date | string | null
+  cancel_reason?: string | null
   created_at?: Date | string
   updated_at?: Date | string
   organization?: Prisma.organizationsCreateNestedOneWithoutTreatment_invoicesInput
+  canceller?: Prisma.usersCreateNestedOneWithoutTreatment_invoices_cancelledInput
+  quote?: Prisma.quotesCreateNestedOneWithoutInvoicesInput
   branch?: Prisma.branchesCreateNestedOneWithoutTreatment_invoicesInput
   patient: Prisma.patient_profilesCreateNestedOneWithoutTreatment_invoicesInput
   creator?: Prisma.usersCreateNestedOneWithoutTreatment_invoices_createdInput
@@ -1063,6 +1283,10 @@ export type treatment_invoicesUncheckedCreateWithoutPatient_recordsInput = {
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: string
   created_by?: bigint | number | null
+  cancelled_at?: Date | string | null
+  cancelled_by?: bigint | number | null
+  cancel_reason?: string | null
+  quote_id?: bigint | number | null
   created_at?: Date | string
   updated_at?: Date | string
   line_items?: Prisma.invoice_line_itemsUncheckedCreateNestedManyWithoutInvoiceInput
@@ -1093,9 +1317,13 @@ export type treatment_invoicesUpdateWithoutPatient_recordsInput = {
   amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  cancelled_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancel_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   organization?: Prisma.organizationsUpdateOneRequiredWithoutTreatment_invoicesNestedInput
+  canceller?: Prisma.usersUpdateOneWithoutTreatment_invoices_cancelledNestedInput
+  quote?: Prisma.quotesUpdateOneWithoutInvoicesNestedInput
   branch?: Prisma.branchesUpdateOneWithoutTreatment_invoicesNestedInput
   patient?: Prisma.patient_profilesUpdateOneRequiredWithoutTreatment_invoicesNestedInput
   creator?: Prisma.usersUpdateOneWithoutTreatment_invoices_createdNestedInput
@@ -1115,6 +1343,10 @@ export type treatment_invoicesUncheckedUpdateWithoutPatient_recordsInput = {
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  cancelled_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancelled_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  cancel_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  quote_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   line_items?: Prisma.invoice_line_itemsUncheckedUpdateManyWithoutInvoiceNestedInput
@@ -1129,9 +1361,13 @@ export type treatment_invoicesCreateWithoutCreatorInput = {
   amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: string
+  cancelled_at?: Date | string | null
+  cancel_reason?: string | null
   created_at?: Date | string
   updated_at?: Date | string
   organization?: Prisma.organizationsCreateNestedOneWithoutTreatment_invoicesInput
+  canceller?: Prisma.usersCreateNestedOneWithoutTreatment_invoices_cancelledInput
+  quote?: Prisma.quotesCreateNestedOneWithoutInvoicesInput
   branch?: Prisma.branchesCreateNestedOneWithoutTreatment_invoicesInput
   patient: Prisma.patient_profilesCreateNestedOneWithoutTreatment_invoicesInput
   line_items?: Prisma.invoice_line_itemsCreateNestedManyWithoutInvoiceInput
@@ -1150,6 +1386,10 @@ export type treatment_invoicesUncheckedCreateWithoutCreatorInput = {
   amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: string
+  cancelled_at?: Date | string | null
+  cancelled_by?: bigint | number | null
+  cancel_reason?: string | null
+  quote_id?: bigint | number | null
   created_at?: Date | string
   updated_at?: Date | string
   line_items?: Prisma.invoice_line_itemsUncheckedCreateNestedManyWithoutInvoiceInput
@@ -1164,6 +1404,60 @@ export type treatment_invoicesCreateOrConnectWithoutCreatorInput = {
 
 export type treatment_invoicesCreateManyCreatorInputEnvelope = {
   data: Prisma.treatment_invoicesCreateManyCreatorInput | Prisma.treatment_invoicesCreateManyCreatorInput[]
+  skipDuplicates?: boolean
+}
+
+export type treatment_invoicesCreateWithoutCancellerInput = {
+  id?: bigint | number
+  procedure_date: Date | string
+  notes?: string | null
+  total_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  status?: string
+  cancelled_at?: Date | string | null
+  cancel_reason?: string | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  organization?: Prisma.organizationsCreateNestedOneWithoutTreatment_invoicesInput
+  quote?: Prisma.quotesCreateNestedOneWithoutInvoicesInput
+  branch?: Prisma.branchesCreateNestedOneWithoutTreatment_invoicesInput
+  patient: Prisma.patient_profilesCreateNestedOneWithoutTreatment_invoicesInput
+  creator?: Prisma.usersCreateNestedOneWithoutTreatment_invoices_createdInput
+  line_items?: Prisma.invoice_line_itemsCreateNestedManyWithoutInvoiceInput
+  invoice_payments?: Prisma.invoice_paymentsCreateNestedManyWithoutInvoiceInput
+  patient_records?: Prisma.patient_recordsCreateNestedManyWithoutInvoiceInput
+}
+
+export type treatment_invoicesUncheckedCreateWithoutCancellerInput = {
+  id?: bigint | number
+  organization_id?: bigint | number
+  branch_id?: bigint | number | null
+  patient_id: bigint | number
+  procedure_date: Date | string
+  notes?: string | null
+  total_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  status?: string
+  created_by?: bigint | number | null
+  cancelled_at?: Date | string | null
+  cancel_reason?: string | null
+  quote_id?: bigint | number | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  line_items?: Prisma.invoice_line_itemsUncheckedCreateNestedManyWithoutInvoiceInput
+  invoice_payments?: Prisma.invoice_paymentsUncheckedCreateNestedManyWithoutInvoiceInput
+  patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutInvoiceInput
+}
+
+export type treatment_invoicesCreateOrConnectWithoutCancellerInput = {
+  where: Prisma.treatment_invoicesWhereUniqueInput
+  create: Prisma.XOR<Prisma.treatment_invoicesCreateWithoutCancellerInput, Prisma.treatment_invoicesUncheckedCreateWithoutCancellerInput>
+}
+
+export type treatment_invoicesCreateManyCancellerInputEnvelope = {
+  data: Prisma.treatment_invoicesCreateManyCancellerInput | Prisma.treatment_invoicesCreateManyCancellerInput[]
   skipDuplicates?: boolean
 }
 
@@ -1183,6 +1477,22 @@ export type treatment_invoicesUpdateManyWithWhereWithoutCreatorInput = {
   data: Prisma.XOR<Prisma.treatment_invoicesUpdateManyMutationInput, Prisma.treatment_invoicesUncheckedUpdateManyWithoutCreatorInput>
 }
 
+export type treatment_invoicesUpsertWithWhereUniqueWithoutCancellerInput = {
+  where: Prisma.treatment_invoicesWhereUniqueInput
+  update: Prisma.XOR<Prisma.treatment_invoicesUpdateWithoutCancellerInput, Prisma.treatment_invoicesUncheckedUpdateWithoutCancellerInput>
+  create: Prisma.XOR<Prisma.treatment_invoicesCreateWithoutCancellerInput, Prisma.treatment_invoicesUncheckedCreateWithoutCancellerInput>
+}
+
+export type treatment_invoicesUpdateWithWhereUniqueWithoutCancellerInput = {
+  where: Prisma.treatment_invoicesWhereUniqueInput
+  data: Prisma.XOR<Prisma.treatment_invoicesUpdateWithoutCancellerInput, Prisma.treatment_invoicesUncheckedUpdateWithoutCancellerInput>
+}
+
+export type treatment_invoicesUpdateManyWithWhereWithoutCancellerInput = {
+  where: Prisma.treatment_invoicesScalarWhereInput
+  data: Prisma.XOR<Prisma.treatment_invoicesUpdateManyMutationInput, Prisma.treatment_invoicesUncheckedUpdateManyWithoutCancellerInput>
+}
+
 export type treatment_invoicesCreateWithoutLine_itemsInput = {
   id?: bigint | number
   procedure_date: Date | string
@@ -1191,9 +1501,13 @@ export type treatment_invoicesCreateWithoutLine_itemsInput = {
   amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: string
+  cancelled_at?: Date | string | null
+  cancel_reason?: string | null
   created_at?: Date | string
   updated_at?: Date | string
   organization?: Prisma.organizationsCreateNestedOneWithoutTreatment_invoicesInput
+  canceller?: Prisma.usersCreateNestedOneWithoutTreatment_invoices_cancelledInput
+  quote?: Prisma.quotesCreateNestedOneWithoutInvoicesInput
   branch?: Prisma.branchesCreateNestedOneWithoutTreatment_invoicesInput
   patient: Prisma.patient_profilesCreateNestedOneWithoutTreatment_invoicesInput
   creator?: Prisma.usersCreateNestedOneWithoutTreatment_invoices_createdInput
@@ -1213,6 +1527,10 @@ export type treatment_invoicesUncheckedCreateWithoutLine_itemsInput = {
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: string
   created_by?: bigint | number | null
+  cancelled_at?: Date | string | null
+  cancelled_by?: bigint | number | null
+  cancel_reason?: string | null
+  quote_id?: bigint | number | null
   created_at?: Date | string
   updated_at?: Date | string
   invoice_payments?: Prisma.invoice_paymentsUncheckedCreateNestedManyWithoutInvoiceInput
@@ -1243,9 +1561,13 @@ export type treatment_invoicesUpdateWithoutLine_itemsInput = {
   amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  cancelled_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancel_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   organization?: Prisma.organizationsUpdateOneRequiredWithoutTreatment_invoicesNestedInput
+  canceller?: Prisma.usersUpdateOneWithoutTreatment_invoices_cancelledNestedInput
+  quote?: Prisma.quotesUpdateOneWithoutInvoicesNestedInput
   branch?: Prisma.branchesUpdateOneWithoutTreatment_invoicesNestedInput
   patient?: Prisma.patient_profilesUpdateOneRequiredWithoutTreatment_invoicesNestedInput
   creator?: Prisma.usersUpdateOneWithoutTreatment_invoices_createdNestedInput
@@ -1265,6 +1587,10 @@ export type treatment_invoicesUncheckedUpdateWithoutLine_itemsInput = {
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  cancelled_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancelled_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  cancel_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  quote_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   invoice_payments?: Prisma.invoice_paymentsUncheckedUpdateManyWithoutInvoiceNestedInput
@@ -1279,9 +1605,13 @@ export type treatment_invoicesCreateWithoutInvoice_paymentsInput = {
   amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: string
+  cancelled_at?: Date | string | null
+  cancel_reason?: string | null
   created_at?: Date | string
   updated_at?: Date | string
   organization?: Prisma.organizationsCreateNestedOneWithoutTreatment_invoicesInput
+  canceller?: Prisma.usersCreateNestedOneWithoutTreatment_invoices_cancelledInput
+  quote?: Prisma.quotesCreateNestedOneWithoutInvoicesInput
   branch?: Prisma.branchesCreateNestedOneWithoutTreatment_invoicesInput
   patient: Prisma.patient_profilesCreateNestedOneWithoutTreatment_invoicesInput
   creator?: Prisma.usersCreateNestedOneWithoutTreatment_invoices_createdInput
@@ -1301,6 +1631,10 @@ export type treatment_invoicesUncheckedCreateWithoutInvoice_paymentsInput = {
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: string
   created_by?: bigint | number | null
+  cancelled_at?: Date | string | null
+  cancelled_by?: bigint | number | null
+  cancel_reason?: string | null
+  quote_id?: bigint | number | null
   created_at?: Date | string
   updated_at?: Date | string
   line_items?: Prisma.invoice_line_itemsUncheckedCreateNestedManyWithoutInvoiceInput
@@ -1331,9 +1665,13 @@ export type treatment_invoicesUpdateWithoutInvoice_paymentsInput = {
   amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  cancelled_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancel_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   organization?: Prisma.organizationsUpdateOneRequiredWithoutTreatment_invoicesNestedInput
+  canceller?: Prisma.usersUpdateOneWithoutTreatment_invoices_cancelledNestedInput
+  quote?: Prisma.quotesUpdateOneWithoutInvoicesNestedInput
   branch?: Prisma.branchesUpdateOneWithoutTreatment_invoicesNestedInput
   patient?: Prisma.patient_profilesUpdateOneRequiredWithoutTreatment_invoicesNestedInput
   creator?: Prisma.usersUpdateOneWithoutTreatment_invoices_createdNestedInput
@@ -1353,10 +1691,84 @@ export type treatment_invoicesUncheckedUpdateWithoutInvoice_paymentsInput = {
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  cancelled_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancelled_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  cancel_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  quote_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   line_items?: Prisma.invoice_line_itemsUncheckedUpdateManyWithoutInvoiceNestedInput
   patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutInvoiceNestedInput
+}
+
+export type treatment_invoicesCreateWithoutQuoteInput = {
+  id?: bigint | number
+  procedure_date: Date | string
+  notes?: string | null
+  total_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  status?: string
+  cancelled_at?: Date | string | null
+  cancel_reason?: string | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  organization?: Prisma.organizationsCreateNestedOneWithoutTreatment_invoicesInput
+  canceller?: Prisma.usersCreateNestedOneWithoutTreatment_invoices_cancelledInput
+  branch?: Prisma.branchesCreateNestedOneWithoutTreatment_invoicesInput
+  patient: Prisma.patient_profilesCreateNestedOneWithoutTreatment_invoicesInput
+  creator?: Prisma.usersCreateNestedOneWithoutTreatment_invoices_createdInput
+  line_items?: Prisma.invoice_line_itemsCreateNestedManyWithoutInvoiceInput
+  invoice_payments?: Prisma.invoice_paymentsCreateNestedManyWithoutInvoiceInput
+  patient_records?: Prisma.patient_recordsCreateNestedManyWithoutInvoiceInput
+}
+
+export type treatment_invoicesUncheckedCreateWithoutQuoteInput = {
+  id?: bigint | number
+  organization_id?: bigint | number
+  branch_id?: bigint | number | null
+  patient_id: bigint | number
+  procedure_date: Date | string
+  notes?: string | null
+  total_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  status?: string
+  created_by?: bigint | number | null
+  cancelled_at?: Date | string | null
+  cancelled_by?: bigint | number | null
+  cancel_reason?: string | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  line_items?: Prisma.invoice_line_itemsUncheckedCreateNestedManyWithoutInvoiceInput
+  invoice_payments?: Prisma.invoice_paymentsUncheckedCreateNestedManyWithoutInvoiceInput
+  patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutInvoiceInput
+}
+
+export type treatment_invoicesCreateOrConnectWithoutQuoteInput = {
+  where: Prisma.treatment_invoicesWhereUniqueInput
+  create: Prisma.XOR<Prisma.treatment_invoicesCreateWithoutQuoteInput, Prisma.treatment_invoicesUncheckedCreateWithoutQuoteInput>
+}
+
+export type treatment_invoicesCreateManyQuoteInputEnvelope = {
+  data: Prisma.treatment_invoicesCreateManyQuoteInput | Prisma.treatment_invoicesCreateManyQuoteInput[]
+  skipDuplicates?: boolean
+}
+
+export type treatment_invoicesUpsertWithWhereUniqueWithoutQuoteInput = {
+  where: Prisma.treatment_invoicesWhereUniqueInput
+  update: Prisma.XOR<Prisma.treatment_invoicesUpdateWithoutQuoteInput, Prisma.treatment_invoicesUncheckedUpdateWithoutQuoteInput>
+  create: Prisma.XOR<Prisma.treatment_invoicesCreateWithoutQuoteInput, Prisma.treatment_invoicesUncheckedCreateWithoutQuoteInput>
+}
+
+export type treatment_invoicesUpdateWithWhereUniqueWithoutQuoteInput = {
+  where: Prisma.treatment_invoicesWhereUniqueInput
+  data: Prisma.XOR<Prisma.treatment_invoicesUpdateWithoutQuoteInput, Prisma.treatment_invoicesUncheckedUpdateWithoutQuoteInput>
+}
+
+export type treatment_invoicesUpdateManyWithWhereWithoutQuoteInput = {
+  where: Prisma.treatment_invoicesScalarWhereInput
+  data: Prisma.XOR<Prisma.treatment_invoicesUpdateManyMutationInput, Prisma.treatment_invoicesUncheckedUpdateManyWithoutQuoteInput>
 }
 
 export type treatment_invoicesCreateManyOrganizationInput = {
@@ -1370,6 +1782,10 @@ export type treatment_invoicesCreateManyOrganizationInput = {
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: string
   created_by?: bigint | number | null
+  cancelled_at?: Date | string | null
+  cancelled_by?: bigint | number | null
+  cancel_reason?: string | null
+  quote_id?: bigint | number | null
   created_at?: Date | string
   updated_at?: Date | string
 }
@@ -1382,8 +1798,12 @@ export type treatment_invoicesUpdateWithoutOrganizationInput = {
   amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  cancelled_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancel_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  canceller?: Prisma.usersUpdateOneWithoutTreatment_invoices_cancelledNestedInput
+  quote?: Prisma.quotesUpdateOneWithoutInvoicesNestedInput
   branch?: Prisma.branchesUpdateOneWithoutTreatment_invoicesNestedInput
   patient?: Prisma.patient_profilesUpdateOneRequiredWithoutTreatment_invoicesNestedInput
   creator?: Prisma.usersUpdateOneWithoutTreatment_invoices_createdNestedInput
@@ -1403,6 +1823,10 @@ export type treatment_invoicesUncheckedUpdateWithoutOrganizationInput = {
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  cancelled_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancelled_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  cancel_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  quote_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   line_items?: Prisma.invoice_line_itemsUncheckedUpdateManyWithoutInvoiceNestedInput
@@ -1421,6 +1845,10 @@ export type treatment_invoicesUncheckedUpdateManyWithoutOrganizationInput = {
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  cancelled_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancelled_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  cancel_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  quote_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1436,6 +1864,10 @@ export type treatment_invoicesCreateManyBranchInput = {
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: string
   created_by?: bigint | number | null
+  cancelled_at?: Date | string | null
+  cancelled_by?: bigint | number | null
+  cancel_reason?: string | null
+  quote_id?: bigint | number | null
   created_at?: Date | string
   updated_at?: Date | string
 }
@@ -1448,9 +1880,13 @@ export type treatment_invoicesUpdateWithoutBranchInput = {
   amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  cancelled_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancel_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   organization?: Prisma.organizationsUpdateOneRequiredWithoutTreatment_invoicesNestedInput
+  canceller?: Prisma.usersUpdateOneWithoutTreatment_invoices_cancelledNestedInput
+  quote?: Prisma.quotesUpdateOneWithoutInvoicesNestedInput
   patient?: Prisma.patient_profilesUpdateOneRequiredWithoutTreatment_invoicesNestedInput
   creator?: Prisma.usersUpdateOneWithoutTreatment_invoices_createdNestedInput
   line_items?: Prisma.invoice_line_itemsUpdateManyWithoutInvoiceNestedInput
@@ -1469,6 +1905,10 @@ export type treatment_invoicesUncheckedUpdateWithoutBranchInput = {
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  cancelled_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancelled_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  cancel_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  quote_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   line_items?: Prisma.invoice_line_itemsUncheckedUpdateManyWithoutInvoiceNestedInput
@@ -1487,6 +1927,10 @@ export type treatment_invoicesUncheckedUpdateManyWithoutBranchInput = {
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  cancelled_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancelled_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  cancel_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  quote_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1502,6 +1946,10 @@ export type treatment_invoicesCreateManyPatientInput = {
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: string
   created_by?: bigint | number | null
+  cancelled_at?: Date | string | null
+  cancelled_by?: bigint | number | null
+  cancel_reason?: string | null
+  quote_id?: bigint | number | null
   created_at?: Date | string
   updated_at?: Date | string
 }
@@ -1514,9 +1962,13 @@ export type treatment_invoicesUpdateWithoutPatientInput = {
   amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  cancelled_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancel_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   organization?: Prisma.organizationsUpdateOneRequiredWithoutTreatment_invoicesNestedInput
+  canceller?: Prisma.usersUpdateOneWithoutTreatment_invoices_cancelledNestedInput
+  quote?: Prisma.quotesUpdateOneWithoutInvoicesNestedInput
   branch?: Prisma.branchesUpdateOneWithoutTreatment_invoicesNestedInput
   creator?: Prisma.usersUpdateOneWithoutTreatment_invoices_createdNestedInput
   line_items?: Prisma.invoice_line_itemsUpdateManyWithoutInvoiceNestedInput
@@ -1535,6 +1987,10 @@ export type treatment_invoicesUncheckedUpdateWithoutPatientInput = {
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  cancelled_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancelled_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  cancel_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  quote_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   line_items?: Prisma.invoice_line_itemsUncheckedUpdateManyWithoutInvoiceNestedInput
@@ -1553,6 +2009,10 @@ export type treatment_invoicesUncheckedUpdateManyWithoutPatientInput = {
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  cancelled_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancelled_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  cancel_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  quote_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1568,6 +2028,29 @@ export type treatment_invoicesCreateManyCreatorInput = {
   amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: string
+  cancelled_at?: Date | string | null
+  cancelled_by?: bigint | number | null
+  cancel_reason?: string | null
+  quote_id?: bigint | number | null
+  created_at?: Date | string
+  updated_at?: Date | string
+}
+
+export type treatment_invoicesCreateManyCancellerInput = {
+  id?: bigint | number
+  organization_id?: bigint | number
+  branch_id?: bigint | number | null
+  patient_id: bigint | number
+  procedure_date: Date | string
+  notes?: string | null
+  total_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  status?: string
+  created_by?: bigint | number | null
+  cancelled_at?: Date | string | null
+  cancel_reason?: string | null
+  quote_id?: bigint | number | null
   created_at?: Date | string
   updated_at?: Date | string
 }
@@ -1580,9 +2063,13 @@ export type treatment_invoicesUpdateWithoutCreatorInput = {
   amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  cancelled_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancel_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   organization?: Prisma.organizationsUpdateOneRequiredWithoutTreatment_invoicesNestedInput
+  canceller?: Prisma.usersUpdateOneWithoutTreatment_invoices_cancelledNestedInput
+  quote?: Prisma.quotesUpdateOneWithoutInvoicesNestedInput
   branch?: Prisma.branchesUpdateOneWithoutTreatment_invoicesNestedInput
   patient?: Prisma.patient_profilesUpdateOneRequiredWithoutTreatment_invoicesNestedInput
   line_items?: Prisma.invoice_line_itemsUpdateManyWithoutInvoiceNestedInput
@@ -1601,6 +2088,10 @@ export type treatment_invoicesUncheckedUpdateWithoutCreatorInput = {
   amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  cancelled_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancelled_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  cancel_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  quote_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   line_items?: Prisma.invoice_line_itemsUncheckedUpdateManyWithoutInvoiceNestedInput
@@ -1619,6 +2110,155 @@ export type treatment_invoicesUncheckedUpdateManyWithoutCreatorInput = {
   amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  cancelled_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancelled_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  cancel_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  quote_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type treatment_invoicesUpdateWithoutCancellerInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  procedure_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  total_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  cancelled_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancel_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  organization?: Prisma.organizationsUpdateOneRequiredWithoutTreatment_invoicesNestedInput
+  quote?: Prisma.quotesUpdateOneWithoutInvoicesNestedInput
+  branch?: Prisma.branchesUpdateOneWithoutTreatment_invoicesNestedInput
+  patient?: Prisma.patient_profilesUpdateOneRequiredWithoutTreatment_invoicesNestedInput
+  creator?: Prisma.usersUpdateOneWithoutTreatment_invoices_createdNestedInput
+  line_items?: Prisma.invoice_line_itemsUpdateManyWithoutInvoiceNestedInput
+  invoice_payments?: Prisma.invoice_paymentsUpdateManyWithoutInvoiceNestedInput
+  patient_records?: Prisma.patient_recordsUpdateManyWithoutInvoiceNestedInput
+}
+
+export type treatment_invoicesUncheckedUpdateWithoutCancellerInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  branch_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  procedure_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  total_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  cancelled_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancel_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  quote_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  line_items?: Prisma.invoice_line_itemsUncheckedUpdateManyWithoutInvoiceNestedInput
+  invoice_payments?: Prisma.invoice_paymentsUncheckedUpdateManyWithoutInvoiceNestedInput
+  patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutInvoiceNestedInput
+}
+
+export type treatment_invoicesUncheckedUpdateManyWithoutCancellerInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  branch_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  procedure_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  total_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  cancelled_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancel_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  quote_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type treatment_invoicesCreateManyQuoteInput = {
+  id?: bigint | number
+  organization_id?: bigint | number
+  branch_id?: bigint | number | null
+  patient_id: bigint | number
+  procedure_date: Date | string
+  notes?: string | null
+  total_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  status?: string
+  created_by?: bigint | number | null
+  cancelled_at?: Date | string | null
+  cancelled_by?: bigint | number | null
+  cancel_reason?: string | null
+  created_at?: Date | string
+  updated_at?: Date | string
+}
+
+export type treatment_invoicesUpdateWithoutQuoteInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  procedure_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  total_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  cancelled_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancel_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  organization?: Prisma.organizationsUpdateOneRequiredWithoutTreatment_invoicesNestedInput
+  canceller?: Prisma.usersUpdateOneWithoutTreatment_invoices_cancelledNestedInput
+  branch?: Prisma.branchesUpdateOneWithoutTreatment_invoicesNestedInput
+  patient?: Prisma.patient_profilesUpdateOneRequiredWithoutTreatment_invoicesNestedInput
+  creator?: Prisma.usersUpdateOneWithoutTreatment_invoices_createdNestedInput
+  line_items?: Prisma.invoice_line_itemsUpdateManyWithoutInvoiceNestedInput
+  invoice_payments?: Prisma.invoice_paymentsUpdateManyWithoutInvoiceNestedInput
+  patient_records?: Prisma.patient_recordsUpdateManyWithoutInvoiceNestedInput
+}
+
+export type treatment_invoicesUncheckedUpdateWithoutQuoteInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  branch_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  procedure_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  total_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  cancelled_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancelled_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  cancel_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  line_items?: Prisma.invoice_line_itemsUncheckedUpdateManyWithoutInvoiceNestedInput
+  invoice_payments?: Prisma.invoice_paymentsUncheckedUpdateManyWithoutInvoiceNestedInput
+  patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutInvoiceNestedInput
+}
+
+export type treatment_invoicesUncheckedUpdateManyWithoutQuoteInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  branch_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  procedure_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  total_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  cancelled_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancelled_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  cancel_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1684,9 +2324,15 @@ export type treatment_invoicesSelect<ExtArgs extends runtime.Types.Extensions.In
   remaining_amount?: boolean
   status?: boolean
   created_by?: boolean
+  cancelled_at?: boolean
+  cancelled_by?: boolean
+  cancel_reason?: boolean
+  quote_id?: boolean
   created_at?: boolean
   updated_at?: boolean
   organization?: boolean | Prisma.organizationsDefaultArgs<ExtArgs>
+  canceller?: boolean | Prisma.treatment_invoices$cancellerArgs<ExtArgs>
+  quote?: boolean | Prisma.treatment_invoices$quoteArgs<ExtArgs>
   branch?: boolean | Prisma.treatment_invoices$branchArgs<ExtArgs>
   patient?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
   creator?: boolean | Prisma.treatment_invoices$creatorArgs<ExtArgs>
@@ -1708,9 +2354,15 @@ export type treatment_invoicesSelectCreateManyAndReturn<ExtArgs extends runtime.
   remaining_amount?: boolean
   status?: boolean
   created_by?: boolean
+  cancelled_at?: boolean
+  cancelled_by?: boolean
+  cancel_reason?: boolean
+  quote_id?: boolean
   created_at?: boolean
   updated_at?: boolean
   organization?: boolean | Prisma.organizationsDefaultArgs<ExtArgs>
+  canceller?: boolean | Prisma.treatment_invoices$cancellerArgs<ExtArgs>
+  quote?: boolean | Prisma.treatment_invoices$quoteArgs<ExtArgs>
   branch?: boolean | Prisma.treatment_invoices$branchArgs<ExtArgs>
   patient?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
   creator?: boolean | Prisma.treatment_invoices$creatorArgs<ExtArgs>
@@ -1728,9 +2380,15 @@ export type treatment_invoicesSelectUpdateManyAndReturn<ExtArgs extends runtime.
   remaining_amount?: boolean
   status?: boolean
   created_by?: boolean
+  cancelled_at?: boolean
+  cancelled_by?: boolean
+  cancel_reason?: boolean
+  quote_id?: boolean
   created_at?: boolean
   updated_at?: boolean
   organization?: boolean | Prisma.organizationsDefaultArgs<ExtArgs>
+  canceller?: boolean | Prisma.treatment_invoices$cancellerArgs<ExtArgs>
+  quote?: boolean | Prisma.treatment_invoices$quoteArgs<ExtArgs>
   branch?: boolean | Prisma.treatment_invoices$branchArgs<ExtArgs>
   patient?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
   creator?: boolean | Prisma.treatment_invoices$creatorArgs<ExtArgs>
@@ -1748,13 +2406,19 @@ export type treatment_invoicesSelectScalar = {
   remaining_amount?: boolean
   status?: boolean
   created_by?: boolean
+  cancelled_at?: boolean
+  cancelled_by?: boolean
+  cancel_reason?: boolean
+  quote_id?: boolean
   created_at?: boolean
   updated_at?: boolean
 }
 
-export type treatment_invoicesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "organization_id" | "branch_id" | "patient_id" | "procedure_date" | "notes" | "total_amount" | "amount_paid" | "remaining_amount" | "status" | "created_by" | "created_at" | "updated_at", ExtArgs["result"]["treatment_invoices"]>
+export type treatment_invoicesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "organization_id" | "branch_id" | "patient_id" | "procedure_date" | "notes" | "total_amount" | "amount_paid" | "remaining_amount" | "status" | "created_by" | "cancelled_at" | "cancelled_by" | "cancel_reason" | "quote_id" | "created_at" | "updated_at", ExtArgs["result"]["treatment_invoices"]>
 export type treatment_invoicesInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   organization?: boolean | Prisma.organizationsDefaultArgs<ExtArgs>
+  canceller?: boolean | Prisma.treatment_invoices$cancellerArgs<ExtArgs>
+  quote?: boolean | Prisma.treatment_invoices$quoteArgs<ExtArgs>
   branch?: boolean | Prisma.treatment_invoices$branchArgs<ExtArgs>
   patient?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
   creator?: boolean | Prisma.treatment_invoices$creatorArgs<ExtArgs>
@@ -1765,12 +2429,16 @@ export type treatment_invoicesInclude<ExtArgs extends runtime.Types.Extensions.I
 }
 export type treatment_invoicesIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   organization?: boolean | Prisma.organizationsDefaultArgs<ExtArgs>
+  canceller?: boolean | Prisma.treatment_invoices$cancellerArgs<ExtArgs>
+  quote?: boolean | Prisma.treatment_invoices$quoteArgs<ExtArgs>
   branch?: boolean | Prisma.treatment_invoices$branchArgs<ExtArgs>
   patient?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
   creator?: boolean | Prisma.treatment_invoices$creatorArgs<ExtArgs>
 }
 export type treatment_invoicesIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   organization?: boolean | Prisma.organizationsDefaultArgs<ExtArgs>
+  canceller?: boolean | Prisma.treatment_invoices$cancellerArgs<ExtArgs>
+  quote?: boolean | Prisma.treatment_invoices$quoteArgs<ExtArgs>
   branch?: boolean | Prisma.treatment_invoices$branchArgs<ExtArgs>
   patient?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
   creator?: boolean | Prisma.treatment_invoices$creatorArgs<ExtArgs>
@@ -1780,6 +2448,8 @@ export type $treatment_invoicesPayload<ExtArgs extends runtime.Types.Extensions.
   name: "treatment_invoices"
   objects: {
     organization: Prisma.$organizationsPayload<ExtArgs>
+    canceller: Prisma.$usersPayload<ExtArgs> | null
+    quote: Prisma.$quotesPayload<ExtArgs> | null
     branch: Prisma.$branchesPayload<ExtArgs> | null
     patient: Prisma.$patient_profilesPayload<ExtArgs>
     creator: Prisma.$usersPayload<ExtArgs> | null
@@ -1802,6 +2472,16 @@ export type $treatment_invoicesPayload<ExtArgs extends runtime.Types.Extensions.
     remaining_amount: runtime.Decimal
     status: string
     created_by: bigint | null
+    /**
+     * Set together with status = cancelled (voided): when, by whom and why.
+     */
+    cancelled_at: Date | null
+    cancelled_by: bigint | null
+    cancel_reason: string | null
+    /**
+     * The accepted quote this invoice was born from, if any.
+     */
+    quote_id: bigint | null
     created_at: Date
     updated_at: Date
   }, ExtArgs["result"]["treatment_invoices"]>
@@ -2199,6 +2879,8 @@ readonly fields: treatment_invoicesFieldRefs;
 export interface Prisma__treatment_invoicesClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   organization<T extends Prisma.organizationsDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.organizationsDefaultArgs<ExtArgs>>): Prisma.Prisma__organizationsClient<runtime.Types.Result.GetResult<Prisma.$organizationsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  canceller<T extends Prisma.treatment_invoices$cancellerArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.treatment_invoices$cancellerArgs<ExtArgs>>): Prisma.Prisma__usersClient<runtime.Types.Result.GetResult<Prisma.$usersPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  quote<T extends Prisma.treatment_invoices$quoteArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.treatment_invoices$quoteArgs<ExtArgs>>): Prisma.Prisma__quotesClient<runtime.Types.Result.GetResult<Prisma.$quotesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   branch<T extends Prisma.treatment_invoices$branchArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.treatment_invoices$branchArgs<ExtArgs>>): Prisma.Prisma__branchesClient<runtime.Types.Result.GetResult<Prisma.$branchesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   patient<T extends Prisma.patient_profilesDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.patient_profilesDefaultArgs<ExtArgs>>): Prisma.Prisma__patient_profilesClient<runtime.Types.Result.GetResult<Prisma.$patient_profilesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   creator<T extends Prisma.treatment_invoices$creatorArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.treatment_invoices$creatorArgs<ExtArgs>>): Prisma.Prisma__usersClient<runtime.Types.Result.GetResult<Prisma.$usersPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
@@ -2245,6 +2927,10 @@ export interface treatment_invoicesFieldRefs {
   readonly remaining_amount: Prisma.FieldRef<"treatment_invoices", 'Decimal'>
   readonly status: Prisma.FieldRef<"treatment_invoices", 'String'>
   readonly created_by: Prisma.FieldRef<"treatment_invoices", 'BigInt'>
+  readonly cancelled_at: Prisma.FieldRef<"treatment_invoices", 'DateTime'>
+  readonly cancelled_by: Prisma.FieldRef<"treatment_invoices", 'BigInt'>
+  readonly cancel_reason: Prisma.FieldRef<"treatment_invoices", 'String'>
+  readonly quote_id: Prisma.FieldRef<"treatment_invoices", 'BigInt'>
   readonly created_at: Prisma.FieldRef<"treatment_invoices", 'DateTime'>
   readonly updated_at: Prisma.FieldRef<"treatment_invoices", 'DateTime'>
 }
@@ -2645,6 +3331,44 @@ export type treatment_invoicesDeleteManyArgs<ExtArgs extends runtime.Types.Exten
    * Limit how many treatment_invoices to delete.
    */
   limit?: number
+}
+
+/**
+ * treatment_invoices.canceller
+ */
+export type treatment_invoices$cancellerArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the users
+   */
+  select?: Prisma.usersSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the users
+   */
+  omit?: Prisma.usersOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.usersInclude<ExtArgs> | null
+  where?: Prisma.usersWhereInput
+}
+
+/**
+ * treatment_invoices.quote
+ */
+export type treatment_invoices$quoteArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the quotes
+   */
+  select?: Prisma.quotesSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the quotes
+   */
+  omit?: Prisma.quotesOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.quotesInclude<ExtArgs> | null
+  where?: Prisma.quotesWhereInput
 }
 
 /**

@@ -409,7 +409,9 @@ export const ModelName = {
   dental_labs: 'dental_labs',
   lab_orders: 'lab_orders',
   agent_conversations: 'agent_conversations',
-  agent_usage: 'agent_usage'
+  agent_usage: 'agent_usage',
+  quotes: 'quotes',
+  quote_items: 'quote_items'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -425,7 +427,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "organizations" | "branches" | "appointment_slots" | "appointments" | "audit_logs" | "clinic_profile" | "inventory_items" | "inventory_movements" | "notifications" | "patient_documents" | "patient_profiles" | "patient_records" | "users" | "expenses" | "expense_payments" | "treatment_invoices" | "invoice_line_items" | "invoice_payments" | "roles" | "role_permissions" | "specialists" | "specialist_consultations" | "dental_labs" | "lab_orders" | "agent_conversations" | "agent_usage"
+    modelProps: "organizations" | "branches" | "appointment_slots" | "appointments" | "audit_logs" | "clinic_profile" | "inventory_items" | "inventory_movements" | "notifications" | "patient_documents" | "patient_profiles" | "patient_records" | "users" | "expenses" | "expense_payments" | "treatment_invoices" | "invoice_line_items" | "invoice_payments" | "roles" | "role_permissions" | "specialists" | "specialist_consultations" | "dental_labs" | "lab_orders" | "agent_conversations" | "agent_usage" | "quotes" | "quote_items"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -2353,6 +2355,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    quotes: {
+      payload: Prisma.$quotesPayload<ExtArgs>
+      fields: Prisma.quotesFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.quotesFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$quotesPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.quotesFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$quotesPayload>
+        }
+        findFirst: {
+          args: Prisma.quotesFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$quotesPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.quotesFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$quotesPayload>
+        }
+        findMany: {
+          args: Prisma.quotesFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$quotesPayload>[]
+        }
+        create: {
+          args: Prisma.quotesCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$quotesPayload>
+        }
+        createMany: {
+          args: Prisma.quotesCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.quotesCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$quotesPayload>[]
+        }
+        delete: {
+          args: Prisma.quotesDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$quotesPayload>
+        }
+        update: {
+          args: Prisma.quotesUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$quotesPayload>
+        }
+        deleteMany: {
+          args: Prisma.quotesDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.quotesUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.quotesUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$quotesPayload>[]
+        }
+        upsert: {
+          args: Prisma.quotesUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$quotesPayload>
+        }
+        aggregate: {
+          args: Prisma.QuotesAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateQuotes>
+        }
+        groupBy: {
+          args: Prisma.quotesGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.QuotesGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.quotesCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.QuotesCountAggregateOutputType> | number
+        }
+      }
+    }
+    quote_items: {
+      payload: Prisma.$quote_itemsPayload<ExtArgs>
+      fields: Prisma.quote_itemsFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.quote_itemsFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$quote_itemsPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.quote_itemsFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$quote_itemsPayload>
+        }
+        findFirst: {
+          args: Prisma.quote_itemsFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$quote_itemsPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.quote_itemsFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$quote_itemsPayload>
+        }
+        findMany: {
+          args: Prisma.quote_itemsFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$quote_itemsPayload>[]
+        }
+        create: {
+          args: Prisma.quote_itemsCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$quote_itemsPayload>
+        }
+        createMany: {
+          args: Prisma.quote_itemsCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.quote_itemsCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$quote_itemsPayload>[]
+        }
+        delete: {
+          args: Prisma.quote_itemsDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$quote_itemsPayload>
+        }
+        update: {
+          args: Prisma.quote_itemsUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$quote_itemsPayload>
+        }
+        deleteMany: {
+          args: Prisma.quote_itemsDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.quote_itemsUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.quote_itemsUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$quote_itemsPayload>[]
+        }
+        upsert: {
+          args: Prisma.quote_itemsUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$quote_itemsPayload>
+        }
+        aggregate: {
+          args: Prisma.Quote_itemsAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateQuote_items>
+        }
+        groupBy: {
+          args: Prisma.quote_itemsGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Quote_itemsGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.quote_itemsCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Quote_itemsCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -2687,6 +2837,10 @@ export const Treatment_invoicesScalarFieldEnum = {
   remaining_amount: 'remaining_amount',
   status: 'status',
   created_by: 'created_by',
+  cancelled_at: 'cancelled_at',
+  cancelled_by: 'cancelled_by',
+  cancel_reason: 'cancel_reason',
+  quote_id: 'quote_id',
   created_at: 'created_at',
   updated_at: 'updated_at'
 } as const
@@ -2713,6 +2867,8 @@ export const Invoice_paymentsScalarFieldEnum = {
   invoice_id: 'invoice_id',
   amount: 'amount',
   payment_method: 'payment_method',
+  kind: 'kind',
+  reason: 'reason',
   notes: 'notes',
   created_by: 'created_by',
   created_at: 'created_at'
@@ -2852,6 +3008,43 @@ export const Agent_usageScalarFieldEnum = {
 } as const
 
 export type Agent_usageScalarFieldEnum = (typeof Agent_usageScalarFieldEnum)[keyof typeof Agent_usageScalarFieldEnum]
+
+
+export const QuotesScalarFieldEnum = {
+  id: 'id',
+  organization_id: 'organization_id',
+  branch_id: 'branch_id',
+  patient_id: 'patient_id',
+  version: 'version',
+  supersedes_id: 'supersedes_id',
+  status: 'status',
+  valid_until: 'valid_until',
+  quoted_total: 'quoted_total',
+  notes: 'notes',
+  created_by: 'created_by',
+  sent_at: 'sent_at',
+  accepted_at: 'accepted_at',
+  declined_at: 'declined_at',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+} as const
+
+export type QuotesScalarFieldEnum = (typeof QuotesScalarFieldEnum)[keyof typeof QuotesScalarFieldEnum]
+
+
+export const Quote_itemsScalarFieldEnum = {
+  id: 'id',
+  organization_id: 'organization_id',
+  quote_id: 'quote_id',
+  record_id: 'record_id',
+  procedure_name: 'procedure_name',
+  tooth_number: 'tooth_number',
+  description: 'description',
+  quoted_amount: 'quoted_amount',
+  created_at: 'created_at'
+} as const
+
+export type Quote_itemsScalarFieldEnum = (typeof Quote_itemsScalarFieldEnum)[keyof typeof Quote_itemsScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -3133,6 +3326,8 @@ export type GlobalOmitConfig = {
   lab_orders?: Prisma.lab_ordersOmit
   agent_conversations?: Prisma.agent_conversationsOmit
   agent_usage?: Prisma.agent_usageOmit
+  quotes?: Prisma.quotesOmit
+  quote_items?: Prisma.quote_itemsOmit
 }
 
 /* Types for Logging */

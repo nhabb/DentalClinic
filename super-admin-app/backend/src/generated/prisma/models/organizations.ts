@@ -317,6 +317,8 @@ export type organizationsWhereInput = {
   specialist_consultations?: Prisma.Specialist_consultationsListRelationFilter
   dental_labs?: Prisma.Dental_labsListRelationFilter
   lab_orders?: Prisma.Lab_ordersListRelationFilter
+  quotes?: Prisma.QuotesListRelationFilter
+  quote_items?: Prisma.Quote_itemsListRelationFilter
 }
 
 export type organizationsOrderByWithRelationInput = {
@@ -360,6 +362,8 @@ export type organizationsOrderByWithRelationInput = {
   specialist_consultations?: Prisma.specialist_consultationsOrderByRelationAggregateInput
   dental_labs?: Prisma.dental_labsOrderByRelationAggregateInput
   lab_orders?: Prisma.lab_ordersOrderByRelationAggregateInput
+  quotes?: Prisma.quotesOrderByRelationAggregateInput
+  quote_items?: Prisma.quote_itemsOrderByRelationAggregateInput
 }
 
 export type organizationsWhereUniqueInput = Prisma.AtLeast<{
@@ -406,6 +410,8 @@ export type organizationsWhereUniqueInput = Prisma.AtLeast<{
   specialist_consultations?: Prisma.Specialist_consultationsListRelationFilter
   dental_labs?: Prisma.Dental_labsListRelationFilter
   lab_orders?: Prisma.Lab_ordersListRelationFilter
+  quotes?: Prisma.QuotesListRelationFilter
+  quote_items?: Prisma.Quote_itemsListRelationFilter
 }, "id" | "slug">
 
 export type organizationsOrderByWithAggregationInput = {
@@ -493,6 +499,8 @@ export type organizationsCreateInput = {
   specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateInput = {
@@ -536,6 +544,8 @@ export type organizationsUncheckedCreateInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsUncheckedCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesUncheckedCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUpdateInput = {
@@ -579,6 +589,8 @@ export type organizationsUpdateInput = {
   specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateInput = {
@@ -622,6 +634,8 @@ export type organizationsUncheckedUpdateInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUncheckedUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUncheckedUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateManyInput = {
@@ -1124,6 +1138,34 @@ export type organizationsUpdateOneRequiredWithoutAgent_usageNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.organizationsUpdateToOneWithWhereWithoutAgent_usageInput, Prisma.organizationsUpdateWithoutAgent_usageInput>, Prisma.organizationsUncheckedUpdateWithoutAgent_usageInput>
 }
 
+export type organizationsCreateNestedOneWithoutQuotesInput = {
+  create?: Prisma.XOR<Prisma.organizationsCreateWithoutQuotesInput, Prisma.organizationsUncheckedCreateWithoutQuotesInput>
+  connectOrCreate?: Prisma.organizationsCreateOrConnectWithoutQuotesInput
+  connect?: Prisma.organizationsWhereUniqueInput
+}
+
+export type organizationsUpdateOneRequiredWithoutQuotesNestedInput = {
+  create?: Prisma.XOR<Prisma.organizationsCreateWithoutQuotesInput, Prisma.organizationsUncheckedCreateWithoutQuotesInput>
+  connectOrCreate?: Prisma.organizationsCreateOrConnectWithoutQuotesInput
+  upsert?: Prisma.organizationsUpsertWithoutQuotesInput
+  connect?: Prisma.organizationsWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.organizationsUpdateToOneWithWhereWithoutQuotesInput, Prisma.organizationsUpdateWithoutQuotesInput>, Prisma.organizationsUncheckedUpdateWithoutQuotesInput>
+}
+
+export type organizationsCreateNestedOneWithoutQuote_itemsInput = {
+  create?: Prisma.XOR<Prisma.organizationsCreateWithoutQuote_itemsInput, Prisma.organizationsUncheckedCreateWithoutQuote_itemsInput>
+  connectOrCreate?: Prisma.organizationsCreateOrConnectWithoutQuote_itemsInput
+  connect?: Prisma.organizationsWhereUniqueInput
+}
+
+export type organizationsUpdateOneRequiredWithoutQuote_itemsNestedInput = {
+  create?: Prisma.XOR<Prisma.organizationsCreateWithoutQuote_itemsInput, Prisma.organizationsUncheckedCreateWithoutQuote_itemsInput>
+  connectOrCreate?: Prisma.organizationsCreateOrConnectWithoutQuote_itemsInput
+  upsert?: Prisma.organizationsUpsertWithoutQuote_itemsInput
+  connect?: Prisma.organizationsWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.organizationsUpdateToOneWithWhereWithoutQuote_itemsInput, Prisma.organizationsUpdateWithoutQuote_itemsInput>, Prisma.organizationsUncheckedUpdateWithoutQuote_itemsInput>
+}
+
 export type organizationsCreateWithoutBranchesInput = {
   id?: bigint | number
   name: string
@@ -1164,6 +1206,8 @@ export type organizationsCreateWithoutBranchesInput = {
   specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutBranchesInput = {
@@ -1206,6 +1250,8 @@ export type organizationsUncheckedCreateWithoutBranchesInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsUncheckedCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesUncheckedCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutBranchesInput = {
@@ -1264,6 +1310,8 @@ export type organizationsUpdateWithoutBranchesInput = {
   specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutBranchesInput = {
@@ -1306,6 +1354,8 @@ export type organizationsUncheckedUpdateWithoutBranchesInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUncheckedUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUncheckedUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateWithoutAppointment_slotsInput = {
@@ -1348,6 +1398,8 @@ export type organizationsCreateWithoutAppointment_slotsInput = {
   specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutAppointment_slotsInput = {
@@ -1390,6 +1442,8 @@ export type organizationsUncheckedCreateWithoutAppointment_slotsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsUncheckedCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesUncheckedCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutAppointment_slotsInput = {
@@ -1448,6 +1502,8 @@ export type organizationsUpdateWithoutAppointment_slotsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutAppointment_slotsInput = {
@@ -1490,6 +1546,8 @@ export type organizationsUncheckedUpdateWithoutAppointment_slotsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUncheckedUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUncheckedUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateWithoutAppointmentsInput = {
@@ -1532,6 +1590,8 @@ export type organizationsCreateWithoutAppointmentsInput = {
   specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutAppointmentsInput = {
@@ -1574,6 +1634,8 @@ export type organizationsUncheckedCreateWithoutAppointmentsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsUncheckedCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesUncheckedCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutAppointmentsInput = {
@@ -1632,6 +1694,8 @@ export type organizationsUpdateWithoutAppointmentsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutAppointmentsInput = {
@@ -1674,6 +1738,8 @@ export type organizationsUncheckedUpdateWithoutAppointmentsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUncheckedUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUncheckedUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateWithoutAudit_logsInput = {
@@ -1716,6 +1782,8 @@ export type organizationsCreateWithoutAudit_logsInput = {
   specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutAudit_logsInput = {
@@ -1758,6 +1826,8 @@ export type organizationsUncheckedCreateWithoutAudit_logsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsUncheckedCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesUncheckedCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutAudit_logsInput = {
@@ -1816,6 +1886,8 @@ export type organizationsUpdateWithoutAudit_logsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutAudit_logsInput = {
@@ -1858,6 +1930,8 @@ export type organizationsUncheckedUpdateWithoutAudit_logsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUncheckedUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUncheckedUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateWithoutClinic_profileInput = {
@@ -1900,6 +1974,8 @@ export type organizationsCreateWithoutClinic_profileInput = {
   specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutClinic_profileInput = {
@@ -1942,6 +2018,8 @@ export type organizationsUncheckedCreateWithoutClinic_profileInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsUncheckedCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesUncheckedCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutClinic_profileInput = {
@@ -2000,6 +2078,8 @@ export type organizationsUpdateWithoutClinic_profileInput = {
   specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutClinic_profileInput = {
@@ -2042,6 +2122,8 @@ export type organizationsUncheckedUpdateWithoutClinic_profileInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUncheckedUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUncheckedUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateWithoutInventory_itemsInput = {
@@ -2084,6 +2166,8 @@ export type organizationsCreateWithoutInventory_itemsInput = {
   specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutInventory_itemsInput = {
@@ -2126,6 +2210,8 @@ export type organizationsUncheckedCreateWithoutInventory_itemsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsUncheckedCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesUncheckedCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutInventory_itemsInput = {
@@ -2184,6 +2270,8 @@ export type organizationsUpdateWithoutInventory_itemsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutInventory_itemsInput = {
@@ -2226,6 +2314,8 @@ export type organizationsUncheckedUpdateWithoutInventory_itemsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUncheckedUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUncheckedUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateWithoutInventory_movementsInput = {
@@ -2268,6 +2358,8 @@ export type organizationsCreateWithoutInventory_movementsInput = {
   specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutInventory_movementsInput = {
@@ -2310,6 +2402,8 @@ export type organizationsUncheckedCreateWithoutInventory_movementsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsUncheckedCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesUncheckedCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutInventory_movementsInput = {
@@ -2368,6 +2462,8 @@ export type organizationsUpdateWithoutInventory_movementsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutInventory_movementsInput = {
@@ -2410,6 +2506,8 @@ export type organizationsUncheckedUpdateWithoutInventory_movementsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUncheckedUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUncheckedUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateWithoutNotificationsInput = {
@@ -2452,6 +2550,8 @@ export type organizationsCreateWithoutNotificationsInput = {
   specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutNotificationsInput = {
@@ -2494,6 +2594,8 @@ export type organizationsUncheckedCreateWithoutNotificationsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsUncheckedCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesUncheckedCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutNotificationsInput = {
@@ -2552,6 +2654,8 @@ export type organizationsUpdateWithoutNotificationsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutNotificationsInput = {
@@ -2594,6 +2698,8 @@ export type organizationsUncheckedUpdateWithoutNotificationsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUncheckedUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUncheckedUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateWithoutPatient_documentsInput = {
@@ -2636,6 +2742,8 @@ export type organizationsCreateWithoutPatient_documentsInput = {
   specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutPatient_documentsInput = {
@@ -2678,6 +2786,8 @@ export type organizationsUncheckedCreateWithoutPatient_documentsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsUncheckedCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesUncheckedCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutPatient_documentsInput = {
@@ -2736,6 +2846,8 @@ export type organizationsUpdateWithoutPatient_documentsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutPatient_documentsInput = {
@@ -2778,6 +2890,8 @@ export type organizationsUncheckedUpdateWithoutPatient_documentsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUncheckedUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUncheckedUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateWithoutPatient_profilesInput = {
@@ -2820,6 +2934,8 @@ export type organizationsCreateWithoutPatient_profilesInput = {
   specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutPatient_profilesInput = {
@@ -2862,6 +2978,8 @@ export type organizationsUncheckedCreateWithoutPatient_profilesInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsUncheckedCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesUncheckedCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutPatient_profilesInput = {
@@ -2920,6 +3038,8 @@ export type organizationsUpdateWithoutPatient_profilesInput = {
   specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutPatient_profilesInput = {
@@ -2962,6 +3082,8 @@ export type organizationsUncheckedUpdateWithoutPatient_profilesInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUncheckedUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUncheckedUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateWithoutPatient_recordsInput = {
@@ -3004,6 +3126,8 @@ export type organizationsCreateWithoutPatient_recordsInput = {
   specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutPatient_recordsInput = {
@@ -3046,6 +3170,8 @@ export type organizationsUncheckedCreateWithoutPatient_recordsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsUncheckedCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesUncheckedCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutPatient_recordsInput = {
@@ -3104,6 +3230,8 @@ export type organizationsUpdateWithoutPatient_recordsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutPatient_recordsInput = {
@@ -3146,6 +3274,8 @@ export type organizationsUncheckedUpdateWithoutPatient_recordsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUncheckedUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUncheckedUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateWithoutUsersInput = {
@@ -3188,6 +3318,8 @@ export type organizationsCreateWithoutUsersInput = {
   specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutUsersInput = {
@@ -3230,6 +3362,8 @@ export type organizationsUncheckedCreateWithoutUsersInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsUncheckedCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesUncheckedCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutUsersInput = {
@@ -3288,6 +3422,8 @@ export type organizationsUpdateWithoutUsersInput = {
   specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutUsersInput = {
@@ -3330,6 +3466,8 @@ export type organizationsUncheckedUpdateWithoutUsersInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUncheckedUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUncheckedUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateWithoutExpensesInput = {
@@ -3372,6 +3510,8 @@ export type organizationsCreateWithoutExpensesInput = {
   specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutExpensesInput = {
@@ -3414,6 +3554,8 @@ export type organizationsUncheckedCreateWithoutExpensesInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsUncheckedCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesUncheckedCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutExpensesInput = {
@@ -3472,6 +3614,8 @@ export type organizationsUpdateWithoutExpensesInput = {
   specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutExpensesInput = {
@@ -3514,6 +3658,8 @@ export type organizationsUncheckedUpdateWithoutExpensesInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUncheckedUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUncheckedUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateWithoutExpense_paymentsInput = {
@@ -3556,6 +3702,8 @@ export type organizationsCreateWithoutExpense_paymentsInput = {
   specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutExpense_paymentsInput = {
@@ -3598,6 +3746,8 @@ export type organizationsUncheckedCreateWithoutExpense_paymentsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsUncheckedCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesUncheckedCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutExpense_paymentsInput = {
@@ -3656,6 +3806,8 @@ export type organizationsUpdateWithoutExpense_paymentsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutExpense_paymentsInput = {
@@ -3698,6 +3850,8 @@ export type organizationsUncheckedUpdateWithoutExpense_paymentsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUncheckedUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUncheckedUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateWithoutTreatment_invoicesInput = {
@@ -3740,6 +3894,8 @@ export type organizationsCreateWithoutTreatment_invoicesInput = {
   specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutTreatment_invoicesInput = {
@@ -3782,6 +3938,8 @@ export type organizationsUncheckedCreateWithoutTreatment_invoicesInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsUncheckedCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesUncheckedCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutTreatment_invoicesInput = {
@@ -3840,6 +3998,8 @@ export type organizationsUpdateWithoutTreatment_invoicesInput = {
   specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutTreatment_invoicesInput = {
@@ -3882,6 +4042,8 @@ export type organizationsUncheckedUpdateWithoutTreatment_invoicesInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUncheckedUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUncheckedUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateWithoutInvoice_line_itemsInput = {
@@ -3924,6 +4086,8 @@ export type organizationsCreateWithoutInvoice_line_itemsInput = {
   specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutInvoice_line_itemsInput = {
@@ -3966,6 +4130,8 @@ export type organizationsUncheckedCreateWithoutInvoice_line_itemsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsUncheckedCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesUncheckedCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutInvoice_line_itemsInput = {
@@ -4024,6 +4190,8 @@ export type organizationsUpdateWithoutInvoice_line_itemsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutInvoice_line_itemsInput = {
@@ -4066,6 +4234,8 @@ export type organizationsUncheckedUpdateWithoutInvoice_line_itemsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUncheckedUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUncheckedUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateWithoutInvoice_paymentsInput = {
@@ -4108,6 +4278,8 @@ export type organizationsCreateWithoutInvoice_paymentsInput = {
   specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutInvoice_paymentsInput = {
@@ -4150,6 +4322,8 @@ export type organizationsUncheckedCreateWithoutInvoice_paymentsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsUncheckedCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesUncheckedCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutInvoice_paymentsInput = {
@@ -4208,6 +4382,8 @@ export type organizationsUpdateWithoutInvoice_paymentsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutInvoice_paymentsInput = {
@@ -4250,6 +4426,8 @@ export type organizationsUncheckedUpdateWithoutInvoice_paymentsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUncheckedUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUncheckedUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateWithoutRolesInput = {
@@ -4292,6 +4470,8 @@ export type organizationsCreateWithoutRolesInput = {
   specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutRolesInput = {
@@ -4334,6 +4514,8 @@ export type organizationsUncheckedCreateWithoutRolesInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsUncheckedCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesUncheckedCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutRolesInput = {
@@ -4392,6 +4574,8 @@ export type organizationsUpdateWithoutRolesInput = {
   specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutRolesInput = {
@@ -4434,6 +4618,8 @@ export type organizationsUncheckedUpdateWithoutRolesInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUncheckedUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUncheckedUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateWithoutRole_permissionsInput = {
@@ -4476,6 +4662,8 @@ export type organizationsCreateWithoutRole_permissionsInput = {
   specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutRole_permissionsInput = {
@@ -4518,6 +4706,8 @@ export type organizationsUncheckedCreateWithoutRole_permissionsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsUncheckedCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesUncheckedCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutRole_permissionsInput = {
@@ -4576,6 +4766,8 @@ export type organizationsUpdateWithoutRole_permissionsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutRole_permissionsInput = {
@@ -4618,6 +4810,8 @@ export type organizationsUncheckedUpdateWithoutRole_permissionsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUncheckedUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUncheckedUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateWithoutSpecialistsInput = {
@@ -4660,6 +4854,8 @@ export type organizationsCreateWithoutSpecialistsInput = {
   specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutSpecialistsInput = {
@@ -4702,6 +4898,8 @@ export type organizationsUncheckedCreateWithoutSpecialistsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsUncheckedCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesUncheckedCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutSpecialistsInput = {
@@ -4760,6 +4958,8 @@ export type organizationsUpdateWithoutSpecialistsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutSpecialistsInput = {
@@ -4802,6 +5002,8 @@ export type organizationsUncheckedUpdateWithoutSpecialistsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUncheckedUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUncheckedUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateWithoutSpecialist_consultationsInput = {
@@ -4844,6 +5046,8 @@ export type organizationsCreateWithoutSpecialist_consultationsInput = {
   specialists?: Prisma.specialistsCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutSpecialist_consultationsInput = {
@@ -4886,6 +5090,8 @@ export type organizationsUncheckedCreateWithoutSpecialist_consultationsInput = {
   specialists?: Prisma.specialistsUncheckedCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsUncheckedCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesUncheckedCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutSpecialist_consultationsInput = {
@@ -4944,6 +5150,8 @@ export type organizationsUpdateWithoutSpecialist_consultationsInput = {
   specialists?: Prisma.specialistsUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutSpecialist_consultationsInput = {
@@ -4986,6 +5194,8 @@ export type organizationsUncheckedUpdateWithoutSpecialist_consultationsInput = {
   specialists?: Prisma.specialistsUncheckedUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUncheckedUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUncheckedUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateWithoutDental_labsInput = {
@@ -5028,6 +5238,8 @@ export type organizationsCreateWithoutDental_labsInput = {
   specialists?: Prisma.specialistsCreateNestedManyWithoutOrganizationInput
   specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutDental_labsInput = {
@@ -5070,6 +5282,8 @@ export type organizationsUncheckedCreateWithoutDental_labsInput = {
   specialists?: Prisma.specialistsUncheckedCreateNestedManyWithoutOrganizationInput
   specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesUncheckedCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutDental_labsInput = {
@@ -5128,6 +5342,8 @@ export type organizationsUpdateWithoutDental_labsInput = {
   specialists?: Prisma.specialistsUpdateManyWithoutOrganizationNestedInput
   specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutDental_labsInput = {
@@ -5170,6 +5386,8 @@ export type organizationsUncheckedUpdateWithoutDental_labsInput = {
   specialists?: Prisma.specialistsUncheckedUpdateManyWithoutOrganizationNestedInput
   specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUncheckedUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateWithoutLab_ordersInput = {
@@ -5212,6 +5430,8 @@ export type organizationsCreateWithoutLab_ordersInput = {
   specialists?: Prisma.specialistsCreateNestedManyWithoutOrganizationInput
   specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutLab_ordersInput = {
@@ -5254,6 +5474,8 @@ export type organizationsUncheckedCreateWithoutLab_ordersInput = {
   specialists?: Prisma.specialistsUncheckedCreateNestedManyWithoutOrganizationInput
   specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsUncheckedCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesUncheckedCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutLab_ordersInput = {
@@ -5312,6 +5534,8 @@ export type organizationsUpdateWithoutLab_ordersInput = {
   specialists?: Prisma.specialistsUpdateManyWithoutOrganizationNestedInput
   specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutLab_ordersInput = {
@@ -5354,6 +5578,8 @@ export type organizationsUncheckedUpdateWithoutLab_ordersInput = {
   specialists?: Prisma.specialistsUncheckedUpdateManyWithoutOrganizationNestedInput
   specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUncheckedUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUncheckedUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateWithoutAgent_conversationsInput = {
@@ -5396,6 +5622,8 @@ export type organizationsCreateWithoutAgent_conversationsInput = {
   specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutAgent_conversationsInput = {
@@ -5438,6 +5666,8 @@ export type organizationsUncheckedCreateWithoutAgent_conversationsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsUncheckedCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesUncheckedCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutAgent_conversationsInput = {
@@ -5496,6 +5726,8 @@ export type organizationsUpdateWithoutAgent_conversationsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutAgent_conversationsInput = {
@@ -5538,6 +5770,8 @@ export type organizationsUncheckedUpdateWithoutAgent_conversationsInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUncheckedUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUncheckedUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsCreateWithoutAgent_usageInput = {
@@ -5580,6 +5814,8 @@ export type organizationsCreateWithoutAgent_usageInput = {
   specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsUncheckedCreateWithoutAgent_usageInput = {
@@ -5622,6 +5858,8 @@ export type organizationsUncheckedCreateWithoutAgent_usageInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutOrganizationInput
   dental_labs?: Prisma.dental_labsUncheckedCreateNestedManyWithoutOrganizationInput
   lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesUncheckedCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type organizationsCreateOrConnectWithoutAgent_usageInput = {
@@ -5680,6 +5918,8 @@ export type organizationsUpdateWithoutAgent_usageInput = {
   specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUpdateManyWithoutOrganizationNestedInput
 }
 
 export type organizationsUncheckedUpdateWithoutAgent_usageInput = {
@@ -5722,6 +5962,392 @@ export type organizationsUncheckedUpdateWithoutAgent_usageInput = {
   specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutOrganizationNestedInput
   dental_labs?: Prisma.dental_labsUncheckedUpdateManyWithoutOrganizationNestedInput
   lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUncheckedUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
+}
+
+export type organizationsCreateWithoutQuotesInput = {
+  id?: bigint | number
+  name: string
+  slug: string
+  legal_name?: string | null
+  email?: string | null
+  phone?: string | null
+  website_url?: string | null
+  logo_url?: string | null
+  description?: string | null
+  timezone?: string
+  currency?: string
+  is_active?: boolean
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  created_at?: Date | string
+  updated_at?: Date | string
+  branches?: Prisma.branchesCreateNestedManyWithoutOrganizationInput
+  users?: Prisma.usersCreateNestedManyWithoutOrganizationInput
+  patient_profiles?: Prisma.patient_profilesCreateNestedManyWithoutOrganizationInput
+  appointment_slots?: Prisma.appointment_slotsCreateNestedManyWithoutOrganizationInput
+  appointments?: Prisma.appointmentsCreateNestedManyWithoutOrganizationInput
+  patient_records?: Prisma.patient_recordsCreateNestedManyWithoutOrganizationInput
+  patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutOrganizationInput
+  inventory_items?: Prisma.inventory_itemsCreateNestedManyWithoutOrganizationInput
+  inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutOrganizationInput
+  notifications?: Prisma.notificationsCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsCreateNestedManyWithoutOrganizationInput
+  agent_usage?: Prisma.agent_usageCreateNestedManyWithoutOrganizationInput
+  audit_logs?: Prisma.audit_logsCreateNestedManyWithoutOrganizationInput
+  clinic_profile?: Prisma.clinic_profileCreateNestedManyWithoutOrganizationInput
+  expenses?: Prisma.expensesCreateNestedManyWithoutOrganizationInput
+  expense_payments?: Prisma.expense_paymentsCreateNestedManyWithoutOrganizationInput
+  treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutOrganizationInput
+  invoice_line_items?: Prisma.invoice_line_itemsCreateNestedManyWithoutOrganizationInput
+  invoice_payments?: Prisma.invoice_paymentsCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsCreateNestedManyWithoutOrganizationInput
+  specialists?: Prisma.specialistsCreateNestedManyWithoutOrganizationInput
+  specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutOrganizationInput
+  dental_labs?: Prisma.dental_labsCreateNestedManyWithoutOrganizationInput
+  lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsCreateNestedManyWithoutOrganizationInput
+}
+
+export type organizationsUncheckedCreateWithoutQuotesInput = {
+  id?: bigint | number
+  name: string
+  slug: string
+  legal_name?: string | null
+  email?: string | null
+  phone?: string | null
+  website_url?: string | null
+  logo_url?: string | null
+  description?: string | null
+  timezone?: string
+  currency?: string
+  is_active?: boolean
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  created_at?: Date | string
+  updated_at?: Date | string
+  branches?: Prisma.branchesUncheckedCreateNestedManyWithoutOrganizationInput
+  users?: Prisma.usersUncheckedCreateNestedManyWithoutOrganizationInput
+  patient_profiles?: Prisma.patient_profilesUncheckedCreateNestedManyWithoutOrganizationInput
+  appointment_slots?: Prisma.appointment_slotsUncheckedCreateNestedManyWithoutOrganizationInput
+  appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutOrganizationInput
+  patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutOrganizationInput
+  patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutOrganizationInput
+  inventory_items?: Prisma.inventory_itemsUncheckedCreateNestedManyWithoutOrganizationInput
+  inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutOrganizationInput
+  notifications?: Prisma.notificationsUncheckedCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedCreateNestedManyWithoutOrganizationInput
+  agent_usage?: Prisma.agent_usageUncheckedCreateNestedManyWithoutOrganizationInput
+  audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutOrganizationInput
+  clinic_profile?: Prisma.clinic_profileUncheckedCreateNestedManyWithoutOrganizationInput
+  expenses?: Prisma.expensesUncheckedCreateNestedManyWithoutOrganizationInput
+  expense_payments?: Prisma.expense_paymentsUncheckedCreateNestedManyWithoutOrganizationInput
+  treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutOrganizationInput
+  invoice_line_items?: Prisma.invoice_line_itemsUncheckedCreateNestedManyWithoutOrganizationInput
+  invoice_payments?: Prisma.invoice_paymentsUncheckedCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesUncheckedCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsUncheckedCreateNestedManyWithoutOrganizationInput
+  specialists?: Prisma.specialistsUncheckedCreateNestedManyWithoutOrganizationInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutOrganizationInput
+  dental_labs?: Prisma.dental_labsUncheckedCreateNestedManyWithoutOrganizationInput
+  lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutOrganizationInput
+  quote_items?: Prisma.quote_itemsUncheckedCreateNestedManyWithoutOrganizationInput
+}
+
+export type organizationsCreateOrConnectWithoutQuotesInput = {
+  where: Prisma.organizationsWhereUniqueInput
+  create: Prisma.XOR<Prisma.organizationsCreateWithoutQuotesInput, Prisma.organizationsUncheckedCreateWithoutQuotesInput>
+}
+
+export type organizationsUpsertWithoutQuotesInput = {
+  update: Prisma.XOR<Prisma.organizationsUpdateWithoutQuotesInput, Prisma.organizationsUncheckedUpdateWithoutQuotesInput>
+  create: Prisma.XOR<Prisma.organizationsCreateWithoutQuotesInput, Prisma.organizationsUncheckedCreateWithoutQuotesInput>
+  where?: Prisma.organizationsWhereInput
+}
+
+export type organizationsUpdateToOneWithWhereWithoutQuotesInput = {
+  where?: Prisma.organizationsWhereInput
+  data: Prisma.XOR<Prisma.organizationsUpdateWithoutQuotesInput, Prisma.organizationsUncheckedUpdateWithoutQuotesInput>
+}
+
+export type organizationsUpdateWithoutQuotesInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  legal_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  website_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  currency?: Prisma.StringFieldUpdateOperationsInput | string
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  branches?: Prisma.branchesUpdateManyWithoutOrganizationNestedInput
+  users?: Prisma.usersUpdateManyWithoutOrganizationNestedInput
+  patient_profiles?: Prisma.patient_profilesUpdateManyWithoutOrganizationNestedInput
+  appointment_slots?: Prisma.appointment_slotsUpdateManyWithoutOrganizationNestedInput
+  appointments?: Prisma.appointmentsUpdateManyWithoutOrganizationNestedInput
+  patient_records?: Prisma.patient_recordsUpdateManyWithoutOrganizationNestedInput
+  patient_documents?: Prisma.patient_documentsUpdateManyWithoutOrganizationNestedInput
+  inventory_items?: Prisma.inventory_itemsUpdateManyWithoutOrganizationNestedInput
+  inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutOrganizationNestedInput
+  notifications?: Prisma.notificationsUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUpdateManyWithoutOrganizationNestedInput
+  agent_usage?: Prisma.agent_usageUpdateManyWithoutOrganizationNestedInput
+  audit_logs?: Prisma.audit_logsUpdateManyWithoutOrganizationNestedInput
+  clinic_profile?: Prisma.clinic_profileUpdateManyWithoutOrganizationNestedInput
+  expenses?: Prisma.expensesUpdateManyWithoutOrganizationNestedInput
+  expense_payments?: Prisma.expense_paymentsUpdateManyWithoutOrganizationNestedInput
+  treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutOrganizationNestedInput
+  invoice_line_items?: Prisma.invoice_line_itemsUpdateManyWithoutOrganizationNestedInput
+  invoice_payments?: Prisma.invoice_paymentsUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUpdateManyWithoutOrganizationNestedInput
+  specialists?: Prisma.specialistsUpdateManyWithoutOrganizationNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutOrganizationNestedInput
+  dental_labs?: Prisma.dental_labsUpdateManyWithoutOrganizationNestedInput
+  lab_orders?: Prisma.lab_ordersUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUpdateManyWithoutOrganizationNestedInput
+}
+
+export type organizationsUncheckedUpdateWithoutQuotesInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  legal_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  website_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  currency?: Prisma.StringFieldUpdateOperationsInput | string
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  branches?: Prisma.branchesUncheckedUpdateManyWithoutOrganizationNestedInput
+  users?: Prisma.usersUncheckedUpdateManyWithoutOrganizationNestedInput
+  patient_profiles?: Prisma.patient_profilesUncheckedUpdateManyWithoutOrganizationNestedInput
+  appointment_slots?: Prisma.appointment_slotsUncheckedUpdateManyWithoutOrganizationNestedInput
+  appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutOrganizationNestedInput
+  patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutOrganizationNestedInput
+  patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutOrganizationNestedInput
+  inventory_items?: Prisma.inventory_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
+  inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutOrganizationNestedInput
+  notifications?: Prisma.notificationsUncheckedUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedUpdateManyWithoutOrganizationNestedInput
+  agent_usage?: Prisma.agent_usageUncheckedUpdateManyWithoutOrganizationNestedInput
+  audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutOrganizationNestedInput
+  clinic_profile?: Prisma.clinic_profileUncheckedUpdateManyWithoutOrganizationNestedInput
+  expenses?: Prisma.expensesUncheckedUpdateManyWithoutOrganizationNestedInput
+  expense_payments?: Prisma.expense_paymentsUncheckedUpdateManyWithoutOrganizationNestedInput
+  treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutOrganizationNestedInput
+  invoice_line_items?: Prisma.invoice_line_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
+  invoice_payments?: Prisma.invoice_paymentsUncheckedUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUncheckedUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUncheckedUpdateManyWithoutOrganizationNestedInput
+  specialists?: Prisma.specialistsUncheckedUpdateManyWithoutOrganizationNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutOrganizationNestedInput
+  dental_labs?: Prisma.dental_labsUncheckedUpdateManyWithoutOrganizationNestedInput
+  lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutOrganizationNestedInput
+  quote_items?: Prisma.quote_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
+}
+
+export type organizationsCreateWithoutQuote_itemsInput = {
+  id?: bigint | number
+  name: string
+  slug: string
+  legal_name?: string | null
+  email?: string | null
+  phone?: string | null
+  website_url?: string | null
+  logo_url?: string | null
+  description?: string | null
+  timezone?: string
+  currency?: string
+  is_active?: boolean
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  created_at?: Date | string
+  updated_at?: Date | string
+  branches?: Prisma.branchesCreateNestedManyWithoutOrganizationInput
+  users?: Prisma.usersCreateNestedManyWithoutOrganizationInput
+  patient_profiles?: Prisma.patient_profilesCreateNestedManyWithoutOrganizationInput
+  appointment_slots?: Prisma.appointment_slotsCreateNestedManyWithoutOrganizationInput
+  appointments?: Prisma.appointmentsCreateNestedManyWithoutOrganizationInput
+  patient_records?: Prisma.patient_recordsCreateNestedManyWithoutOrganizationInput
+  patient_documents?: Prisma.patient_documentsCreateNestedManyWithoutOrganizationInput
+  inventory_items?: Prisma.inventory_itemsCreateNestedManyWithoutOrganizationInput
+  inventory_movements?: Prisma.inventory_movementsCreateNestedManyWithoutOrganizationInput
+  notifications?: Prisma.notificationsCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsCreateNestedManyWithoutOrganizationInput
+  agent_usage?: Prisma.agent_usageCreateNestedManyWithoutOrganizationInput
+  audit_logs?: Prisma.audit_logsCreateNestedManyWithoutOrganizationInput
+  clinic_profile?: Prisma.clinic_profileCreateNestedManyWithoutOrganizationInput
+  expenses?: Prisma.expensesCreateNestedManyWithoutOrganizationInput
+  expense_payments?: Prisma.expense_paymentsCreateNestedManyWithoutOrganizationInput
+  treatment_invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutOrganizationInput
+  invoice_line_items?: Prisma.invoice_line_itemsCreateNestedManyWithoutOrganizationInput
+  invoice_payments?: Prisma.invoice_paymentsCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsCreateNestedManyWithoutOrganizationInput
+  specialists?: Prisma.specialistsCreateNestedManyWithoutOrganizationInput
+  specialist_consultations?: Prisma.specialist_consultationsCreateNestedManyWithoutOrganizationInput
+  dental_labs?: Prisma.dental_labsCreateNestedManyWithoutOrganizationInput
+  lab_orders?: Prisma.lab_ordersCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesCreateNestedManyWithoutOrganizationInput
+}
+
+export type organizationsUncheckedCreateWithoutQuote_itemsInput = {
+  id?: bigint | number
+  name: string
+  slug: string
+  legal_name?: string | null
+  email?: string | null
+  phone?: string | null
+  website_url?: string | null
+  logo_url?: string | null
+  description?: string | null
+  timezone?: string
+  currency?: string
+  is_active?: boolean
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  created_at?: Date | string
+  updated_at?: Date | string
+  branches?: Prisma.branchesUncheckedCreateNestedManyWithoutOrganizationInput
+  users?: Prisma.usersUncheckedCreateNestedManyWithoutOrganizationInput
+  patient_profiles?: Prisma.patient_profilesUncheckedCreateNestedManyWithoutOrganizationInput
+  appointment_slots?: Prisma.appointment_slotsUncheckedCreateNestedManyWithoutOrganizationInput
+  appointments?: Prisma.appointmentsUncheckedCreateNestedManyWithoutOrganizationInput
+  patient_records?: Prisma.patient_recordsUncheckedCreateNestedManyWithoutOrganizationInput
+  patient_documents?: Prisma.patient_documentsUncheckedCreateNestedManyWithoutOrganizationInput
+  inventory_items?: Prisma.inventory_itemsUncheckedCreateNestedManyWithoutOrganizationInput
+  inventory_movements?: Prisma.inventory_movementsUncheckedCreateNestedManyWithoutOrganizationInput
+  notifications?: Prisma.notificationsUncheckedCreateNestedManyWithoutOrganizationInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedCreateNestedManyWithoutOrganizationInput
+  agent_usage?: Prisma.agent_usageUncheckedCreateNestedManyWithoutOrganizationInput
+  audit_logs?: Prisma.audit_logsUncheckedCreateNestedManyWithoutOrganizationInput
+  clinic_profile?: Prisma.clinic_profileUncheckedCreateNestedManyWithoutOrganizationInput
+  expenses?: Prisma.expensesUncheckedCreateNestedManyWithoutOrganizationInput
+  expense_payments?: Prisma.expense_paymentsUncheckedCreateNestedManyWithoutOrganizationInput
+  treatment_invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutOrganizationInput
+  invoice_line_items?: Prisma.invoice_line_itemsUncheckedCreateNestedManyWithoutOrganizationInput
+  invoice_payments?: Prisma.invoice_paymentsUncheckedCreateNestedManyWithoutOrganizationInput
+  roles?: Prisma.rolesUncheckedCreateNestedManyWithoutOrganizationInput
+  role_permissions?: Prisma.role_permissionsUncheckedCreateNestedManyWithoutOrganizationInput
+  specialists?: Prisma.specialistsUncheckedCreateNestedManyWithoutOrganizationInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedCreateNestedManyWithoutOrganizationInput
+  dental_labs?: Prisma.dental_labsUncheckedCreateNestedManyWithoutOrganizationInput
+  lab_orders?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutOrganizationInput
+  quotes?: Prisma.quotesUncheckedCreateNestedManyWithoutOrganizationInput
+}
+
+export type organizationsCreateOrConnectWithoutQuote_itemsInput = {
+  where: Prisma.organizationsWhereUniqueInput
+  create: Prisma.XOR<Prisma.organizationsCreateWithoutQuote_itemsInput, Prisma.organizationsUncheckedCreateWithoutQuote_itemsInput>
+}
+
+export type organizationsUpsertWithoutQuote_itemsInput = {
+  update: Prisma.XOR<Prisma.organizationsUpdateWithoutQuote_itemsInput, Prisma.organizationsUncheckedUpdateWithoutQuote_itemsInput>
+  create: Prisma.XOR<Prisma.organizationsCreateWithoutQuote_itemsInput, Prisma.organizationsUncheckedCreateWithoutQuote_itemsInput>
+  where?: Prisma.organizationsWhereInput
+}
+
+export type organizationsUpdateToOneWithWhereWithoutQuote_itemsInput = {
+  where?: Prisma.organizationsWhereInput
+  data: Prisma.XOR<Prisma.organizationsUpdateWithoutQuote_itemsInput, Prisma.organizationsUncheckedUpdateWithoutQuote_itemsInput>
+}
+
+export type organizationsUpdateWithoutQuote_itemsInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  legal_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  website_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  currency?: Prisma.StringFieldUpdateOperationsInput | string
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  branches?: Prisma.branchesUpdateManyWithoutOrganizationNestedInput
+  users?: Prisma.usersUpdateManyWithoutOrganizationNestedInput
+  patient_profiles?: Prisma.patient_profilesUpdateManyWithoutOrganizationNestedInput
+  appointment_slots?: Prisma.appointment_slotsUpdateManyWithoutOrganizationNestedInput
+  appointments?: Prisma.appointmentsUpdateManyWithoutOrganizationNestedInput
+  patient_records?: Prisma.patient_recordsUpdateManyWithoutOrganizationNestedInput
+  patient_documents?: Prisma.patient_documentsUpdateManyWithoutOrganizationNestedInput
+  inventory_items?: Prisma.inventory_itemsUpdateManyWithoutOrganizationNestedInput
+  inventory_movements?: Prisma.inventory_movementsUpdateManyWithoutOrganizationNestedInput
+  notifications?: Prisma.notificationsUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUpdateManyWithoutOrganizationNestedInput
+  agent_usage?: Prisma.agent_usageUpdateManyWithoutOrganizationNestedInput
+  audit_logs?: Prisma.audit_logsUpdateManyWithoutOrganizationNestedInput
+  clinic_profile?: Prisma.clinic_profileUpdateManyWithoutOrganizationNestedInput
+  expenses?: Prisma.expensesUpdateManyWithoutOrganizationNestedInput
+  expense_payments?: Prisma.expense_paymentsUpdateManyWithoutOrganizationNestedInput
+  treatment_invoices?: Prisma.treatment_invoicesUpdateManyWithoutOrganizationNestedInput
+  invoice_line_items?: Prisma.invoice_line_itemsUpdateManyWithoutOrganizationNestedInput
+  invoice_payments?: Prisma.invoice_paymentsUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUpdateManyWithoutOrganizationNestedInput
+  specialists?: Prisma.specialistsUpdateManyWithoutOrganizationNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUpdateManyWithoutOrganizationNestedInput
+  dental_labs?: Prisma.dental_labsUpdateManyWithoutOrganizationNestedInput
+  lab_orders?: Prisma.lab_ordersUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUpdateManyWithoutOrganizationNestedInput
+}
+
+export type organizationsUncheckedUpdateWithoutQuote_itemsInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  legal_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  website_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logo_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  currency?: Prisma.StringFieldUpdateOperationsInput | string
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  branches?: Prisma.branchesUncheckedUpdateManyWithoutOrganizationNestedInput
+  users?: Prisma.usersUncheckedUpdateManyWithoutOrganizationNestedInput
+  patient_profiles?: Prisma.patient_profilesUncheckedUpdateManyWithoutOrganizationNestedInput
+  appointment_slots?: Prisma.appointment_slotsUncheckedUpdateManyWithoutOrganizationNestedInput
+  appointments?: Prisma.appointmentsUncheckedUpdateManyWithoutOrganizationNestedInput
+  patient_records?: Prisma.patient_recordsUncheckedUpdateManyWithoutOrganizationNestedInput
+  patient_documents?: Prisma.patient_documentsUncheckedUpdateManyWithoutOrganizationNestedInput
+  inventory_items?: Prisma.inventory_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
+  inventory_movements?: Prisma.inventory_movementsUncheckedUpdateManyWithoutOrganizationNestedInput
+  notifications?: Prisma.notificationsUncheckedUpdateManyWithoutOrganizationNestedInput
+  agent_conversations?: Prisma.agent_conversationsUncheckedUpdateManyWithoutOrganizationNestedInput
+  agent_usage?: Prisma.agent_usageUncheckedUpdateManyWithoutOrganizationNestedInput
+  audit_logs?: Prisma.audit_logsUncheckedUpdateManyWithoutOrganizationNestedInput
+  clinic_profile?: Prisma.clinic_profileUncheckedUpdateManyWithoutOrganizationNestedInput
+  expenses?: Prisma.expensesUncheckedUpdateManyWithoutOrganizationNestedInput
+  expense_payments?: Prisma.expense_paymentsUncheckedUpdateManyWithoutOrganizationNestedInput
+  treatment_invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutOrganizationNestedInput
+  invoice_line_items?: Prisma.invoice_line_itemsUncheckedUpdateManyWithoutOrganizationNestedInput
+  invoice_payments?: Prisma.invoice_paymentsUncheckedUpdateManyWithoutOrganizationNestedInput
+  roles?: Prisma.rolesUncheckedUpdateManyWithoutOrganizationNestedInput
+  role_permissions?: Prisma.role_permissionsUncheckedUpdateManyWithoutOrganizationNestedInput
+  specialists?: Prisma.specialistsUncheckedUpdateManyWithoutOrganizationNestedInput
+  specialist_consultations?: Prisma.specialist_consultationsUncheckedUpdateManyWithoutOrganizationNestedInput
+  dental_labs?: Prisma.dental_labsUncheckedUpdateManyWithoutOrganizationNestedInput
+  lab_orders?: Prisma.lab_ordersUncheckedUpdateManyWithoutOrganizationNestedInput
+  quotes?: Prisma.quotesUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 
@@ -5755,6 +6381,8 @@ export type OrganizationsCountOutputType = {
   specialist_consultations: number
   dental_labs: number
   lab_orders: number
+  quotes: number
+  quote_items: number
 }
 
 export type OrganizationsCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -5783,6 +6411,8 @@ export type OrganizationsCountOutputTypeSelect<ExtArgs extends runtime.Types.Ext
   specialist_consultations?: boolean | OrganizationsCountOutputTypeCountSpecialist_consultationsArgs
   dental_labs?: boolean | OrganizationsCountOutputTypeCountDental_labsArgs
   lab_orders?: boolean | OrganizationsCountOutputTypeCountLab_ordersArgs
+  quotes?: boolean | OrganizationsCountOutputTypeCountQuotesArgs
+  quote_items?: boolean | OrganizationsCountOutputTypeCountQuote_itemsArgs
 }
 
 /**
@@ -5970,6 +6600,20 @@ export type OrganizationsCountOutputTypeCountLab_ordersArgs<ExtArgs extends runt
   where?: Prisma.lab_ordersWhereInput
 }
 
+/**
+ * OrganizationsCountOutputType without action
+ */
+export type OrganizationsCountOutputTypeCountQuotesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.quotesWhereInput
+}
+
+/**
+ * OrganizationsCountOutputType without action
+ */
+export type OrganizationsCountOutputTypeCountQuote_itemsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.quote_itemsWhereInput
+}
+
 
 export type organizationsSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -6012,6 +6656,8 @@ export type organizationsSelect<ExtArgs extends runtime.Types.Extensions.Interna
   specialist_consultations?: boolean | Prisma.organizations$specialist_consultationsArgs<ExtArgs>
   dental_labs?: boolean | Prisma.organizations$dental_labsArgs<ExtArgs>
   lab_orders?: boolean | Prisma.organizations$lab_ordersArgs<ExtArgs>
+  quotes?: boolean | Prisma.organizations$quotesArgs<ExtArgs>
+  quote_items?: boolean | Prisma.organizations$quote_itemsArgs<ExtArgs>
   _count?: boolean | Prisma.OrganizationsCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["organizations"]>
 
@@ -6096,6 +6742,8 @@ export type organizationsInclude<ExtArgs extends runtime.Types.Extensions.Intern
   specialist_consultations?: boolean | Prisma.organizations$specialist_consultationsArgs<ExtArgs>
   dental_labs?: boolean | Prisma.organizations$dental_labsArgs<ExtArgs>
   lab_orders?: boolean | Prisma.organizations$lab_ordersArgs<ExtArgs>
+  quotes?: boolean | Prisma.organizations$quotesArgs<ExtArgs>
+  quote_items?: boolean | Prisma.organizations$quote_itemsArgs<ExtArgs>
   _count?: boolean | Prisma.OrganizationsCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type organizationsIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -6129,6 +6777,8 @@ export type $organizationsPayload<ExtArgs extends runtime.Types.Extensions.Inter
     specialist_consultations: Prisma.$specialist_consultationsPayload<ExtArgs>[]
     dental_labs: Prisma.$dental_labsPayload<ExtArgs>[]
     lab_orders: Prisma.$lab_ordersPayload<ExtArgs>[]
+    quotes: Prisma.$quotesPayload<ExtArgs>[]
+    quote_items: Prisma.$quote_itemsPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: bigint
@@ -6569,6 +7219,8 @@ export interface Prisma__organizationsClient<T, Null = never, ExtArgs extends ru
   specialist_consultations<T extends Prisma.organizations$specialist_consultationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.organizations$specialist_consultationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$specialist_consultationsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   dental_labs<T extends Prisma.organizations$dental_labsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.organizations$dental_labsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$dental_labsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   lab_orders<T extends Prisma.organizations$lab_ordersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.organizations$lab_ordersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$lab_ordersPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  quotes<T extends Prisma.organizations$quotesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.organizations$quotesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$quotesPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  quote_items<T extends Prisma.organizations$quote_itemsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.organizations$quote_itemsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$quote_itemsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -7603,6 +8255,54 @@ export type organizations$lab_ordersArgs<ExtArgs extends runtime.Types.Extension
   take?: number
   skip?: number
   distinct?: Prisma.Lab_ordersScalarFieldEnum | Prisma.Lab_ordersScalarFieldEnum[]
+}
+
+/**
+ * organizations.quotes
+ */
+export type organizations$quotesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the quotes
+   */
+  select?: Prisma.quotesSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the quotes
+   */
+  omit?: Prisma.quotesOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.quotesInclude<ExtArgs> | null
+  where?: Prisma.quotesWhereInput
+  orderBy?: Prisma.quotesOrderByWithRelationInput | Prisma.quotesOrderByWithRelationInput[]
+  cursor?: Prisma.quotesWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.QuotesScalarFieldEnum | Prisma.QuotesScalarFieldEnum[]
+}
+
+/**
+ * organizations.quote_items
+ */
+export type organizations$quote_itemsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the quote_items
+   */
+  select?: Prisma.quote_itemsSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the quote_items
+   */
+  omit?: Prisma.quote_itemsOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.quote_itemsInclude<ExtArgs> | null
+  where?: Prisma.quote_itemsWhereInput
+  orderBy?: Prisma.quote_itemsOrderByWithRelationInput | Prisma.quote_itemsOrderByWithRelationInput[]
+  cursor?: Prisma.quote_itemsWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.Quote_itemsScalarFieldEnum | Prisma.Quote_itemsScalarFieldEnum[]
 }
 
 /**

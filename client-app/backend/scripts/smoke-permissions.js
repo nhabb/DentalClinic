@@ -26,6 +26,7 @@ const { execSync } = require('node:child_process');
 const path = require('node:path');
 const {
   BASE,
+  PASSWORD,
   api,
   deleteOrganizationBySlug,
   login,
@@ -105,9 +106,14 @@ function urlFor(route, patient) {
   return url;
 }
 
+// Deleting money records (billing) asks the caller to re-enter their own
+// password (ConfirmedAdminGuard). Every probe carries the actors' shared
+// password so the admin probe exercises the route past that step; for the
+// other actors the role check refuses before the password is read.
 const call = (route, url, token) =>
   api(route.method, url, {
     token,
+    headers: { 'X-Confirm-Password': PASSWORD },
     body:
       route.method === 'GET'
         ? undefined

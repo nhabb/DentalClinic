@@ -7,6 +7,7 @@ import {
   Min,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { PAYMENT_METHODS } from './payment-methods';
 
 export class RecordPaymentDto {
   @ApiProperty({ example: 100 })
@@ -17,9 +18,9 @@ export class RecordPaymentDto {
 
   @ApiProperty({
     example: 'cash',
-    enum: ['cash', 'card', 'insurance', 'bank_transfer'],
+    enum: PAYMENT_METHODS,
   })
-  @IsIn(['cash', 'card', 'insurance', 'bank_transfer'])
+  @IsIn(PAYMENT_METHODS)
   payment_method: string;
 
   @ApiPropertyOptional({ example: 'First installment' })

@@ -47,9 +47,19 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       }
     }
 
+    // A machine-readable reason, when the exception carries one (e.g. the
+    // password-confirmation guard), so clients can react without parsing text.
+    const code =
+      exceptionResponse &&
+      typeof exceptionResponse === 'object' &&
+      'code' in exceptionResponse
+        ? (exceptionResponse as { code?: string }).code
+        : undefined;
+
     response.status(status).json({
       statusCode: status,
       message,
+      ...(code ? { code } : {}),
       path: request.url,
       timestamp: new Date().toISOString(),
     });

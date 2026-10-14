@@ -76,7 +76,9 @@ export const ModelName = {
   dental_labs: 'dental_labs',
   lab_orders: 'lab_orders',
   agent_conversations: 'agent_conversations',
-  agent_usage: 'agent_usage'
+  agent_usage: 'agent_usage',
+  quotes: 'quotes',
+  quote_items: 'quote_items'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -390,6 +392,10 @@ export const Treatment_invoicesScalarFieldEnum = {
   remaining_amount: 'remaining_amount',
   status: 'status',
   created_by: 'created_by',
+  cancelled_at: 'cancelled_at',
+  cancelled_by: 'cancelled_by',
+  cancel_reason: 'cancel_reason',
+  quote_id: 'quote_id',
   created_at: 'created_at',
   updated_at: 'updated_at'
 } as const
@@ -416,6 +422,8 @@ export const Invoice_paymentsScalarFieldEnum = {
   invoice_id: 'invoice_id',
   amount: 'amount',
   payment_method: 'payment_method',
+  kind: 'kind',
+  reason: 'reason',
   notes: 'notes',
   created_by: 'created_by',
   created_at: 'created_at'
@@ -555,6 +563,43 @@ export const Agent_usageScalarFieldEnum = {
 } as const
 
 export type Agent_usageScalarFieldEnum = (typeof Agent_usageScalarFieldEnum)[keyof typeof Agent_usageScalarFieldEnum]
+
+
+export const QuotesScalarFieldEnum = {
+  id: 'id',
+  organization_id: 'organization_id',
+  branch_id: 'branch_id',
+  patient_id: 'patient_id',
+  version: 'version',
+  supersedes_id: 'supersedes_id',
+  status: 'status',
+  valid_until: 'valid_until',
+  quoted_total: 'quoted_total',
+  notes: 'notes',
+  created_by: 'created_by',
+  sent_at: 'sent_at',
+  accepted_at: 'accepted_at',
+  declined_at: 'declined_at',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+} as const
+
+export type QuotesScalarFieldEnum = (typeof QuotesScalarFieldEnum)[keyof typeof QuotesScalarFieldEnum]
+
+
+export const Quote_itemsScalarFieldEnum = {
+  id: 'id',
+  organization_id: 'organization_id',
+  quote_id: 'quote_id',
+  record_id: 'record_id',
+  procedure_name: 'procedure_name',
+  tooth_number: 'tooth_number',
+  description: 'description',
+  quoted_amount: 'quoted_amount',
+  created_at: 'created_at'
+} as const
+
+export type Quote_itemsScalarFieldEnum = (typeof Quote_itemsScalarFieldEnum)[keyof typeof Quote_itemsScalarFieldEnum]
 
 
 export const SortOrder = {

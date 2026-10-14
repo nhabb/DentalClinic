@@ -19,6 +19,9 @@ import { tenantSafetyExtension } from './tenant-safety.extension';
  *   - tenantSafetyExtension stops Prisma from merging different requests'
  *     unique lookups into one statement.
  */
+/** The client handed to an interactive `$transaction` callback. */
+export type Tx = Parameters<Parameters<PrismaService['$transaction']>[0]>[0];
+
 @Injectable()
 export class PrismaService
   extends PrismaClient

@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaService } from '../../shared/prisma/prisma.service';
+import { PrismaService, Tx } from '../../shared/prisma/prisma.service';
 import { RecordWorkDto, WorkStatus } from './dto/record-work.dto';
 import { CompleteWorkDto } from './dto/complete-work.dto';
 
@@ -49,8 +49,6 @@ function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }
 
-/** The client handed to an interactive transaction callback. */
-type Tx = Parameters<Parameters<PrismaService['$transaction']>[0]>[0];
 /** One write of a patient-work transaction, run in order inside it. */
 type TxOp = (tx: Tx) => Promise<unknown>;
 
@@ -62,6 +60,19 @@ type TxOp = (tx: Tx) => Promise<unknown>;
 @Injectable()
 export class PatientWorkService {
   constructor(private readonly prisma: PrismaService) {}
+
+  /** The latest accepted quote that priced any of these chart records, or null. */
+  private async acceptedQuoteFor(
+    tx: Tx,
+    recordIds: bigint[],
+  ): Promise<bigint | null> {
+    const line = await tx.quote_items.findFirst({
+      where: { record_id: { in: recordIds }, quote: { status: 'accepted' } },
+      orderBy: { quote: { accepted_at: 'desc' } },
+      select: { quote_id: true },
+    });
+    return line?.quote_id ?? null;
+  }
 
   /** Run the writes in order inside one transaction; nothing to do = no transaction. */
   private runOps(ops: TxOp[]): Promise<unknown[]> {
@@ -273,7 +284,7 @@ export class PatientWorkService {
     // shared tick and can run under another request's tenant (see tenant-pool.ts).
     const ops: TxOp[] = [];
     if (billable.length > 0) {
-      ops.push((tx) =>
+      ops.push(async (tx) =>
         tx.treatment_invoices.create({
           data: {
             patient_id: patientId,
@@ -284,6 +295,11 @@ export class PatientWorkService {
             remaining_amount: total,
             status: 'open',
             created_by: createdBy,
+            // The accepted quote these records were priced on, if any: quoted vs billed stays comparable.
+            quote_id: await this.acceptedQuoteFor(
+              tx,
+              billable.map((r) => r.id),
+            ),
             line_items: {
               create: billable.map((r) => ({
                 procedure_name: r.title,

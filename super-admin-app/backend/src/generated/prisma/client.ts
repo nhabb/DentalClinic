@@ -173,3 +173,14 @@ export type agent_conversations = Prisma.agent_conversationsModel
  * One row per AI assistant answer: tokens, rounds and tool calls, for the operator usage dashboard.
  */
 export type agent_usage = Prisma.agent_usageModel
+/**
+ * Model quotes
+ * A priced treatment plan given to a patient: a numbered, versioned estimate of planned work.
+ * Not money: never counted as income or outstanding. draft -> sent -> accepted | declined | expired.
+ */
+export type quotes = Prisma.quotesModel
+/**
+ * Model quote_items
+ * One priced line of a quote, usually one planned procedure on one tooth.
+ */
+export type quote_items = Prisma.quote_itemsModel

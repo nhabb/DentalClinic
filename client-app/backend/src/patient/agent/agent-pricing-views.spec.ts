@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   HIDDEN_PRICE,
@@ -17,13 +17,15 @@ import { AGENT_SEARCH_PATH } from './guarded-select';
  * columns are gated on app.agent_has('pricing:read').
  */
 const backendDir = join(__dirname, '..', '..', '..');
-const sql = readFileSync(
-  join(
-    backendDir,
-    'prisma/migrations/20261013200000_pricing_permission_and_agent_views/migration.sql',
-  ),
-  'utf8',
-);
+const migrationsDir = join(backendDir, 'prisma', 'migrations');
+
+/** Every migration that defines agent views, oldest first, as one text. */
+const sql = readdirSync(migrationsDir)
+  .filter((d) => !d.endsWith('.toml'))
+  .sort()
+  .map((d) => readFileSync(join(migrationsDir, d, 'migration.sql'), 'utf8'))
+  .filter((text) => text.includes('CREATE OR REPLACE VIEW agent.'))
+  .join('\n');
 const schema = readFileSync(join(backendDir, 'prisma/schema.prisma'), 'utf8');
 
 const models = new Set(
@@ -93,13 +95,14 @@ describe('pricing views for the assistant', () => {
   });
 
   it('are what dental_agent reads instead of the base tables', () => {
-    const grant = statement('GRANT SELECT ON\n    agent.');
-    const revoke = statement('REVOKE SELECT ON');
-    expect(grant).toContain('TO dental_agent;');
-    expect(revoke).toContain('FROM dental_agent;');
+    // The grant and revoke statements live in whichever migration added the table.
     for (const t of tables) {
-      expect(grant).toContain(`agent.${t}`);
-      expect(revoke).toContain(`public.${t}`);
+      expect(sql).toMatch(
+        new RegExp(`GRANT SELECT ON[^;]*agent\\.${t}[^;]*TO dental_agent;`),
+      );
+      expect(sql).toMatch(
+        new RegExp(`REVOKE SELECT ON[^;]*public\\.${t}[^;]*FROM dental_agent;`),
+      );
       expect(sql).toContain(
         `ALTER VIEW agent.${t} OWNER TO dental_agent_views;`,
       );

@@ -18,6 +18,8 @@ import { FormField, inputClass } from "@/components/ui/FormField";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Avatar } from "@/components/ui/Avatar";
+import { QuotesPanel } from "@/components/billing/QuotesPanel";
+import { CONFIRM_PASSWORD_HEADER, PasswordConfirmModal } from "@/components/billing/PasswordConfirmModal";
 import {
   FaFileInvoiceDollar,
   FaDollarSign,
@@ -56,8 +58,11 @@ type LineItem = { id: number; procedure_name: string; amount: number; tooth_numb
 
 type InvoicePayment = {
   id: number;
+  /** payment = money received, refund = money returned (shown as a minus). */
+  kind: "payment" | "refund";
   amount: number;
   payment_method: string;
+  reason?: string | null;
   notes?: string;
   created_at: string;
 };
@@ -70,7 +75,11 @@ type TreatmentInvoice = {
   total_amount: number;
   amount_paid: number;
   remaining_amount: number;
-  status: "open" | "partial" | "paid";
+  status: "open" | "partial" | "paid" | "cancelled";
+  cancel_reason?: string | null;
+  cancelled_at?: string | null;
+  /** The accepted quote this invoice was billed from, if any. */
+  quote?: { id: number; version: number; quoted_total: number } | null;
   created_at: string;
   line_items: LineItem[];
   invoice_payments: InvoicePayment[];
@@ -85,6 +94,7 @@ function StatusBadge({ status }: { status: string }) {
     open: "bg-blue-100 text-blue-800",
     partial: "bg-yellow-100 text-yellow-800",
     paid: "bg-green-100 text-green-800",
+    cancelled: "bg-gray-200 text-gray-600 line-through",
   };
   return (
     <span className={`px-2 py-1 rounded-full text-xs font-semibold capitalize ${map[status] ?? "bg-gray-100 text-gray-800"}`}>
@@ -121,8 +131,21 @@ export default function BillingPage() {
   const [recordingPayment, setRecordingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState("");
 
-  // Delete invoice
-  const [deletingId, setDeletingId] = useState<number | null>(null);
+  // Invoices or quotes
+  const [view, setView] = useState<"invoices" | "quotes">("invoices");
+
+  // Refund / void forms (inside the invoice modal)
+  const [refundForm, setRefundForm] = useState({ amount: "", payment_method: "cash", reason: "" });
+  const [refunding, setRefunding] = useState(false);
+  const [refundError, setRefundError] = useState("");
+  const [voidReason, setVoidReason] = useState("");
+  const [voiding, setVoiding] = useState(false);
+  const [voidError, setVoidError] = useState("");
+
+  // Deleting money records: admin only, password re-entered in a modal.
+  const [confirm, setConfirm] = useState<{ kind: "invoice" | "payment"; id: number; label: string } | null>(null);
+  const [confirmBusy, setConfirmBusy] = useState(false);
+  const [confirmError, setConfirmError] = useState("");
 
   // ── Fetch helpers ────────────────────────────────────────────────────────────
 
@@ -133,7 +156,8 @@ export default function BillingPage() {
     amount_paid: Number(inv.amount_paid),
     remaining_amount: Number(inv.remaining_amount),
     line_items: (inv.line_items ?? []).map((li: any) => ({ ...li, id: Number(li.id), amount: Number(li.amount) })),
-    invoice_payments: (inv.invoice_payments ?? []).map((p: any) => ({ ...p, id: Number(p.id), amount: Number(p.amount) })),
+    invoice_payments: (inv.invoice_payments ?? []).map((p: any) => ({ ...p, id: Number(p.id), amount: Number(p.amount), kind: p.kind ?? "payment" })),
+    quote: inv.quote ? { ...inv.quote, id: Number(inv.quote.id), quoted_total: Number(inv.quote.quoted_total) } : null,
   });
 
   const fetchInvoices = async () => {
@@ -175,13 +199,15 @@ export default function BillingPage() {
     Open: invoices.filter((i) => matchesInvoiceSearch(i) && i.status === "open").length,
     Partial: invoices.filter((i) => matchesInvoiceSearch(i) && i.status === "partial").length,
     Paid: invoices.filter((i) => matchesInvoiceSearch(i) && i.status === "paid").length,
+    Cancelled: invoices.filter((i) => matchesInvoiceSearch(i) && i.status === "cancelled").length,
   };
+  const liveInvoices = invoices.filter((i) => i.status !== "cancelled");
   const hasInvoiceFilters = !!bq || selectedStatus !== "All";
   const clearInvoiceFilters = () => { setSearchQuery(""); setSelectedStatus("All"); };
 
-  const totalInvoiced = invoices.reduce((s, i) => s + i.total_amount, 0);
-  const totalCollected = invoices.reduce((s, i) => s + i.amount_paid, 0);
-  const outstanding = invoices.filter((i) => i.status !== "paid").reduce((s, i) => s + i.remaining_amount, 0);
+  const totalInvoiced = liveInvoices.reduce((s, i) => s + i.total_amount, 0);
+  const totalCollected = liveInvoices.reduce((s, i) => s + i.amount_paid, 0);
+  const outstanding = liveInvoices.filter((i) => i.status !== "paid").reduce((s, i) => s + i.remaining_amount, 0);
 
   // ── Line item helpers ─────────────────────────────────────────────────────────
 
@@ -282,28 +308,118 @@ export default function BillingPage() {
     }
   };
 
-  const handleDeleteInvoice = async (inv: TreatmentInvoice) => {
-    if (!window.confirm(`Delete Invoice #${inv.id}? This cannot be undone.`)) return;
-    setDeletingId(inv.id);
+  // ── Refund ──────────────────────────────────────────────────────────────────
+
+  const handleRefund = async () => {
+    if (!selectedInvoice) return;
+    setRefundError("");
+    const amount = parseFloat(refundForm.amount);
+    if (!amount || amount <= 0) { setRefundError("Enter the amount being returned."); return; }
+    if (amount > selectedInvoice.amount_paid + 0.001) {
+      setRefundError(`Cannot refund more than was received (${selectedInvoice.amount_paid.toFixed(2)}).`);
+      return;
+    }
+    if (refundForm.reason.trim().length < 3) { setRefundError("Say why the money is being returned."); return; }
+    setRefunding(true);
     try {
-      const res = await apiFetch(`/api/billing/invoices/${inv.id}`, { method: "DELETE" });
-      if (res.ok) {
-        setInvoices((prev) => prev.filter((i) => i.id !== inv.id));
+      const res = await apiFetch(`/api/billing/invoices/${selectedInvoice.id}/refunds`, {
+        method: "POST",
+        body: JSON.stringify({ amount, payment_method: refundForm.payment_method, reason: refundForm.reason.trim() }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message ?? "Failed to record the refund");
+      }
+      const normalized = normalizeInvoice(await res.json());
+      await fetchInvoices();
+      toast.success("Refund recorded.");
+      setSelectedInvoice(normalized);
+      setRefundForm({ amount: "", payment_method: "cash", reason: "" });
+    } catch (e: any) {
+      setRefundError(e.message ?? "Something went wrong.");
+    } finally {
+      setRefunding(false);
+    }
+  };
+
+  // ── Void (cancel) ───────────────────────────────────────────────────────────
+
+  const handleVoid = async () => {
+    if (!selectedInvoice) return;
+    setVoidError("");
+    if (voidReason.trim().length < 3) { setVoidError("Say why this invoice is cancelled."); return; }
+    if (!window.confirm(`Cancel Invoice #${selectedInvoice.id}? It stays on record as cancelled and is no longer owed.`)) return;
+    setVoiding(true);
+    try {
+      const res = await apiFetch(`/api/billing/invoices/${selectedInvoice.id}/void`, {
+        method: "POST",
+        body: JSON.stringify({ reason: voidReason.trim() }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message ?? "Failed to cancel the invoice");
+      }
+      const normalized = normalizeInvoice(await res.json());
+      await fetchInvoices();
+      toast.success("Invoice cancelled.");
+      setSelectedInvoice(normalized);
+      setVoidReason("");
+    } catch (e: any) {
+      setVoidError(e.message ?? "Something went wrong.");
+    } finally {
+      setVoiding(false);
+    }
+  };
+
+  // ── Delete (admin + password) ───────────────────────────────────────────────
+
+  const requestDeleteInvoice = (inv: TreatmentInvoice) => {
+    setConfirmError("");
+    setConfirm({ kind: "invoice", id: inv.id, label: `Invoice #${inv.id} for ${inv.patient.users.first_name} ${inv.patient.users.last_name}` });
+  };
+  const requestDeletePayment = (p: InvoicePayment) => {
+    setConfirmError("");
+    setConfirm({ kind: "payment", id: p.id, label: `${p.kind === "refund" ? "Refund" : "Payment"} of ${p.amount.toFixed(2)}` });
+  };
+
+  const handleConfirmedDelete = async (password: string) => {
+    if (!confirm) return;
+    setConfirmBusy(true);
+    setConfirmError("");
+    const path = confirm.kind === "invoice" ? `/api/billing/invoices/${confirm.id}` : `/api/billing/payments/${confirm.id}`;
+    try {
+      const res = await apiFetch(path, { method: "DELETE", headers: { [CONFIRM_PASSWORD_HEADER]: password } });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        setConfirmError(err.message ?? "The deletion was refused.");
+        return;
+      }
+      if (confirm.kind === "invoice") {
+        setInvoices((prev) => prev.filter((i) => i.id !== confirm.id));
+        setShowViewModal(false);
+        setSelectedInvoice(null);
         toast.success("Invoice deleted.");
       } else {
-        const err = await res.json().catch(() => ({}));
-        toast.error(err.message ?? "Failed to delete invoice.");
+        const normalized = normalizeInvoice(await res.json());
+        await fetchInvoices();
+        setSelectedInvoice(normalized);
+        toast.success("Removed.");
       }
+      setConfirm(null);
     } catch {
-      toast.error("Failed to delete invoice.");
+      setConfirmError("The deletion could not be completed.");
     } finally {
-      setDeletingId(null);
+      setConfirmBusy(false);
     }
   };
 
   const openViewModal = (invoice: TreatmentInvoice) => {
     setSelectedInvoice(invoice);
     resetPaymentForm();
+    setRefundForm({ amount: "", payment_method: "cash", reason: "" });
+    setRefundError("");
+    setVoidReason("");
+    setVoidError("");
     setShowViewModal(true);
   };
 
@@ -335,7 +451,21 @@ export default function BillingPage() {
         />
 
         <main className="flex-1 p-8 overflow-auto">
-          {isLoading ? (
+          <div className="mb-6 inline-flex rounded-xl border border-ink-200 bg-ink-50 p-1 text-sm font-medium">
+            {(["invoices", "quotes"] as const).map((v) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setView(v)}
+                className={`rounded-lg px-4 py-1.5 capitalize transition-colors ${view === v ? "bg-white text-brand shadow-sm" : "text-ink-500 hover:text-ink-800"}`}
+              >
+                {v}
+              </button>
+            ))}
+          </div>
+          {view === "quotes" ? (
+            <QuotesPanel patients={patients} procedures={PROCEDURES} />
+          ) : isLoading ? (
             <LoadingSpinner />
           ) : (
             <>
@@ -366,7 +496,7 @@ export default function BillingPage() {
                   icon={FaHashtag}
                   iconBgClass="bg-purple-100"
                   iconColorClass="text-purple-600"
-                  value={String(invoices.length)}
+                  value={String(liveInvoices.length)}
                   label={t("billing.totalInvoices")}
                 />
               </div>
@@ -390,6 +520,7 @@ export default function BillingPage() {
                       { value: "Open", label: t("billing.statusOpen"), count: invoiceStatusCounts.Open, dot: "bg-amber-500" },
                       { value: "Partial", label: t("billing.statusPartial"), count: invoiceStatusCounts.Partial, dot: "bg-blue-500" },
                       { value: "Paid", label: t("billing.statusPaid"), count: invoiceStatusCounts.Paid, dot: "bg-emerald-500" },
+                      { value: "Cancelled", label: "Cancelled", count: invoiceStatusCounts.Cancelled, dot: "bg-gray-400" },
                     ],
                   },
                 ]}
@@ -447,16 +578,12 @@ export default function BillingPage() {
                                 </button>
                                 {can("billing:delete") && (
                                 <button
-                                  onClick={() => handleDeleteInvoice(inv)}
-                                  disabled={deletingId === inv.id}
-                                  className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-40"
-                                  title="Delete invoice"
+                                  onClick={() => requestDeleteInvoice(inv)}
+                                  disabled={inv.invoice_payments.length > 0}
+                                  className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-30"
+                                  title={inv.invoice_payments.length > 0 ? "Has payments: cancel it instead of deleting" : "Delete invoice (admin, password required)"}
                                 >
-                                  {deletingId === inv.id ? (
-                                    <span className="block w-3.5 h-3.5 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
-                                  ) : (
-                                    <FaTrash className="text-sm" />
-                                  )}
+                                  <FaTrash className="text-sm" />
                                 </button>
                                 )}
                               </div>
@@ -595,7 +722,15 @@ export default function BillingPage() {
             <div className="flex flex-wrap gap-4 text-sm text-gray-600">
               <span><strong>{t("billing.dateLabel")}</strong> {formatDateBeirut(selectedInvoice.procedure_date)}</span>
               <span><strong>{t("billing.statusLabel")}</strong> <StatusBadge status={selectedInvoice.status} /></span>
+              {selectedInvoice.quote && (
+                <span><strong>Quote:</strong> #{selectedInvoice.quote.id} v{selectedInvoice.quote.version} (estimate ${selectedInvoice.quote.quoted_total.toFixed(2)})</span>
+              )}
             </div>
+            {selectedInvoice.status === "cancelled" && (
+              <p className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
+                <strong>Cancelled</strong>{selectedInvoice.cancelled_at ? ` on ${formatDateBeirut(selectedInvoice.cancelled_at)}` : ""}: {selectedInvoice.cancel_reason}
+              </p>
+            )}
 
             {selectedInvoice.notes && (
               <p className="text-sm text-gray-600 bg-gray-50 rounded-lg px-3 py-2 italic">{selectedInvoice.notes}</p>
@@ -655,21 +790,37 @@ export default function BillingPage() {
                 <h4 className="font-semibold text-gray-800 mb-2">{t("billing.paymentHistory")}</h4>
                 <div className="space-y-2">
                   {selectedInvoice.invoice_payments.map((p) => (
-                    <div key={p.id} className="flex items-center justify-between text-sm bg-gray-50 rounded-lg px-3 py-2">
+                    <div key={p.id} className={`flex items-center justify-between text-sm rounded-lg px-3 py-2 ${p.kind === "refund" ? "bg-red-50" : "bg-gray-50"}`}>
                       <div>
-                        <span className="font-medium text-gray-800">${p.amount.toFixed(2)}</span>
+                        <span className={`font-medium ${p.kind === "refund" ? "text-red-700" : "text-gray-800"}`}>
+                          {p.kind === "refund" ? "−" : ""}${p.amount.toFixed(2)}
+                        </span>
+                        {p.kind === "refund" && <span className="ml-2 text-xs font-semibold uppercase text-red-600">refund</span>}
                         <span className="ml-2 text-gray-500 capitalize">{p.payment_method}</span>
+                        {p.reason && <span className="ml-2 text-gray-500 italic">{p.reason}</span>}
                         {p.notes && <span className="ml-2 text-gray-400 italic">{p.notes}</span>}
                       </div>
-                      <span className="text-gray-400">{formatDateBeirut(p.created_at)}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-400">{formatDateBeirut(p.created_at)}</span>
+                        {can("billing:delete") && selectedInvoice.status !== "cancelled" && (
+                          <button
+                            type="button"
+                            onClick={() => requestDeletePayment(p)}
+                            className="p-1 text-red-300 hover:text-red-600 rounded"
+                            title="Remove this row (admin, password required)"
+                          >
+                            <FaTrash className="text-xs" />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Record payment — only when not fully paid */}
-            {can("billing:write") && selectedInvoice.status !== "paid" && (
+            {/* Record payment — only while the invoice is live and not fully paid */}
+            {can("billing:write") && selectedInvoice.status !== "paid" && selectedInvoice.status !== "cancelled" && (
               <div className="border-t border-gray-200 pt-4">
                 <h4 className="font-semibold text-gray-800 mb-3">{t("billing.recordPayment")}</h4>
                 <div className="space-y-3">
@@ -723,9 +874,79 @@ export default function BillingPage() {
                 </div>
               </div>
             )}
+
+            {/* Refund — money back to the patient, never more than was received */}
+            {can("billing:write") && selectedInvoice.status !== "cancelled" && selectedInvoice.amount_paid > 0 && (
+              <details className="border-t border-gray-200 pt-4">
+                <summary className="cursor-pointer font-semibold text-gray-800">Refund money to the patient</summary>
+                <div className="mt-3 space-y-3">
+                  <div className="flex gap-3">
+                    <div className="flex-1">
+                      <FormField label={`Amount (max ${selectedInvoice.amount_paid.toFixed(2)}) *`}>
+                        <input type="number" min="0.01" step="0.01" max={selectedInvoice.amount_paid} placeholder="0.00" value={refundForm.amount}
+                          onChange={(e) => setRefundForm((f) => ({ ...f, amount: e.target.value }))} className={inputClass} />
+                      </FormField>
+                    </div>
+                    <div className="flex-1">
+                      <FormField label="Returned by *">
+                        <select value={refundForm.payment_method} onChange={(e) => setRefundForm((f) => ({ ...f, payment_method: e.target.value }))} className={inputClass}>
+                          <option value="cash">{t("billing.cash")}</option>
+                          <option value="card">{t("billing.card")}</option>
+                          <option value="insurance">{t("billing.insurance")}</option>
+                          <option value="bank_transfer">{t("billing.bankTransfer")}</option>
+                        </select>
+                      </FormField>
+                    </div>
+                  </div>
+                  <FormField label="Reason *">
+                    <input type="text" placeholder="Why the money is returned" value={refundForm.reason}
+                      onChange={(e) => setRefundForm((f) => ({ ...f, reason: e.target.value }))} className={inputClass} />
+                  </FormField>
+                  {refundError && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{refundError}</p>}
+                  <Button variant="outline" onClick={handleRefund} disabled={refunding} className="w-full">
+                    {refunding ? "Recording…" : "Record refund"}
+                  </Button>
+                </div>
+              </details>
+            )}
+
+            {/* Void — the invoice is not owed; it stays on record as cancelled */}
+            {can("billing:write") && selectedInvoice.status !== "cancelled" && (
+              <details className="border-t border-gray-200 pt-4">
+                <summary className="cursor-pointer font-semibold text-gray-800">Cancel this invoice</summary>
+                <div className="mt-3 space-y-3">
+                  {selectedInvoice.amount_paid > 0 ? (
+                    <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                      ${selectedInvoice.amount_paid.toFixed(2)} was received on this invoice. Refund it first; then it can be cancelled.
+                    </p>
+                  ) : (
+                    <>
+                      <p className="text-sm text-gray-600">The invoice stays on record, marked cancelled with your reason, and is no longer counted as owed. Chart work billed on it can be billed again.</p>
+                      <FormField label="Reason *">
+                        <input type="text" placeholder="Why this invoice is cancelled" value={voidReason} onChange={(e) => setVoidReason(e.target.value)} className={inputClass} />
+                      </FormField>
+                      {voidError && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{voidError}</p>}
+                      <Button variant="destructive" onClick={handleVoid} disabled={voiding} className="w-full">
+                        {voiding ? "Cancelling…" : "Cancel invoice"}
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </details>
+            )}
           </div>
         </Modal>
       )}
+
+      <PasswordConfirmModal
+        open={!!confirm}
+        title={confirm?.kind === "payment" ? "Remove this payment row" : "Delete this invoice"}
+        description={confirm ? `${confirm.label} will be removed permanently. Prefer a refund or a cancellation when money was actually received.` : ""}
+        busy={confirmBusy}
+        error={confirmError}
+        onConfirm={handleConfirmedDelete}
+        onClose={() => { if (!confirmBusy) setConfirm(null); }}
+      />
     </div>
   );
 }
