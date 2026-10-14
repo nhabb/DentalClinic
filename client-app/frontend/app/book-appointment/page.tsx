@@ -1,6 +1,7 @@
 "use client";
 
 import { apiFetch } from "@/lib/api/client";
+import { ClinicName } from "@/components/ui/ClinicName";
 import { useClinicIdentity } from "@/lib/clinic";
 import { toast } from 'sonner';
 import Link from "next/link";
@@ -351,10 +352,7 @@ export default function BookAppointment() {
               <div className="w-10 h-10 bg-gradient-to-br from-brand to-brand-400 rounded-lg flex items-center justify-center">
                 <FaTooth className="text-white text-xl" />
               </div>
-              <span className="flex min-w-0 flex-col leading-tight">
-                <span className="truncate text-xl font-bold text-gray-900">{clinic?.name ?? "\u00a0"}</span>
-                {clinic?.branch && <span className="truncate text-[11px] text-gray-500">{clinic.branch}</span>}
-              </span>
+              <ClinicName size="lg" name={clinic?.name} detail={clinic?.branch} />
             </Link>
             <div className="flex items-center gap-4">
               {(photoUrl || patientName) && (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ClinicName } from "@/components/ui/ClinicName";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "@/lib/i18n";
@@ -145,21 +146,16 @@ export default function AdminSidebar({
               sidebarOpen && "flex-1",
             )}
           >
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-accent-blue-400 to-accent-blue-600 shadow-lg shadow-accent-blue-700/20 transition-transform duration-200 group-hover:scale-105">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 shadow-lg shadow-brand-700/20 transition-transform duration-200 group-hover:scale-105">
               <FaTooth className="text-lg text-white" />
             </span>
             {sidebarOpen && (
-              <span className="min-w-0 animate-fade-in">
-                <span
-                  className="line-clamp-2 font-display text-[15px] font-bold leading-tight text-ink-900"
-                  title={clinic?.name}
-                >
-                  {clinic?.name ?? "\u00a0"}
-                </span>
-                <span className="block truncate text-[11px] text-ink-400" title={clinic?.branch ?? undefined}>
-                  {clinic?.branch ?? subtitle ?? t("nav.adminPanel")}
-                </span>
-              </span>
+              <ClinicName
+                className="animate-fade-in"
+                size="sm"
+                name={clinic?.name}
+                detail={clinic?.branch ?? subtitle ?? t("nav.adminPanel")}
+              />
             )}
           </Link>
           <button

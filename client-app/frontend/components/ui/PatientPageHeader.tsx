@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { ClinicName } from "@/components/ui/ClinicName";
 import Link from "next/link";
 import { FaTooth, FaArrowLeft } from "react-icons/fa";
 import { Avatar } from "@/components/ui/Avatar";
@@ -56,10 +57,7 @@ export function PatientPageHeader({
             <span className="flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 shadow-sm shadow-brand-700/20 transition-transform duration-200 group-hover:scale-105">
               <FaTooth className="text-lg text-white" />
             </span>
-            <span className="flex min-w-0 flex-col leading-tight">
-              <span className="truncate font-display text-xl font-bold text-ink-900">{clinic?.name ?? "\u00a0"}</span>
-              {clinic?.branch && <span className="truncate text-[11px] text-ink-400">{clinic.branch}</span>}
-            </span>
+            <ClinicName size="lg" name={clinic?.name} detail={clinic?.branch} />
           </Link>
 
           <div className="flex items-center gap-3">
