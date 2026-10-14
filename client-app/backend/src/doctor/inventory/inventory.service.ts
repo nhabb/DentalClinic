@@ -209,8 +209,10 @@ export class InventoryService {
       );
     }
 
-    const [movement] = await this.prisma.$transaction([
-      this.prisma.inventory_movements.create({
+    // Interactive transaction on purpose: the array form is started from a
+    // shared tick and can run under another request's tenant (see tenant-pool.ts).
+    return this.prisma.$transaction(async (tx) => {
+      const movement = await tx.inventory_movements.create({
         data: {
           item_id: itemId,
           movement_type: dto.movement_type,
@@ -222,14 +224,13 @@ export class InventoryService {
           note: dto.note,
           performed_by: BigInt(dto.performed_by),
         },
-      }),
-      this.prisma.inventory_items.update({
+      });
+      await tx.inventory_items.update({
         where: { id: itemId },
         data: { quantity: newQuantity, updated_at: new Date() },
-      }),
-    ]);
-
-    return movement;
+      });
+      return movement;
+    });
   }
 
   async getMovements(itemId: bigint, page = 1, limit = 20) {

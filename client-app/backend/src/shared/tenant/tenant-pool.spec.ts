@@ -1,4 +1,9 @@
-import { EMPTY_TENANT, runWithTenant } from './tenant-context';
+import {
+  EMPTY_TENANT,
+  currentTenant,
+  runWithTenant,
+  type TenantContext,
+} from './tenant-context';
 
 /**
  * A stand-in for pg's Pool: hands out fake clients that record the SQL they
@@ -22,7 +27,20 @@ class FakeClient {
 const fakePool = {
   clients: [] as FakeClient[],
   nextClient: null as FakeClient | null,
+  /**
+   * When set, the client is handed out later from inside this other tenant's
+   * async context, the way pg's pool serves a queued request from whichever
+   * request just released a connection.
+   */
+  deliverFrom: null as TenantContext | null,
 };
+
+/** Hand `client` to `give` now, or later from the other tenant's context. */
+function deliver(client: FakeClient, give: () => void) {
+  const from = fakePool.deliverFrom;
+  if (!from) return give();
+  setImmediate(() => void runWithTenant(from, give));
+}
 
 jest.mock('pg', () => ({
   Pool: class {
@@ -37,10 +55,12 @@ jest.mock('pg', () => ({
       fakePool.nextClient = null;
       fakePool.clients.push(client);
       if (cb) {
-        cb(undefined, client, (e?: unknown) => client.release(e));
+        deliver(client, () =>
+          cb(undefined, client, (e?: unknown) => client.release(e)),
+        );
         return;
       }
-      return Promise.resolve(client);
+      return new Promise((resolve) => deliver(client, () => resolve(client)));
     }
   },
 }));
@@ -86,7 +106,58 @@ describe('TenantPool', () => {
   beforeEach(() => {
     fakePool.clients = [];
     fakePool.nextClient = null;
+    fakePool.deliverFrom = null;
     delete process.env.DB_APP_ROLE; // default role: dental_app
+  });
+
+  const otherClinic: TenantContext = {
+    ...EMPTY_TENANT,
+    organizationId: 99n,
+    source: 'jwt',
+  };
+  const myClinic: TenantContext = {
+    ...EMPTY_TENANT,
+    organizationId: 1n,
+    source: 'jwt',
+  };
+
+  it('primes with the caller tenant even when pg hands the connection out from another request (callback form)', (done) => {
+    fakePool.deliverFrom = otherClinic;
+    const pool = new TenantPool();
+    void runWithTenant(myClinic, () => {
+      pool.connect((err, client) => {
+        try {
+          expect(err).toBeUndefined();
+          expect(settingsOf(client as unknown as FakeClient)).toMatchObject({
+            'app.current_org': '1',
+          });
+          // The callback itself runs in the caller's context, not the releaser's.
+          expect(currentTenant().organizationId).toBe(1n);
+          done();
+        } catch (e) {
+          done(e);
+        }
+      });
+    });
+  });
+
+  it('primes with the caller tenant even when pg hands the connection out from another request (promise form)', async () => {
+    fakePool.deliverFrom = otherClinic;
+    const pool = new TenantPool();
+    await runWithTenant(myClinic, () => pool.connect());
+    expect(settingsOf(fakePool.clients[0])).toMatchObject({
+      'app.current_org': '1',
+    });
+  });
+
+  it('a queued request outside any tenant stays empty even if served from another tenant context', async () => {
+    fakePool.deliverFrom = otherClinic;
+    const pool = new TenantPool();
+    await pool.connect();
+    expect(settingsOf(fakePool.clients[0])).toMatchObject({
+      'app.current_org': '',
+      'app.bypass_rls': 'off',
+    });
   });
 
   it('switches role once and sets the four tenant settings on checkout (promise form)', async () => {
@@ -114,16 +185,19 @@ describe('TenantPool', () => {
 
   it('primes through the callback form used by pool.query()', (done) => {
     const pool = new TenantPool();
-    runWithTenant({ ...EMPTY_TENANT, system: true, source: 'system' }, () => {
-      pool.connect((err, client) => {
-        expect(err).toBeUndefined();
-        expect(settingsOf(client as unknown as FakeClient)).toMatchObject({
-          'app.current_org': '',
-          'app.bypass_rls': 'on',
+    void runWithTenant(
+      { ...EMPTY_TENANT, system: true, source: 'system' },
+      () => {
+        pool.connect((err, client) => {
+          expect(err).toBeUndefined();
+          expect(settingsOf(client as unknown as FakeClient)).toMatchObject({
+            'app.current_org': '',
+            'app.bypass_rls': 'on',
+          });
+          done();
         });
-        done();
-      });
-    });
+      },
+    );
   });
 
   it('fails closed with empty settings when there is no tenant context', async () => {

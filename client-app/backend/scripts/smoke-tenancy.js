@@ -443,10 +443,14 @@ async function main() {
         restrict_to_branch: true,
       },
     });
+    const tyreSecId = tyreSec.json?.user?.id;
+    const tyreSecRow = tyreSecId
+      ? await api('GET', `/users/${tyreSecId}`, { token: t })
+      : { status: 0, json: null };
     record(
       'admin creates branch-restricted secretary',
-      tyreSec.status === 201 && tyreSec.json?.restrict_to_branch === true,
-      `status ${tyreSec.status} ${tyreSec.json?.message ?? ''}`,
+      tyreSec.status === 201 && tyreSecRow.json?.restrict_to_branch === true,
+      `status ${tyreSec.status} ${tyreSec.json?.message ?? ''} restrict=${tyreSecRow.json?.restrict_to_branch}`,
     );
     await setPassword(SMOKE_EMAILS[1], PASSWORD);
     const sec = await login(SMOKE_EMAILS[1]);
@@ -511,11 +515,10 @@ async function main() {
       );
 
       // Lifting the restriction and deactivating are visible on the next request.
-      const lifted = await api(
-        'PATCH',
-        `/users/${tyreSec.json.id}/assignment`,
-        { token: t, body: { restrict_to_branch: false } },
-      );
+      const lifted = await api('PATCH', `/users/${tyreSecId}/assignment`, {
+        token: t,
+        body: { restrict_to_branch: false },
+      });
       record(
         'admin lifts the branch restriction',
         lifted.status === 200 && lifted.json?.restrict_to_branch === false,
@@ -530,10 +533,10 @@ async function main() {
       await checkRolesAndPermissions({
         admin: t,
         secretary: s,
-        secretaryId: tyreSec.json.id,
+        secretaryId: tyreSecId,
       });
 
-      await api('PATCH', `/users/${tyreSec.json.id}/assignment`, {
+      await api('PATCH', `/users/${tyreSecId}/assignment`, {
         token: t,
         body: { is_active: false },
       });
@@ -610,10 +613,14 @@ async function main() {
         role: 'doctor',
       },
     });
+    const staffRow = staff.json?.user?.id
+      ? await api('GET', `/users/${staff.json.user.id}`, scoped)
+      : { status: 0, json: null };
     record(
       'staff created inside the new org',
-      staff.status === 201 && staff.json?.organization_id === String(newOrgId),
-      `status ${staff.status} org=${staff.json?.organization_id}`,
+      staff.status === 201 &&
+        String(staffRow.json?.organization_id) === String(newOrgId),
+      `status ${staff.status} org=${staffRow.json?.organization_id}`,
     );
 
     const doctorsBaseline = await api('GET', '/users/doctors');

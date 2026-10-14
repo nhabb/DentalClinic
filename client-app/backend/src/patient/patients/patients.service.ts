@@ -345,42 +345,44 @@ export class PatientsService {
 
     // Nullify all nullable FKs that reference this user but have no onDelete cascade,
     // so the subsequent user deletion doesn't hit FK constraint violations.
-    await this.prisma.$transaction([
-      this.prisma.audit_logs.updateMany({
+    // Interactive transaction on purpose: the array form is started from a
+    // shared tick and can run under another request's tenant (see tenant-pool.ts).
+    await this.prisma.$transaction(async (tx) => {
+      await tx.audit_logs.updateMany({
         where: { user_id: userId },
         data: { user_id: null },
-      }),
-      this.prisma.inventory_movements.updateMany({
+      });
+      await tx.inventory_movements.updateMany({
         where: { performed_by: userId },
         data: { performed_by: null },
-      }),
-      this.prisma.appointments.updateMany({
+      });
+      await tx.appointments.updateMany({
         where: { created_by: userId },
         data: { created_by: null },
-      }),
-      this.prisma.patient_documents.updateMany({
+      });
+      await tx.patient_documents.updateMany({
         where: { uploaded_by: userId },
         data: { uploaded_by: null },
-      }),
-      this.prisma.patient_records.updateMany({
+      });
+      await tx.patient_records.updateMany({
         where: { created_by: userId },
         data: { created_by: null },
-      }),
-      this.prisma.expenses.updateMany({
+      });
+      await tx.expenses.updateMany({
         where: { created_by: userId },
         data: { created_by: null },
-      }),
-      this.prisma.treatment_invoices.updateMany({
+      });
+      await tx.treatment_invoices.updateMany({
         where: { created_by: userId },
         data: { created_by: null },
-      }),
-      this.prisma.invoice_payments.updateMany({
+      });
+      await tx.invoice_payments.updateMany({
         where: { created_by: userId },
         data: { created_by: null },
-      }),
+      });
       // Delete the user — cascades to: patient_profiles → appointments, records, docs, invoices, payments
-      this.prisma.users.delete({ where: { id: userId } }),
-    ]);
+      await tx.users.delete({ where: { id: userId } });
+    });
 
     return { message: 'Patient deleted successfully' };
   }

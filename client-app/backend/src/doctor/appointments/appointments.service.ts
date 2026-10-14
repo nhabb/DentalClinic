@@ -69,9 +69,11 @@ export class AppointmentsService {
     });
     if (!patient) throw new NotFoundException('Patient profile not found');
 
-    // Create appointment + mark slot booked in a transaction
-    const [appointment] = await this.prisma.$transaction([
-      this.prisma.appointments.create({
+    // Create appointment + mark slot booked in a transaction.
+    // Interactive transaction on purpose: the array form is started from a
+    // shared tick and can run under another request's tenant (see tenant-pool.ts).
+    const appointment = await this.prisma.$transaction(async (tx) => {
+      const created = await tx.appointments.create({
         data: {
           // The appointment happens wherever the slot is.
           branch_id: slot.branch_id,
@@ -85,12 +87,13 @@ export class AppointmentsService {
           reason: dto.reason,
         },
         include: appointmentInclude,
-      }),
-      this.prisma.appointment_slots.update({
+      });
+      await tx.appointment_slots.update({
         where: { id: slot.id },
         data: { is_booked: true, updated_at: new Date() },
-      }),
-    ]);
+      });
+      return created;
+    });
 
     // Notify doctor
     await this.notifications.create({

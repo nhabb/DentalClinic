@@ -49,6 +49,11 @@ function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }
 
+/** The client handed to an interactive transaction callback. */
+type Tx = Parameters<Parameters<PrismaService['$transaction']>[0]>[0];
+/** One write of a patient-work transaction, run in order inside it. */
+type TxOp = (tx: Tx) => Promise<unknown>;
+
 /**
  * Work done on teeth, recorded from the dental chart. Each tooth × procedure
  * becomes one patient_records row (record_type `treatment` or `treatment_plan`)
@@ -57,6 +62,16 @@ function round2(n: number): number {
 @Injectable()
 export class PatientWorkService {
   constructor(private readonly prisma: PrismaService) {}
+
+  /** Run the writes in order inside one transaction; nothing to do = no transaction. */
+  private runOps(ops: TxOp[]): Promise<unknown[]> {
+    if (ops.length === 0) return Promise.resolve([]);
+    return this.prisma.$transaction(async (tx) => {
+      const results: unknown[] = [];
+      for (const op of ops) results.push(await op(tx));
+      return results;
+    });
+  }
 
   private async requirePatient(patientId: bigint) {
     const patient = await this.prisma.patient_profiles.findUnique({
@@ -159,12 +174,14 @@ export class PatientWorkService {
 
     const total = round2(billable.reduce((s, i) => s + (i.amount ?? 0), 0));
 
-    // One batch transaction: the invoice (with its line items and the records it
+    // One transaction: the invoice (with its line items and the records it
     // bills) in a single nested write, plus the remaining records.
-    const ops: any[] = [];
+    // Interactive transaction on purpose: the array form is started from a
+    // shared tick and can run under another request's tenant (see tenant-pool.ts).
+    const ops: TxOp[] = [];
     if (billable.length > 0) {
-      ops.push(
-        this.prisma.treatment_invoices.create({
+      ops.push((tx) =>
+        tx.treatment_invoices.create({
           data: {
             patient_id: patientId,
             procedure_date: treatmentDate,
@@ -188,14 +205,14 @@ export class PatientWorkService {
       );
     }
     if (unbilled.length > 0) {
-      ops.push(
-        this.prisma.patient_records.createMany({
+      ops.push((tx) =>
+        tx.patient_records.createMany({
           data: unbilled.map(recordData),
         }),
       );
     }
 
-    const results = await this.prisma.$transaction(ops);
+    const results = await this.runOps(ops);
     const invoice = billable.length > 0 ? results[0] : null;
 
     const chart = await this.getChart(patientId);
@@ -252,10 +269,12 @@ export class PatientWorkService {
       billable.reduce((s, r) => s + (amountOf.get(String(r.id)) ?? 0), 0),
     );
 
-    const ops: any[] = [];
+    // Interactive transaction on purpose: the array form is started from a
+    // shared tick and can run under another request's tenant (see tenant-pool.ts).
+    const ops: TxOp[] = [];
     if (billable.length > 0) {
-      ops.push(
-        this.prisma.treatment_invoices.create({
+      ops.push((tx) =>
+        tx.treatment_invoices.create({
           data: {
             patient_id: patientId,
             procedure_date: treatmentDate,
@@ -284,8 +303,8 @@ export class PatientWorkService {
       if (r.record_type !== 'treatment_plan') {
         // Unbilled completed work: keep the price used now as the record's quoted price.
         if (finalAmount !== undefined && finalAmount > 0) {
-          ops.push(
-            this.prisma.patient_records.update({
+          ops.push((tx) =>
+            tx.patient_records.update({
               where: { id: r.id },
               data: { quoted_amount: finalAmount, updated_at: new Date() },
             }),
@@ -295,8 +314,8 @@ export class PatientWorkService {
       }
       // Drop the "(planned)" suffix from the auto-generated note; keep custom notes as they are.
       const autoPlanned = `${r.title} on tooth ${r.tooth_number} (planned)`;
-      ops.push(
-        this.prisma.patient_records.update({
+      ops.push((tx) =>
+        tx.patient_records.update({
           where: { id: r.id },
           data: {
             record_type: 'treatment',
@@ -313,7 +332,7 @@ export class PatientWorkService {
       );
     }
 
-    const results = ops.length > 0 ? await this.prisma.$transaction(ops) : [];
+    const results = await this.runOps(ops);
     const invoice = billable.length > 0 ? results[0] : null;
     return {
       invoice,

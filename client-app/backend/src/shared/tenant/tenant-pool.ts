@@ -1,6 +1,6 @@
 import { Logger } from '@nestjs/common';
 import { Pool, PoolClient } from 'pg';
-import { TenantContext, currentTenant } from './tenant-context';
+import { TenantContext, currentTenant, tenantStorage } from './tenant-context';
 
 /**
  * Database role the backend switches every connection into. It has NOBYPASSRLS,
@@ -59,6 +59,12 @@ export function tenantSettings(ctx: TenantContext): TenantSettings {
  * overriding `connect` covers every statement. The settings are session-level,
  * so they survive BEGIN/ROLLBACK and are overwritten on the next checkout.
  *
+ * The tenant is read *when connect() is called*, never later. When the pool is
+ * busy, pg queues the request and hands it a connection from inside whichever
+ * request released one, so by then the async context belongs to that other
+ * request. Reading the tenant at that point primed connections for the wrong
+ * clinic under load (one request saw another organization's rows).
+ *
  * Requires a session-mode connection (direct :5432 or Supavisor session mode).
  * Transaction-mode poolers would not keep SET ROLE / set_config between statements.
  */
@@ -69,14 +75,21 @@ export class TenantPool extends Pool {
   connect(): Promise<PoolClient>;
   connect(callback: ConnectCallback): void;
   connect(callback?: ConnectCallback): Promise<PoolClient> | void {
+    // Captured synchronously: this is the caller's tenant, whatever async
+    // context the pool later invokes us from.
+    const ctx = currentTenant();
     if (callback) {
+      // The callback is run back inside the caller's context so anything it
+      // does (including nested queries) is scoped to the right tenant too.
+      const deliver: ConnectCallback = (err, client, release) =>
+        tenantStorage.run(ctx, () => callback(err, client, release));
       super.connect((err, client, release) => {
-        if (err || !client) return callback(err, client, release);
-        this.prime(client as PrimedClient).then(
-          () => callback(undefined, client, release),
+        if (err || !client) return deliver(err, client, release);
+        this.prime(client as PrimedClient, ctx).then(
+          () => deliver(undefined, client, release),
           (primeErr: Error) => {
             release(primeErr);
-            callback(primeErr, undefined, release);
+            deliver(primeErr, undefined, release);
           },
         );
       });
@@ -84,7 +97,7 @@ export class TenantPool extends Pool {
     }
     return super.connect().then(async (client) => {
       try {
-        await this.prime(client as PrimedClient);
+        await this.prime(client as PrimedClient, ctx);
         return client;
       } catch (primeErr) {
         client.release(primeErr as Error);
@@ -93,9 +106,12 @@ export class TenantPool extends Pool {
     });
   }
 
-  /** Apply the current request's tenant to a freshly checked-out connection. */
-  protected async prime(client: PrimedClient): Promise<void> {
-    const s = tenantSettings(currentTenant());
+  /** Apply the given tenant (the one captured by connect()) to a freshly checked-out connection. */
+  protected async prime(
+    client: PrimedClient,
+    ctx: TenantContext,
+  ): Promise<void> {
+    const s = tenantSettings(ctx);
     const role = configuredAppRole();
 
     if (role && !client.__tenantRoleSet) {
