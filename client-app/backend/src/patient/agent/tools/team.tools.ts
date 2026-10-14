@@ -5,6 +5,6 @@ import type { ToolHandlers } from './tool-handler';
 export function teamTools(users: UsersService): ToolHandlers {
   return {
     // Active staff: in some clinics the treating doctors hold the admin role.
-    list_doctors: () => users.findStaff(),
+    list_doctors: () => users.findDoctors(),
   };
 }

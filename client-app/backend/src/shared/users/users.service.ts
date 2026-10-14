@@ -11,7 +11,11 @@ import { UpdateUserDto, ChangePasswordDto } from './dto/update-user.dto';
 import { StaffAssignmentDto } from './dto/staff-assignment.dto';
 import { requireOrganizationId, runAsSystem } from '../tenant/tenant-context';
 import { UserAccessService } from '../tenant/user-access.service';
-import { ADMIN_ROLE_KEY, PATIENT_ROLE_KEY } from '../authorization/permissions';
+import {
+  ADMIN_ROLE_KEY,
+  DOCTOR_ROLE_KEY,
+  PATIENT_ROLE_KEY,
+} from '../authorization/permissions';
 import { RolesService } from '../authorization/roles.service';
 import { uploadLimit, formatMb } from '../common/uploads/upload-limit';
 import {
@@ -252,13 +256,15 @@ export class UsersService {
     });
   }
 
-  /** Active staff of the organization; shown publicly on the booking page. */
-  async findStaff() {
+  /**
+   * Active doctors of the organization: the people a patient can book with.
+   * Shown publicly on the booking page and used as the doctor filter in the
+   * admin pages. Admins, secretaries and custom roles are staff but do not
+   * take appointments, so they are not listed here.
+   */
+  async findDoctors() {
     return this.prisma.users.findMany({
-      where: {
-        role: { notIn: [PATIENT_ROLE_KEY, 'superadmin'] },
-        is_active: true,
-      },
+      where: { role: DOCTOR_ROLE_KEY, is_active: true },
       select: {
         id: true,
         email: true,

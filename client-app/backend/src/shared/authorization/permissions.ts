@@ -156,6 +156,8 @@ export interface DefaultRole {
 
 export const ADMIN_ROLE_KEY = 'admin';
 export const PATIENT_ROLE_KEY = 'patient';
+/** The role offered for booking: the only staff who take appointments. */
+export const DOCTOR_ROLE_KEY = 'doctor';
 
 export const DEFAULT_ROLES: readonly DefaultRole[] = [
   {
@@ -165,7 +167,7 @@ export const DEFAULT_ROLES: readonly DefaultRole[] = [
     permissions: ALL_PERMISSIONS,
   },
   {
-    key: 'doctor',
+    key: DOCTOR_ROLE_KEY,
     name: 'Doctor',
     description: 'Treats patients: appointments, records, charts, billing.',
     permissions: [

@@ -76,10 +76,10 @@ export class UsersController {
   @Get('doctors')
   @ApiOperation({
     summary:
-      "List the clinic's staff who take appointments (public, for booking)",
+      "List the clinic's active doctors (public, for booking)",
   })
   findDoctors() {
-    return this.usersService.findStaff();
+    return this.usersService.findDoctors();
   }
 
   @Post('staff')
