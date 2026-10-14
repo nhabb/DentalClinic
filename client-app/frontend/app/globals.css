@@ -9,7 +9,7 @@
  *
  * A warm, low-glare palette built to be restful to look at over a long
  * clinical shift: a linen canvas instead of cold white, warm greige
- * neutrals, and a deep harbour blue as the brand voice with terracotta
+ * neutrals, and a clear clinical blue as the brand voice with terracotta
  * and honey as its companions. Success is a cool lagoon teal so it never
  * reads as the brand. There is deliberately no green and no purple.
  *
@@ -26,19 +26,19 @@
  * ======================================================================= */
 
 @theme {
-  /* ---- Brand: harbour, a deep blue that reads calm and clinical ------- */
-  --color-brand-50:  #eef4fb;
-  --color-brand-100: #d8e6f6;
-  --color-brand-200: #b3cdec;
-  --color-brand-300: #85aedd;
-  --color-brand-400: #578dc8;
-  --color-brand-500: #3a71b2;
-  --color-brand-600: #2b5a94;
-  --color-brand-700: #244a79;
-  --color-brand-800: #203e63;
-  --color-brand-900: #1b3452;
-  --color-brand-950: #0f1e32;
-  --color-brand:     #2b5a94;
+  /* ---- Brand: a clear clinical blue, one blue for both apps --------- */
+  --color-brand-50:  #eff6ff;
+  --color-brand-100: #dbeafe;
+  --color-brand-200: #bfdbfe;
+  --color-brand-300: #93c5fd;
+  --color-brand-400: #60a5fa;
+  --color-brand-500: #3b82f6;
+  --color-brand-600: #2563eb;
+  --color-brand-700: #1d4ed8;
+  --color-brand-800: #1e40af;
+  --color-brand-900: #1e3a8a;
+  --color-brand-950: #172554;
+  --color-brand:     #2563eb;
 
   /* ---- Clay: terracotta, the warm counterweight to the blue ---------- */
   --color-clay-50:  #fdf6f1;
@@ -106,8 +106,8 @@
   --color-ink-900: #272420;
   --color-ink-950: #181612;
 
-  /* ---- Accent blue: a brighter, cooler blue than the brand, used
-   *      sparingly for small highlights in a few newer UI patterns
+  /* ---- Accent blue: the same scale as the brand, kept as a name so
+   *      older call sites keep working; use brand-* in new code
    *      (command palette active row, selected-row ring, unread dot).
    *      Never used for large surfaces; those stay white/ink/brand. ---- */
   --color-accent-blue-50:  #eff6ff;
@@ -149,31 +149,31 @@
   --color-zinc-900: #272420;  --color-neutral-900: #272420;  --color-stone-900: #272420;
   --color-zinc-950: #181612;  --color-neutral-950: #181612;  --color-stone-950: #181612;
 
-  /* Blues and cyans -> brand harbour ---------------------------------- */
-  --color-blue-50:  #eef4fb;  --color-sky-50:  #eef4fb;  --color-cyan-50:  #eef4fb;  --color-indigo-50:  #eef4fb;
-  --color-blue-100: #d8e6f6;  --color-sky-100: #d8e6f6;  --color-cyan-100: #d8e6f6;  --color-indigo-100: #d8e6f6;
-  --color-blue-200: #b3cdec;  --color-sky-200: #b3cdec;  --color-cyan-200: #b3cdec;  --color-indigo-200: #b3cdec;
-  --color-blue-300: #85aedd;  --color-sky-300: #85aedd;  --color-cyan-300: #85aedd;  --color-indigo-300: #85aedd;
-  --color-blue-400: #578dc8;  --color-sky-400: #578dc8;  --color-cyan-400: #578dc8;  --color-indigo-400: #578dc8;
-  --color-blue-500: #3a71b2;  --color-sky-500: #3a71b2;  --color-cyan-500: #3a71b2;  --color-indigo-500: #3a71b2;
-  --color-blue-600: #2b5a94;  --color-sky-600: #2b5a94;  --color-cyan-600: #2b5a94;  --color-indigo-600: #2b5a94;
-  --color-blue-700: #244a79;  --color-sky-700: #244a79;  --color-cyan-700: #244a79;  --color-indigo-700: #244a79;
-  --color-blue-800: #203e63;  --color-sky-800: #203e63;  --color-cyan-800: #203e63;  --color-indigo-800: #203e63;
-  --color-blue-900: #1b3452;  --color-sky-900: #1b3452;  --color-cyan-900: #1b3452;  --color-indigo-900: #1b3452;
-  --color-blue-950: #0f1e32;  --color-sky-950: #0f1e32;  --color-cyan-950: #0f1e32;  --color-indigo-950: #0f1e32;
+  /* Blues and cyans -> brand blue -------------------------------------- */
+  --color-blue-50:  #eff6ff;  --color-sky-50:  #eff6ff;  --color-cyan-50:  #eff6ff;  --color-indigo-50:  #eff6ff;
+  --color-blue-100: #dbeafe;  --color-sky-100: #dbeafe;  --color-cyan-100: #dbeafe;  --color-indigo-100: #dbeafe;
+  --color-blue-200: #bfdbfe;  --color-sky-200: #bfdbfe;  --color-cyan-200: #bfdbfe;  --color-indigo-200: #bfdbfe;
+  --color-blue-300: #93c5fd;  --color-sky-300: #93c5fd;  --color-cyan-300: #93c5fd;  --color-indigo-300: #93c5fd;
+  --color-blue-400: #60a5fa;  --color-sky-400: #60a5fa;  --color-cyan-400: #60a5fa;  --color-indigo-400: #60a5fa;
+  --color-blue-500: #3b82f6;  --color-sky-500: #3b82f6;  --color-cyan-500: #3b82f6;  --color-indigo-500: #3b82f6;
+  --color-blue-600: #2563eb;  --color-sky-600: #2563eb;  --color-cyan-600: #2563eb;  --color-indigo-600: #2563eb;
+  --color-blue-700: #1d4ed8;  --color-sky-700: #1d4ed8;  --color-cyan-700: #1d4ed8;  --color-indigo-700: #1d4ed8;
+  --color-blue-800: #1e40af;  --color-sky-800: #1e40af;  --color-cyan-800: #1e40af;  --color-indigo-800: #1e40af;
+  --color-blue-900: #1e3a8a;  --color-sky-900: #1e3a8a;  --color-cyan-900: #1e3a8a;  --color-indigo-900: #1e3a8a;
+  --color-blue-950: #172554;  --color-sky-950: #172554;  --color-cyan-950: #172554;  --color-indigo-950: #172554;
 
-  /* Teal and emerald -> brand harbour too, so accents stay one family - */
-  --color-teal-50:  #eef4fb;  --color-emerald-50:  #eef4fb;
-  --color-teal-100: #d8e6f6;  --color-emerald-100: #d8e6f6;
-  --color-teal-200: #b3cdec;  --color-emerald-200: #b3cdec;
-  --color-teal-300: #85aedd;  --color-emerald-300: #85aedd;
-  --color-teal-400: #578dc8;  --color-emerald-400: #578dc8;
-  --color-teal-500: #3a71b2;  --color-emerald-500: #3a71b2;
-  --color-teal-600: #2b5a94;  --color-emerald-600: #2b5a94;
-  --color-teal-700: #244a79;  --color-emerald-700: #244a79;
-  --color-teal-800: #203e63;  --color-emerald-800: #203e63;
-  --color-teal-900: #1b3452;  --color-emerald-900: #1b3452;
-  --color-teal-950: #0f1e32;  --color-emerald-950: #0f1e32;
+  /* Teal and emerald -> brand blue too, so accents stay one family ---- */
+  --color-teal-50:  #eff6ff;  --color-emerald-50:  #eff6ff;
+  --color-teal-100: #dbeafe;  --color-emerald-100: #dbeafe;
+  --color-teal-200: #bfdbfe;  --color-emerald-200: #bfdbfe;
+  --color-teal-300: #93c5fd;  --color-emerald-300: #93c5fd;
+  --color-teal-400: #60a5fa;  --color-emerald-400: #60a5fa;
+  --color-teal-500: #3b82f6;  --color-emerald-500: #3b82f6;
+  --color-teal-600: #2563eb;  --color-emerald-600: #2563eb;
+  --color-teal-700: #1d4ed8;  --color-emerald-700: #1d4ed8;
+  --color-teal-800: #1e40af;  --color-emerald-800: #1e40af;
+  --color-teal-900: #1e3a8a;  --color-emerald-900: #1e3a8a;
+  --color-teal-950: #172554;  --color-emerald-950: #172554;
 
   /* Purples, pinks and oranges -> clay terracotta --------------------- */
   --color-violet-50:  #fdf6f1;  --color-purple-50:  #fdf6f1;  --color-fuchsia-50:  #fdf6f1;  --color-orange-50:  #fdf6f1;  --color-pink-50:  #fdf6f1;
@@ -226,25 +226,25 @@
   /* ---- Legacy aliases ------------------------------------------------
    * Kept so any class we have not hand-migrated still resolves to the
    * new palette. New code should not reach for these names.           */
-  --color-primary-50:  #eef4fb;
-  --color-primary-100: #d8e6f6;
-  --color-primary-200: #b3cdec;
-  --color-primary-300: #85aedd;
-  --color-primary-400: #578dc8;
-  --color-primary-500: #3a71b2;
-  --color-primary-600: #2b5a94;
-  --color-primary-700: #244a79;
-  --color-primary-800: #203e63;
-  --color-primary-900: #1b3452;
-  --color-dental-blue:      #2b5a94;
-  --color-dental-lightblue: #b3cdec;
-  --color-dental-teal:      #578dc8;
+  --color-primary-50:  #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+  --color-primary-800: #1e40af;
+  --color-primary-900: #1e3a8a;
+  --color-dental-blue:      #2563eb;
+  --color-dental-lightblue: #bfdbfe;
+  --color-dental-teal:      #60a5fa;
   --color-dental-purple:    #db8b61;
   --color-dental-green:     #41a8ad;
   --color-dental-slate:     #8d8474;
-  --color-auth-blue:        #244a79;
-  --color-auth-blue-dark:   #1b3452;
-  --color-auth-blue-light:  #3a71b2;
+  --color-auth-blue:        #1d4ed8;
+  --color-auth-blue-dark:   #1e3a8a;
+  --color-auth-blue-light:  #3b82f6;
 
   /* ---- Type --------------------------------------------------------- */
   --font-sans: var(--font-sans-stack), ui-sans-serif, system-ui, -apple-system,
@@ -296,7 +296,7 @@
   --card-foreground:            #272420;
   --popover:                    #ffffff;
   --popover-foreground:         #272420;
-  --primary:                    #2b5a94;
+  --primary:                    #2563eb;
   --primary-foreground:         #faf8f4;
   --secondary:                  #f4f1ea;
   --secondary-foreground:       #3b362f;
@@ -308,22 +308,22 @@
   --destructive-foreground:     #ffffff;
   --border:                     #e9e4d9;
   --input:                      #e9e4d9;
-  --ring:                       #578dc8;
+  --ring:                       #60a5fa;
 
-  --chart-1:                    #2b5a94;
+  --chart-1:                    #2563eb;
   --chart-2:                    #d2763c;
   --chart-3:                    #c7951c;
   --chart-4:                    #288d93;
   --chart-5:                    #8d8474;
 
-  --sidebar:                    #1b3452;
+  --sidebar:                    #1e3a8a;
   --sidebar-foreground:         #e9e4d9;
-  --sidebar-primary:            #578dc8;
-  --sidebar-primary-foreground: #0f1e32;
-  --sidebar-accent:             #244a79;
+  --sidebar-primary:            #60a5fa;
+  --sidebar-primary-foreground: #172554;
+  --sidebar-accent:             #1d4ed8;
   --sidebar-accent-foreground:  #faf8f4;
   --sidebar-border:             rgba(233, 228, 217, 0.12);
-  --sidebar-ring:               #578dc8;
+  --sidebar-ring:               #60a5fa;
 }
 
 .dark {
@@ -333,8 +333,8 @@
   --card-foreground:            #f4f1ea;
   --popover:                    #272420;
   --popover-foreground:         #f4f1ea;
-  --primary:                    #85aedd;
-  --primary-foreground:         #0f1e32;
+  --primary:                    #93c5fd;
+  --primary-foreground:         #172554;
   --secondary:                  #3b362f;
   --secondary-foreground:       #f4f1ea;
   --muted:                      #3b362f;
@@ -345,16 +345,16 @@
   --destructive-foreground:     #181612;
   --border:                     rgba(244, 241, 234, 0.12);
   --input:                      rgba(244, 241, 234, 0.16);
-  --ring:                       #578dc8;
+  --ring:                       #60a5fa;
 
-  --sidebar:                    #0f1e32;
+  --sidebar:                    #172554;
   --sidebar-foreground:         #e9e4d9;
-  --sidebar-primary:            #85aedd;
-  --sidebar-primary-foreground: #0f1e32;
-  --sidebar-accent:             #203e63;
+  --sidebar-primary:            #93c5fd;
+  --sidebar-primary-foreground: #172554;
+  --sidebar-accent:             #1e40af;
   --sidebar-accent-foreground:  #faf8f4;
   --sidebar-border:             rgba(233, 228, 217, 0.10);
-  --sidebar-ring:               #578dc8;
+  --sidebar-ring:               #60a5fa;
 }
 
 @theme inline {
@@ -500,33 +500,33 @@
  * Gradients — same class names the pages already use, new colours
  * ======================================================================= */
 .gradient-primary {
-  background: linear-gradient(135deg, #2b5a94 0%, #578dc8 100%);
+  background: linear-gradient(135deg, #2563eb 0%, #60a5fa 100%);
 }
 
 .gradient-soft {
   background:
     radial-gradient(60rem 30rem at 85% -10%, #faeadf 0%, transparent 60%),
-    radial-gradient(45rem 28rem at 0% 0%, #eef4fb 0%, transparent 55%),
+    radial-gradient(45rem 28rem at 0% 0%, #eff6ff 0%, transparent 55%),
     linear-gradient(180deg, #faf8f4 0%, #f4f1ea 100%);
 }
 
 .gradient-premium {
-  background: linear-gradient(135deg, #244a79 0%, #b85e2f 100%);
+  background: linear-gradient(135deg, #1d4ed8 0%, #b85e2f 100%);
 }
 
 .gradient-hero {
-  background: linear-gradient(135deg, #2b5a94 0%, #578dc8 55%, #deaf36 100%);
+  background: linear-gradient(135deg, #2563eb 0%, #60a5fa 55%, #deaf36 100%);
 }
 
 .gradient-auth-bg {
   background:
-    radial-gradient(50rem 40rem at 15% 10%, rgba(87, 141, 200, 0.35) 0%, transparent 60%),
+    radial-gradient(50rem 40rem at 15% 10%, rgba(96, 165, 250, 0.35) 0%, transparent 60%),
     radial-gradient(45rem 35rem at 90% 85%, rgba(210, 118, 60, 0.28) 0%, transparent 60%),
-    linear-gradient(145deg, #1b3452 0%, #244a79 45%, #0f1e32 100%);
+    linear-gradient(145deg, #1e3a8a 0%, #1d4ed8 45%, #172554 100%);
 }
 
 .gradient-auth-card {
-  background: linear-gradient(140deg, #244a79 0%, #2b5a94 55%, #3a71b2 100%);
+  background: linear-gradient(140deg, #1d4ed8 0%, #2563eb 55%, #3b82f6 100%);
 }
 
 /* A hairline of linen texture for large flat panels — keeps big empty
