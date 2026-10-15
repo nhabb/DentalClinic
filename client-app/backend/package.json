@@ -20,6 +20,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "routes": "ts-node scripts/route-inventory.ts",
     "smoke:permissions": "node scripts/smoke-permissions.js",
+    "smoke:billing": "node scripts/smoke-billing.js",
     "smoke:agent": "ts-node scripts/smoke-agent.ts",
     "smoke:concurrency": "node scripts/smoke-tenant-concurrency.js"
   },

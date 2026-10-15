@@ -16,7 +16,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { PROCEDURES } from '../../billing/dto/create-invoice.dto';
+import { FDI_TOOTH, PROCEDURES } from '../../billing/dto/create-invoice.dto';
 
 export const QUOTE_STATUSES = [
   'draft',
@@ -44,7 +44,7 @@ export class QuoteItemDto {
   @ApiPropertyOptional({ example: '16', description: 'FDI tooth number' })
   @IsOptional()
   @IsString()
-  @Matches(/^(1[1-8]|2[1-8]|3[1-8]|4[1-8]|5[1-5]|6[1-5]|7[1-5]|8[1-5])$/, {
+  @Matches(FDI_TOOTH, {
     message: 'tooth_number must be an FDI tooth number (11-48 or 51-85)',
   })
   tooth_number?: string;
@@ -69,11 +69,21 @@ export class CreateQuoteDto {
 
   @ApiPropertyOptional({
     example: '2026-12-31',
-    description: 'Last day the prices hold (YYYY-MM-DD)',
+    description: 'Last day the prices hold (YYYY-MM-DD); today or later',
   })
   @IsOptional()
   @IsDateString()
   valid_until?: string;
+
+  @ApiPropertyOptional({
+    example: 100,
+    description: 'Taken off the sum of the lines (0 or omitted = none)',
+  })
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  @Max(100000)
+  quoted_discount?: number;
 
   @ApiPropertyOptional({ maxLength: 2000 })
   @IsOptional()
@@ -97,6 +107,13 @@ export class UpdateQuoteDto {
   @IsDateString()
   valid_until?: string;
 
+  @ApiPropertyOptional({ example: 100 })
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  @Max(100000)
+  quoted_discount?: number;
+
   @ApiPropertyOptional({ maxLength: 2000 })
   @IsOptional()
   @IsString()
@@ -111,4 +128,33 @@ export class UpdateQuoteDto {
   @ValidateNested({ each: true })
   @Type(() => QuoteItemDto)
   items?: QuoteItemDto[];
+}
+
+/**
+ * Bill an accepted quote as it stands: its lines and discount become the
+ * invoice. Used for treatment paid up front (orthodontics, implants) or in
+ * instalments; work billed later from the chart does not need it.
+ */
+export class InvoiceFromQuoteDto {
+  @ApiPropertyOptional({
+    example: '2026-10-15',
+    description: 'Date of the work or of the plan start; defaults to today',
+  })
+  @IsOptional()
+  @IsDateString()
+  procedure_date?: string;
+
+  @ApiPropertyOptional({
+    example: '2026-11-15',
+    description: 'Payment due date; defaults to the procedure date',
+  })
+  @IsOptional()
+  @IsDateString()
+  due_date?: string;
+
+  @ApiPropertyOptional({ maxLength: 2000 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  notes?: string;
 }

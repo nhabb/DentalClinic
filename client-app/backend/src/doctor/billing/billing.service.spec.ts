@@ -81,10 +81,14 @@ describe('BillingService.recordPayment', () => {
       { id: 1n, total_amount: 100, amount_paid: 0 },
       [{ amount: 40, kind: 'payment' }],
     );
-    const result = (await service.recordPayment(1n, {
-      amount: 60,
-      payment_method: 'cash',
-    })) as unknown as {
+    const result = (await service.recordPayment(
+      1n,
+      {
+        amount: 60,
+        payment_method: 'cash',
+      },
+      ACTOR,
+    )) as unknown as {
       amount_paid: number;
       remaining_amount: number;
       status: string;
@@ -104,10 +108,14 @@ describe('BillingService.recordPayment', () => {
         { amount: 100, kind: 'refund' },
       ],
     );
-    const result = (await service.recordPayment(1n, {
-      amount: 25,
-      payment_method: 'cash',
-    })) as unknown as { amount_paid: number; status: string };
+    const result = (await service.recordPayment(
+      1n,
+      {
+        amount: 25,
+        payment_method: 'cash',
+      },
+      ACTOR,
+    )) as unknown as { amount_paid: number; status: string };
     expect(tx.invoice_payments.create).toHaveBeenCalledTimes(1);
     expect(result.amount_paid).toBe(25);
     expect(result.status).toBe('partial');
@@ -119,7 +127,7 @@ describe('BillingService.recordPayment', () => {
       [{ amount: 40, kind: 'payment' }],
     );
     await expect(
-      service.recordPayment(1n, { amount: 61, payment_method: 'cash' }),
+      service.recordPayment(1n, { amount: 61, payment_method: 'cash' }, ACTOR),
     ).rejects.toBeInstanceOf(BadRequestException);
     expect(tx.invoice_payments.create).not.toHaveBeenCalled();
   });
@@ -130,7 +138,7 @@ describe('BillingService.recordPayment', () => {
       [{ amount: 100, kind: 'payment' }],
     );
     await expect(
-      service.recordPayment(1n, { amount: 100, payment_method: 'cash' }),
+      service.recordPayment(1n, { amount: 100, payment_method: 'cash' }, ACTOR),
     ).rejects.toThrow(/already fully paid/);
     expect(tx.invoice_payments.create).not.toHaveBeenCalled();
   });
@@ -141,7 +149,7 @@ describe('BillingService.recordPayment', () => {
       [],
     );
     await expect(
-      service.recordPayment(1n, { amount: 10, payment_method: 'cash' }),
+      service.recordPayment(1n, { amount: 10, payment_method: 'cash' }, ACTOR),
     ).rejects.toBeInstanceOf(ConflictException);
     expect(tx.invoice_payments.create).not.toHaveBeenCalled();
   });
@@ -151,7 +159,11 @@ describe('BillingService.recordPayment', () => {
       { id: 1n, total_amount: 100, amount_paid: 0 },
       [],
     );
-    await service.recordPayment(1n, { amount: 10, payment_method: 'card' });
+    await service.recordPayment(
+      1n,
+      { amount: 10, payment_method: 'card' },
+      ACTOR,
+    );
     const calls = tx.$queryRaw.mock.calls as unknown as [
       TemplateStringsArray,
     ][];
@@ -353,5 +365,193 @@ describe('deriveInvoiceStatus', () => {
     expect(deriveInvoiceStatus(100, 0.5)).toBe('partial');
     expect(deriveInvoiceStatus(100, 99.999)).toBe('paid');
     expect(deriveInvoiceStatus(100, 100)).toBe('paid');
+  });
+});
+
+/** A fake database for issuing invoices and reading what is owed. */
+function buildLedger(
+  outstanding: {
+    id: bigint;
+    invoice_number: string;
+    remaining_amount: number;
+    due_date: Date;
+    patient_id?: bigint;
+  }[] = [],
+) {
+  const prisma = {
+    patient_profiles: { findUnique: jest.fn().mockResolvedValue({ id: 7n }) },
+    treatment_invoices: {
+      create: jest.fn(({ data }: { data: Record<string, unknown> }) =>
+        Promise.resolve({ id: 1n, invoice_number: 'INV-2026-00001', ...data }),
+      ),
+      findMany: jest
+        .fn()
+        .mockResolvedValue(
+          outstanding.map((o) => ({ status: 'open', patient_id: 7n, ...o })),
+        ),
+    },
+  };
+  const audit = { record: jest.fn().mockResolvedValue(undefined) };
+  const service = new BillingService(prisma as never, audit as never);
+  return { service, prisma };
+}
+
+const issued = (prisma: ReturnType<typeof buildLedger>['prisma']) =>
+  prisma.treatment_invoices.create.mock.calls[0][0].data;
+
+describe('BillingService.create', () => {
+  it('issues an invoice: lines to a subtotal, discount with reason, what is owed, due on the work day, by the signed-in user', async () => {
+    const { service, prisma } = buildLedger();
+    await service.create(
+      {
+        patient_id: 7,
+        procedure_date: '2026-10-15',
+        discount_amount: 30,
+        discount_reason: 'Family discount',
+        line_items: [
+          { procedure_name: 'Crown', amount: 250, tooth_number: '16' },
+          { procedure_name: 'X-Ray', amount: 20 },
+        ],
+      },
+      ACTOR,
+    );
+    const data = issued(prisma) as { due_date: Date; procedure_date: Date };
+    expect(data).toMatchObject({
+      patient_id: 7n,
+      subtotal: 270,
+      discount_amount: 30,
+      discount_reason: 'Family discount',
+      total_amount: 240,
+      amount_paid: 0,
+      remaining_amount: 240,
+      status: 'open',
+      created_by: ACTOR,
+    });
+    expect(data.due_date).toEqual(data.procedure_date);
+    expect(issued(prisma)).not.toHaveProperty('invoice_number');
+  });
+
+  it('honours payment terms but never a due date before the work', async () => {
+    const { service, prisma } = buildLedger();
+    await service.create(
+      {
+        patient_id: 7,
+        procedure_date: '2026-10-15',
+        due_date: '2026-11-14',
+        line_items: [{ procedure_name: 'Crown', amount: 250 }],
+      },
+      ACTOR,
+    );
+    const due = (issued(prisma) as { due_date: Date }).due_date;
+    expect(due.toISOString().slice(0, 10)).toBe('2026-11-14');
+    await expect(
+      service.create(
+        {
+          patient_id: 7,
+          procedure_date: '2026-10-15',
+          due_date: '2026-10-01',
+          line_items: [{ procedure_name: 'Crown', amount: 250 }],
+        },
+        ACTOR,
+      ),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('refuses a discount without a reason or above the lines', async () => {
+    const { service, prisma } = buildLedger();
+    const base = {
+      patient_id: 7,
+      procedure_date: '2026-10-15',
+      line_items: [{ procedure_name: 'Crown', amount: 250 }],
+    };
+    await expect(
+      service.create({ ...base, discount_amount: 10 }, ACTOR),
+    ).rejects.toThrow(/needs a reason/);
+    await expect(
+      service.create(
+        { ...base, discount_amount: 251, discount_reason: 'too much' },
+        ACTOR,
+      ),
+    ).rejects.toThrow(/exceeds the lines/);
+    expect(prisma.treatment_invoices.create).not.toHaveBeenCalled();
+  });
+
+  it('an invoice that comes to nothing is settled, not open forever', async () => {
+    const { service, prisma } = buildLedger();
+    await service.create(
+      {
+        patient_id: 7,
+        procedure_date: '2026-10-15',
+        line_items: [{ procedure_name: 'Checkup', amount: 0 }],
+      },
+      ACTOR,
+    );
+    expect(issued(prisma)).toMatchObject({ total_amount: 0, status: 'paid' });
+  });
+});
+
+describe('BillingService aging and outstanding (by due date, not by issue date)', () => {
+  const daysAgo = (n: number) => new Date(Date.now() - n * 86_400_000);
+
+  it('buckets balances by how far past due they are, with not-yet-due apart', async () => {
+    const { service } = buildLedger([
+      {
+        id: 1n,
+        invoice_number: 'INV-1',
+        remaining_amount: 10,
+        due_date: daysAgo(-5),
+      },
+      {
+        id: 2n,
+        invoice_number: 'INV-2',
+        remaining_amount: 20,
+        due_date: daysAgo(15),
+      },
+      {
+        id: 3n,
+        invoice_number: 'INV-3',
+        remaining_amount: 30,
+        due_date: daysAgo(45),
+      },
+      {
+        id: 4n,
+        invoice_number: 'INV-4',
+        remaining_amount: 40,
+        due_date: daysAgo(75),
+      },
+      {
+        id: 5n,
+        invoice_number: 'INV-5',
+        remaining_amount: 50,
+        due_date: daysAgo(200),
+      },
+    ]);
+    const report = await service.getAgingReport();
+    expect(report.buckets).toEqual({
+      not_yet_due: 10,
+      '0_30_days': 20,
+      '31_60_days': 30,
+      '61_90_days': 40,
+      '90_plus_days': 50,
+    });
+    expect(report.total_outstanding).toBe(150);
+    expect(report.total_overdue).toBe(140);
+  });
+
+  it('lists what is owed with the invoice number and the days overdue', async () => {
+    const { service } = buildLedger([
+      {
+        id: 3n,
+        invoice_number: 'INV-3',
+        remaining_amount: 30,
+        due_date: daysAgo(45),
+      },
+    ]);
+    const [row] = await service.getOutstandingPayments();
+    expect(row).toMatchObject({
+      invoice_number: 'INV-3',
+      remaining: 30,
+      days_overdue: 45,
+    });
   });
 });

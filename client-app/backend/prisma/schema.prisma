@@ -83,8 +83,23 @@ model organizations {
   lab_orders               lab_orders[]
   quotes                   quotes[]
   quote_items              quote_items[]
+  document_sequences       document_sequences[]
 
   @@index([is_active], map: "idx_organizations_is_active")
+}
+
+/// Per-clinic counters behind invoice and quote numbers (INV-2026-00017): one
+/// row per organization, kind and year. Written only by the database triggers
+/// that number new invoices and quotes; the app never reads it.
+model document_sequences {
+  organization_id BigInt
+  /// invoice | quote
+  kind            String
+  year            Int
+  last_value      Int    @default(0)
+  organization    organizations @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([organization_id, kind, year])
 }
 
 /// A physical clinic location belonging to an organization (e.g. Beirut, Tyre).
@@ -493,8 +508,18 @@ model treatment_invoices {
   /// Branch that issued the invoice.
   branch_id        BigInt?   @default(dbgenerated("app.default_branch_id()"))
   patient_id       BigInt
+  /// Sequential per clinic and year (INV-2026-00017); assigned by a database trigger on insert.
+  invoice_number   String    @default("")
   procedure_date   DateTime  @db.Date
+  /// Payment terms: the day payment is due (defaults to procedure_date, due on receipt). Balances age from here.
+  due_date         DateTime  @db.Date
   notes            String?
+  /// Sum of the line items before any discount.
+  subtotal         Decimal   @db.Decimal(10, 2)
+  /// Taken off the subtotal; needs discount_reason when > 0.
+  discount_amount  Decimal   @default(0) @db.Decimal(10, 2)
+  discount_reason  String?
+  /// Amount owed: subtotal - discount_amount.
   total_amount     Decimal   @db.Decimal(10, 2)
   amount_paid      Decimal   @default(0) @db.Decimal(10, 2)
   remaining_amount Decimal   @db.Decimal(10, 2)
@@ -519,6 +544,7 @@ model treatment_invoices {
   invoice_payments invoice_payments[]
   patient_records  patient_records[]
 
+  @@unique([organization_id, invoice_number], map: "treatment_invoices_number_unique")
   @@index([quote_id], map: "idx_treatment_invoices_quote")
   @@index([patient_id], map: "idx_treatment_invoices_patient_id")
   @@index([status], map: "idx_treatment_invoices_status")
@@ -554,6 +580,8 @@ model invoice_payments {
   /// Required for refunds.
   reason          String?
   notes           String?
+  /// The day the money moved (received or returned); reports use this, not created_at.
+  payment_date    DateTime @default(dbgenerated("CURRENT_DATE")) @db.Date
   created_by      BigInt?
   created_at      DateTime @default(now()) @db.Timestamptz(6)
 
@@ -563,6 +591,7 @@ model invoice_payments {
 
   @@index([invoice_id], map: "idx_invoice_payments_invoice_id")
   @@index([organization_id], map: "idx_invoice_payments_org")
+  @@index([payment_date], map: "idx_invoice_payments_payment_date")
 }
 
 // ─── Roles and permissions (per organization) ─────────────────────────────────
@@ -772,6 +801,8 @@ model quotes {
   /// Branch the quote was prepared at; NULL for organization-wide.
   branch_id       BigInt?              @default(dbgenerated("app.default_branch_id()"))
   patient_id      BigInt
+  /// Sequential per clinic and year (QUO-2026-00004); assigned by a database trigger on insert.
+  quote_number    String               @default("")
   /// Version within this patient's sequence; a revision is a new row with version + 1.
   version         Int                  @default(1)
   /// The previous version this quote replaces.
@@ -779,7 +810,9 @@ model quotes {
   status          String               @default("draft")
   /// Last day the quoted prices hold.
   valid_until     DateTime?            @db.Date
-  /// Sum of the items (maintained by trigger).
+  /// Taken off the quoted lines (0 when none).
+  quoted_discount Decimal              @default(0) @db.Decimal(10, 2)
+  /// Sum of the items minus quoted_discount (maintained by trigger).
   quoted_total    Decimal              @default(0) @db.Decimal(10, 2)
   notes           String?
   created_by      BigInt?
@@ -797,6 +830,7 @@ model quotes {
   items           quote_items[]
   invoices        treatment_invoices[]
 
+  @@unique([organization_id, quote_number], map: "quotes_number_unique")
   @@index([organization_id], map: "idx_quotes_org")
   @@index([organization_id, branch_id], map: "idx_quotes_org_branch")
   @@index([patient_id], map: "idx_quotes_patient")

@@ -73,6 +73,24 @@ export class BillingController {
     return this.billingService.getKpis();
   }
 
+  @Get('outstanding')
+  @ApiOperation({
+    summary:
+      'Every balance still owed, with its invoice number, due date and days overdue (longest overdue first)',
+  })
+  getOutstanding() {
+    return this.billingService.getOutstandingPayments();
+  }
+
+  @Get('aging')
+  @ApiOperation({
+    summary:
+      'Accounts-receivable aging: outstanding balances by days past their due date',
+  })
+  getAging() {
+    return this.billingService.getAgingReport();
+  }
+
   @Get('invoice-payments')
   @ApiOperation({
     summary: 'List raw payment and refund rows (for charts)',
@@ -87,10 +105,11 @@ export class BillingController {
   @Post('invoices')
   @RequirePermissions('billing:write')
   @ApiOperation({
-    summary: 'Create a treatment invoice with procedure line items',
+    summary:
+      'Issue an invoice (numbered by the clinic) with procedure lines, an optional discount and a due date',
   })
-  createInvoice(@Body() dto: CreateInvoiceDto) {
-    return this.billingService.create(dto);
+  createInvoice(@Body() dto: CreateInvoiceDto, @Req() req: AuthedRequest) {
+    return this.billingService.create(dto, BigInt(req.user.id));
   }
 
   @Get('invoices')
@@ -151,8 +170,13 @@ export class BillingController {
   recordPayment(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: RecordPaymentDto,
+    @Req() req: AuthedRequest,
   ) {
-    return this.billingService.recordPayment(BigInt(id), dto);
+    return this.billingService.recordPayment(
+      BigInt(id),
+      dto,
+      BigInt(req.user.id),
+    );
   }
 
   @Post('invoices/:id/refunds')

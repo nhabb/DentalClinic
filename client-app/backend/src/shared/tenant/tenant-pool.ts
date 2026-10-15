@@ -17,6 +17,8 @@ export function configuredAppRole(): string {
 const quoteIdent = (name: string) => `"${name.replace(/"/g, '""')}"`;
 
 type PrimedClient = PoolClient & {
+  /** Session guards (idle-in-transaction timeout) already set on this physical connection. */
+  __sessionGuarded?: boolean;
   /** SET ROLE already issued on this physical connection. */
   __tenantRoleSet?: boolean;
   /** Last settings applied, to skip redundant set_config calls. */
@@ -113,6 +115,14 @@ export class TenantPool extends Pool {
   ): Promise<void> {
     const s = tenantSettings(ctx);
     const role = configuredAppRole();
+
+    // A client that dies mid-transaction (crash, killed process) must not keep
+    // its row locks, such as the invoice-number counter, until the pooler
+    // notices: the server ends a session idle inside a transaction after 30 s.
+    if (!client.__sessionGuarded) {
+      await client.query(`SET idle_in_transaction_session_timeout = '30s'`);
+      client.__sessionGuarded = true;
+    }
 
     if (role && !client.__tenantRoleSet) {
       try {

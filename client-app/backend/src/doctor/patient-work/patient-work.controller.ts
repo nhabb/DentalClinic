@@ -64,7 +64,7 @@ export class PatientWorkController {
   })
   recordWork(@Body() dto: RecordWorkDto, @Req() req: { user: RequestUser }) {
     assertMayBill(this.access, req.user, dto);
-    return this.patientWorkService.recordWork(dto);
+    return this.patientWorkService.recordWork(dto, BigInt(req.user.id));
   }
 
   @Post('complete')
@@ -78,7 +78,7 @@ export class PatientWorkController {
     @Req() req: { user: RequestUser },
   ) {
     assertMayBill(this.access, req.user, dto);
-    return this.patientWorkService.completePlanned(dto);
+    return this.patientWorkService.completePlanned(dto, BigInt(req.user.id));
   }
 
   @Delete('records/:id')

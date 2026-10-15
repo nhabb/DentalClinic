@@ -52,6 +52,7 @@ export const AnyNull = runtime.AnyNull
 
 export const ModelName = {
   organizations: 'organizations',
+  document_sequences: 'document_sequences',
   branches: 'branches',
   appointment_slots: 'appointment_slots',
   appointments: 'appointments',
@@ -116,6 +117,16 @@ export const OrganizationsScalarFieldEnum = {
 } as const
 
 export type OrganizationsScalarFieldEnum = (typeof OrganizationsScalarFieldEnum)[keyof typeof OrganizationsScalarFieldEnum]
+
+
+export const Document_sequencesScalarFieldEnum = {
+  organization_id: 'organization_id',
+  kind: 'kind',
+  year: 'year',
+  last_value: 'last_value'
+} as const
+
+export type Document_sequencesScalarFieldEnum = (typeof Document_sequencesScalarFieldEnum)[keyof typeof Document_sequencesScalarFieldEnum]
 
 
 export const BranchesScalarFieldEnum = {
@@ -385,8 +396,13 @@ export const Treatment_invoicesScalarFieldEnum = {
   organization_id: 'organization_id',
   branch_id: 'branch_id',
   patient_id: 'patient_id',
+  invoice_number: 'invoice_number',
   procedure_date: 'procedure_date',
+  due_date: 'due_date',
   notes: 'notes',
+  subtotal: 'subtotal',
+  discount_amount: 'discount_amount',
+  discount_reason: 'discount_reason',
   total_amount: 'total_amount',
   amount_paid: 'amount_paid',
   remaining_amount: 'remaining_amount',
@@ -425,6 +441,7 @@ export const Invoice_paymentsScalarFieldEnum = {
   kind: 'kind',
   reason: 'reason',
   notes: 'notes',
+  payment_date: 'payment_date',
   created_by: 'created_by',
   created_at: 'created_at'
 } as const
@@ -570,10 +587,12 @@ export const QuotesScalarFieldEnum = {
   organization_id: 'organization_id',
   branch_id: 'branch_id',
   patient_id: 'patient_id',
+  quote_number: 'quote_number',
   version: 'version',
   supersedes_id: 'supersedes_id',
   status: 'status',
   valid_until: 'valid_until',
+  quoted_discount: 'quoted_discount',
   quoted_total: 'quoted_total',
   notes: 'notes',
   created_by: 'created_by',

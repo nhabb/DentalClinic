@@ -174,7 +174,11 @@ describe('TenantPool', () => {
     );
 
     const [client] = fakePool.clients;
-    expect(client.queries[0].text).toBe('SET ROLE "dental_app"');
+    // First the session guard (a dead client may not keep locks), then the role.
+    expect(client.queries[0].text).toBe(
+      `SET idle_in_transaction_session_timeout = '30s'`,
+    );
+    expect(client.queries[1].text).toBe('SET ROLE "dental_app"');
     expect(settingsOf(client)).toEqual({
       'app.current_org': '1',
       'app.home_branch': '2',
@@ -276,6 +280,6 @@ describe('TenantPool', () => {
     process.env.DB_APP_ROLE = 'clinic"app';
     const pool = new TenantPool();
     await pool.connect();
-    expect(fakePool.clients[0].queries[0].text).toBe('SET ROLE "clinic""app"');
+    expect(fakePool.clients[0].queries[1].text).toBe('SET ROLE "clinic""app"');
   });
 });

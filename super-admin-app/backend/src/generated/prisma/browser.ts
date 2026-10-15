@@ -23,6 +23,13 @@ export * from './enums';
  */
 export type organizations = Prisma.organizationsModel
 /**
+ * Model document_sequences
+ * Per-clinic counters behind invoice and quote numbers (INV-2026-00017): one
+ * row per organization, kind and year. Written only by the database triggers
+ * that number new invoices and quotes; the app never reads it.
+ */
+export type document_sequences = Prisma.document_sequencesModel
+/**
  * Model branches
  * A physical clinic location belonging to an organization (e.g. Beirut, Tyre).
  */

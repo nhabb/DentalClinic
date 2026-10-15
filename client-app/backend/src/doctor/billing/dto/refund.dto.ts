@@ -1,13 +1,15 @@
 import {
+  IsDateString,
   IsIn,
   IsNumber,
+  IsOptional,
   IsString,
   Max,
   MaxLength,
   Min,
   MinLength,
 } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 import { PAYMENT_METHODS } from './payment-methods';
 
@@ -22,6 +24,15 @@ export class RefundDto {
   @ApiProperty({ example: 'cash', enum: PAYMENT_METHODS })
   @IsIn(PAYMENT_METHODS)
   payment_method: string;
+
+  @ApiPropertyOptional({
+    example: '2026-04-12',
+    description:
+      'The day the money was returned (YYYY-MM-DD); defaults to today, never in the future',
+  })
+  @IsOptional()
+  @IsDateString()
+  payment_date?: string;
 
   @ApiProperty({
     example: 'Crown remade by the lab at no charge',

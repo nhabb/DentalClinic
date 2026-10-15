@@ -4,14 +4,33 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaService, Tx } from '../../shared/prisma/prisma.service';
+import {
+  PrismaService,
+  REMOTE_TX_OPTIONS,
+  Tx,
+} from '../../shared/prisma/prisma.service';
 import { AuditService } from '../../shared/audit/audit.service';
+import { dateRange, toDateOnly } from '../../shared/common/date-only';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { RecordPaymentDto } from './dto/record-payment.dto';
 import { RefundDto } from './dto/refund.dto';
 import { VoidInvoiceDto } from './dto/void-invoice.dto';
+import {
+  daysOverdue,
+  deriveInvoiceStatus,
+  dueDateFor,
+  EPSILON,
+  invoiceFigures,
+  LIVE_STATUSES,
+  paymentDateFor,
+  round2,
+} from './invoice-math';
 
-const invoiceInclude = {
+export { deriveInvoiceStatus, LIVE_STATUSES } from './invoice-math';
+export type { InvoiceStatus } from './invoice-math';
+
+/** The shape every invoice is returned in, from any route that creates or changes one. */
+export const invoiceInclude = {
   patient: {
     select: {
       id: true,
@@ -27,7 +46,13 @@ const invoiceInclude = {
     select: { id: true, first_name: true, last_name: true },
   },
   quote: {
-    select: { id: true, version: true, status: true, quoted_total: true },
+    select: {
+      id: true,
+      quote_number: true,
+      version: true,
+      status: true,
+      quoted_total: true,
+    },
   },
   line_items: {
     orderBy: { created_at: 'asc' as const },
@@ -36,34 +61,9 @@ const invoiceInclude = {
     include: {
       creator: { select: { id: true, first_name: true, last_name: true } },
     },
-    orderBy: { created_at: 'asc' as const },
+    orderBy: [{ payment_date: 'asc' as const }, { created_at: 'asc' as const }],
   },
 };
-
-// Tolerance for floating point comparisons on 2-decimal money values.
-const EPSILON = 0.005;
-
-const round2 = (n: number): number => Math.round(n * 100) / 100;
-
-
-export type InvoiceStatus = 'open' | 'partial' | 'paid' | 'cancelled';
-
-/** Statuses of invoices that are still owed (or settled); cancelled is neither. */
-export const LIVE_STATUSES: readonly InvoiceStatus[] = [
-  'open',
-  'partial',
-  'paid',
-];
-
-/** The status an invoice's payments imply (never cancelled: that is a decision, not arithmetic). */
-export function deriveInvoiceStatus(
-  total: number,
-  paid: number,
-): Exclude<InvoiceStatus, 'cancelled'> {
-  if (total - paid <= EPSILON) return 'paid';
-  if (paid > EPSILON) return 'partial';
-  return 'open';
-}
 
 /** Payments and refunds of a set of invoice_payments rows, as the reports need them. */
 export interface MoneyMoved {
@@ -77,6 +77,38 @@ export interface MoneyMoved {
   refund_count: number;
 }
 
+/**
+ * Outstanding balances by how far past due they are. "Not yet due" is current
+ * (a balance due today is not late); the others count whole days overdue.
+ */
+export const AGING_BUCKETS = [
+  'not_yet_due',
+  '0_30_days',
+  '31_60_days',
+  '61_90_days',
+  '90_plus_days',
+] as const;
+export type AgingBucket = (typeof AGING_BUCKETS)[number];
+
+export function agingBucketFor(overdueDays: number, notYetDue: boolean) {
+  if (notYetDue || overdueDays === 0) return 'not_yet_due';
+  if (overdueDays <= 30) return '0_30_days';
+  if (overdueDays <= 60) return '31_60_days';
+  if (overdueDays <= 90) return '61_90_days';
+  return '90_plus_days';
+}
+
+/** First day of this month and of last month, and last month's end, as calendar dates (UTC). */
+function monthWindows(now = new Date()) {
+  const y = now.getUTCFullYear();
+  const m = now.getUTCMonth();
+  return {
+    startOfMonth: new Date(Date.UTC(y, m, 1)),
+    startOfLastMonth: new Date(Date.UTC(y, m - 1, 1)),
+    endOfLastMonth: new Date(Date.UTC(y, m, 0, 23, 59, 59, 999)),
+  };
+}
+
 @Injectable()
 export class BillingService {
   constructor(
@@ -84,21 +116,23 @@ export class BillingService {
     private readonly audit: AuditService,
   ) {}
 
-  async create(dto: CreateInvoiceDto) {
-    // Accept either patient_profiles.id or users.id
-    let profile = await this.prisma.patient_profiles.findUnique({
+  /**
+   * An invoice from the billing page. The number comes from the database
+   * (sequential per clinic), the figures from invoice-math, the creator from
+   * the signed-in user, never from the request body.
+   */
+  async create(dto: CreateInvoiceDto, actorId: bigint) {
+    const profile = await this.prisma.patient_profiles.findUnique({
       where: { id: BigInt(dto.patient_id) },
+      select: { id: true },
     });
-    if (!profile) {
-      profile = await this.prisma.patient_profiles.findUnique({
-        where: { user_id: BigInt(dto.patient_id) },
-      });
-    }
     if (!profile) throw new NotFoundException('Patient profile not found');
 
-    const total_amount = dto.line_items.reduce(
-      (sum, item) => sum + item.amount,
-      0,
+    const procedureDate = toDateOnly(dto.procedure_date);
+    const figures = invoiceFigures(
+      dto.line_items.map((i) => i.amount),
+      dto.discount_amount ?? 0,
+      dto.discount_reason,
     );
 
     return this.prisma.treatment_invoices.create({
@@ -106,16 +140,16 @@ export class BillingService {
         // Omitted = database default (home branch, then the organization's default branch).
         ...(dto.branch_id ? { branch_id: BigInt(dto.branch_id) } : {}),
         patient_id: profile.id,
-        procedure_date: new Date(dto.procedure_date),
-        notes: dto.notes,
-        total_amount,
-        remaining_amount: total_amount,
-        status: 'open',
-        created_by: dto.created_by ? BigInt(dto.created_by) : null,
+        procedure_date: procedureDate,
+        due_date: dueDateFor(procedureDate, dto.due_date),
+        notes: dto.notes?.trim() || null,
+        ...figures,
+        created_by: actorId,
         line_items: {
           create: dto.line_items.map((item) => ({
             procedure_name: item.procedure_name,
-            amount: item.amount,
+            amount: round2(item.amount),
+            tooth_number: item.tooth_number ?? null,
           })),
         },
       },
@@ -143,15 +177,12 @@ export class BillingService {
     } = filters;
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const where: Record<string, unknown> = {};
     if (patient_id) where.patient_id = BigInt(patient_id);
     if (branch_id) where.branch_id = BigInt(branch_id);
     if (status) where.status = status;
-    if (from || to) {
-      where.created_at = {};
-      if (from) where.created_at.gte = new Date(`${from}T00:00:00.000Z`);
-      if (to) where.created_at.lte = new Date(`${to}T23:59:59.999Z`);
-    }
+    const issued = dateRange(from, to);
+    if (issued) where.created_at = issued;
 
     const [data, total] = await Promise.all([
       this.prisma.treatment_invoices.findMany({
@@ -179,7 +210,7 @@ export class BillingService {
     return invoice;
   }
 
-  // ── Corrections: refund, void, delete ─────────────────────────────────────
+  // ── Money in, money back, corrections ─────────────────────────────────────
 
   /**
    * Money received is recorded in exactly one place, invoice_payments. The
@@ -189,11 +220,16 @@ export class BillingService {
    * totals out of step with the payments. The database enforces the same rule
    * with constraints and a trigger (migration 20261009010000_payment_integrity).
    */
-  async recordPayment(invoiceId: bigint, dto: RecordPaymentDto) {
+  async recordPayment(
+    invoiceId: bigint,
+    dto: RecordPaymentDto,
+    actorId: bigint,
+  ) {
     const amount = round2(dto.amount);
     if (amount <= 0) {
       throw new BadRequestException('Payment amount must be positive');
     }
+    const paymentDate = paymentDateFor(dto.payment_date);
 
     return this.prisma.$transaction(async (tx) => {
       const locked = await this.lockInvoice(tx, invoiceId);
@@ -220,12 +256,13 @@ export class BillingService {
           kind: 'payment',
           amount,
           payment_method: dto.payment_method,
-          notes: dto.notes,
-          created_by: dto.created_by ? BigInt(dto.created_by) : null,
+          payment_date: paymentDate,
+          notes: dto.notes?.trim() || null,
+          created_by: actorId,
         },
       });
       return this.writeTotals(tx, invoiceId, total, alreadyPaid + amount);
-    });
+    }, REMOTE_TX_OPTIONS);
   }
 
   /**
@@ -235,6 +272,7 @@ export class BillingService {
    */
   async refund(invoiceId: bigint, dto: RefundDto, actorId: bigint) {
     const amount = round2(dto.amount);
+    const paymentDate = paymentDateFor(dto.payment_date);
     const updated = await this.prisma.$transaction(async (tx) => {
       const locked = await this.lockInvoice(tx, invoiceId);
       if (locked.status === 'cancelled') {
@@ -258,12 +296,13 @@ export class BillingService {
           kind: 'refund',
           amount,
           payment_method: dto.payment_method,
+          payment_date: paymentDate,
           reason: dto.reason.trim(),
           created_by: actorId,
         },
       });
       return this.writeTotals(tx, invoiceId, total, received - amount);
-    });
+    }, REMOTE_TX_OPTIONS);
     await this.audit.record({
       actorId,
       action: 'billing.invoice.refund',
@@ -309,13 +348,14 @@ export class BillingService {
         },
         include: invoiceInclude,
       });
-    });
+    }, REMOTE_TX_OPTIONS);
     await this.audit.record({
       actorId,
       action: 'billing.invoice.void',
       table: 'treatment_invoices',
       recordId: invoiceId,
       before: {
+        invoice_number: before.invoice_number,
         status: before.status,
         total_amount: before.total_amount,
         patient_id: before.patient_id,
@@ -329,6 +369,8 @@ export class BillingService {
    * Removes an invoice outright. Only for mistakes with no money on them: an
    * invoice with any payment or refund row is refused (void it instead). The
    * route demands the admin's password; what was deleted goes to the audit log.
+   * The number it held is not reused: a gap in the sequence is the honest
+   * trace of a deletion.
    */
   async deleteInvoice(id: bigint, actorId: bigint) {
     const invoice = await this.findOne(id);
@@ -345,13 +387,14 @@ export class BillingService {
         );
       }
       await tx.treatment_invoices.delete({ where: { id } });
-    });
+    }, REMOTE_TX_OPTIONS);
     await this.audit.record({
       actorId,
       action: 'billing.invoice.delete',
       table: 'treatment_invoices',
       recordId: id,
       before: {
+        invoice_number: invoice.invoice_number,
         patient_id: invoice.patient_id,
         total_amount: invoice.total_amount,
         status: invoice.status,
@@ -391,7 +434,7 @@ export class BillingService {
         }
         throw err;
       }
-    });
+    }, REMOTE_TX_OPTIONS);
     await this.audit.record({
       actorId,
       action: `billing.${payment.kind}.delete`,
@@ -457,20 +500,13 @@ export class BillingService {
   }
 
   // ── Financial summary ────────────────────────────────────────────────────
+  // Money is reported on the day it moved (payment_date), expenses on their
+  // expense_date, so a late entry lands in the right period.
   async getSummary(filters: { from?: string; to?: string } = {}) {
     const { from, to } = filters;
-
-    const buildRange = () => {
-      if (!from && !to) return undefined;
-      return {
-        ...(from ? { gte: new Date(`${from}T00:00:00.000Z`) } : {}),
-        ...(to ? { lte: new Date(`${to}T23:59:59.999Z`) } : {}),
-      };
-    };
-
-    const range = buildRange();
-    const paymentWhere: any = range ? { created_at: range } : {};
-    const expenseWhere: any = range ? { expense_date: range } : {};
+    const range = dateRange(from, to);
+    const paymentWhere = range ? { payment_date: range } : {};
+    const expenseWhere = range ? { expense_date: range } : {};
 
     const [money, expenseAgg, outstandingAgg] = await Promise.all([
       // Actual money kept = payments - refunds in the period
@@ -506,18 +542,7 @@ export class BillingService {
 
   // ── KPI overview ─────────────────────────────────────────────────────────
   async getKpis() {
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const endOfLastMonth = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      0,
-      23,
-      59,
-      59,
-      999,
-    );
+    const { startOfMonth, startOfLastMonth, endOfLastMonth } = monthWindows();
 
     const [
       liveInvoices,
@@ -533,16 +558,18 @@ export class BillingService {
         where: { status: { in: [...LIVE_STATUSES] } },
         select: {
           total_amount: true,
+          discount_amount: true,
           amount_paid: true,
           remaining_amount: true,
           status: true,
+          due_date: true,
         },
       }),
       this.moneyMoved({}),
       this.prisma.expenses.findMany({ select: { amount: true } }),
-      this.moneyMoved({ created_at: { gte: startOfMonth } }),
+      this.moneyMoved({ payment_date: { gte: startOfMonth } }),
       this.moneyMoved({
-        created_at: { gte: startOfLastMonth, lte: endOfLastMonth },
+        payment_date: { gte: startOfLastMonth, lte: endOfLastMonth },
       }),
       this.prisma.expenses.findMany({
         where: { expense_date: { gte: startOfMonth } },
@@ -554,16 +581,27 @@ export class BillingService {
       }),
     ]);
 
-    const sumAmt = (rows: { amount: any }[]) =>
+    const sumAmt = (rows: { amount: unknown }[]) =>
       rows.reduce((s, r) => s + Number(r.amount), 0);
 
     const totalBilled = liveInvoices.reduce(
       (s, i) => s + Number(i.total_amount),
       0,
     );
+    const totalDiscounts = liveInvoices.reduce(
+      (s, i) => s + Number(i.discount_amount),
+      0,
+    );
     const totalCollected = allTime.net;
-    const totalOutstanding = liveInvoices
-      .filter((i) => i.status === 'open' || i.status === 'partial')
+    const owed = liveInvoices.filter(
+      (i) => i.status === 'open' || i.status === 'partial',
+    );
+    const totalOutstanding = owed.reduce(
+      (s, i) => s + Number(i.remaining_amount),
+      0,
+    );
+    const totalOverdue = owed
+      .filter((i) => daysOverdue(i.due_date) > 0)
       .reduce((s, i) => s + Number(i.remaining_amount), 0);
     const totalExpenses = sumAmt(allExpenses);
     const collectionRate =
@@ -582,9 +620,11 @@ export class BillingService {
     return {
       all_time: {
         total_billed: totalBilled,
+        total_discounts: round2(totalDiscounts),
         total_collected: totalCollected,
         total_refunded: allTime.refunds,
         total_outstanding: totalOutstanding,
+        total_overdue: round2(totalOverdue),
         total_expenses: totalExpenses,
         net_profit: totalCollected - totalExpenses,
         collection_rate_pct: Math.round(collectionRate * 10) / 10,
@@ -617,6 +657,7 @@ export class BillingService {
   }
 
   // ── Outstanding invoices ────────────────────────────────────────────────
+  /** Every balance still owed, the longest overdue first. */
   async getOutstandingPayments() {
     const invoices = await this.prisma.treatment_invoices.findMany({
       where: { status: { in: ['open', 'partial'] } },
@@ -628,11 +669,12 @@ export class BillingService {
           },
         },
       },
-      orderBy: { created_at: 'asc' },
+      orderBy: [{ due_date: 'asc' }, { created_at: 'asc' }],
     });
 
     return invoices.map((inv) => ({
       id: Number(inv.id),
+      invoice_number: inv.invoice_number,
       patient_id: Number(inv.patient_id),
       patient_name: inv.patient?.users
         ? `${inv.patient.users.first_name} ${inv.patient.users.last_name}`
@@ -641,45 +683,31 @@ export class BillingService {
       amount_paid: Number(inv.amount_paid),
       remaining: Number(inv.remaining_amount),
       status: inv.status,
+      due_date: inv.due_date,
+      days_overdue: daysOverdue(inv.due_date),
       created_at: inv.created_at,
     }));
   }
 
   // ── A/R aging report ────────────────────────────────────────────────────
+  /** Outstanding balances by days past their due date (not days since issue). */
   async getAgingReport() {
     const invoices = await this.prisma.treatment_invoices.findMany({
       where: { status: { in: ['open', 'partial'] } },
-      select: { id: true, remaining_amount: true, created_at: true },
+      select: { id: true, remaining_amount: true, due_date: true },
     });
 
     const now = new Date();
-    const buckets = {
-      '0_30_days': 0,
-      '31_60_days': 0,
-      '61_90_days': 0,
-      '90_plus_days': 0,
-    };
-    const counts = {
-      '0_30_days': 0,
-      '31_60_days': 0,
-      '61_90_days': 0,
-      '90_plus_days': 0,
-    };
+    const buckets = Object.fromEntries(AGING_BUCKETS.map((b) => [b, 0]));
+    const counts = Object.fromEntries(AGING_BUCKETS.map((b) => [b, 0]));
+    const todayStart = toDateOnly(now.toISOString()).getTime();
 
     for (const inv of invoices) {
-      const days = Math.floor(
-        (now.getTime() - new Date(inv.created_at).getTime()) / 86_400_000,
-      );
-      const amount = Number(inv.remaining_amount);
-      const key =
-        days <= 30
-          ? '0_30_days'
-          : days <= 60
-            ? '31_60_days'
-            : days <= 90
-              ? '61_90_days'
-              : '90_plus_days';
-      buckets[key] += amount;
+      const overdue = daysOverdue(inv.due_date, now);
+      const notYetDue =
+        toDateOnly(inv.due_date.toISOString()).getTime() > todayStart;
+      const key = agingBucketFor(overdue, notYetDue);
+      buckets[key] += Number(inv.remaining_amount);
       counts[key]++;
     }
 
@@ -687,12 +715,17 @@ export class BillingService {
       buckets,
       invoice_counts: counts,
       total_outstanding: Object.values(buckets).reduce((s, v) => s + v, 0),
+      total_overdue: Object.entries(buckets)
+        .filter(([k]) => k !== 'not_yet_due')
+        .reduce((s, [, v]) => s + v, 0),
     };
   }
 
   // ── Per-patient financial summary ───────────────────────────────────────
   async getPatientFinancials(patient_id?: number) {
-    const where: any = { status: { in: [...LIVE_STATUSES] } };
+    const where: Record<string, unknown> = {
+      status: { in: [...LIVE_STATUSES] },
+    };
     if (patient_id) where.patient_id = BigInt(patient_id);
 
     const invoices = await this.prisma.treatment_invoices.findMany({
@@ -752,16 +785,16 @@ export class BillingService {
   // ── Monthly trends + payment method breakdown ────────────────────────────
   async getPaymentsAnalytics(months = 12) {
     const since = new Date();
-    since.setMonth(since.getMonth() - months);
+    since.setUTCMonth(since.getUTCMonth() - months);
 
     const [rows, expenses] = await Promise.all([
       this.prisma.invoice_payments.findMany({
-        where: { created_at: { gte: since } },
+        where: { payment_date: { gte: since } },
         select: {
           amount: true,
           kind: true,
           payment_method: true,
-          created_at: true,
+          payment_date: true,
         },
       }),
       this.prisma.expenses.findMany({
@@ -782,7 +815,7 @@ export class BillingService {
       (monthly[key] ??= { income: 0, refunds: 0, expenses: 0 });
 
     for (const p of rows) {
-      const b = bucket(p.created_at.toISOString().slice(0, 7));
+      const b = bucket(p.payment_date.toISOString().slice(0, 7));
       b.income += signed(p);
       if (p.kind === 'refund') b.refunds += Number(p.amount);
     }
@@ -816,12 +849,13 @@ export class BillingService {
   async listInvoicePayments(limit = 500) {
     return this.prisma.invoice_payments.findMany({
       take: limit,
-      orderBy: { created_at: 'desc' },
+      orderBy: [{ payment_date: 'desc' }, { created_at: 'desc' }],
       select: {
         id: true,
         kind: true,
         amount: true,
         payment_method: true,
+        payment_date: true,
         reason: true,
         created_at: true,
         invoice_id: true,

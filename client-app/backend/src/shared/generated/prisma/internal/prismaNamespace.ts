@@ -385,6 +385,7 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 
 export const ModelName = {
   organizations: 'organizations',
+  document_sequences: 'document_sequences',
   branches: 'branches',
   appointment_slots: 'appointment_slots',
   appointments: 'appointments',
@@ -427,7 +428,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "organizations" | "branches" | "appointment_slots" | "appointments" | "audit_logs" | "clinic_profile" | "inventory_items" | "inventory_movements" | "notifications" | "patient_documents" | "patient_profiles" | "patient_records" | "users" | "expenses" | "expense_payments" | "treatment_invoices" | "invoice_line_items" | "invoice_payments" | "roles" | "role_permissions" | "specialists" | "specialist_consultations" | "dental_labs" | "lab_orders" | "agent_conversations" | "agent_usage" | "quotes" | "quote_items"
+    modelProps: "organizations" | "document_sequences" | "branches" | "appointment_slots" | "appointments" | "audit_logs" | "clinic_profile" | "inventory_items" | "inventory_movements" | "notifications" | "patient_documents" | "patient_profiles" | "patient_records" | "users" | "expenses" | "expense_payments" | "treatment_invoices" | "invoice_line_items" | "invoice_payments" | "roles" | "role_permissions" | "specialists" | "specialist_consultations" | "dental_labs" | "lab_orders" | "agent_conversations" | "agent_usage" | "quotes" | "quote_items"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -502,6 +503,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.organizationsCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.OrganizationsCountAggregateOutputType> | number
+        }
+      }
+    }
+    document_sequences: {
+      payload: Prisma.$document_sequencesPayload<ExtArgs>
+      fields: Prisma.document_sequencesFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.document_sequencesFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$document_sequencesPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.document_sequencesFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$document_sequencesPayload>
+        }
+        findFirst: {
+          args: Prisma.document_sequencesFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$document_sequencesPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.document_sequencesFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$document_sequencesPayload>
+        }
+        findMany: {
+          args: Prisma.document_sequencesFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$document_sequencesPayload>[]
+        }
+        create: {
+          args: Prisma.document_sequencesCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$document_sequencesPayload>
+        }
+        createMany: {
+          args: Prisma.document_sequencesCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.document_sequencesCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$document_sequencesPayload>[]
+        }
+        delete: {
+          args: Prisma.document_sequencesDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$document_sequencesPayload>
+        }
+        update: {
+          args: Prisma.document_sequencesUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$document_sequencesPayload>
+        }
+        deleteMany: {
+          args: Prisma.document_sequencesDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.document_sequencesUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.document_sequencesUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$document_sequencesPayload>[]
+        }
+        upsert: {
+          args: Prisma.document_sequencesUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$document_sequencesPayload>
+        }
+        aggregate: {
+          args: Prisma.Document_sequencesAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateDocument_sequences>
+        }
+        groupBy: {
+          args: Prisma.document_sequencesGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Document_sequencesGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.document_sequencesCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Document_sequencesCountAggregateOutputType> | number
         }
       }
     }
@@ -2563,6 +2638,16 @@ export const OrganizationsScalarFieldEnum = {
 export type OrganizationsScalarFieldEnum = (typeof OrganizationsScalarFieldEnum)[keyof typeof OrganizationsScalarFieldEnum]
 
 
+export const Document_sequencesScalarFieldEnum = {
+  organization_id: 'organization_id',
+  kind: 'kind',
+  year: 'year',
+  last_value: 'last_value'
+} as const
+
+export type Document_sequencesScalarFieldEnum = (typeof Document_sequencesScalarFieldEnum)[keyof typeof Document_sequencesScalarFieldEnum]
+
+
 export const BranchesScalarFieldEnum = {
   id: 'id',
   organization_id: 'organization_id',
@@ -2830,8 +2915,13 @@ export const Treatment_invoicesScalarFieldEnum = {
   organization_id: 'organization_id',
   branch_id: 'branch_id',
   patient_id: 'patient_id',
+  invoice_number: 'invoice_number',
   procedure_date: 'procedure_date',
+  due_date: 'due_date',
   notes: 'notes',
+  subtotal: 'subtotal',
+  discount_amount: 'discount_amount',
+  discount_reason: 'discount_reason',
   total_amount: 'total_amount',
   amount_paid: 'amount_paid',
   remaining_amount: 'remaining_amount',
@@ -2870,6 +2960,7 @@ export const Invoice_paymentsScalarFieldEnum = {
   kind: 'kind',
   reason: 'reason',
   notes: 'notes',
+  payment_date: 'payment_date',
   created_by: 'created_by',
   created_at: 'created_at'
 } as const
@@ -3015,10 +3106,12 @@ export const QuotesScalarFieldEnum = {
   organization_id: 'organization_id',
   branch_id: 'branch_id',
   patient_id: 'patient_id',
+  quote_number: 'quote_number',
   version: 'version',
   supersedes_id: 'supersedes_id',
   status: 'status',
   valid_until: 'valid_until',
+  quoted_discount: 'quoted_discount',
   quoted_total: 'quoted_total',
   notes: 'notes',
   created_by: 'created_by',
@@ -3301,6 +3394,7 @@ export type PrismaClientOptions = ({
 }
 export type GlobalOmitConfig = {
   organizations?: Prisma.organizationsOmit
+  document_sequences?: Prisma.document_sequencesOmit
   branches?: Prisma.branchesOmit
   appointment_slots?: Prisma.appointment_slotsOmit
   appointments?: Prisma.appointmentsOmit
