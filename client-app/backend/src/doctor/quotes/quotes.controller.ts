@@ -22,6 +22,7 @@ import type { RequestUser } from '../../shared/common/guards/jwt-auth.guard';
 import { QuotesService } from './quotes.service';
 import {
   CreateQuoteDto,
+  InvoiceFromQuoteDto,
   QUOTE_STATUSES,
   UpdateQuoteDto,
 } from './dto/quote.dto';
@@ -71,7 +72,9 @@ export class QuotesController {
 
   @Post()
   @RequirePermissions('billing:write')
-  @ApiOperation({ summary: 'Prepare a quote (draft) for a patient' })
+  @ApiOperation({
+    summary: 'Prepare a quote (draft) for a patient; numbered by the clinic',
+  })
   create(@Body() dto: CreateQuoteDto, @Req() req: AuthedRequest) {
     return this.quotes.create(dto, BigInt(req.user.id));
   }
@@ -117,6 +120,20 @@ export class QuotesController {
   })
   revise(@Param('id', ParseIntPipe) id: number, @Req() req: AuthedRequest) {
     return this.quotes.revise(BigInt(id), BigInt(req.user.id));
+  }
+
+  @Post(':id/invoice')
+  @RequirePermissions('billing:write')
+  @ApiOperation({
+    summary:
+      'Issue an invoice from an accepted quote: its lines and discount, linked back to the quote (one live invoice per quote)',
+  })
+  createInvoice(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: InvoiceFromQuoteDto,
+    @Req() req: AuthedRequest,
+  ) {
+    return this.quotes.createInvoice(BigInt(id), dto, BigInt(req.user.id));
   }
 
   @Delete(':id')

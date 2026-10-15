@@ -693,14 +693,6 @@ export type inventory_itemsUncheckedUpdateManyWithoutBranchNestedInput = {
   deleteMany?: Prisma.inventory_itemsScalarWhereInput | Prisma.inventory_itemsScalarWhereInput[]
 }
 
-export type IntFieldUpdateOperationsInput = {
-  set?: number
-  increment?: number
-  decrement?: number
-  multiply?: number
-  divide?: number
-}
-
 export type NullableDecimalFieldUpdateOperationsInput = {
   set?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   increment?: runtime.Decimal | runtime.DecimalJsLike | number | string

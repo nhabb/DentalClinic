@@ -28,5 +28,25 @@ export function dateRange(
   };
 }
 
-/** Today as "YYYY-MM-DD". */
+/** Today as "YYYY-MM-DD" in UTC. Prefer `clinicTodayIso` for anything a desk sees. */
 export const todayIso = (): string => new Date().toISOString().split('T')[0];
+
+/**
+ * The time zone the clinics' calendar days are counted in. One zone for the
+ * platform until organizations.timezone is carried in the tenant context.
+ */
+export const CLINIC_TIMEZONE = process.env.CLINIC_TIMEZONE || 'Asia/Beirut';
+
+/**
+ * Today as "YYYY-MM-DD" on the clinic's calendar: what "received today",
+ * "due today" and "valid until today" mean at the desk, whatever the server's
+ * clock zone is. en-CA formats as YYYY-MM-DD.
+ */
+export function clinicTodayIso(now = new Date()): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: CLINIC_TIMEZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(now);
+}

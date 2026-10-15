@@ -53,11 +53,6 @@ export class CompleteWorkDto {
   @MaxLength(2000)
   notes?: string;
 
-  @ApiPropertyOptional({ description: 'Doctor user ID' })
-  @IsOptional()
-  @IsNumber()
-  created_by?: number;
-
   @ApiPropertyOptional({ default: true })
   @IsOptional()
   @IsBoolean()

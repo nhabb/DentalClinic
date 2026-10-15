@@ -50,7 +50,8 @@ function columnsOf(table: string): string[] {
 function viewOf(table: string): { plain: string[]; gated: string[] } {
   const head = `CREATE OR REPLACE VIEW agent.${table} AS`;
   const tail = `FROM public.${table};`;
-  const start = sql.indexOf(head);
+  // The latest definition wins: a later migration may rebuild a view with new columns.
+  const start = sql.lastIndexOf(head);
   const end = sql.indexOf(tail, start);
   if (start < 0 || end < 0) throw new Error(`no view for ${table}`);
   const body = sql.slice(start + head.length, end).replace(/^\s*SELECT/, '');

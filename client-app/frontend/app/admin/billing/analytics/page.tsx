@@ -52,7 +52,9 @@ interface Invoice {
   id: number;
   total_amount: number;
   remaining_amount: number;
-  status: "open" | "partial" | "paid";
+  status: "open" | "partial" | "paid" | "cancelled";
+  /** Payment terms: balances age from this day. */
+  due_date: string;
   created_at: string;
 }
 
@@ -63,11 +65,13 @@ interface InvoicePayment {
   created_at: string;
 }
 
+/** The API's aging buckets (GET /billing/aging): balances owed, by days past their due date. */
 const AGING_BUCKETS = [
-  { key: "0_30", label: "0–30 days", max: 30 },
-  { key: "31_60", label: "31–60 days", max: 60 },
-  { key: "61_90", label: "61–90 days", max: 90 },
-  { key: "90_plus", label: "90+ days", max: Infinity },
+  { key: "not_yet_due", label: "Not yet due" },
+  { key: "0_30_days", label: "1–30 days overdue" },
+  { key: "31_60_days", label: "31–60 days overdue" },
+  { key: "61_90_days", label: "61–90 days overdue" },
+  { key: "90_plus_days", label: "90+ days overdue" },
 ] as const;
 
 const monthKeyOf = (iso: string) => iso.slice(0, 7);
@@ -83,6 +87,8 @@ export default function BillingAnalyticsPage() {
   const [kpis, setKpis] = useState<Kpis | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [payments, setPayments] = useState<InvoicePayment[]>([]);
+  // Aging comes from the API: the same buckets the assistant and the reports use.
+  const [agingBuckets, setAgingBuckets] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
@@ -94,16 +100,19 @@ export default function BillingAnalyticsPage() {
       apiFetch("/api/billing/kpis").then((r) => (r.ok ? r.json() : null)),
       apiFetch("/api/billing/invoices?limit=500").then((r) => (r.ok ? r.json() : { data: [] })),
       apiFetch("/api/billing/invoice-payments?limit=1000").then((r) => (r.ok ? r.json() : [])),
+      apiFetch("/api/billing/aging").then((r) => (r.ok ? r.json() : { buckets: {} })),
     ])
-      .then(([kpisJson, invoicesJson, paymentsJson]) => {
+      .then(([kpisJson, invoicesJson, paymentsJson, agingJson]) => {
         if (cancelled) return;
         setKpis(kpisJson);
+        setAgingBuckets(agingJson?.buckets ?? {});
         setInvoices(
           (Array.isArray(invoicesJson?.data) ? invoicesJson.data : []).map((inv: any) => ({
             id: Number(inv.id),
             total_amount: Number(inv.total_amount),
             remaining_amount: Number(inv.remaining_amount),
             status: inv.status,
+            due_date: inv.due_date ?? inv.procedure_date ?? inv.created_at,
             created_at: inv.created_at,
           })),
         );
@@ -138,26 +147,19 @@ export default function BillingAnalyticsPage() {
     router.push("/login");
   };
 
-  // Invoices by status — totals in dollars.
+  // Invoices by status — totals in dollars. A cancelled invoice was never really billed.
   const statusTotals: Record<string, number> = { open: 0, partial: 0, paid: 0 };
-  invoices.forEach((inv) => {
-    statusTotals[inv.status] = (statusTotals[inv.status] ?? 0) + inv.total_amount;
-  });
-  const statusSlices = (Object.keys(statusTotals) as Invoice["status"][])
+  invoices
+    .filter((inv) => inv.status !== "cancelled")
+    .forEach((inv) => {
+      statusTotals[inv.status] = (statusTotals[inv.status] ?? 0) + inv.total_amount;
+    });
+  const statusSlices = (Object.keys(statusTotals) as Exclude<Invoice["status"], "cancelled">[])
     .filter((s) => statusTotals[s] > 0)
     .map((s) => ({ key: s, label: s.charAt(0).toUpperCase() + s.slice(1), value: statusTotals[s], color: INVOICE_STATUS_COLOR[s] }));
 
-  // Aging buckets — remaining balance on open/partial invoices, by days since created.
-  const now = Date.now();
-  const agingTotals: Record<string, number> = { "0_30": 0, "31_60": 0, "61_90": 0, "90_plus": 0 };
-  invoices
-    .filter((inv) => inv.status !== "paid" && inv.remaining_amount > 0)
-    .forEach((inv) => {
-      const days = Math.floor((now - new Date(inv.created_at).getTime()) / 86_400_000);
-      const bucket = AGING_BUCKETS.find((b) => days <= b.max) ?? AGING_BUCKETS[AGING_BUCKETS.length - 1];
-      agingTotals[bucket.key] += inv.remaining_amount;
-    });
-  const agingRows = AGING_BUCKETS.map((b, i) => ({ key: b.key, label: b.label, value: agingTotals[b.key], color: SERIES[i % SERIES.length] }));
+  // Aging — balances still owed, by days past their due date, as the API reports them.
+  const agingRows = AGING_BUCKETS.map((b, i) => ({ key: b.key, label: b.label, value: Number(agingBuckets[b.key] ?? 0), color: SERIES[i % SERIES.length] }));
 
   // Payments by method.
   const methodTotals: Record<string, number> = {};

@@ -1,11 +1,18 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaService, Tx } from '../../shared/prisma/prisma.service';
+import { clinicTodayIso } from '../../shared/common/date-only';
+import {
+  PrismaService,
+  REMOTE_TX_OPTIONS,
+  Tx,
+} from '../../shared/prisma/prisma.service';
 import { RecordWorkDto, WorkStatus } from './dto/record-work.dto';
 import { CompleteWorkDto } from './dto/complete-work.dto';
+import { dueDateFor, invoiceFigures } from '../billing/invoice-math';
 
 export type ToothStatus = 'healthy' | 'treated' | 'planned' | 'missing';
 
@@ -81,7 +88,7 @@ export class PatientWorkService {
       const results: unknown[] = [];
       for (const op of ops) results.push(await op(tx));
       return results;
-    });
+    }, REMOTE_TX_OPTIONS);
   }
 
   private async requirePatient(patientId: bigint) {
@@ -140,12 +147,12 @@ export class PatientWorkService {
     };
   }
 
-  async recordWork(dto: RecordWorkDto) {
+  async recordWork(dto: RecordWorkDto, actorId: bigint) {
     const patientId = BigInt(dto.patient_id);
     await this.requirePatient(patientId);
 
     const treatmentDate = toDateOnly(dto.treatment_date);
-    const createdBy = dto.created_by ? BigInt(dto.created_by) : null;
+    const createdBy = actorId;
     const appointmentId = dto.appointment_id
       ? BigInt(dto.appointment_id)
       : null;
@@ -183,8 +190,6 @@ export class PatientWorkService {
       : [];
     const unbilled = dto.items.filter((i) => !billable.includes(i));
 
-    const total = round2(billable.reduce((s, i) => s + (i.amount ?? 0), 0));
-
     // One transaction: the invoice (with its line items and the records it
     // bills) in a single nested write, plus the remaining records.
     // Interactive transaction on purpose: the array form is started from a
@@ -196,11 +201,9 @@ export class PatientWorkService {
           data: {
             patient_id: patientId,
             procedure_date: treatmentDate,
+            due_date: dueDateFor(treatmentDate),
             notes: dto.notes?.trim() || null,
-            total_amount: total,
-            amount_paid: 0,
-            remaining_amount: total,
-            status: 'open',
+            ...invoiceFigures(billable.map((i) => i.amount ?? 0)),
             created_by: createdBy,
             line_items: {
               create: billable.map((i) => ({
@@ -238,9 +241,10 @@ export class PatientWorkService {
    * Turn planned records into completed treatments and/or bill work that is
    * not yet on an invoice. Items with a price are billed together on one new
    * invoice and linked to it. Accepts planned records and completed records
-   * that have no invoice yet.
+   * that have no invoice yet; planned work already invoiced from its quote
+   * is completed without a price.
    */
-  async completePlanned(dto: CompleteWorkDto) {
+  async completePlanned(dto: CompleteWorkDto, actorId: bigint) {
     const patientId = BigInt(dto.patient_id);
     await this.requirePatient(patientId);
 
@@ -266,34 +270,40 @@ export class PatientWorkService {
 
     const treatmentDate = dto.treatment_date
       ? toDateOnly(dto.treatment_date)
-      : toDateOnly(new Date().toISOString());
-    const createdBy = dto.created_by ? BigInt(dto.created_by) : null;
+      : toDateOnly(clinicTodayIso());
+    const createdBy = actorId;
     const amountOf = new Map(
       dto.items.map((i) => [String(i.record_id), round2(i.amount ?? 0)]),
     );
 
-    const billable =
-      dto.create_invoice !== false
-        ? records.filter((r) => (amountOf.get(String(r.id)) ?? 0) > 0)
-        : [];
-    const total = round2(
-      billable.reduce((s, r) => s + (amountOf.get(String(r.id)) ?? 0), 0),
-    );
+    // Work already on an invoice (billed up front from a quote, or on an
+    // earlier visit) is completed here but never billed a second time.
+    const priced = records.filter((r) => (amountOf.get(String(r.id)) ?? 0) > 0);
+    const alreadyBilled = priced.filter((r) => r.invoice_id !== null);
+    if (alreadyBilled.length > 0) {
+      const names = alreadyBilled
+        .map((r) => `${r.title} on tooth ${r.tooth_number}`)
+        .join(', ');
+      throw new BadRequestException(
+        `Already billed on an invoice, send no amount for: ${names}`,
+      );
+    }
+    const billable = dto.create_invoice !== false ? priced : [];
 
     // Interactive transaction on purpose: the array form is started from a
     // shared tick and can run under another request's tenant (see tenant-pool.ts).
     const ops: TxOp[] = [];
     if (billable.length > 0) {
-      ops.push(async (tx) =>
-        tx.treatment_invoices.create({
+      ops.push(async (tx) => {
+        const invoice = await tx.treatment_invoices.create({
           data: {
             patient_id: patientId,
             procedure_date: treatmentDate,
+            due_date: dueDateFor(treatmentDate),
             notes: dto.notes?.trim() || null,
-            total_amount: total,
-            amount_paid: 0,
-            remaining_amount: total,
-            status: 'open',
+            ...invoiceFigures(
+              billable.map((r) => amountOf.get(String(r.id)) ?? 0),
+            ),
             created_by: createdBy,
             // The accepted quote these records were priced on, if any: quoted vs billed stays comparable.
             quote_id: await this.acceptedQuoteFor(
@@ -307,12 +317,23 @@ export class PatientWorkService {
                 tooth_number: r.tooth_number,
               })),
             },
-            // connect sets invoice_id on the existing planned records
-            patient_records: { connect: billable.map((r) => ({ id: r.id })) },
           },
           include: { line_items: true },
-        }),
-      );
+        });
+        // Attach only records that are still unbilled: a quote invoiced at the
+        // same moment wins the row, and this transaction rolls back instead of
+        // billing the work twice (the database refuses to move a billed record too).
+        const attached = await tx.patient_records.updateMany({
+          where: { id: { in: billable.map((r) => r.id) }, invoice_id: null },
+          data: { invoice_id: invoice.id, updated_at: new Date() },
+        });
+        if (attached.count !== billable.length) {
+          throw new ConflictException(
+            'Some of this work was billed a moment ago (from its quote or another desk); refresh the chart',
+          );
+        }
+        return invoice;
+      });
     }
     for (const r of records) {
       const finalAmount = amountOf.get(String(r.id));

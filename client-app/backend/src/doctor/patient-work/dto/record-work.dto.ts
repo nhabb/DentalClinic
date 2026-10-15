@@ -94,11 +94,6 @@ export class RecordWorkDto {
   @MaxLength(2000)
   notes?: string;
 
-  @ApiPropertyOptional({ description: 'Doctor user ID' })
-  @IsOptional()
-  @IsNumber()
-  created_by?: number;
-
   @ApiPropertyOptional({
     default: true,
     description: 'Create an invoice for completed items with a price',

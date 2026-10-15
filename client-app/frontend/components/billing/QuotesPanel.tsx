@@ -42,9 +42,13 @@ type QuoteItem = {
 
 export type Quote = {
   id: number;
+  /** Sequential per clinic and year (QUO-2026-00004): what the patient sees. */
+  quote_number: string;
   version: number;
   status: QuoteStatus;
   valid_until: string | null;
+  /** Taken off the lines; quoted_total is lines minus this. */
+  quoted_discount: number;
   quoted_total: number;
   notes: string | null;
   created_at: string;
@@ -52,7 +56,12 @@ export type Quote = {
   accepted_at: string | null;
   patient: { id: number; users: { first_name: string; last_name: string } };
   items: QuoteItem[];
-  invoices: { id: number; status: string; total_amount: number }[];
+  invoices: {
+    id: number;
+    invoice_number: string;
+    status: string;
+    total_amount: number;
+  }[];
 };
 
 type PatientOption = { id: number; label: string };
@@ -92,6 +101,8 @@ function normalizeQuote(q: any): Quote {
   return {
     ...q,
     id: Number(q.id),
+    quote_number: q.quote_number ?? `#${q.id}`,
+    quoted_discount: Number(q.quoted_discount ?? 0),
     quoted_total: Number(q.quoted_total ?? 0),
     patient: { ...q.patient, id: Number(q.patient?.id) },
     items: (q.items ?? []).map((i: any) => ({
@@ -224,6 +235,33 @@ export function QuotesPanel({ patients, procedures }: QuotesPanelProps) {
     }
   };
 
+  /** Bill an accepted quote as it stands: one numbered invoice with its lines and discount. */
+  const issueInvoice = async (q: Quote) => {
+    if (
+      !window.confirm(
+        `Issue an invoice for ${money(q.quoted_total)} from quote ${q.quote_number}? The patient will owe it from today.`,
+      )
+    )
+      return;
+    setBusyId(q.id);
+    try {
+      const res = await apiFetch(`/api/quotes/${q.id}/invoice`, {
+        method: "POST",
+        body: JSON.stringify({}),
+      });
+      if (!res.ok)
+        throw new Error(await readError(res, "Could not issue the invoice."));
+      const invoice = await res.json();
+      toast.success(`Invoice ${invoice.invoice_number} issued; find it under Invoices.`);
+      setSelected(null);
+      await load();
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setBusyId(null);
+    }
+  };
+
   const print = (q: Quote) => {
     const w = window.open("", "_blank", "width=800,height=900");
     if (!w) return;
@@ -236,17 +274,21 @@ export function QuotesPanel({ patients, procedures }: QuotesPanelProps) {
       )
       .join("");
     w.document
-      .write(`<!doctype html><html><head><title>Quote #${q.id} v${q.version}</title>
+      .write(`<!doctype html><html><head><title>Quote ${esc(q.quote_number)} v${q.version}</title>
       <style>body{font-family:system-ui,sans-serif;padding:32px;color:#1e2533}h1{font-size:22px;margin:0 0 4px}
       table{width:100%;border-collapse:collapse;margin-top:16px}td,th{padding:8px;border-bottom:1px solid #dfe6f1;text-align:left}
       tfoot td{font-weight:700;border-top:2px solid #1e2533}small{color:#6d7d97}.meta{color:#6d7d97;font-size:13px}</style></head><body>
       <h1>Treatment estimate</h1>
-      <div class="meta">Quote #${q.id} · version ${q.version} · ${formatDateBeirut(q.created_at)}${
+      <div class="meta">Quote ${esc(q.quote_number)} · version ${q.version} · ${formatDateBeirut(q.created_at)}${
         q.valid_until ? ` · valid until ${formatDateBeirut(q.valid_until)}` : ""
       }</div>
       <p><strong>${esc(q.patient.users.first_name)} ${esc(q.patient.users.last_name)}</strong></p>
       <table><thead><tr><th>Procedure</th><th style="text-align:right">Estimate</th></tr></thead>
-      <tbody>${rows}</tbody><tfoot><tr><td>Total estimate</td><td style="text-align:right">${money(q.quoted_total)}</td></tr></tfoot></table>
+      <tbody>${rows}</tbody><tfoot>${
+        q.quoted_discount > 0
+          ? `<tr><td style="font-weight:400">Lines</td><td style="text-align:right;font-weight:400">${money(q.quoted_total + q.quoted_discount)}</td></tr><tr><td style="font-weight:400">Discount</td><td style="text-align:right;font-weight:400">−${money(q.quoted_discount)}</td></tr>`
+          : ""
+      }<tr><td>Total estimate</td><td style="text-align:right">${money(q.quoted_total)}</td></tr></tfoot></table>
       ${q.notes ? `<p>${esc(q.notes)}</p>` : ""}
       <p class="meta">This is an estimate of planned treatment, not an invoice. Prices may change if the treatment plan changes.</p>
       <script>window.print()</script></body></html>`);
@@ -260,6 +302,7 @@ export function QuotesPanel({ patients, procedures }: QuotesPanelProps) {
   const [lines, setLines] = useState<DraftLine[]>([]);
   const [plannedLoading, setPlannedLoading] = useState(false);
   const [validUntil, setValidUntil] = useState("");
+  const [discount, setDiscount] = useState("");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
@@ -268,6 +311,7 @@ export function QuotesPanel({ patients, procedures }: QuotesPanelProps) {
     setNewPatient("");
     setLines([]);
     setValidUntil("");
+    setDiscount("");
     setNotes("");
     setFormError("");
     setShowNew(true);
@@ -321,10 +365,12 @@ export function QuotesPanel({ patients, procedures }: QuotesPanelProps) {
     setLines((p) => p.map((l) => (l.key === key ? { ...l, ...patch } : l)));
 
   const included = lines.filter((l) => l.included);
-  const draftTotal = included.reduce(
+  const draftLines = included.reduce(
     (s, l) => s + (parseFloat(l.amount) || 0),
     0,
   );
+  const draftDiscount = parseFloat(discount) || 0;
+  const draftTotal = draftLines - draftDiscount;
 
   const saveNew = async () => {
     setFormError("");
@@ -337,6 +383,8 @@ export function QuotesPanel({ patients, procedures }: QuotesPanelProps) {
       if (Number.isNaN(amount) || amount < 0)
         return setFormError("Every line needs a price (0 or more).");
     }
+    if (draftDiscount < 0 || draftDiscount > draftLines)
+      return setFormError("The discount cannot exceed the lines.");
     setSaving(true);
     try {
       const res = await apiFetch("/api/quotes", {
@@ -344,6 +392,7 @@ export function QuotesPanel({ patients, procedures }: QuotesPanelProps) {
         body: JSON.stringify({
           patient_id: Number(newPatient),
           valid_until: validUntil || undefined,
+          quoted_discount: draftDiscount || undefined,
           notes: notes || undefined,
           items: included.map((l) => ({
             record_id: l.record_id,
@@ -478,8 +527,9 @@ export function QuotesPanel({ patients, procedures }: QuotesPanelProps) {
                   <td className="px-4 py-3 font-medium text-ink-900">
                     {q.patient.users.first_name} {q.patient.users.last_name}
                   </td>
-                  <td className="px-4 py-3 text-ink-600">
-                    #{q.id} <span className="text-ink-400">v{q.version}</span>
+                  <td className="px-4 py-3 text-ink-600 whitespace-nowrap">
+                    {q.quote_number}{" "}
+                    <span className="text-ink-400">v{q.version}</span>
                   </td>
                   <td className="px-4 py-3 text-ink-600 whitespace-nowrap">
                     {formatDateBeirut(q.created_at)}
@@ -519,7 +569,7 @@ export function QuotesPanel({ patients, procedures }: QuotesPanelProps) {
         <Modal
           isOpen={!!selected}
           onClose={() => setSelected(null)}
-          title={`Quote #${selected.id} v${selected.version} — ${selected.patient.users.first_name} ${selected.patient.users.last_name}`}
+          title={`Quote ${selected.quote_number} v${selected.version} — ${selected.patient.users.first_name} ${selected.patient.users.last_name}`}
           maxWidth="max-w-2xl"
         >
           <div className="space-y-5 max-h-[75vh] overflow-y-auto pr-1">
@@ -587,6 +637,22 @@ export function QuotesPanel({ patients, procedures }: QuotesPanelProps) {
                     </td>
                   </tr>
                 ))}
+                {selected.quoted_discount > 0 && (
+                  <>
+                    <tr className="text-ink-600">
+                      <td className="px-3 py-2">Lines</td>
+                      <td className="px-3 py-2 text-right">
+                        {money(selected.quoted_total + selected.quoted_discount)}
+                      </td>
+                    </tr>
+                    <tr className="text-ink-600">
+                      <td className="px-3 py-2">Discount</td>
+                      <td className="px-3 py-2 text-right">
+                        −{money(selected.quoted_discount)}
+                      </td>
+                    </tr>
+                  </>
+                )}
                 <tr className="bg-ink-50 font-semibold">
                   <td className="px-3 py-2">Total estimate</td>
                   <td className="px-3 py-2 text-right">
@@ -607,7 +673,7 @@ export function QuotesPanel({ patients, procedures }: QuotesPanelProps) {
                 <strong>Billed from this quote:</strong>{" "}
                 {selected.invoices.map((inv) => (
                   <span key={inv.id} className="mr-3">
-                    Invoice #{inv.id} {money(inv.total_amount)}{" "}
+                    {inv.invoice_number} {money(inv.total_amount)}{" "}
                     <span className="capitalize text-ink-400">
                       ({inv.status})
                     </span>
@@ -686,6 +752,18 @@ export function QuotesPanel({ patients, procedures }: QuotesPanelProps) {
                   </Button>
                 </>
               )}
+              {canWrite &&
+                selected.status === "accepted" &&
+                !selected.invoices.some((inv) => inv.status !== "cancelled") && (
+                  <Button
+                    size="sm"
+                    disabled={busyId === selected.id}
+                    onClick={() => issueInvoice(selected)}
+                    title="Bill the whole quote now (treatment paid up front); otherwise completing the work from the chart bills it"
+                  >
+                    <FaFileInvoiceDollar className="mr-2" /> Issue invoice
+                  </Button>
+                )}
               {canWrite && selected.status !== "draft" && (
                 <Button
                   size="sm"
@@ -820,20 +898,40 @@ export function QuotesPanel({ patients, procedures }: QuotesPanelProps) {
                   </div>
                 ))}
                 {lines.length > 0 && (
-                  <p className="text-right text-sm font-semibold text-ink-900">
-                    Total estimate: {money(draftTotal)}
-                  </p>
+                  <div className="text-right text-sm text-ink-700 space-y-0.5">
+                    {draftDiscount > 0 && (
+                      <>
+                        <p>Lines: {money(draftLines)}</p>
+                        <p>Discount: −{money(draftDiscount)}</p>
+                      </>
+                    )}
+                    <p className="font-semibold text-ink-900">
+                      Total estimate: {money(draftTotal)}
+                    </p>
+                  </div>
                 )}
               </div>
             )
           )}
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <FormField label="Valid until">
               <input
                 type="date"
                 value={validUntil}
+                min={new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Beirut" }).format(new Date())}
                 onChange={(e) => setValidUntil(e.target.value)}
+                className={inputClass}
+              />
+            </FormField>
+            <FormField label="Discount">
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+                value={discount}
+                onChange={(e) => setDiscount(e.target.value)}
                 className={inputClass}
               />
             </FormField>

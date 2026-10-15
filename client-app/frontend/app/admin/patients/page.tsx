@@ -884,19 +884,6 @@ export default function PatientsPage() {
     setWorkItems((prev) => prev.map((it, i) => (i === index ? { ...it, bill: !it.bill } : it)));
   const setAllWorkItemsBill = (bill: boolean) => setWorkItems((prev) => prev.map((it) => ({ ...it, bill })));
 
-  /** Current staff user id for created_by fields; falls back to the session's /me. */
-  const resolveCreatedBy = async (): Promise<number | null> => {
-    if (doctorId) return doctorId;
-    try {
-      const me = await apiFetch("/api/auth/me");
-      if (me.ok) {
-        const u = await me.json();
-        return Number(u?.id) || null;
-      }
-    } catch { /* unknown user */ }
-    return null;
-  };
-
   const readApiError = async (res: Response, fallback: string) => {
     const data = await res.json().catch(() => null);
     const msg = Array.isArray(data?.message) ? data.message.join(", ") : data?.message;
@@ -907,7 +894,6 @@ export default function PatientsPage() {
     if (!selectedPatient || workItems.length === 0) return;
     setSavingWork(true);
     try {
-      const createdBy = await resolveCreatedBy();
       const res = await apiFetch("/api/patient-work", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -915,7 +901,6 @@ export default function PatientsPage() {
           patient_id: selectedPatient.id,
           treatment_date: workDate,
           ...(workNotes.trim() ? { notes: workNotes.trim() } : {}),
-          ...(createdBy ? { created_by: createdBy } : {}),
           create_invoice: workBilledCount > 0,
           items: workItems.map((i) => ({
             tooth_number: i.tooth,
@@ -988,7 +973,6 @@ export default function PatientsPage() {
     if (!selectedPatient || completeItems.length === 0) return;
     setCompleting(true);
     try {
-      const createdBy = await resolveCreatedBy();
       const res = await apiFetch("/api/patient-work/complete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -996,7 +980,6 @@ export default function PatientsPage() {
           patient_id: selectedPatient.id,
           treatment_date: completeDate,
           ...(completeNotes.trim() ? { notes: completeNotes.trim() } : {}),
-          ...(createdBy ? { created_by: createdBy } : {}),
           create_invoice: completeBilledCount > 0,
           items: completeItems.map((i) => ({ record_id: i.id, amount: completeAmount(i) })),
         }),
@@ -1061,7 +1044,6 @@ export default function PatientsPage() {
     }
     setPaying(true);
     try {
-      const createdBy = await resolveCreatedBy();
       const res = await apiFetch(`/api/billing/invoices/${payInvoice.id}/payments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1069,7 +1051,6 @@ export default function PatientsPage() {
           amount,
           payment_method: payForm.method,
           ...(payForm.notes.trim() ? { notes: payForm.notes.trim() } : {}),
-          ...(createdBy ? { created_by: createdBy } : {}),
         }),
       });
       if (!res.ok) {

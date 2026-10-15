@@ -31,6 +31,8 @@ export type Treatment_invoicesAvgAggregateOutputType = {
   organization_id: number | null
   branch_id: number | null
   patient_id: number | null
+  subtotal: runtime.Decimal | null
+  discount_amount: runtime.Decimal | null
   total_amount: runtime.Decimal | null
   amount_paid: runtime.Decimal | null
   remaining_amount: runtime.Decimal | null
@@ -44,6 +46,8 @@ export type Treatment_invoicesSumAggregateOutputType = {
   organization_id: bigint | null
   branch_id: bigint | null
   patient_id: bigint | null
+  subtotal: runtime.Decimal | null
+  discount_amount: runtime.Decimal | null
   total_amount: runtime.Decimal | null
   amount_paid: runtime.Decimal | null
   remaining_amount: runtime.Decimal | null
@@ -57,8 +61,13 @@ export type Treatment_invoicesMinAggregateOutputType = {
   organization_id: bigint | null
   branch_id: bigint | null
   patient_id: bigint | null
+  invoice_number: string | null
   procedure_date: Date | null
+  due_date: Date | null
   notes: string | null
+  subtotal: runtime.Decimal | null
+  discount_amount: runtime.Decimal | null
+  discount_reason: string | null
   total_amount: runtime.Decimal | null
   amount_paid: runtime.Decimal | null
   remaining_amount: runtime.Decimal | null
@@ -77,8 +86,13 @@ export type Treatment_invoicesMaxAggregateOutputType = {
   organization_id: bigint | null
   branch_id: bigint | null
   patient_id: bigint | null
+  invoice_number: string | null
   procedure_date: Date | null
+  due_date: Date | null
   notes: string | null
+  subtotal: runtime.Decimal | null
+  discount_amount: runtime.Decimal | null
+  discount_reason: string | null
   total_amount: runtime.Decimal | null
   amount_paid: runtime.Decimal | null
   remaining_amount: runtime.Decimal | null
@@ -97,8 +111,13 @@ export type Treatment_invoicesCountAggregateOutputType = {
   organization_id: number
   branch_id: number
   patient_id: number
+  invoice_number: number
   procedure_date: number
+  due_date: number
   notes: number
+  subtotal: number
+  discount_amount: number
+  discount_reason: number
   total_amount: number
   amount_paid: number
   remaining_amount: number
@@ -119,6 +138,8 @@ export type Treatment_invoicesAvgAggregateInputType = {
   organization_id?: true
   branch_id?: true
   patient_id?: true
+  subtotal?: true
+  discount_amount?: true
   total_amount?: true
   amount_paid?: true
   remaining_amount?: true
@@ -132,6 +153,8 @@ export type Treatment_invoicesSumAggregateInputType = {
   organization_id?: true
   branch_id?: true
   patient_id?: true
+  subtotal?: true
+  discount_amount?: true
   total_amount?: true
   amount_paid?: true
   remaining_amount?: true
@@ -145,8 +168,13 @@ export type Treatment_invoicesMinAggregateInputType = {
   organization_id?: true
   branch_id?: true
   patient_id?: true
+  invoice_number?: true
   procedure_date?: true
+  due_date?: true
   notes?: true
+  subtotal?: true
+  discount_amount?: true
+  discount_reason?: true
   total_amount?: true
   amount_paid?: true
   remaining_amount?: true
@@ -165,8 +193,13 @@ export type Treatment_invoicesMaxAggregateInputType = {
   organization_id?: true
   branch_id?: true
   patient_id?: true
+  invoice_number?: true
   procedure_date?: true
+  due_date?: true
   notes?: true
+  subtotal?: true
+  discount_amount?: true
+  discount_reason?: true
   total_amount?: true
   amount_paid?: true
   remaining_amount?: true
@@ -185,8 +218,13 @@ export type Treatment_invoicesCountAggregateInputType = {
   organization_id?: true
   branch_id?: true
   patient_id?: true
+  invoice_number?: true
   procedure_date?: true
+  due_date?: true
   notes?: true
+  subtotal?: true
+  discount_amount?: true
+  discount_reason?: true
   total_amount?: true
   amount_paid?: true
   remaining_amount?: true
@@ -292,8 +330,13 @@ export type Treatment_invoicesGroupByOutputType = {
   organization_id: bigint
   branch_id: bigint | null
   patient_id: bigint
+  invoice_number: string
   procedure_date: Date
+  due_date: Date
   notes: string | null
+  subtotal: runtime.Decimal
+  discount_amount: runtime.Decimal
+  discount_reason: string | null
   total_amount: runtime.Decimal
   amount_paid: runtime.Decimal
   remaining_amount: runtime.Decimal
@@ -335,8 +378,13 @@ export type treatment_invoicesWhereInput = {
   organization_id?: Prisma.BigIntFilter<"treatment_invoices"> | bigint | number
   branch_id?: Prisma.BigIntNullableFilter<"treatment_invoices"> | bigint | number | null
   patient_id?: Prisma.BigIntFilter<"treatment_invoices"> | bigint | number
+  invoice_number?: Prisma.StringFilter<"treatment_invoices"> | string
   procedure_date?: Prisma.DateTimeFilter<"treatment_invoices"> | Date | string
+  due_date?: Prisma.DateTimeFilter<"treatment_invoices"> | Date | string
   notes?: Prisma.StringNullableFilter<"treatment_invoices"> | string | null
+  subtotal?: Prisma.DecimalFilter<"treatment_invoices"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: Prisma.DecimalFilter<"treatment_invoices"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: Prisma.StringNullableFilter<"treatment_invoices"> | string | null
   total_amount?: Prisma.DecimalFilter<"treatment_invoices"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: Prisma.DecimalFilter<"treatment_invoices"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFilter<"treatment_invoices"> | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -364,8 +412,13 @@ export type treatment_invoicesOrderByWithRelationInput = {
   organization_id?: Prisma.SortOrder
   branch_id?: Prisma.SortOrderInput | Prisma.SortOrder
   patient_id?: Prisma.SortOrder
+  invoice_number?: Prisma.SortOrder
   procedure_date?: Prisma.SortOrder
+  due_date?: Prisma.SortOrder
   notes?: Prisma.SortOrderInput | Prisma.SortOrder
+  subtotal?: Prisma.SortOrder
+  discount_amount?: Prisma.SortOrder
+  discount_reason?: Prisma.SortOrderInput | Prisma.SortOrder
   total_amount?: Prisma.SortOrder
   amount_paid?: Prisma.SortOrder
   remaining_amount?: Prisma.SortOrder
@@ -390,14 +443,20 @@ export type treatment_invoicesOrderByWithRelationInput = {
 
 export type treatment_invoicesWhereUniqueInput = Prisma.AtLeast<{
   id?: bigint | number
+  organization_id_invoice_number?: Prisma.treatment_invoicesOrganization_idInvoice_numberCompoundUniqueInput
   AND?: Prisma.treatment_invoicesWhereInput | Prisma.treatment_invoicesWhereInput[]
   OR?: Prisma.treatment_invoicesWhereInput[]
   NOT?: Prisma.treatment_invoicesWhereInput | Prisma.treatment_invoicesWhereInput[]
   organization_id?: Prisma.BigIntFilter<"treatment_invoices"> | bigint | number
   branch_id?: Prisma.BigIntNullableFilter<"treatment_invoices"> | bigint | number | null
   patient_id?: Prisma.BigIntFilter<"treatment_invoices"> | bigint | number
+  invoice_number?: Prisma.StringFilter<"treatment_invoices"> | string
   procedure_date?: Prisma.DateTimeFilter<"treatment_invoices"> | Date | string
+  due_date?: Prisma.DateTimeFilter<"treatment_invoices"> | Date | string
   notes?: Prisma.StringNullableFilter<"treatment_invoices"> | string | null
+  subtotal?: Prisma.DecimalFilter<"treatment_invoices"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: Prisma.DecimalFilter<"treatment_invoices"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: Prisma.StringNullableFilter<"treatment_invoices"> | string | null
   total_amount?: Prisma.DecimalFilter<"treatment_invoices"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: Prisma.DecimalFilter<"treatment_invoices"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFilter<"treatment_invoices"> | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -418,15 +477,20 @@ export type treatment_invoicesWhereUniqueInput = Prisma.AtLeast<{
   line_items?: Prisma.Invoice_line_itemsListRelationFilter
   invoice_payments?: Prisma.Invoice_paymentsListRelationFilter
   patient_records?: Prisma.Patient_recordsListRelationFilter
-}, "id">
+}, "id" | "organization_id_invoice_number">
 
 export type treatment_invoicesOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   organization_id?: Prisma.SortOrder
   branch_id?: Prisma.SortOrderInput | Prisma.SortOrder
   patient_id?: Prisma.SortOrder
+  invoice_number?: Prisma.SortOrder
   procedure_date?: Prisma.SortOrder
+  due_date?: Prisma.SortOrder
   notes?: Prisma.SortOrderInput | Prisma.SortOrder
+  subtotal?: Prisma.SortOrder
+  discount_amount?: Prisma.SortOrder
+  discount_reason?: Prisma.SortOrderInput | Prisma.SortOrder
   total_amount?: Prisma.SortOrder
   amount_paid?: Prisma.SortOrder
   remaining_amount?: Prisma.SortOrder
@@ -453,8 +517,13 @@ export type treatment_invoicesScalarWhereWithAggregatesInput = {
   organization_id?: Prisma.BigIntWithAggregatesFilter<"treatment_invoices"> | bigint | number
   branch_id?: Prisma.BigIntNullableWithAggregatesFilter<"treatment_invoices"> | bigint | number | null
   patient_id?: Prisma.BigIntWithAggregatesFilter<"treatment_invoices"> | bigint | number
+  invoice_number?: Prisma.StringWithAggregatesFilter<"treatment_invoices"> | string
   procedure_date?: Prisma.DateTimeWithAggregatesFilter<"treatment_invoices"> | Date | string
+  due_date?: Prisma.DateTimeWithAggregatesFilter<"treatment_invoices"> | Date | string
   notes?: Prisma.StringNullableWithAggregatesFilter<"treatment_invoices"> | string | null
+  subtotal?: Prisma.DecimalWithAggregatesFilter<"treatment_invoices"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: Prisma.DecimalWithAggregatesFilter<"treatment_invoices"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: Prisma.StringNullableWithAggregatesFilter<"treatment_invoices"> | string | null
   total_amount?: Prisma.DecimalWithAggregatesFilter<"treatment_invoices"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: Prisma.DecimalWithAggregatesFilter<"treatment_invoices"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalWithAggregatesFilter<"treatment_invoices"> | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -470,8 +539,13 @@ export type treatment_invoicesScalarWhereWithAggregatesInput = {
 
 export type treatment_invoicesCreateInput = {
   id?: bigint | number
+  invoice_number?: string
   procedure_date: Date | string
+  due_date: Date | string
   notes?: string | null
+  subtotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: string | null
   total_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -496,8 +570,13 @@ export type treatment_invoicesUncheckedCreateInput = {
   organization_id?: bigint | number
   branch_id?: bigint | number | null
   patient_id: bigint | number
+  invoice_number?: string
   procedure_date: Date | string
+  due_date: Date | string
   notes?: string | null
+  subtotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: string | null
   total_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -516,8 +595,13 @@ export type treatment_invoicesUncheckedCreateInput = {
 
 export type treatment_invoicesUpdateInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  invoice_number?: Prisma.StringFieldUpdateOperationsInput | string
   procedure_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  due_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subtotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   total_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -542,8 +626,13 @@ export type treatment_invoicesUncheckedUpdateInput = {
   organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   branch_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  invoice_number?: Prisma.StringFieldUpdateOperationsInput | string
   procedure_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  due_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subtotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   total_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -565,8 +654,13 @@ export type treatment_invoicesCreateManyInput = {
   organization_id?: bigint | number
   branch_id?: bigint | number | null
   patient_id: bigint | number
+  invoice_number?: string
   procedure_date: Date | string
+  due_date: Date | string
   notes?: string | null
+  subtotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: string | null
   total_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -582,8 +676,13 @@ export type treatment_invoicesCreateManyInput = {
 
 export type treatment_invoicesUpdateManyMutationInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  invoice_number?: Prisma.StringFieldUpdateOperationsInput | string
   procedure_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  due_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subtotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   total_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -599,8 +698,13 @@ export type treatment_invoicesUncheckedUpdateManyInput = {
   organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   branch_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  invoice_number?: Prisma.StringFieldUpdateOperationsInput | string
   procedure_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  due_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subtotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   total_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -629,13 +733,23 @@ export type Treatment_invoicesNullableScalarRelationFilter = {
   isNot?: Prisma.treatment_invoicesWhereInput | null
 }
 
+export type treatment_invoicesOrganization_idInvoice_numberCompoundUniqueInput = {
+  organization_id: bigint | number
+  invoice_number: string
+}
+
 export type treatment_invoicesCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   organization_id?: Prisma.SortOrder
   branch_id?: Prisma.SortOrder
   patient_id?: Prisma.SortOrder
+  invoice_number?: Prisma.SortOrder
   procedure_date?: Prisma.SortOrder
+  due_date?: Prisma.SortOrder
   notes?: Prisma.SortOrder
+  subtotal?: Prisma.SortOrder
+  discount_amount?: Prisma.SortOrder
+  discount_reason?: Prisma.SortOrder
   total_amount?: Prisma.SortOrder
   amount_paid?: Prisma.SortOrder
   remaining_amount?: Prisma.SortOrder
@@ -654,6 +768,8 @@ export type treatment_invoicesAvgOrderByAggregateInput = {
   organization_id?: Prisma.SortOrder
   branch_id?: Prisma.SortOrder
   patient_id?: Prisma.SortOrder
+  subtotal?: Prisma.SortOrder
+  discount_amount?: Prisma.SortOrder
   total_amount?: Prisma.SortOrder
   amount_paid?: Prisma.SortOrder
   remaining_amount?: Prisma.SortOrder
@@ -667,8 +783,13 @@ export type treatment_invoicesMaxOrderByAggregateInput = {
   organization_id?: Prisma.SortOrder
   branch_id?: Prisma.SortOrder
   patient_id?: Prisma.SortOrder
+  invoice_number?: Prisma.SortOrder
   procedure_date?: Prisma.SortOrder
+  due_date?: Prisma.SortOrder
   notes?: Prisma.SortOrder
+  subtotal?: Prisma.SortOrder
+  discount_amount?: Prisma.SortOrder
+  discount_reason?: Prisma.SortOrder
   total_amount?: Prisma.SortOrder
   amount_paid?: Prisma.SortOrder
   remaining_amount?: Prisma.SortOrder
@@ -687,8 +808,13 @@ export type treatment_invoicesMinOrderByAggregateInput = {
   organization_id?: Prisma.SortOrder
   branch_id?: Prisma.SortOrder
   patient_id?: Prisma.SortOrder
+  invoice_number?: Prisma.SortOrder
   procedure_date?: Prisma.SortOrder
+  due_date?: Prisma.SortOrder
   notes?: Prisma.SortOrder
+  subtotal?: Prisma.SortOrder
+  discount_amount?: Prisma.SortOrder
+  discount_reason?: Prisma.SortOrder
   total_amount?: Prisma.SortOrder
   amount_paid?: Prisma.SortOrder
   remaining_amount?: Prisma.SortOrder
@@ -707,6 +833,8 @@ export type treatment_invoicesSumOrderByAggregateInput = {
   organization_id?: Prisma.SortOrder
   branch_id?: Prisma.SortOrder
   patient_id?: Prisma.SortOrder
+  subtotal?: Prisma.SortOrder
+  discount_amount?: Prisma.SortOrder
   total_amount?: Prisma.SortOrder
   amount_paid?: Prisma.SortOrder
   remaining_amount?: Prisma.SortOrder
@@ -1018,8 +1146,13 @@ export type treatment_invoicesUncheckedUpdateManyWithoutQuoteNestedInput = {
 
 export type treatment_invoicesCreateWithoutOrganizationInput = {
   id?: bigint | number
+  invoice_number?: string
   procedure_date: Date | string
+  due_date: Date | string
   notes?: string | null
+  subtotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: string | null
   total_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1042,8 +1175,13 @@ export type treatment_invoicesUncheckedCreateWithoutOrganizationInput = {
   id?: bigint | number
   branch_id?: bigint | number | null
   patient_id: bigint | number
+  invoice_number?: string
   procedure_date: Date | string
+  due_date: Date | string
   notes?: string | null
+  subtotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: string | null
   total_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1094,8 +1232,13 @@ export type treatment_invoicesScalarWhereInput = {
   organization_id?: Prisma.BigIntFilter<"treatment_invoices"> | bigint | number
   branch_id?: Prisma.BigIntNullableFilter<"treatment_invoices"> | bigint | number | null
   patient_id?: Prisma.BigIntFilter<"treatment_invoices"> | bigint | number
+  invoice_number?: Prisma.StringFilter<"treatment_invoices"> | string
   procedure_date?: Prisma.DateTimeFilter<"treatment_invoices"> | Date | string
+  due_date?: Prisma.DateTimeFilter<"treatment_invoices"> | Date | string
   notes?: Prisma.StringNullableFilter<"treatment_invoices"> | string | null
+  subtotal?: Prisma.DecimalFilter<"treatment_invoices"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: Prisma.DecimalFilter<"treatment_invoices"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: Prisma.StringNullableFilter<"treatment_invoices"> | string | null
   total_amount?: Prisma.DecimalFilter<"treatment_invoices"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: Prisma.DecimalFilter<"treatment_invoices"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFilter<"treatment_invoices"> | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1111,8 +1254,13 @@ export type treatment_invoicesScalarWhereInput = {
 
 export type treatment_invoicesCreateWithoutBranchInput = {
   id?: bigint | number
+  invoice_number?: string
   procedure_date: Date | string
+  due_date: Date | string
   notes?: string | null
+  subtotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: string | null
   total_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1135,8 +1283,13 @@ export type treatment_invoicesUncheckedCreateWithoutBranchInput = {
   id?: bigint | number
   organization_id?: bigint | number
   patient_id: bigint | number
+  invoice_number?: string
   procedure_date: Date | string
+  due_date: Date | string
   notes?: string | null
+  subtotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: string | null
   total_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1181,8 +1334,13 @@ export type treatment_invoicesUpdateManyWithWhereWithoutBranchInput = {
 
 export type treatment_invoicesCreateWithoutPatientInput = {
   id?: bigint | number
+  invoice_number?: string
   procedure_date: Date | string
+  due_date: Date | string
   notes?: string | null
+  subtotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: string | null
   total_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1205,8 +1363,13 @@ export type treatment_invoicesUncheckedCreateWithoutPatientInput = {
   id?: bigint | number
   organization_id?: bigint | number
   branch_id?: bigint | number | null
+  invoice_number?: string
   procedure_date: Date | string
+  due_date: Date | string
   notes?: string | null
+  subtotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: string | null
   total_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1251,8 +1414,13 @@ export type treatment_invoicesUpdateManyWithWhereWithoutPatientInput = {
 
 export type treatment_invoicesCreateWithoutPatient_recordsInput = {
   id?: bigint | number
+  invoice_number?: string
   procedure_date: Date | string
+  due_date: Date | string
   notes?: string | null
+  subtotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: string | null
   total_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1276,8 +1444,13 @@ export type treatment_invoicesUncheckedCreateWithoutPatient_recordsInput = {
   organization_id?: bigint | number
   branch_id?: bigint | number | null
   patient_id: bigint | number
+  invoice_number?: string
   procedure_date: Date | string
+  due_date: Date | string
   notes?: string | null
+  subtotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: string | null
   total_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1311,8 +1484,13 @@ export type treatment_invoicesUpdateToOneWithWhereWithoutPatient_recordsInput = 
 
 export type treatment_invoicesUpdateWithoutPatient_recordsInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  invoice_number?: Prisma.StringFieldUpdateOperationsInput | string
   procedure_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  due_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subtotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   total_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1336,8 +1514,13 @@ export type treatment_invoicesUncheckedUpdateWithoutPatient_recordsInput = {
   organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   branch_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  invoice_number?: Prisma.StringFieldUpdateOperationsInput | string
   procedure_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  due_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subtotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   total_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1355,8 +1538,13 @@ export type treatment_invoicesUncheckedUpdateWithoutPatient_recordsInput = {
 
 export type treatment_invoicesCreateWithoutCreatorInput = {
   id?: bigint | number
+  invoice_number?: string
   procedure_date: Date | string
+  due_date: Date | string
   notes?: string | null
+  subtotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: string | null
   total_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1380,8 +1568,13 @@ export type treatment_invoicesUncheckedCreateWithoutCreatorInput = {
   organization_id?: bigint | number
   branch_id?: bigint | number | null
   patient_id: bigint | number
+  invoice_number?: string
   procedure_date: Date | string
+  due_date: Date | string
   notes?: string | null
+  subtotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: string | null
   total_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1409,8 +1602,13 @@ export type treatment_invoicesCreateManyCreatorInputEnvelope = {
 
 export type treatment_invoicesCreateWithoutCancellerInput = {
   id?: bigint | number
+  invoice_number?: string
   procedure_date: Date | string
+  due_date: Date | string
   notes?: string | null
+  subtotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: string | null
   total_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1434,8 +1632,13 @@ export type treatment_invoicesUncheckedCreateWithoutCancellerInput = {
   organization_id?: bigint | number
   branch_id?: bigint | number | null
   patient_id: bigint | number
+  invoice_number?: string
   procedure_date: Date | string
+  due_date: Date | string
   notes?: string | null
+  subtotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: string | null
   total_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1495,8 +1698,13 @@ export type treatment_invoicesUpdateManyWithWhereWithoutCancellerInput = {
 
 export type treatment_invoicesCreateWithoutLine_itemsInput = {
   id?: bigint | number
+  invoice_number?: string
   procedure_date: Date | string
+  due_date: Date | string
   notes?: string | null
+  subtotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: string | null
   total_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1520,8 +1728,13 @@ export type treatment_invoicesUncheckedCreateWithoutLine_itemsInput = {
   organization_id?: bigint | number
   branch_id?: bigint | number | null
   patient_id: bigint | number
+  invoice_number?: string
   procedure_date: Date | string
+  due_date: Date | string
   notes?: string | null
+  subtotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: string | null
   total_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1555,8 +1768,13 @@ export type treatment_invoicesUpdateToOneWithWhereWithoutLine_itemsInput = {
 
 export type treatment_invoicesUpdateWithoutLine_itemsInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  invoice_number?: Prisma.StringFieldUpdateOperationsInput | string
   procedure_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  due_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subtotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   total_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1580,8 +1798,13 @@ export type treatment_invoicesUncheckedUpdateWithoutLine_itemsInput = {
   organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   branch_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  invoice_number?: Prisma.StringFieldUpdateOperationsInput | string
   procedure_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  due_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subtotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   total_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1599,8 +1822,13 @@ export type treatment_invoicesUncheckedUpdateWithoutLine_itemsInput = {
 
 export type treatment_invoicesCreateWithoutInvoice_paymentsInput = {
   id?: bigint | number
+  invoice_number?: string
   procedure_date: Date | string
+  due_date: Date | string
   notes?: string | null
+  subtotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: string | null
   total_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1624,8 +1852,13 @@ export type treatment_invoicesUncheckedCreateWithoutInvoice_paymentsInput = {
   organization_id?: bigint | number
   branch_id?: bigint | number | null
   patient_id: bigint | number
+  invoice_number?: string
   procedure_date: Date | string
+  due_date: Date | string
   notes?: string | null
+  subtotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: string | null
   total_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1659,8 +1892,13 @@ export type treatment_invoicesUpdateToOneWithWhereWithoutInvoice_paymentsInput =
 
 export type treatment_invoicesUpdateWithoutInvoice_paymentsInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  invoice_number?: Prisma.StringFieldUpdateOperationsInput | string
   procedure_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  due_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subtotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   total_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1684,8 +1922,13 @@ export type treatment_invoicesUncheckedUpdateWithoutInvoice_paymentsInput = {
   organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   branch_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  invoice_number?: Prisma.StringFieldUpdateOperationsInput | string
   procedure_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  due_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subtotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   total_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1703,8 +1946,13 @@ export type treatment_invoicesUncheckedUpdateWithoutInvoice_paymentsInput = {
 
 export type treatment_invoicesCreateWithoutQuoteInput = {
   id?: bigint | number
+  invoice_number?: string
   procedure_date: Date | string
+  due_date: Date | string
   notes?: string | null
+  subtotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: string | null
   total_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1728,8 +1976,13 @@ export type treatment_invoicesUncheckedCreateWithoutQuoteInput = {
   organization_id?: bigint | number
   branch_id?: bigint | number | null
   patient_id: bigint | number
+  invoice_number?: string
   procedure_date: Date | string
+  due_date: Date | string
   notes?: string | null
+  subtotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: string | null
   total_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1775,8 +2028,13 @@ export type treatment_invoicesCreateManyOrganizationInput = {
   id?: bigint | number
   branch_id?: bigint | number | null
   patient_id: bigint | number
+  invoice_number?: string
   procedure_date: Date | string
+  due_date: Date | string
   notes?: string | null
+  subtotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: string | null
   total_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1792,8 +2050,13 @@ export type treatment_invoicesCreateManyOrganizationInput = {
 
 export type treatment_invoicesUpdateWithoutOrganizationInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  invoice_number?: Prisma.StringFieldUpdateOperationsInput | string
   procedure_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  due_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subtotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   total_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1816,8 +2079,13 @@ export type treatment_invoicesUncheckedUpdateWithoutOrganizationInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   branch_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  invoice_number?: Prisma.StringFieldUpdateOperationsInput | string
   procedure_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  due_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subtotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   total_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1838,8 +2106,13 @@ export type treatment_invoicesUncheckedUpdateManyWithoutOrganizationInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   branch_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  invoice_number?: Prisma.StringFieldUpdateOperationsInput | string
   procedure_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  due_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subtotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   total_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1857,8 +2130,13 @@ export type treatment_invoicesCreateManyBranchInput = {
   id?: bigint | number
   organization_id?: bigint | number
   patient_id: bigint | number
+  invoice_number?: string
   procedure_date: Date | string
+  due_date: Date | string
   notes?: string | null
+  subtotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: string | null
   total_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1874,8 +2152,13 @@ export type treatment_invoicesCreateManyBranchInput = {
 
 export type treatment_invoicesUpdateWithoutBranchInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  invoice_number?: Prisma.StringFieldUpdateOperationsInput | string
   procedure_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  due_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subtotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   total_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1898,8 +2181,13 @@ export type treatment_invoicesUncheckedUpdateWithoutBranchInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  invoice_number?: Prisma.StringFieldUpdateOperationsInput | string
   procedure_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  due_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subtotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   total_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1920,8 +2208,13 @@ export type treatment_invoicesUncheckedUpdateManyWithoutBranchInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  invoice_number?: Prisma.StringFieldUpdateOperationsInput | string
   procedure_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  due_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subtotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   total_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1939,8 +2232,13 @@ export type treatment_invoicesCreateManyPatientInput = {
   id?: bigint | number
   organization_id?: bigint | number
   branch_id?: bigint | number | null
+  invoice_number?: string
   procedure_date: Date | string
+  due_date: Date | string
   notes?: string | null
+  subtotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: string | null
   total_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1956,8 +2254,13 @@ export type treatment_invoicesCreateManyPatientInput = {
 
 export type treatment_invoicesUpdateWithoutPatientInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  invoice_number?: Prisma.StringFieldUpdateOperationsInput | string
   procedure_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  due_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subtotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   total_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1980,8 +2283,13 @@ export type treatment_invoicesUncheckedUpdateWithoutPatientInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   branch_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  invoice_number?: Prisma.StringFieldUpdateOperationsInput | string
   procedure_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  due_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subtotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   total_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -2002,8 +2310,13 @@ export type treatment_invoicesUncheckedUpdateManyWithoutPatientInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   branch_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  invoice_number?: Prisma.StringFieldUpdateOperationsInput | string
   procedure_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  due_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subtotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   total_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -2022,8 +2335,13 @@ export type treatment_invoicesCreateManyCreatorInput = {
   organization_id?: bigint | number
   branch_id?: bigint | number | null
   patient_id: bigint | number
+  invoice_number?: string
   procedure_date: Date | string
+  due_date: Date | string
   notes?: string | null
+  subtotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: string | null
   total_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -2041,8 +2359,13 @@ export type treatment_invoicesCreateManyCancellerInput = {
   organization_id?: bigint | number
   branch_id?: bigint | number | null
   patient_id: bigint | number
+  invoice_number?: string
   procedure_date: Date | string
+  due_date: Date | string
   notes?: string | null
+  subtotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: string | null
   total_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -2057,8 +2380,13 @@ export type treatment_invoicesCreateManyCancellerInput = {
 
 export type treatment_invoicesUpdateWithoutCreatorInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  invoice_number?: Prisma.StringFieldUpdateOperationsInput | string
   procedure_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  due_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subtotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   total_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -2082,8 +2410,13 @@ export type treatment_invoicesUncheckedUpdateWithoutCreatorInput = {
   organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   branch_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  invoice_number?: Prisma.StringFieldUpdateOperationsInput | string
   procedure_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  due_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subtotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   total_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -2104,8 +2437,13 @@ export type treatment_invoicesUncheckedUpdateManyWithoutCreatorInput = {
   organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   branch_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  invoice_number?: Prisma.StringFieldUpdateOperationsInput | string
   procedure_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  due_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subtotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   total_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -2120,8 +2458,13 @@ export type treatment_invoicesUncheckedUpdateManyWithoutCreatorInput = {
 
 export type treatment_invoicesUpdateWithoutCancellerInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  invoice_number?: Prisma.StringFieldUpdateOperationsInput | string
   procedure_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  due_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subtotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   total_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -2145,8 +2488,13 @@ export type treatment_invoicesUncheckedUpdateWithoutCancellerInput = {
   organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   branch_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  invoice_number?: Prisma.StringFieldUpdateOperationsInput | string
   procedure_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  due_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subtotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   total_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -2167,8 +2515,13 @@ export type treatment_invoicesUncheckedUpdateManyWithoutCancellerInput = {
   organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   branch_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  invoice_number?: Prisma.StringFieldUpdateOperationsInput | string
   procedure_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  due_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subtotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   total_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -2186,8 +2539,13 @@ export type treatment_invoicesCreateManyQuoteInput = {
   organization_id?: bigint | number
   branch_id?: bigint | number | null
   patient_id: bigint | number
+  invoice_number?: string
   procedure_date: Date | string
+  due_date: Date | string
   notes?: string | null
+  subtotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: string | null
   total_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -2202,8 +2560,13 @@ export type treatment_invoicesCreateManyQuoteInput = {
 
 export type treatment_invoicesUpdateWithoutQuoteInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  invoice_number?: Prisma.StringFieldUpdateOperationsInput | string
   procedure_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  due_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subtotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   total_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -2227,8 +2590,13 @@ export type treatment_invoicesUncheckedUpdateWithoutQuoteInput = {
   organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   branch_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  invoice_number?: Prisma.StringFieldUpdateOperationsInput | string
   procedure_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  due_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subtotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   total_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -2249,8 +2617,13 @@ export type treatment_invoicesUncheckedUpdateManyWithoutQuoteInput = {
   organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   branch_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  invoice_number?: Prisma.StringFieldUpdateOperationsInput | string
   procedure_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  due_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subtotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   total_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   amount_paid?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   remaining_amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -2317,8 +2690,13 @@ export type treatment_invoicesSelect<ExtArgs extends runtime.Types.Extensions.In
   organization_id?: boolean
   branch_id?: boolean
   patient_id?: boolean
+  invoice_number?: boolean
   procedure_date?: boolean
+  due_date?: boolean
   notes?: boolean
+  subtotal?: boolean
+  discount_amount?: boolean
+  discount_reason?: boolean
   total_amount?: boolean
   amount_paid?: boolean
   remaining_amount?: boolean
@@ -2347,8 +2725,13 @@ export type treatment_invoicesSelectCreateManyAndReturn<ExtArgs extends runtime.
   organization_id?: boolean
   branch_id?: boolean
   patient_id?: boolean
+  invoice_number?: boolean
   procedure_date?: boolean
+  due_date?: boolean
   notes?: boolean
+  subtotal?: boolean
+  discount_amount?: boolean
+  discount_reason?: boolean
   total_amount?: boolean
   amount_paid?: boolean
   remaining_amount?: boolean
@@ -2373,8 +2756,13 @@ export type treatment_invoicesSelectUpdateManyAndReturn<ExtArgs extends runtime.
   organization_id?: boolean
   branch_id?: boolean
   patient_id?: boolean
+  invoice_number?: boolean
   procedure_date?: boolean
+  due_date?: boolean
   notes?: boolean
+  subtotal?: boolean
+  discount_amount?: boolean
+  discount_reason?: boolean
   total_amount?: boolean
   amount_paid?: boolean
   remaining_amount?: boolean
@@ -2399,8 +2787,13 @@ export type treatment_invoicesSelectScalar = {
   organization_id?: boolean
   branch_id?: boolean
   patient_id?: boolean
+  invoice_number?: boolean
   procedure_date?: boolean
+  due_date?: boolean
   notes?: boolean
+  subtotal?: boolean
+  discount_amount?: boolean
+  discount_reason?: boolean
   total_amount?: boolean
   amount_paid?: boolean
   remaining_amount?: boolean
@@ -2414,7 +2807,7 @@ export type treatment_invoicesSelectScalar = {
   updated_at?: boolean
 }
 
-export type treatment_invoicesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "organization_id" | "branch_id" | "patient_id" | "procedure_date" | "notes" | "total_amount" | "amount_paid" | "remaining_amount" | "status" | "created_by" | "cancelled_at" | "cancelled_by" | "cancel_reason" | "quote_id" | "created_at" | "updated_at", ExtArgs["result"]["treatment_invoices"]>
+export type treatment_invoicesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "organization_id" | "branch_id" | "patient_id" | "invoice_number" | "procedure_date" | "due_date" | "notes" | "subtotal" | "discount_amount" | "discount_reason" | "total_amount" | "amount_paid" | "remaining_amount" | "status" | "created_by" | "cancelled_at" | "cancelled_by" | "cancel_reason" | "quote_id" | "created_at" | "updated_at", ExtArgs["result"]["treatment_invoices"]>
 export type treatment_invoicesInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   organization?: boolean | Prisma.organizationsDefaultArgs<ExtArgs>
   canceller?: boolean | Prisma.treatment_invoices$cancellerArgs<ExtArgs>
@@ -2465,8 +2858,28 @@ export type $treatment_invoicesPayload<ExtArgs extends runtime.Types.Extensions.
      */
     branch_id: bigint | null
     patient_id: bigint
+    /**
+     * Sequential per clinic and year (INV-2026-00017); assigned by a database trigger on insert.
+     */
+    invoice_number: string
     procedure_date: Date
+    /**
+     * Payment terms: the day payment is due (defaults to procedure_date, due on receipt). Balances age from here.
+     */
+    due_date: Date
     notes: string | null
+    /**
+     * Sum of the line items before any discount.
+     */
+    subtotal: runtime.Decimal
+    /**
+     * Taken off the subtotal; needs discount_reason when > 0.
+     */
+    discount_amount: runtime.Decimal
+    discount_reason: string | null
+    /**
+     * Amount owed: subtotal - discount_amount.
+     */
     total_amount: runtime.Decimal
     amount_paid: runtime.Decimal
     remaining_amount: runtime.Decimal
@@ -2920,8 +3333,13 @@ export interface treatment_invoicesFieldRefs {
   readonly organization_id: Prisma.FieldRef<"treatment_invoices", 'BigInt'>
   readonly branch_id: Prisma.FieldRef<"treatment_invoices", 'BigInt'>
   readonly patient_id: Prisma.FieldRef<"treatment_invoices", 'BigInt'>
+  readonly invoice_number: Prisma.FieldRef<"treatment_invoices", 'String'>
   readonly procedure_date: Prisma.FieldRef<"treatment_invoices", 'DateTime'>
+  readonly due_date: Prisma.FieldRef<"treatment_invoices", 'DateTime'>
   readonly notes: Prisma.FieldRef<"treatment_invoices", 'String'>
+  readonly subtotal: Prisma.FieldRef<"treatment_invoices", 'Decimal'>
+  readonly discount_amount: Prisma.FieldRef<"treatment_invoices", 'Decimal'>
+  readonly discount_reason: Prisma.FieldRef<"treatment_invoices", 'String'>
   readonly total_amount: Prisma.FieldRef<"treatment_invoices", 'Decimal'>
   readonly amount_paid: Prisma.FieldRef<"treatment_invoices", 'Decimal'>
   readonly remaining_amount: Prisma.FieldRef<"treatment_invoices", 'Decimal'>

@@ -103,7 +103,7 @@ export const PRICING_PERMISSION = 'pricing:read';
 
 export const PRICING_COLUMNS: Readonly<Record<string, readonly string[]>> = {
   patient_records: ['quoted_amount'],
-  quotes: ['quoted_total'],
+  quotes: ['quoted_total', 'quoted_discount'],
   quote_items: ['quoted_amount'],
   lab_orders: ['cost'],
   specialist_consultations: ['fee'],

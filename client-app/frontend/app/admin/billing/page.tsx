@@ -30,6 +30,7 @@ import {
   FaPlus,
   FaTrash,
   FaChartLine,
+  FaPrint,
 } from "react-icons/fa";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -53,7 +54,7 @@ const PROCEDURES = [
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type LineItemForm = { procedure_name: string; amount: string };
+type LineItemForm = { procedure_name: string; amount: string; tooth_number: string };
 type LineItem = { id: number; procedure_name: string; amount: number; tooth_number?: string | null };
 
 type InvoicePayment = {
@@ -62,6 +63,8 @@ type InvoicePayment = {
   kind: "payment" | "refund";
   amount: number;
   payment_method: string;
+  /** The day the money moved; may be earlier than created_at. */
+  payment_date: string;
   reason?: string | null;
   notes?: string;
   created_at: string;
@@ -69,9 +72,17 @@ type InvoicePayment = {
 
 type TreatmentInvoice = {
   id: number;
+  /** Sequential per clinic and year (INV-2026-00017): what the patient sees. */
+  invoice_number: string;
   patient: { id: number; users: { first_name: string; last_name: string; email: string } };
   procedure_date: string;
+  /** Payment terms: balances age from this day. */
+  due_date: string;
   notes?: string;
+  /** Lines before the discount; total_amount = subtotal - discount_amount. */
+  subtotal: number;
+  discount_amount: number;
+  discount_reason?: string | null;
   total_amount: number;
   amount_paid: number;
   remaining_amount: number;
@@ -79,11 +90,26 @@ type TreatmentInvoice = {
   cancel_reason?: string | null;
   cancelled_at?: string | null;
   /** The accepted quote this invoice was billed from, if any. */
-  quote?: { id: number; version: number; quoted_total: number } | null;
+  quote?: { id: number; quote_number: string; version: number; quoted_total: number } | null;
   created_at: string;
   line_items: LineItem[];
   invoice_payments: InvoicePayment[];
 };
+
+/** Today on the clinic's calendar (Beirut), as YYYY-MM-DD: what "received today" means at the desk. */
+const todayIso = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Beirut", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+
+/** Whole days an owed balance is past its due date; 0 when settled, cancelled or not yet due. */
+function daysOverdue(inv: Pick<TreatmentInvoice, "due_date" | "status">): number {
+  if (inv.status === "paid" || inv.status === "cancelled") return 0;
+  const due = new Date(`${inv.due_date.slice(0, 10)}T00:00:00Z`).getTime();
+  const today = new Date(`${todayIso()}T00:00:00Z`).getTime();
+  return Math.max(0, Math.round((today - due) / 86_400_000));
+}
+
+/** Text from patients and staff goes into the printable page as text, never as markup. */
+const esc = (v: unknown) =>
+  String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] as string);
 
 type PatientOption = { id: number; label: string };
 
@@ -118,8 +144,10 @@ export default function BillingPage() {
 
   // Create modal
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [createForm, setCreateForm] = useState({ patient_id: "", procedure_date: "", notes: "" });
-  const [lineItems, setLineItems] = useState<LineItemForm[]>([{ procedure_name: "", amount: "" }]);
+  const emptyCreateForm = { patient_id: "", procedure_date: "", due_date: "", notes: "", discount_amount: "", discount_reason: "" };
+  const emptyLine: LineItemForm = { procedure_name: "", amount: "", tooth_number: "" };
+  const [createForm, setCreateForm] = useState(emptyCreateForm);
+  const [lineItems, setLineItems] = useState<LineItemForm[]>([emptyLine]);
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
 
@@ -127,7 +155,9 @@ export default function BillingPage() {
   const { can } = usePermissions();
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<TreatmentInvoice | null>(null);
-  const [paymentForm, setPaymentForm] = useState({ amount: "", payment_method: "cash", notes: "" });
+  const emptyPaymentForm = () => ({ amount: "", payment_method: "cash", payment_date: todayIso(), notes: "" });
+  const emptyRefundForm = () => ({ amount: "", payment_method: "cash", payment_date: todayIso(), reason: "" });
+  const [paymentForm, setPaymentForm] = useState(emptyPaymentForm);
   const [recordingPayment, setRecordingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState("");
 
@@ -135,7 +165,7 @@ export default function BillingPage() {
   const [view, setView] = useState<"invoices" | "quotes">("invoices");
 
   // Refund / void forms (inside the invoice modal)
-  const [refundForm, setRefundForm] = useState({ amount: "", payment_method: "cash", reason: "" });
+  const [refundForm, setRefundForm] = useState(emptyRefundForm);
   const [refunding, setRefunding] = useState(false);
   const [refundError, setRefundError] = useState("");
   const [voidReason, setVoidReason] = useState("");
@@ -152,11 +182,15 @@ export default function BillingPage() {
   const normalizeInvoice = (inv: any): TreatmentInvoice => ({
     ...inv,
     id: Number(inv.id),
+    invoice_number: inv.invoice_number ?? `#${inv.id}`,
+    due_date: inv.due_date ?? inv.procedure_date,
+    subtotal: Number(inv.subtotal ?? inv.total_amount),
+    discount_amount: Number(inv.discount_amount ?? 0),
     total_amount: Number(inv.total_amount),
     amount_paid: Number(inv.amount_paid),
     remaining_amount: Number(inv.remaining_amount),
     line_items: (inv.line_items ?? []).map((li: any) => ({ ...li, id: Number(li.id), amount: Number(li.amount) })),
-    invoice_payments: (inv.invoice_payments ?? []).map((p: any) => ({ ...p, id: Number(p.id), amount: Number(p.amount), kind: p.kind ?? "payment" })),
+    invoice_payments: (inv.invoice_payments ?? []).map((p: any) => ({ ...p, id: Number(p.id), amount: Number(p.amount), kind: p.kind ?? "payment", payment_date: p.payment_date ?? p.created_at })),
     quote: inv.quote ? { ...inv.quote, id: Number(inv.quote.id), quoted_total: Number(inv.quote.quoted_total) } : null,
   });
 
@@ -211,15 +245,17 @@ export default function BillingPage() {
 
   // ── Line item helpers ─────────────────────────────────────────────────────────
 
-  const addLineItem = () => setLineItems((p) => [...p, { procedure_name: "", amount: "" }]);
+  const addLineItem = () => setLineItems((p) => [...p, emptyLine]);
   const removeLineItem = (idx: number) => setLineItems((p) => p.filter((_, i) => i !== idx));
   const updateLineItem = (idx: number, field: keyof LineItemForm, value: string) =>
     setLineItems((p) => p.map((item, i) => (i === idx ? { ...item, [field]: value } : item)));
-  const computedTotal = lineItems.reduce((s, item) => s + (parseFloat(item.amount) || 0), 0);
+  const computedSubtotal = lineItems.reduce((s, item) => s + (parseFloat(item.amount) || 0), 0);
+  const computedDiscount = parseFloat(createForm.discount_amount) || 0;
+  const computedTotal = computedSubtotal - computedDiscount;
 
   const resetCreateModal = () => {
-    setCreateForm({ patient_id: "", procedure_date: "", notes: "" });
-    setLineItems([{ procedure_name: "", amount: "" }]);
+    setCreateForm(emptyCreateForm);
+    setLineItems([emptyLine]);
     setCreateError("");
   };
 
@@ -231,8 +267,8 @@ export default function BillingPage() {
     if (!createForm.procedure_date) { setCreateError("Please select a procedure date."); return; }
     for (const item of lineItems) {
       if (!item.procedure_name) { setCreateError("Please select a procedure for all line items."); return; }
-      if (!item.amount || parseFloat(item.amount) <= 0) {
-        setCreateError("Please enter a valid amount for all line items.");
+      if (item.amount === "" || parseFloat(item.amount) < 0) {
+        setCreateError("Please enter a valid amount for all line items (0 for free of charge).");
         return;
       }
       if (parseFloat(item.amount) > 100000) {
@@ -240,6 +276,9 @@ export default function BillingPage() {
         return;
       }
     }
+    if (computedDiscount < 0 || computedDiscount > computedSubtotal) { setCreateError("The discount cannot exceed the line items."); return; }
+    if (computedDiscount > 0 && createForm.discount_reason.trim().length < 3) { setCreateError("Say why the discount is given."); return; }
+    if (createForm.due_date && createForm.due_date < createForm.procedure_date) { setCreateError("The due date cannot be before the procedure date."); return; }
     setCreating(true);
     try {
       const res = await apiFetch("/api/billing/invoices", {
@@ -247,10 +286,14 @@ export default function BillingPage() {
         body: JSON.stringify({
           patient_id: Number(createForm.patient_id),
           procedure_date: createForm.procedure_date,
+          due_date: createForm.due_date || undefined,
           notes: createForm.notes || undefined,
+          discount_amount: computedDiscount || undefined,
+          discount_reason: computedDiscount ? createForm.discount_reason.trim() : undefined,
           line_items: lineItems.map((item) => ({
             procedure_name: item.procedure_name,
             amount: parseFloat(item.amount),
+            tooth_number: item.tooth_number.trim() || undefined,
           })),
         }),
       });
@@ -272,7 +315,7 @@ export default function BillingPage() {
 
   // ── Record payment ────────────────────────────────────────────────────────────
 
-  const resetPaymentForm = () => { setPaymentForm({ amount: "", payment_method: "cash", notes: "" }); setPaymentError(""); };
+  const resetPaymentForm = () => { setPaymentForm(emptyPaymentForm()); setPaymentError(""); };
 
   const handleRecordPayment = async () => {
     if (!selectedInvoice) return;
@@ -288,7 +331,7 @@ export default function BillingPage() {
     try {
       const res = await apiFetch(`/api/billing/invoices/${selectedInvoice.id}/payments`, {
         method: "POST",
-        body: JSON.stringify({ amount, payment_method: paymentForm.payment_method, notes: paymentForm.notes || undefined }),
+        body: JSON.stringify({ amount, payment_method: paymentForm.payment_method, payment_date: paymentForm.payment_date || undefined, notes: paymentForm.notes || undefined }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -324,7 +367,7 @@ export default function BillingPage() {
     try {
       const res = await apiFetch(`/api/billing/invoices/${selectedInvoice.id}/refunds`, {
         method: "POST",
-        body: JSON.stringify({ amount, payment_method: refundForm.payment_method, reason: refundForm.reason.trim() }),
+        body: JSON.stringify({ amount, payment_method: refundForm.payment_method, payment_date: refundForm.payment_date || undefined, reason: refundForm.reason.trim() }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -334,7 +377,7 @@ export default function BillingPage() {
       await fetchInvoices();
       toast.success("Refund recorded.");
       setSelectedInvoice(normalized);
-      setRefundForm({ amount: "", payment_method: "cash", reason: "" });
+      setRefundForm(emptyRefundForm());
     } catch (e: any) {
       setRefundError(e.message ?? "Something went wrong.");
     } finally {
@@ -348,7 +391,7 @@ export default function BillingPage() {
     if (!selectedInvoice) return;
     setVoidError("");
     if (voidReason.trim().length < 3) { setVoidError("Say why this invoice is cancelled."); return; }
-    if (!window.confirm(`Cancel Invoice #${selectedInvoice.id}? It stays on record as cancelled and is no longer owed.`)) return;
+    if (!window.confirm(`Cancel invoice ${selectedInvoice.invoice_number}? It stays on record as cancelled and is no longer owed.`)) return;
     setVoiding(true);
     try {
       const res = await apiFetch(`/api/billing/invoices/${selectedInvoice.id}/void`, {
@@ -375,7 +418,7 @@ export default function BillingPage() {
 
   const requestDeleteInvoice = (inv: TreatmentInvoice) => {
     setConfirmError("");
-    setConfirm({ kind: "invoice", id: inv.id, label: `Invoice #${inv.id} for ${inv.patient.users.first_name} ${inv.patient.users.last_name}` });
+    setConfirm({ kind: "invoice", id: inv.id, label: `Invoice ${inv.invoice_number} for ${inv.patient.users.first_name} ${inv.patient.users.last_name}` });
   };
   const requestDeletePayment = (p: InvoicePayment) => {
     setConfirmError("");
@@ -416,11 +459,40 @@ export default function BillingPage() {
   const openViewModal = (invoice: TreatmentInvoice) => {
     setSelectedInvoice(invoice);
     resetPaymentForm();
-    setRefundForm({ amount: "", payment_method: "cash", reason: "" });
+    setRefundForm(emptyRefundForm());
     setRefundError("");
     setVoidReason("");
     setVoidError("");
     setShowViewModal(true);
+  };
+
+  /** A printable invoice / receipt: number, terms, lines, discount, what was paid and what is owed. */
+  const printInvoice = (inv: TreatmentInvoice) => {
+    const w = window.open("", "_blank", "width=800,height=900");
+    if (!w) return;
+    const lines = inv.line_items
+      .map((li) => `<tr><td>${esc(li.procedure_name)}${li.tooth_number ? ` <small>(tooth ${esc(li.tooth_number)})</small>` : ""}</td><td class="r">${li.amount.toFixed(2)}</td></tr>`)
+      .join("");
+    const money = inv.invoice_payments
+      .map((p) => `<tr><td>${formatDateBeirut(p.payment_date)} · ${p.kind === "refund" ? "Refund" : "Payment"} · ${esc(p.payment_method)}${p.reason ? ` <small>${esc(p.reason)}</small>` : ""}</td><td class="r">${p.kind === "refund" ? "−" : ""}${p.amount.toFixed(2)}</td></tr>`)
+      .join("");
+    const overdue = daysOverdue(inv);
+    w.document.write(`<!doctype html><html><head><title>Invoice ${esc(inv.invoice_number)}</title>
+      <style>body{font-family:system-ui,sans-serif;padding:32px;color:#1e2533}h1{font-size:22px;margin:0 0 4px}
+      table{width:100%;border-collapse:collapse;margin-top:16px}td,th{padding:8px;border-bottom:1px solid #dfe6f1;text-align:left}
+      .r{text-align:right}tfoot td{font-weight:700;border-top:2px solid #1e2533}small{color:#6d7d97}.meta{color:#6d7d97;font-size:13px}
+      .owed{margin-top:20px;font-size:18px;font-weight:700}.stamp{display:inline-block;border:2px solid #1e2533;padding:2px 8px;font-weight:700;letter-spacing:.08em}</style></head><body>
+      <h1>${inv.status === "paid" ? "Receipt" : "Invoice"} ${esc(inv.invoice_number)}${inv.status === "cancelled" ? ' <span class="stamp">CANCELLED</span>' : inv.status === "paid" ? ' <span class="stamp">PAID</span>' : ""}</h1>
+      <div class="meta">Work done ${formatDateBeirut(inv.procedure_date)} · due ${formatDateBeirut(inv.due_date)}${overdue > 0 ? ` (${overdue} days overdue)` : ""}${inv.quote ? ` · from quote ${esc(inv.quote.quote_number)}` : ""}</div>
+      <p><strong>${esc(inv.patient.users.first_name)} ${esc(inv.patient.users.last_name)}</strong></p>
+      <table><thead><tr><th>Procedure</th><th class="r">Amount</th></tr></thead><tbody>${lines}</tbody>
+      <tfoot>${inv.discount_amount > 0 ? `<tr><td style="font-weight:400">Subtotal</td><td class="r" style="font-weight:400">${inv.subtotal.toFixed(2)}</td></tr><tr><td style="font-weight:400">Discount${inv.discount_reason ? ` <small>${esc(inv.discount_reason)}</small>` : ""}</td><td class="r" style="font-weight:400">−${inv.discount_amount.toFixed(2)}</td></tr>` : ""}
+      <tr><td>Total</td><td class="r">${inv.total_amount.toFixed(2)}</td></tr></tfoot></table>
+      ${money ? `<table><thead><tr><th>Money received</th><th class="r"></th></tr></thead><tbody>${money}</tbody></table>` : ""}
+      <p class="owed">Balance due: ${inv.status === "cancelled" ? "0.00 (cancelled)" : inv.remaining_amount.toFixed(2)}</p>
+      ${inv.notes ? `<p>${esc(inv.notes)}</p>` : ""}
+      <script>window.print()</script></body></html>`);
+    w.document.close();
   };
 
   const handleLogout = () => {
@@ -539,7 +611,7 @@ export default function BillingPage() {
                     <table className="w-full text-sm">
                       <thead className="bg-gray-50/80 border-b border-gray-200">
                         <tr>
-                          {[t("billing.colPatient"), t("billing.colDate"), t("billing.colProcedures"), t("billing.colTotal"), t("billing.colPaid"), t("billing.colRemaining"), t("billing.colStatus"), ""].map((h) => (
+                          {["Invoice", t("billing.colPatient"), t("billing.colDate"), "Due", t("billing.colProcedures"), t("billing.colTotal"), t("billing.colPaid"), t("billing.colRemaining"), t("billing.colStatus"), ""].map((h) => (
                             <th key={h} className="px-5 py-3 text-start text-[11px] font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
                               {h}
                             </th>
@@ -549,6 +621,7 @@ export default function BillingPage() {
                       <tbody className="divide-y divide-gray-100 stagger">
                         {filtered.map((inv) => (
                           <tr key={inv.id} className="hover:bg-gray-50 transition-colors">
+                            <td className="px-4 py-3 text-gray-700 font-mono text-xs whitespace-nowrap">{inv.invoice_number}</td>
                             <td className="px-4 py-3">
                               <div className="flex items-center gap-2">
                                 <Avatar name={`${inv.patient.users.first_name} ${inv.patient.users.last_name}`} size="sm" />
@@ -559,6 +632,14 @@ export default function BillingPage() {
                             </td>
                             <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
                               {formatDateBeirut(inv.procedure_date)}
+                            </td>
+                            <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
+                              {formatDateBeirut(inv.due_date)}
+                              {daysOverdue(inv) > 0 && (
+                                <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-semibold text-red-700">
+                                  {daysOverdue(inv)}d overdue
+                                </span>
+                              )}
                             </td>
                             <td className="px-4 py-3 text-gray-600">
                               {inv.line_items.length} {inv.line_items.length !== 1 ? t("billing.items") : t("billing.item")}
@@ -624,14 +705,25 @@ export default function BillingPage() {
             </select>
           </FormField>
 
-          <FormField label={t("billing.procedureDateRequired")}>
-            <input
-              type="date"
-              value={createForm.procedure_date}
-              onChange={(e) => setCreateForm((f) => ({ ...f, procedure_date: e.target.value }))}
-              className={inputClass}
-            />
-          </FormField>
+          <div className="grid grid-cols-2 gap-3">
+            <FormField label={t("billing.procedureDateRequired")}>
+              <input
+                type="date"
+                value={createForm.procedure_date}
+                onChange={(e) => setCreateForm((f) => ({ ...f, procedure_date: e.target.value }))}
+                className={inputClass}
+              />
+            </FormField>
+            <FormField label="Due date (blank = due on receipt)">
+              <input
+                type="date"
+                value={createForm.due_date}
+                min={createForm.procedure_date || undefined}
+                onChange={(e) => setCreateForm((f) => ({ ...f, due_date: e.target.value }))}
+                className={inputClass}
+              />
+            </FormField>
+          </div>
 
           <FormField label={t("billing.notesOptional")}>
             <textarea
@@ -660,6 +752,15 @@ export default function BillingPage() {
                     ))}
                   </select>
                   <input
+                    type="text"
+                    maxLength={2}
+                    placeholder="Tooth"
+                    title="FDI tooth number (optional)"
+                    value={item.tooth_number}
+                    onChange={(e) => updateLineItem(idx, "tooth_number", e.target.value)}
+                    className="w-20 px-3 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand text-gray-900 bg-white"
+                  />
+                  <input
                     type="number"
                     min="0"
                     max={100000}
@@ -687,8 +788,38 @@ export default function BillingPage() {
             >
               <FaPlus className="text-xs" /> {t("billing.addLineItem")}
             </button>
-            <div className="mt-3 text-right text-sm font-semibold text-gray-800">
-              {t("billing.total")}: <span className="text-brand text-base">${computedTotal.toFixed(2)}</span>
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              <FormField label="Discount (optional)">
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={createForm.discount_amount}
+                  onChange={(e) => setCreateForm((f) => ({ ...f, discount_amount: e.target.value }))}
+                  className={inputClass}
+                />
+              </FormField>
+              <FormField label={computedDiscount > 0 ? "Discount reason *" : "Discount reason"}>
+                <input
+                  type="text"
+                  placeholder="Family discount, goodwill, …"
+                  value={createForm.discount_reason}
+                  onChange={(e) => setCreateForm((f) => ({ ...f, discount_reason: e.target.value }))}
+                  className={inputClass}
+                />
+              </FormField>
+            </div>
+            <div className="mt-3 text-right text-sm text-gray-700 space-y-0.5">
+              {computedDiscount > 0 && (
+                <>
+                  <p>Subtotal: ${computedSubtotal.toFixed(2)}</p>
+                  <p>Discount: −${computedDiscount.toFixed(2)}</p>
+                </>
+              )}
+              <p className="font-semibold text-gray-800">
+                {t("billing.total")}: <span className="text-brand text-base">${computedTotal.toFixed(2)}</span>
+              </p>
             </div>
           </div>
 
@@ -714,17 +845,26 @@ export default function BillingPage() {
         <Modal
           isOpen={showViewModal}
           onClose={() => { setShowViewModal(false); setSelectedInvoice(null); }}
-          title={`Invoice #${selectedInvoice.id} — ${selectedInvoice.patient.users.first_name} ${selectedInvoice.patient.users.last_name}`}
+          title={`Invoice ${selectedInvoice.invoice_number} — ${selectedInvoice.patient.users.first_name} ${selectedInvoice.patient.users.last_name}`}
           maxWidth="max-w-2xl"
         >
           <div className="space-y-5 max-h-[75vh] overflow-y-auto pr-1">
             {/* Info row */}
-            <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
               <span><strong>{t("billing.dateLabel")}</strong> {formatDateBeirut(selectedInvoice.procedure_date)}</span>
+              <span>
+                <strong>Due:</strong> {formatDateBeirut(selectedInvoice.due_date)}
+                {daysOverdue(selectedInvoice) > 0 && (
+                  <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-semibold text-red-700">{daysOverdue(selectedInvoice)} days overdue</span>
+                )}
+              </span>
               <span><strong>{t("billing.statusLabel")}</strong> <StatusBadge status={selectedInvoice.status} /></span>
               {selectedInvoice.quote && (
-                <span><strong>Quote:</strong> #{selectedInvoice.quote.id} v{selectedInvoice.quote.version} (estimate ${selectedInvoice.quote.quoted_total.toFixed(2)})</span>
+                <span><strong>Quote:</strong> {selectedInvoice.quote.quote_number} v{selectedInvoice.quote.version} (estimate ${selectedInvoice.quote.quoted_total.toFixed(2)})</span>
               )}
+              <Button variant="outline" size="sm" onClick={() => printInvoice(selectedInvoice)} className="ml-auto">
+                <FaPrint className="mr-2" /> {selectedInvoice.status === "paid" ? "Print receipt" : "Print"}
+              </Button>
             </div>
             {selectedInvoice.status === "cancelled" && (
               <p className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
@@ -760,6 +900,18 @@ export default function BillingPage() {
                       <td className="px-3 py-2 text-right text-gray-800">${li.amount.toFixed(2)}</td>
                     </tr>
                   ))}
+                  {selectedInvoice.discount_amount > 0 && (
+                    <>
+                      <tr className="text-gray-600">
+                        <td className="px-3 py-2">Subtotal</td>
+                        <td className="px-3 py-2 text-right">${selectedInvoice.subtotal.toFixed(2)}</td>
+                      </tr>
+                      <tr className="text-gray-600">
+                        <td className="px-3 py-2">Discount{selectedInvoice.discount_reason && <span className="ml-2 text-xs italic text-gray-500">{selectedInvoice.discount_reason}</span>}</td>
+                        <td className="px-3 py-2 text-right">−${selectedInvoice.discount_amount.toFixed(2)}</td>
+                      </tr>
+                    </>
+                  )}
                   <tr className="bg-gray-50 font-semibold">
                     <td className="px-3 py-2">{t("billing.total")}</td>
                     <td className="px-3 py-2 text-right">${selectedInvoice.total_amount.toFixed(2)}</td>
@@ -801,7 +953,7 @@ export default function BillingPage() {
                         {p.notes && <span className="ml-2 text-gray-400 italic">{p.notes}</span>}
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-gray-400">{formatDateBeirut(p.created_at)}</span>
+                        <span className="text-gray-400">{formatDateBeirut(p.payment_date)}</span>
                         {can("billing:delete") && selectedInvoice.status !== "cancelled" && (
                           <button
                             type="button"
@@ -854,6 +1006,15 @@ export default function BillingPage() {
                       </FormField>
                     </div>
                   </div>
+                  <FormField label="Received on *">
+                    <input
+                      type="date"
+                      value={paymentForm.payment_date}
+                      max={todayIso()}
+                      onChange={(e) => setPaymentForm((f) => ({ ...f, payment_date: e.target.value }))}
+                      className={inputClass}
+                    />
+                  </FormField>
                   <FormField label={t("billing.notesOptional")}>
                     <input
                       type="text"
@@ -898,10 +1059,16 @@ export default function BillingPage() {
                       </FormField>
                     </div>
                   </div>
-                  <FormField label="Reason *">
-                    <input type="text" placeholder="Why the money is returned" value={refundForm.reason}
-                      onChange={(e) => setRefundForm((f) => ({ ...f, reason: e.target.value }))} className={inputClass} />
-                  </FormField>
+                  <div className="grid grid-cols-2 gap-3">
+                    <FormField label="Returned on *">
+                      <input type="date" value={refundForm.payment_date} max={todayIso()}
+                        onChange={(e) => setRefundForm((f) => ({ ...f, payment_date: e.target.value }))} className={inputClass} />
+                    </FormField>
+                    <FormField label="Reason *">
+                      <input type="text" placeholder="Why the money is returned" value={refundForm.reason}
+                        onChange={(e) => setRefundForm((f) => ({ ...f, reason: e.target.value }))} className={inputClass} />
+                    </FormField>
+                  </div>
                   {refundError && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{refundError}</p>}
                   <Button variant="outline" onClick={handleRefund} disabled={refunding} className="w-full">
                     {refunding ? "Recording…" : "Record refund"}

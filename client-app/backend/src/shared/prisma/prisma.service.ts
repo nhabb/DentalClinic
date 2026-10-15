@@ -22,6 +22,14 @@ import { tenantSafetyExtension } from './tenant-safety.extension';
 /** The client handed to an interactive `$transaction` callback. */
 export type Tx = Parameters<Parameters<PrismaService['$transaction']>[0]>[0];
 
+/**
+ * Options for interactive transactions that write several rows. The database
+ * is remote (hundreds of ms per round trip), so Prisma's 5 s default expires
+ * mid-commit under a handful of statements; 20 s is still short enough that a
+ * hung client cannot hold its locks for long (see TenantPool.prime).
+ */
+export const REMOTE_TX_OPTIONS = { maxWait: 10_000, timeout: 20_000 } as const;
+
 @Injectable()
 export class PrismaService
   extends PrismaClient
