@@ -20,6 +20,8 @@ import { AdminPageHeader } from "@/components/ui/AdminPageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Drawer } from "@/components/ui/Drawer";
 import { BulkActionBar } from "@/components/ui/BulkActionBar";
+import { PatientMoneyBand } from "@/components/chart/PatientMoneyBand";
+import { PatientQuotesBand } from "@/components/chart/PatientQuotesBand";
 import { useImportExport } from "@/components/ui/useImportExport";
 import ToothChart, { type ToothState } from "@/components/dental/ToothChart";
 import dynamic from "next/dynamic";
@@ -325,6 +327,11 @@ export default function PatientsPage() {
   // Billing from the chart is billing: without billing:write, work is recorded unbilled and payments are hidden.
   const { can } = usePermissions();
   const canBill = can("billing:write");
+
+  // The chart is the one door: the plan, its quotes and the money live on this
+  // screen too. Bumping this token reloads both bands after anything changes.
+  const [moneyToken, setMoneyToken] = useState(0);
+  const bumpMoney = () => setMoneyToken((n) => n + 1);
   const [payForm, setPayForm] = useState<{ amount: string; method: (typeof PAYMENT_METHODS)[number]; notes: string }>({
     amount: "",
     method: "cash",
@@ -801,6 +808,48 @@ export default function PatientsPage() {
 
   // ── Dental chart / work ─────────────────────────────────────────────────────
 
+  /**
+   * Deep link from the billing page, which no longer creates anything itself:
+   * /admin/patients?patient=<profile id>&tab=chart opens that patient's chart.
+   * The query is read from the URL rather than useSearchParams so the page
+   * needs no Suspense boundary.
+   */
+  useEffect(() => {
+    if (patients.length === 0) return;
+    const params = new URLSearchParams(window.location.search);
+    const wanted = Number(params.get("patient"));
+    if (!wanted) return;
+    const patient = patients.find((p) => p.id === wanted);
+    window.history.replaceState(null, "", "/admin/patients");
+    if (!patient) {
+      toast.error("That patient is not in your clinic.");
+      return;
+    }
+    if (params.get("tab") === "chart") openPatientChart(patient);
+    else openPatientDetails(patient);
+    // openPatient* are stable for this purpose; the link is read once per load.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [patients]);
+
+  /** Planned work on the chart, the raw material of a quote. */
+  const plannedWork = (chart?.history ?? [])
+    .filter((h) => h.status === "planned")
+    .map((h) => ({
+      id: h.id,
+      tooth: h.tooth,
+      procedure: h.procedure,
+      quotedAmount: h.quotedAmount,
+    }));
+
+  /** Accepting a quote or billing one changes the chart and the money alike. */
+  const refreshChartAndMoney = () => {
+    if (selectedPatient) {
+      fetchChart(selectedPatient.id);
+      fetchPatientHistory(selectedPatient.id);
+    }
+    bumpMoney();
+  };
+
   const fetchChart = async (patientId: number) => {
     setChartLoading(true);
     try {
@@ -824,19 +873,25 @@ export default function PatientsPage() {
     setWorkForm((f) => ({ ...f, procedure, amount: String(DEFAULT_PRICES[procedure] ?? "") }));
   };
 
-  const handleAddWorkItems = () => {
-    if (selectedTeeth.length === 0) {
+  /**
+   * Adds the form to the pending list. With no tooth selected it can still add
+   * one general charge, a consultation, a product or a fee, so the chart stays
+   * the only place a bill is built.
+   */
+  const handleAddWorkItems = (wholeMouth = false) => {
+    if (selectedTeeth.length === 0 && !wholeMouth) {
       toast.error(t("dentalChart.selectTeethFirst"));
       return;
     }
     const amount = parseFloat(workForm.amount);
     const isMissing = workForm.status === "missing";
     const safeAmount = !isMissing && Number.isFinite(amount) && amount >= 0 ? amount : 0;
+    const teeth = wholeMouth ? [""] : [...selectedTeeth].sort();
     // Append, never merge: the same tooth can receive several treatments,
     // including the same procedure more than once (e.g. two fillings).
     setWorkItems((prev) => [
       ...prev,
-      ...[...selectedTeeth].sort().map<WorkItem>((tooth) => ({
+      ...teeth.map<WorkItem>((tooth) => ({
         tooth,
         procedure: workForm.procedure,
         status: workForm.status,
@@ -903,7 +958,7 @@ export default function PatientsPage() {
           ...(workNotes.trim() ? { notes: workNotes.trim() } : {}),
           create_invoice: workBilledCount > 0,
           items: workItems.map((i) => ({
-            tooth_number: i.tooth,
+            ...(i.tooth ? { tooth_number: i.tooth } : {}),
             // An unticked completed item is saved with no price, so it stays
             // unbilled and can be put on its own invoice later from the history.
             ...(i.status === "missing"
@@ -921,6 +976,7 @@ export default function PatientsPage() {
         return;
       }
       if (data?.chart) setChart(mapChart(data.chart));
+      bumpMoney();
       setWorkItems([]);
       setSelectedTeeth([]);
       setWorkNotes("");
@@ -990,6 +1046,7 @@ export default function PatientsPage() {
       }
       const data = await res.json();
       if (data?.chart) setChart(mapChart(data.chart));
+      bumpMoney();
       setCompleteSelection([]);
       setShowCompleteModal(false);
       fetchPatientHistory(selectedPatient.id);
@@ -1021,6 +1078,7 @@ export default function PatientsPage() {
       }
       const data = await res.json();
       if (data?.chart) setChart(mapChart(data.chart));
+      bumpMoney();
       setCompleteSelection((prev) => prev.filter((x) => x !== id));
       if (selectedPatient) fetchPatientHistory(selectedPatient.id);
       toast.success(t("dentalChart.removed"));
@@ -1061,6 +1119,7 @@ export default function PatientsPage() {
       const remaining = Number(inv?.remaining_amount) || 0;
       toast.success(t("dentalChart.paymentRecorded"));
       if (selectedPatient) await fetchChart(selectedPatient.id);
+      bumpMoney();
       if (remaining <= 0) {
         setPayInvoice(null);
       } else {
@@ -1138,6 +1197,19 @@ export default function PatientsPage() {
     setPatientHistory(null);
     setDocuments([]);
     fetchPatientHistory(patient.id);
+  };
+
+  /** Opens a patient straight on their chart, the one place bills are built. */
+  const openPatientChart = (patient: Patient) => {
+    setSelectedPatient(patient);
+    setShowPatientModal(true);
+    setPatientHistory(null);
+    setDocuments([]);
+    setSelectedTeeth([]);
+    setWorkItems([]);
+    setActiveTab("chart");
+    fetchPatientHistory(patient.id);
+    fetchChart(patient.id);
   };
 
   const handleTabChange = (tab: "info" | "appointments" | "treatments" | "chart" | "documents") => {
@@ -1925,11 +1997,22 @@ export default function PatientsPage() {
                               size="sm"
                               className="w-full bg-brand hover:bg-brand/90"
                               disabled={selectedTeeth.length === 0}
-                              onClick={handleAddWorkItems}
+                              onClick={() => handleAddWorkItems()}
                             >
                               {t("dentalChart.addToList")}
                               {selectedTeeth.length > 0 ? ` (${selectedTeeth.length})` : ""}
                             </Button>
+                            {/* A charge that is not about one tooth: a consultation,
+                                a product, a missed appointment fee. */}
+                            {selectedTeeth.length === 0 && workForm.status !== "missing" && (
+                              <button
+                                type="button"
+                                onClick={() => handleAddWorkItems(true)}
+                                className="w-full text-xs font-medium text-brand hover:underline"
+                              >
+                                Add as a general charge, no tooth
+                              </button>
+                            )}
                           </div>
 
                           {workItems.length > 0 && (
@@ -1942,7 +2025,7 @@ export default function PatientsPage() {
                                   <li key={`${item.tooth}-${item.procedure}-${index}`} className="flex items-center justify-between gap-2 px-3 py-2 text-sm">
                                     <div className="min-w-0">
                                       <p className="font-medium text-gray-900 truncate">
-                                        <span className="inline-block w-8 text-brand font-bold">{item.tooth}</span>
+                                        <span className="inline-block w-8 text-brand font-bold">{item.tooth || "—"}</span>
                                         {procedureLabel(item.status, item.procedure)}
                                       </p>
                                       <p className="text-xs text-gray-500">
@@ -2044,6 +2127,27 @@ export default function PatientsPage() {
                           )}
                         </div>
                       </div>
+
+                      {/* Plan band: planned work becomes a priced estimate and is decided here */}
+                      {can("billing:read") && (
+                        <PatientQuotesBand
+                          patientId={selectedPatient.id}
+                          planned={plannedWork}
+                          canWrite={canBill}
+                          reloadToken={moneyToken}
+                          onChanged={refreshChartAndMoney}
+                        />
+                      )}
+
+                      {/* Money band: what is billed, received and owed, and the way to take money */}
+                      {can("billing:read") && (
+                        <PatientMoneyBand
+                          patientId={selectedPatient.id}
+                          reloadToken={moneyToken}
+                          canBill={canBill}
+                          onPay={openPayModal}
+                        />
+                      )}
 
                       {/* History */}
                       <div>

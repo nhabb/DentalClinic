@@ -158,6 +158,26 @@ describe('PatientWorkService.completePlanned', () => {
   });
 });
 
+describe('PatientWorkService: charges with no tooth', () => {
+  it('records a general charge and bills it, colouring no tooth', async () => {
+    const { service, tx } = build([]);
+    await service.recordWork(
+      {
+        patient_id: 7,
+        treatment_date: '2026-10-16',
+        items: [
+          { procedure_name: 'Checkup', status: 'completed', amount: 30 },
+        ],
+      },
+      ACTOR,
+    );
+    const data = invoiceData(tx);
+    expect(data).toMatchObject({ subtotal: 30, total_amount: 30 });
+    const records = (data.patient_records as { create: { tooth_number: string | null }[] }).create;
+    expect(records[0].tooth_number).toBeNull();
+  });
+});
+
 describe('PatientWorkService.recordWork', () => {
   it('bills completed, priced items on one invoice due on the treatment date and records the rest unbilled', async () => {
     const { service, tx } = build([]);

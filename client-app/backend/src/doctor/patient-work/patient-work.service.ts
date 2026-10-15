@@ -31,6 +31,10 @@ const RECORD_TYPE_FOR_STATUS: Record<WorkStatus, string> = {
 
 const MISSING_TITLE = 'Missing tooth';
 
+/** " on tooth 16", or nothing for work that is not about one tooth. */
+const onTooth = (tooth: string | null | undefined) =>
+  tooth ? ` on tooth ${tooth}` : '';
+
 const WORK_RECORD_TYPES = Object.values(RECORD_TYPE_FOR_STATUS);
 
 const REMOVES_TOOTH = new Set(['Tooth Extraction']);
@@ -106,7 +110,6 @@ export class PatientWorkService {
     const records = await this.prisma.patient_records.findMany({
       where: {
         patient_id: patientId,
-        tooth_number: { not: null },
         record_type: { in: WORK_RECORD_TYPES },
       },
       include: historyInclude,
@@ -115,7 +118,10 @@ export class PatientWorkService {
 
     const teeth: Record<string, ToothSummary> = {};
     for (const r of records) {
-      const tooth = r.tooth_number as string;
+      // Work that is not about one tooth (a consultation, a product, a fee)
+      // belongs in the history but colours no tooth on the chart.
+      if (!r.tooth_number) continue;
+      const tooth = r.tooth_number;
       const entry = teeth[tooth] ?? {
         status: 'healthy',
         last_procedure: null,
@@ -166,7 +172,7 @@ export class PatientWorkService {
       const defaultDescription =
         item.status === 'missing'
           ? `Tooth ${item.tooth_number} recorded as missing`
-          : `${title} on tooth ${item.tooth_number}${item.status === 'planned' ? ' (planned)' : ''}`;
+          : `${title}${onTooth(item.tooth_number)}${item.status === 'planned' ? ' (planned)' : ''}`;
       return {
         patient_id: patientId,
         appointment_id: appointmentId,
@@ -174,7 +180,7 @@ export class PatientWorkService {
         title,
         description:
           item.notes?.trim() || dto.notes?.trim() || defaultDescription,
-        tooth_number: item.tooth_number,
+        tooth_number: item.tooth_number ?? null,
         treatment_date: treatmentDate,
         created_by: createdBy,
         // Remember the agreed price so completing a plan later bills it, not the default.
@@ -209,7 +215,7 @@ export class PatientWorkService {
               create: billable.map((i) => ({
                 procedure_name: i.procedure_name as string,
                 amount: round2(i.amount ?? 0),
-                tooth_number: i.tooth_number,
+                tooth_number: i.tooth_number ?? null,
               })),
             },
             patient_records: { create: billable.map(recordData) },
@@ -282,7 +288,7 @@ export class PatientWorkService {
     const alreadyBilled = priced.filter((r) => r.invoice_id !== null);
     if (alreadyBilled.length > 0) {
       const names = alreadyBilled
-        .map((r) => `${r.title} on tooth ${r.tooth_number}`)
+        .map((r) => `${r.title}${onTooth(r.tooth_number)}`)
         .join(', ');
       throw new BadRequestException(
         `Already billed on an invoice, send no amount for: ${names}`,
@@ -350,7 +356,7 @@ export class PatientWorkService {
         continue;
       }
       // Drop the "(planned)" suffix from the auto-generated note; keep custom notes as they are.
-      const autoPlanned = `${r.title} on tooth ${r.tooth_number} (planned)`;
+      const autoPlanned = `${r.title}${onTooth(r.tooth_number)} (planned)`;
       ops.push((tx) =>
         tx.patient_records.update({
           where: { id: r.id },
@@ -362,7 +368,7 @@ export class PatientWorkService {
               ? { quoted_amount: finalAmount }
               : {}),
             ...(r.description === autoPlanned
-              ? { description: `${r.title} on tooth ${r.tooth_number}` }
+              ? { description: `${r.title}${onTooth(r.tooth_number)}` }
               : {}),
           },
         }),

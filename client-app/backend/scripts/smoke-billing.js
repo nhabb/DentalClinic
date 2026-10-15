@@ -17,8 +17,16 @@ const {
 } = require('./lib/smoke-helpers');
 
 const SLUG = `smoke-billing-${Date.now().toString(36)}`;
+// Days on the clinic's calendar, which is what the API counts in: computing
+// "today" in UTC disagrees with the server for part of every day.
+const CLINIC_TZ = process.env.CLINIC_TIMEZONE || 'Asia/Beirut';
 const day = (offset = 0) =>
-  new Date(Date.now() + offset * 86_400_000).toISOString().slice(0, 10);
+  new Intl.DateTimeFormat('en-CA', {
+    timeZone: CLINIC_TZ,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date(Date.now() + offset * 86_400_000));
 const num = (v) => Number(v);
 
 async function main() {

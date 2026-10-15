@@ -1,5 +1,6 @@
 import { BadRequestException, ConflictException } from '@nestjs/common';
 import { BillingService, deriveInvoiceStatus } from './billing.service';
+import { clinicTodayIso } from '../../shared/common/date-only';
 
 type Row = { amount: number; kind: 'payment' | 'refund' };
 
@@ -491,7 +492,12 @@ describe('BillingService.create', () => {
 });
 
 describe('BillingService aging and outstanding (by due date, not by issue date)', () => {
-  const daysAgo = (n: number) => new Date(Date.now() - n * 86_400_000);
+  // Anchored on the clinic calendar day, not the wall clock, so the count of
+  // days overdue does not change with the time of day the suite happens to run.
+  const daysAgo = (n: number) =>
+    new Date(
+      new Date(`${clinicTodayIso()}T12:00:00.000Z`).getTime() - n * 86_400_000,
+    );
 
   it('buckets balances by how far past due they are, with not-yet-due apart', async () => {
     const { service } = buildLedger([

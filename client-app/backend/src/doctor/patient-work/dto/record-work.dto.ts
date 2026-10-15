@@ -30,12 +30,19 @@ export type WorkStatus = (typeof WORK_STATUSES)[number];
 const FDI_TOOTH = /^(?:[1-4][1-8]|[5-8][1-5])$/;
 
 export class WorkItemDto {
-  @ApiProperty({ example: '16', description: 'FDI tooth number' })
+  @ApiPropertyOptional({
+    example: '16',
+    description:
+      'FDI tooth number. Leave it out for work that is not about one tooth (a consultation, a product, a fee); required when status is "missing".',
+  })
+  @ValidateIf(
+    (o: WorkItemDto) => o.status === 'missing' || o.tooth_number != null,
+  )
   @IsString()
   @Matches(FDI_TOOTH, {
     message: 'tooth_number must be an FDI tooth number (11-48 or 51-85)',
   })
-  tooth_number: string;
+  tooth_number?: string;
 
   @ApiPropertyOptional({
     enum: PROCEDURES,
