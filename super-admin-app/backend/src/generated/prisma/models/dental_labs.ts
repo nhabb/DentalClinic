@@ -29,11 +29,13 @@ export type AggregateDental_labs = {
 export type Dental_labsAvgAggregateOutputType = {
   id: number | null
   organization_id: number | null
+  turnaround_days: number | null
 }
 
 export type Dental_labsSumAggregateOutputType = {
   id: bigint | null
   organization_id: bigint | null
+  turnaround_days: number | null
 }
 
 export type Dental_labsMinAggregateOutputType = {
@@ -43,6 +45,10 @@ export type Dental_labsMinAggregateOutputType = {
   phone: string | null
   email: string | null
   address: string | null
+  contact_person: string | null
+  turnaround_days: number | null
+  payment_terms: string | null
+  tax_number: string | null
   notes: string | null
   is_active: boolean | null
   created_at: Date | null
@@ -56,6 +62,10 @@ export type Dental_labsMaxAggregateOutputType = {
   phone: string | null
   email: string | null
   address: string | null
+  contact_person: string | null
+  turnaround_days: number | null
+  payment_terms: string | null
+  tax_number: string | null
   notes: string | null
   is_active: boolean | null
   created_at: Date | null
@@ -69,6 +79,10 @@ export type Dental_labsCountAggregateOutputType = {
   phone: number
   email: number
   address: number
+  contact_person: number
+  turnaround_days: number
+  payment_terms: number
+  tax_number: number
   notes: number
   is_active: number
   created_at: number
@@ -80,11 +94,13 @@ export type Dental_labsCountAggregateOutputType = {
 export type Dental_labsAvgAggregateInputType = {
   id?: true
   organization_id?: true
+  turnaround_days?: true
 }
 
 export type Dental_labsSumAggregateInputType = {
   id?: true
   organization_id?: true
+  turnaround_days?: true
 }
 
 export type Dental_labsMinAggregateInputType = {
@@ -94,6 +110,10 @@ export type Dental_labsMinAggregateInputType = {
   phone?: true
   email?: true
   address?: true
+  contact_person?: true
+  turnaround_days?: true
+  payment_terms?: true
+  tax_number?: true
   notes?: true
   is_active?: true
   created_at?: true
@@ -107,6 +127,10 @@ export type Dental_labsMaxAggregateInputType = {
   phone?: true
   email?: true
   address?: true
+  contact_person?: true
+  turnaround_days?: true
+  payment_terms?: true
+  tax_number?: true
   notes?: true
   is_active?: true
   created_at?: true
@@ -120,6 +144,10 @@ export type Dental_labsCountAggregateInputType = {
   phone?: true
   email?: true
   address?: true
+  contact_person?: true
+  turnaround_days?: true
+  payment_terms?: true
+  tax_number?: true
   notes?: true
   is_active?: true
   created_at?: true
@@ -220,6 +248,10 @@ export type Dental_labsGroupByOutputType = {
   phone: string | null
   email: string | null
   address: string | null
+  contact_person: string | null
+  turnaround_days: number | null
+  payment_terms: string | null
+  tax_number: string | null
   notes: string | null
   is_active: boolean
   created_at: Date
@@ -256,6 +288,10 @@ export type dental_labsWhereInput = {
   phone?: Prisma.StringNullableFilter<"dental_labs"> | string | null
   email?: Prisma.StringNullableFilter<"dental_labs"> | string | null
   address?: Prisma.StringNullableFilter<"dental_labs"> | string | null
+  contact_person?: Prisma.StringNullableFilter<"dental_labs"> | string | null
+  turnaround_days?: Prisma.IntNullableFilter<"dental_labs"> | number | null
+  payment_terms?: Prisma.StringNullableFilter<"dental_labs"> | string | null
+  tax_number?: Prisma.StringNullableFilter<"dental_labs"> | string | null
   notes?: Prisma.StringNullableFilter<"dental_labs"> | string | null
   is_active?: Prisma.BoolFilter<"dental_labs"> | boolean
   created_at?: Prisma.DateTimeFilter<"dental_labs"> | Date | string
@@ -271,6 +307,10 @@ export type dental_labsOrderByWithRelationInput = {
   phone?: Prisma.SortOrderInput | Prisma.SortOrder
   email?: Prisma.SortOrderInput | Prisma.SortOrder
   address?: Prisma.SortOrderInput | Prisma.SortOrder
+  contact_person?: Prisma.SortOrderInput | Prisma.SortOrder
+  turnaround_days?: Prisma.SortOrderInput | Prisma.SortOrder
+  payment_terms?: Prisma.SortOrderInput | Prisma.SortOrder
+  tax_number?: Prisma.SortOrderInput | Prisma.SortOrder
   notes?: Prisma.SortOrderInput | Prisma.SortOrder
   is_active?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
@@ -289,6 +329,10 @@ export type dental_labsWhereUniqueInput = Prisma.AtLeast<{
   phone?: Prisma.StringNullableFilter<"dental_labs"> | string | null
   email?: Prisma.StringNullableFilter<"dental_labs"> | string | null
   address?: Prisma.StringNullableFilter<"dental_labs"> | string | null
+  contact_person?: Prisma.StringNullableFilter<"dental_labs"> | string | null
+  turnaround_days?: Prisma.IntNullableFilter<"dental_labs"> | number | null
+  payment_terms?: Prisma.StringNullableFilter<"dental_labs"> | string | null
+  tax_number?: Prisma.StringNullableFilter<"dental_labs"> | string | null
   notes?: Prisma.StringNullableFilter<"dental_labs"> | string | null
   is_active?: Prisma.BoolFilter<"dental_labs"> | boolean
   created_at?: Prisma.DateTimeFilter<"dental_labs"> | Date | string
@@ -304,6 +348,10 @@ export type dental_labsOrderByWithAggregationInput = {
   phone?: Prisma.SortOrderInput | Prisma.SortOrder
   email?: Prisma.SortOrderInput | Prisma.SortOrder
   address?: Prisma.SortOrderInput | Prisma.SortOrder
+  contact_person?: Prisma.SortOrderInput | Prisma.SortOrder
+  turnaround_days?: Prisma.SortOrderInput | Prisma.SortOrder
+  payment_terms?: Prisma.SortOrderInput | Prisma.SortOrder
+  tax_number?: Prisma.SortOrderInput | Prisma.SortOrder
   notes?: Prisma.SortOrderInput | Prisma.SortOrder
   is_active?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
@@ -325,6 +373,10 @@ export type dental_labsScalarWhereWithAggregatesInput = {
   phone?: Prisma.StringNullableWithAggregatesFilter<"dental_labs"> | string | null
   email?: Prisma.StringNullableWithAggregatesFilter<"dental_labs"> | string | null
   address?: Prisma.StringNullableWithAggregatesFilter<"dental_labs"> | string | null
+  contact_person?: Prisma.StringNullableWithAggregatesFilter<"dental_labs"> | string | null
+  turnaround_days?: Prisma.IntNullableWithAggregatesFilter<"dental_labs"> | number | null
+  payment_terms?: Prisma.StringNullableWithAggregatesFilter<"dental_labs"> | string | null
+  tax_number?: Prisma.StringNullableWithAggregatesFilter<"dental_labs"> | string | null
   notes?: Prisma.StringNullableWithAggregatesFilter<"dental_labs"> | string | null
   is_active?: Prisma.BoolWithAggregatesFilter<"dental_labs"> | boolean
   created_at?: Prisma.DateTimeWithAggregatesFilter<"dental_labs"> | Date | string
@@ -337,6 +389,10 @@ export type dental_labsCreateInput = {
   phone?: string | null
   email?: string | null
   address?: string | null
+  contact_person?: string | null
+  turnaround_days?: number | null
+  payment_terms?: string | null
+  tax_number?: string | null
   notes?: string | null
   is_active?: boolean
   created_at?: Date | string
@@ -352,6 +408,10 @@ export type dental_labsUncheckedCreateInput = {
   phone?: string | null
   email?: string | null
   address?: string | null
+  contact_person?: string | null
+  turnaround_days?: number | null
+  payment_terms?: string | null
+  tax_number?: string | null
   notes?: string | null
   is_active?: boolean
   created_at?: Date | string
@@ -365,6 +425,10 @@ export type dental_labsUpdateInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contact_person?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  turnaround_days?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  payment_terms?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tax_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -380,6 +444,10 @@ export type dental_labsUncheckedUpdateInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contact_person?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  turnaround_days?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  payment_terms?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tax_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -394,6 +462,10 @@ export type dental_labsCreateManyInput = {
   phone?: string | null
   email?: string | null
   address?: string | null
+  contact_person?: string | null
+  turnaround_days?: number | null
+  payment_terms?: string | null
+  tax_number?: string | null
   notes?: string | null
   is_active?: boolean
   created_at?: Date | string
@@ -406,6 +478,10 @@ export type dental_labsUpdateManyMutationInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contact_person?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  turnaround_days?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  payment_terms?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tax_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -419,6 +495,10 @@ export type dental_labsUncheckedUpdateManyInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contact_person?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  turnaround_days?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  payment_terms?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tax_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -442,6 +522,10 @@ export type dental_labsCountOrderByAggregateInput = {
   phone?: Prisma.SortOrder
   email?: Prisma.SortOrder
   address?: Prisma.SortOrder
+  contact_person?: Prisma.SortOrder
+  turnaround_days?: Prisma.SortOrder
+  payment_terms?: Prisma.SortOrder
+  tax_number?: Prisma.SortOrder
   notes?: Prisma.SortOrder
   is_active?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
@@ -451,6 +535,7 @@ export type dental_labsCountOrderByAggregateInput = {
 export type dental_labsAvgOrderByAggregateInput = {
   id?: Prisma.SortOrder
   organization_id?: Prisma.SortOrder
+  turnaround_days?: Prisma.SortOrder
 }
 
 export type dental_labsMaxOrderByAggregateInput = {
@@ -460,6 +545,10 @@ export type dental_labsMaxOrderByAggregateInput = {
   phone?: Prisma.SortOrder
   email?: Prisma.SortOrder
   address?: Prisma.SortOrder
+  contact_person?: Prisma.SortOrder
+  turnaround_days?: Prisma.SortOrder
+  payment_terms?: Prisma.SortOrder
+  tax_number?: Prisma.SortOrder
   notes?: Prisma.SortOrder
   is_active?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
@@ -473,6 +562,10 @@ export type dental_labsMinOrderByAggregateInput = {
   phone?: Prisma.SortOrder
   email?: Prisma.SortOrder
   address?: Prisma.SortOrder
+  contact_person?: Prisma.SortOrder
+  turnaround_days?: Prisma.SortOrder
+  payment_terms?: Prisma.SortOrder
+  tax_number?: Prisma.SortOrder
   notes?: Prisma.SortOrder
   is_active?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
@@ -482,6 +575,7 @@ export type dental_labsMinOrderByAggregateInput = {
 export type dental_labsSumOrderByAggregateInput = {
   id?: Prisma.SortOrder
   organization_id?: Prisma.SortOrder
+  turnaround_days?: Prisma.SortOrder
 }
 
 export type Dental_labsScalarRelationFilter = {
@@ -531,6 +625,14 @@ export type dental_labsUncheckedUpdateManyWithoutOrganizationNestedInput = {
   deleteMany?: Prisma.dental_labsScalarWhereInput | Prisma.dental_labsScalarWhereInput[]
 }
 
+export type NullableIntFieldUpdateOperationsInput = {
+  set?: number | null
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
+}
+
 export type dental_labsCreateNestedOneWithoutLab_ordersInput = {
   create?: Prisma.XOR<Prisma.dental_labsCreateWithoutLab_ordersInput, Prisma.dental_labsUncheckedCreateWithoutLab_ordersInput>
   connectOrCreate?: Prisma.dental_labsCreateOrConnectWithoutLab_ordersInput
@@ -551,6 +653,10 @@ export type dental_labsCreateWithoutOrganizationInput = {
   phone?: string | null
   email?: string | null
   address?: string | null
+  contact_person?: string | null
+  turnaround_days?: number | null
+  payment_terms?: string | null
+  tax_number?: string | null
   notes?: string | null
   is_active?: boolean
   created_at?: Date | string
@@ -564,6 +670,10 @@ export type dental_labsUncheckedCreateWithoutOrganizationInput = {
   phone?: string | null
   email?: string | null
   address?: string | null
+  contact_person?: string | null
+  turnaround_days?: number | null
+  payment_terms?: string | null
+  tax_number?: string | null
   notes?: string | null
   is_active?: boolean
   created_at?: Date | string
@@ -607,6 +717,10 @@ export type dental_labsScalarWhereInput = {
   phone?: Prisma.StringNullableFilter<"dental_labs"> | string | null
   email?: Prisma.StringNullableFilter<"dental_labs"> | string | null
   address?: Prisma.StringNullableFilter<"dental_labs"> | string | null
+  contact_person?: Prisma.StringNullableFilter<"dental_labs"> | string | null
+  turnaround_days?: Prisma.IntNullableFilter<"dental_labs"> | number | null
+  payment_terms?: Prisma.StringNullableFilter<"dental_labs"> | string | null
+  tax_number?: Prisma.StringNullableFilter<"dental_labs"> | string | null
   notes?: Prisma.StringNullableFilter<"dental_labs"> | string | null
   is_active?: Prisma.BoolFilter<"dental_labs"> | boolean
   created_at?: Prisma.DateTimeFilter<"dental_labs"> | Date | string
@@ -619,6 +733,10 @@ export type dental_labsCreateWithoutLab_ordersInput = {
   phone?: string | null
   email?: string | null
   address?: string | null
+  contact_person?: string | null
+  turnaround_days?: number | null
+  payment_terms?: string | null
+  tax_number?: string | null
   notes?: string | null
   is_active?: boolean
   created_at?: Date | string
@@ -633,6 +751,10 @@ export type dental_labsUncheckedCreateWithoutLab_ordersInput = {
   phone?: string | null
   email?: string | null
   address?: string | null
+  contact_person?: string | null
+  turnaround_days?: number | null
+  payment_terms?: string | null
+  tax_number?: string | null
   notes?: string | null
   is_active?: boolean
   created_at?: Date | string
@@ -661,6 +783,10 @@ export type dental_labsUpdateWithoutLab_ordersInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contact_person?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  turnaround_days?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  payment_terms?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tax_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -675,6 +801,10 @@ export type dental_labsUncheckedUpdateWithoutLab_ordersInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contact_person?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  turnaround_days?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  payment_terms?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tax_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -687,6 +817,10 @@ export type dental_labsCreateManyOrganizationInput = {
   phone?: string | null
   email?: string | null
   address?: string | null
+  contact_person?: string | null
+  turnaround_days?: number | null
+  payment_terms?: string | null
+  tax_number?: string | null
   notes?: string | null
   is_active?: boolean
   created_at?: Date | string
@@ -699,6 +833,10 @@ export type dental_labsUpdateWithoutOrganizationInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contact_person?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  turnaround_days?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  payment_terms?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tax_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -712,6 +850,10 @@ export type dental_labsUncheckedUpdateWithoutOrganizationInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contact_person?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  turnaround_days?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  payment_terms?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tax_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -725,6 +867,10 @@ export type dental_labsUncheckedUpdateManyWithoutOrganizationInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contact_person?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  turnaround_days?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  payment_terms?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tax_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -769,6 +915,10 @@ export type dental_labsSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   phone?: boolean
   email?: boolean
   address?: boolean
+  contact_person?: boolean
+  turnaround_days?: boolean
+  payment_terms?: boolean
+  tax_number?: boolean
   notes?: boolean
   is_active?: boolean
   created_at?: boolean
@@ -785,6 +935,10 @@ export type dental_labsSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   phone?: boolean
   email?: boolean
   address?: boolean
+  contact_person?: boolean
+  turnaround_days?: boolean
+  payment_terms?: boolean
+  tax_number?: boolean
   notes?: boolean
   is_active?: boolean
   created_at?: boolean
@@ -799,6 +953,10 @@ export type dental_labsSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   phone?: boolean
   email?: boolean
   address?: boolean
+  contact_person?: boolean
+  turnaround_days?: boolean
+  payment_terms?: boolean
+  tax_number?: boolean
   notes?: boolean
   is_active?: boolean
   created_at?: boolean
@@ -813,13 +971,17 @@ export type dental_labsSelectScalar = {
   phone?: boolean
   email?: boolean
   address?: boolean
+  contact_person?: boolean
+  turnaround_days?: boolean
+  payment_terms?: boolean
+  tax_number?: boolean
   notes?: boolean
   is_active?: boolean
   created_at?: boolean
   updated_at?: boolean
 }
 
-export type dental_labsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "organization_id" | "name" | "phone" | "email" | "address" | "notes" | "is_active" | "created_at" | "updated_at", ExtArgs["result"]["dental_labs"]>
+export type dental_labsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "organization_id" | "name" | "phone" | "email" | "address" | "contact_person" | "turnaround_days" | "payment_terms" | "tax_number" | "notes" | "is_active" | "created_at" | "updated_at", ExtArgs["result"]["dental_labs"]>
 export type dental_labsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   organization?: boolean | Prisma.organizationsDefaultArgs<ExtArgs>
   lab_orders?: boolean | Prisma.dental_labs$lab_ordersArgs<ExtArgs>
@@ -845,6 +1007,19 @@ export type $dental_labsPayload<ExtArgs extends runtime.Types.Extensions.Interna
     phone: string | null
     email: string | null
     address: string | null
+    /**
+     * Named person to deal with at the lab.
+     */
+    contact_person: string | null
+    /**
+     * Working days the lab usually takes; a new order's due date defaults from this.
+     */
+    turnaround_days: number | null
+    /**
+     * How this lab is paid (30 days, on delivery, ...).
+     */
+    payment_terms: string | null
+    tax_number: string | null
     notes: string | null
     is_active: boolean
     created_at: Date
@@ -1280,6 +1455,10 @@ export interface dental_labsFieldRefs {
   readonly phone: Prisma.FieldRef<"dental_labs", 'String'>
   readonly email: Prisma.FieldRef<"dental_labs", 'String'>
   readonly address: Prisma.FieldRef<"dental_labs", 'String'>
+  readonly contact_person: Prisma.FieldRef<"dental_labs", 'String'>
+  readonly turnaround_days: Prisma.FieldRef<"dental_labs", 'Int'>
+  readonly payment_terms: Prisma.FieldRef<"dental_labs", 'String'>
+  readonly tax_number: Prisma.FieldRef<"dental_labs", 'String'>
   readonly notes: Prisma.FieldRef<"dental_labs", 'String'>
   readonly is_active: Prisma.FieldRef<"dental_labs", 'Boolean'>
   readonly created_at: Prisma.FieldRef<"dental_labs", 'DateTime'>

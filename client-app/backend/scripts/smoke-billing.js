@@ -65,14 +65,14 @@ async function main() {
   const patientId = num((await api('GET', '/patients?limit=1', as)).json.data[0].id);
 
   // ── Planned work on the chart, quoted with a discount ────────────────────
+  // The chart is clinical only: it never creates an invoice, whatever is priced.
   const planned = await api('POST', '/patient-work', {
     ...as,
     body: {
       patient_id: patientId,
       treatment_date: day(),
-      create_invoice: false,
       items: [
-        { tooth_number: '16', procedure_name: 'Crown', status: 'planned', amount: 300 },
+        { tooth_number: '16', procedure_name: 'Crown', status: 'planned' },
       ],
     },
   });
@@ -173,19 +173,88 @@ async function main() {
   record('a second live invoice from the same quote is refused', twice.status === 409, `status ${twice.status}`);
 
   // ── The chart cannot bill that work again ────────────────────────────────
-  const rebill = await api('POST', '/patient-work/complete', {
-    ...as,
-    body: { patient_id: patientId, items: [{ record_id: recordId, amount: 300 }] },
-  });
-  record('completing billed-up-front work with a price is refused', rebill.status === 400, `status ${rebill.status}`);
   const complete = await api('POST', '/patient-work/complete', {
     ...as,
     body: { patient_id: patientId, items: [{ record_id: recordId }] },
   });
   record(
-    'completing it without a price marks it done and bills nothing',
-    complete.status === 201 && complete.json?.billed === 0 && complete.json?.completed === 1,
-    `status ${complete.status} billed=${complete.json?.billed}`,
+    'the chart marks planned work done and bills nothing',
+    complete.status === 201 && complete.json?.completed === 1 && !complete.json?.invoice,
+    `status ${complete.status} completed=${complete.json?.completed}`,
+  );
+  const chartNeverBills = await api('POST', '/patient-work', {
+    ...as,
+    body: {
+      patient_id: patientId,
+      treatment_date: day(),
+      items: [{ tooth_number: '26', procedure_name: 'Filling', status: 'completed' }],
+    },
+  });
+  record(
+    'the chart creates no invoice for completed work',
+    chartNeverBills.status === 201 && !chartNeverBills.json?.invoice,
+    `status ${chartNeverBills.status} invoice=${JSON.stringify(chartNeverBills.json?.invoice ?? null)}`,
+  );
+  const fillingId = num(
+    (chartNeverBills.json?.chart?.history ?? []).find(
+      (r) => r.tooth_number === '26' && r.invoice_id === null,
+    )?.id,
+  );
+
+  const pricedFromChart = await api('POST', '/patient-work/complete', {
+    ...as,
+    body: { patient_id: patientId, items: [{ record_id: fillingId, amount: 90 }] },
+  });
+  record(
+    'the chart refuses a price: money is not its business',
+    pricedFromChart.status === 400,
+    `status ${pricedFromChart.status}`,
+  );
+
+  // ── The billing page is the one door: bill that chart work from here ─────
+  const billable = await api('GET', `/billing/patients/${patientId}/billable`, as);
+  record(
+    'the billing page lists the unbilled completed work',
+    billable.status === 200 &&
+      (billable.json?.completed_unbilled ?? []).some((r) => num(r.id) === fillingId),
+    `status ${billable.status} count=${(billable.json?.completed_unbilled ?? []).length}`,
+  );
+
+  const fromChart = await api('POST', '/billing/invoices', {
+    ...as,
+    body: {
+      patient_id: patientId,
+      procedure_date: day(),
+      line_items: [
+        { record_id: fillingId, procedure_name: 'Filling', tooth_number: '26', amount: 90 },
+      ],
+    },
+  });
+  record(
+    'the billing page bills chart work and attaches the record',
+    fromChart.status === 201 && num(fromChart.json?.total_amount) === 90,
+    `status ${fromChart.status} ${fromChart.json?.message ?? ''}`,
+  );
+  const doubleBill = await api('POST', '/billing/invoices', {
+    ...as,
+    body: {
+      patient_id: patientId,
+      procedure_date: day(),
+      line_items: [
+        { record_id: fillingId, procedure_name: 'Filling', tooth_number: '26', amount: 90 },
+      ],
+    },
+  });
+  record(
+    'billing the same chart work twice is refused',
+    doubleBill.status === 400,
+    `status ${doubleBill.status}`,
+  );
+  const stillListed = await api('GET', `/billing/patients/${patientId}/billable`, as);
+  record(
+    'billed work leaves the unbilled list',
+    !(stillListed.json?.completed_unbilled ?? []).some((r) => num(r.id) === fillingId),
+    `count=${(stillListed.json?.completed_unbilled ?? []).length}`,
   );
 
   // ── Money: payment dates, refunds, reports ───────────────────────────────
@@ -222,10 +291,12 @@ async function main() {
     JSON.stringify(row ? { n: row.invoice_number, d: row.days_overdue, r: row.remaining } : null),
   );
 
+  // 200 still owed on the quote's invoice, plus the 90 filling billed from the
+  // billing page: both are due today, so both are current.
   const aging = await api('GET', '/billing/aging', as);
   record(
-    'aging report: a balance due today is current, nothing overdue',
-    aging.json?.buckets?.not_yet_due === 200 && aging.json?.total_overdue === 0,
+    'aging report: balances due today are current, nothing overdue',
+    aging.json?.buckets?.not_yet_due === 290 && aging.json?.total_overdue === 0,
     JSON.stringify(aging.json?.buckets),
   );
 
@@ -308,6 +379,105 @@ async function main() {
     'every invoice of the clinic has a distinct number',
     numbers.length >= 4 && new Set(numbers).size === numbers.length,
     numbers.join(' '),
+  );
+
+  // ── A treatment plan billed visit by visit ───────────────────────────────
+  // The quote may carry one live invoice, so billing part of it must not
+  // stamp quote_id and strand the rest (that failed with a 500 before).
+  const plan = await api('POST', '/patient-work', {
+    ...as,
+    body: {
+      patient_id: patientId,
+      treatment_date: day(),
+      items: [
+        { tooth_number: '36', procedure_name: 'Root Canal', status: 'planned' },
+        { tooth_number: '36', procedure_name: 'Crown', status: 'planned' },
+      ],
+    },
+  });
+  const plannedIds = (plan.json?.chart?.history ?? [])
+    .filter((r) => r.record_type === 'treatment_plan' && r.tooth_number === '36')
+    .map((r) => num(r.id));
+  record('plan two visits of work on one tooth', plannedIds.length === 2, `ids ${plannedIds}`);
+
+  const planQuote = await api('POST', '/quotes', {
+    ...as,
+    body: {
+      patient_id: patientId,
+      items: [
+        { record_id: plannedIds[0], procedure_name: 'Root Canal', tooth_number: '36', amount: 200 },
+        { record_id: plannedIds[1], procedure_name: 'Crown', tooth_number: '36', amount: 250 },
+      ],
+    },
+  });
+  await api('POST', `/quotes/${num(planQuote.json?.id)}/accept`, as);
+  record('accept the two-visit quote', planQuote.status === 201, `status ${planQuote.status}`);
+
+  // Visit 1: the root canal is done and billed on its own.
+  await api('POST', '/patient-work/complete', {
+    ...as,
+    body: { patient_id: patientId, items: [{ record_id: plannedIds[0] }] },
+  });
+  const visit1 = await api('POST', '/billing/invoices', {
+    ...as,
+    body: {
+      patient_id: patientId,
+      procedure_date: day(),
+      line_items: [{ record_id: plannedIds[0], procedure_name: 'Root Canal', tooth_number: '36', amount: 200 }],
+    },
+  });
+  record('visit 1 of a quoted plan is billed', visit1.status === 201, `status ${visit1.status} ${visit1.json?.message ?? ''}`);
+  record(
+    'billing part of a quote leaves the quote unlinked, so the rest stays billable',
+    visit1.json?.quote === null || visit1.json?.quote === undefined,
+    `quote ${JSON.stringify(visit1.json?.quote ?? null)}`,
+  );
+
+  // The API returns ids as strings (BigInt.prototype.toJSON), so a record id
+  // handed straight back from a listing must be accepted, not refused as
+  // "record_id must be an integer number".
+  const asString = await api('GET', `/billing/patients/${patientId}/billable`, as);
+  const plannedFromApi = (asString.json?.planned ?? [])[0];
+  record(
+    'the billable listing returns ids the way the API always does (strings)',
+    typeof plannedFromApi?.id === 'string',
+    `typeof id = ${typeof plannedFromApi?.id}`,
+  );
+  const stringIdQuote = await api('POST', '/quotes', {
+    ...as,
+    body: {
+      patient_id: patientId,
+      items: [
+        { record_id: plannedFromApi?.id, procedure_name: 'Crown', tooth_number: '36', amount: 250 },
+      ],
+    },
+  });
+  record(
+    'a quote accepts a record id exactly as the listing gave it',
+    stringIdQuote.status === 201,
+    `status ${stringIdQuote.status} ${JSON.stringify(stringIdQuote.json?.message ?? '')}`,
+  );
+  if (stringIdQuote.status === 201) {
+    await api('DELETE', `/quotes/${num(stringIdQuote.json?.id)}`, as);
+  }
+
+  // Visit 2: the crown, weeks later. This is what used to 500.
+  await api('POST', '/patient-work/complete', {
+    ...as,
+    body: { patient_id: patientId, items: [{ record_id: plannedIds[1] }] },
+  });
+  const visit2 = await api('POST', '/billing/invoices', {
+    ...as,
+    body: {
+      patient_id: patientId,
+      procedure_date: day(),
+      line_items: [{ record_id: plannedIds[1], procedure_name: 'Crown', tooth_number: '36', amount: 250 }],
+    },
+  });
+  record(
+    'visit 2 of the same quoted plan is billed too (never a 500)',
+    visit2.status === 201 && num(visit2.json?.total_amount) === 250,
+    `status ${visit2.status} ${visit2.json?.message ?? ''}`,
   );
 }
 

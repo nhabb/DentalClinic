@@ -61,14 +61,14 @@ export class SpecialistsController {
   }
 
   @Post()
-  @RequirePermissions('specialists:write')
+  @RequirePermissions('specialists:create')
   @ApiOperation({ summary: 'Add a specialist to the directory' })
   create(@Body() dto: CreateSpecialistDto) {
     return this.specialists.create(dto);
   }
 
   @Patch(':id')
-  @RequirePermissions('specialists:write')
+  @RequirePermissions('specialists:edit')
   @ApiOperation({
     summary: 'Edit a specialist (set is_active false to retire)',
   })
@@ -80,7 +80,7 @@ export class SpecialistsController {
   }
 
   @Delete(':id')
-  @RequirePermissions('specialists:write')
+  @RequirePermissions('specialists:delete')
   @ApiOperation({ summary: 'Delete a specialist that has no consultations' })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.specialists.remove(BigInt(id));

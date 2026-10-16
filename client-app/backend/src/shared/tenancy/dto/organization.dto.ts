@@ -13,6 +13,7 @@ import {
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { CreateBranchDto } from './branch.dto';
+import { IsPhone } from '../../common/phone';
 
 const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -36,9 +37,7 @@ export class UpdateOrganizationDto {
   email?: string;
 
   @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  @MaxLength(30)
+  @IsPhone()
   phone?: string;
 
   @ApiPropertyOptional()
@@ -89,9 +88,7 @@ export class OrganizationOwnerDto {
   last_name: string;
 
   @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  @MaxLength(30)
+  @IsPhone()
   phone?: string;
 
   @ApiPropertyOptional({ enum: ['admin', 'doctor'], default: 'admin' })

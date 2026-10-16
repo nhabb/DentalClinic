@@ -45,9 +45,11 @@ describe('buildSystemPrompt', () => {
       text.indexOf('Permission rules:'),
     );
     expect(allowed).toContain('- billing:read: View invoices');
-    expect(allowed).not.toContain('billing:write');
-    expect(notAllowed).toContain('- billing:write: Create invoices');
-    expect(notAllowed).toContain('- roles:manage: Edit roles and permissions');
+    expect(allowed).not.toContain('billing:create');
+    expect(notAllowed).toContain('- billing:create: Create invoices');
+    expect(notAllowed).toContain(
+      '- roles:edit: Edit roles and their permissions',
+    );
   });
 
   it('tells the model not to work around missing permissions', () => {

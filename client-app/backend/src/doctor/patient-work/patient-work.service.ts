@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -12,7 +11,7 @@ import {
 } from '../../shared/prisma/prisma.service';
 import { RecordWorkDto, WorkStatus } from './dto/record-work.dto';
 import { CompleteWorkDto } from './dto/complete-work.dto';
-import { dueDateFor, invoiceFigures } from '../billing/invoice-math';
+import { PlanQuoteService } from '../quotes/plan-quote.service';
 
 export type ToothStatus = 'healthy' | 'treated' | 'planned' | 'missing';
 
@@ -65,24 +64,50 @@ type TxOp = (tx: Tx) => Promise<unknown>;
 
 /**
  * Work done on teeth, recorded from the dental chart. Each tooth × procedure
- * becomes one patient_records row (record_type `treatment` or `treatment_plan`)
- * and completed, priced items are billed on a single treatment invoice.
+ * becomes one patient_records row (record_type `treatment` or `treatment_plan`).
+ * The chart is clinical only: a price here is noted on the record
+ * (quoted_amount) for the billing page, which is the one place invoices are
+ * created and money is taken.
  */
 @Injectable()
 export class PatientWorkService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly planQuote: PlanQuoteService,
+  ) {}
 
-  /** The latest accepted quote that priced any of these chart records, or null. */
-  private async acceptedQuoteFor(
-    tx: Tx,
-    recordIds: bigint[],
-  ): Promise<bigint | null> {
-    const line = await tx.quote_items.findFirst({
-      where: { record_id: { in: recordIds }, quote: { status: 'accepted' } },
-      orderBy: { quote: { accepted_at: 'desc' } },
-      select: { quote_id: true },
+  /**
+   * Reprice one planned item from the chart, and let the quote follow.
+   * Only planned, unbilled work can be repriced: once it is on an invoice the
+   * figure belongs to that invoice.
+   */
+  async repriceRecord(recordId: bigint, amount: number, actorId: bigint) {
+    const record = await this.prisma.patient_records.findFirst({
+      where: { id: recordId },
+      select: {
+        id: true,
+        patient_id: true,
+        record_type: true,
+        invoice_id: true,
+      },
     });
-    return line?.quote_id ?? null;
+    if (!record) throw new NotFoundException('Work record not found');
+    if (record.record_type !== 'treatment_plan') {
+      throw new BadRequestException(
+        'Only planned work is priced on the chart; completed work is priced when it is billed',
+      );
+    }
+    if (record.invoice_id) {
+      throw new BadRequestException(
+        'This work is already on an invoice; its price belongs to that invoice',
+      );
+    }
+    await this.prisma.patient_records.update({
+      where: { id: recordId },
+      data: { quoted_amount: round2(amount), updated_at: new Date() },
+    });
+    await this.planQuote.sync(record.patient_id, actorId);
+    return { chart: await this.getChart(record.patient_id) };
   }
 
   /** Run the writes in order inside one transaction; nothing to do = no transaction. */
@@ -162,7 +187,6 @@ export class PatientWorkService {
     const appointmentId = dto.appointment_id
       ? BigInt(dto.appointment_id)
       : null;
-    const createInvoice = dto.create_invoice !== false;
 
     const recordData = (item: RecordWorkDto['items'][number]) => {
       const title =
@@ -183,7 +207,7 @@ export class PatientWorkService {
         tooth_number: item.tooth_number ?? null,
         treatment_date: treatmentDate,
         created_by: createdBy,
-        // Remember the agreed price so completing a plan later bills it, not the default.
+        // The price planned at the chair; the patient's quote follows it.
         quoted_amount:
           item.status !== 'missing' && item.amount != null
             ? round2(item.amount)
@@ -191,66 +215,26 @@ export class PatientWorkService {
       };
     };
 
-    const billable = createInvoice
-      ? dto.items.filter((i) => i.status === 'completed' && (i.amount ?? 0) > 0)
-      : [];
-    const unbilled = dto.items.filter((i) => !billable.includes(i));
-
-    // One transaction: the invoice (with its line items and the records it
-    // bills) in a single nested write, plus the remaining records.
-    // Interactive transaction on purpose: the array form is started from a
-    // shared tick and can run under another request's tenant (see tenant-pool.ts).
-    const ops: TxOp[] = [];
-    if (billable.length > 0) {
-      ops.push((tx) =>
-        tx.treatment_invoices.create({
-          data: {
-            patient_id: patientId,
-            procedure_date: treatmentDate,
-            due_date: dueDateFor(treatmentDate),
-            notes: dto.notes?.trim() || null,
-            ...invoiceFigures(billable.map((i) => i.amount ?? 0)),
-            created_by: createdBy,
-            line_items: {
-              create: billable.map((i) => ({
-                procedure_name: i.procedure_name as string,
-                amount: round2(i.amount ?? 0),
-                tooth_number: i.tooth_number ?? null,
-              })),
-            },
-            patient_records: { create: billable.map(recordData) },
-          },
-          include: { line_items: true },
-        }),
-      );
-    }
-    if (unbilled.length > 0) {
-      ops.push((tx) =>
-        tx.patient_records.createMany({
-          data: unbilled.map(recordData),
-        }),
-      );
-    }
-
-    const results = await this.runOps(ops);
-    const invoice = billable.length > 0 ? results[0] : null;
+    await this.prisma.patient_records.createMany({
+      data: dto.items.map(recordData),
+    });
+    // Planning priced work changes the plan, so the quote follows it.
+    await this.planQuote.sync(patientId, actorId);
 
     const chart = await this.getChart(patientId);
     return {
-      invoice,
       records_created: dto.items.length,
       chart,
     };
   }
 
   /**
-   * Turn planned records into completed treatments and/or bill work that is
-   * not yet on an invoice. Items with a price are billed together on one new
-   * invoice and linked to it. Accepts planned records and completed records
-   * that have no invoice yet; planned work already invoiced from its quote
-   * is completed without a price.
+   * Turn planned records into completed treatments: the work was done. No
+   * money is involved and no price is given here; an agreed price reaches the
+   * record from an accepted quote, and the billing page prices and bills the
+   * completed work.
    */
-  async completePlanned(dto: CompleteWorkDto, actorId: bigint) {
+  async completePlanned(dto: CompleteWorkDto) {
     const patientId = BigInt(dto.patient_id);
     await this.requirePatient(patientId);
 
@@ -259,102 +243,23 @@ export class PatientWorkService {
       where: {
         id: { in: ids },
         patient_id: patientId,
-        OR: [
-          { record_type: 'treatment_plan' },
-          { record_type: 'treatment', invoice_id: null },
-        ],
+        record_type: 'treatment_plan',
       },
     });
     if (records.length !== ids.length) {
       throw new BadRequestException(
-        'Every item must be planned or not-yet-billed work belonging to this patient',
+        "Every item must be this patient's planned work",
       );
     }
-    const plannedIds = records
-      .filter((r) => r.record_type === 'treatment_plan')
-      .map((r) => r.id);
 
     const treatmentDate = dto.treatment_date
       ? toDateOnly(dto.treatment_date)
       : toDateOnly(clinicTodayIso());
-    const createdBy = actorId;
-    const amountOf = new Map(
-      dto.items.map((i) => [String(i.record_id), round2(i.amount ?? 0)]),
-    );
-
-    // Work already on an invoice (billed up front from a quote, or on an
-    // earlier visit) is completed here but never billed a second time.
-    const priced = records.filter((r) => (amountOf.get(String(r.id)) ?? 0) > 0);
-    const alreadyBilled = priced.filter((r) => r.invoice_id !== null);
-    if (alreadyBilled.length > 0) {
-      const names = alreadyBilled
-        .map((r) => `${r.title}${onTooth(r.tooth_number)}`)
-        .join(', ');
-      throw new BadRequestException(
-        `Already billed on an invoice, send no amount for: ${names}`,
-      );
-    }
-    const billable = dto.create_invoice !== false ? priced : [];
 
     // Interactive transaction on purpose: the array form is started from a
     // shared tick and can run under another request's tenant (see tenant-pool.ts).
     const ops: TxOp[] = [];
-    if (billable.length > 0) {
-      ops.push(async (tx) => {
-        const invoice = await tx.treatment_invoices.create({
-          data: {
-            patient_id: patientId,
-            procedure_date: treatmentDate,
-            due_date: dueDateFor(treatmentDate),
-            notes: dto.notes?.trim() || null,
-            ...invoiceFigures(
-              billable.map((r) => amountOf.get(String(r.id)) ?? 0),
-            ),
-            created_by: createdBy,
-            // The accepted quote these records were priced on, if any: quoted vs billed stays comparable.
-            quote_id: await this.acceptedQuoteFor(
-              tx,
-              billable.map((r) => r.id),
-            ),
-            line_items: {
-              create: billable.map((r) => ({
-                procedure_name: r.title,
-                amount: amountOf.get(String(r.id)) ?? 0,
-                tooth_number: r.tooth_number,
-              })),
-            },
-          },
-          include: { line_items: true },
-        });
-        // Attach only records that are still unbilled: a quote invoiced at the
-        // same moment wins the row, and this transaction rolls back instead of
-        // billing the work twice (the database refuses to move a billed record too).
-        const attached = await tx.patient_records.updateMany({
-          where: { id: { in: billable.map((r) => r.id) }, invoice_id: null },
-          data: { invoice_id: invoice.id, updated_at: new Date() },
-        });
-        if (attached.count !== billable.length) {
-          throw new ConflictException(
-            'Some of this work was billed a moment ago (from its quote or another desk); refresh the chart',
-          );
-        }
-        return invoice;
-      });
-    }
     for (const r of records) {
-      const finalAmount = amountOf.get(String(r.id));
-      if (r.record_type !== 'treatment_plan') {
-        // Unbilled completed work: keep the price used now as the record's quoted price.
-        if (finalAmount !== undefined && finalAmount > 0) {
-          ops.push((tx) =>
-            tx.patient_records.update({
-              where: { id: r.id },
-              data: { quoted_amount: finalAmount, updated_at: new Date() },
-            }),
-          );
-        }
-        continue;
-      }
       // Drop the "(planned)" suffix from the auto-generated note; keep custom notes as they are.
       const autoPlanned = `${r.title}${onTooth(r.tooth_number)} (planned)`;
       ops.push((tx) =>
@@ -364,9 +269,6 @@ export class PatientWorkService {
             record_type: 'treatment',
             treatment_date: treatmentDate,
             updated_at: new Date(),
-            ...(finalAmount !== undefined && finalAmount > 0
-              ? { quoted_amount: finalAmount }
-              : {}),
             ...(r.description === autoPlanned
               ? { description: `${r.title}${onTooth(r.tooth_number)}` }
               : {}),
@@ -375,12 +277,11 @@ export class PatientWorkService {
       );
     }
 
-    const results = await this.runOps(ops);
-    const invoice = billable.length > 0 ? results[0] : null;
+    await this.runOps(ops);
+    // Completed work is no longer planned, so it leaves the quote.
+    await this.planQuote.sync(patientId, null);
     return {
-      invoice,
-      completed: plannedIds.length,
-      billed: billable.length,
+      completed: records.length,
       chart: await this.getChart(patientId),
     };
   }
@@ -399,6 +300,7 @@ export class PatientWorkService {
       );
     }
     await this.prisma.patient_records.delete({ where: { id: recordId } });
+    await this.planQuote.sync(record.patient_id, null);
     return { removed: true, chart: await this.getChart(record.patient_id) };
   }
 }

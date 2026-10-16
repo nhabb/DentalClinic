@@ -2,10 +2,53 @@ import { formatDateBeirut } from "@/lib/utils";
 import { clinicToday, esc, money } from "./quote-doc";
 
 /*
- * One definition of what an invoice is on the client, shared by the dental
- * chart (where invoices are created and paid) and the billing page (where they
- * are listed and corrected), so the two screens cannot drift apart.
+ * One definition of what an invoice is on the client. Invoices are created,
+ * paid and corrected on the billing page; the dental chart only shows which
+ * work is already billed. Keeping the shape here means no screen can drift.
  */
+
+/**
+ * The procedures an invoice line may name. Kept in step with the backend's
+ * PROCEDURES (create-invoice.dto.ts), which validates every line.
+ */
+export const PROCEDURES = [
+  "Checkup",
+  "X-Ray",
+  "Teeth Cleaning",
+  "Whitening",
+  "Tooth Extraction",
+  "Root Canal",
+  "Filling",
+  "Crown",
+  "Bridge",
+  "Implant",
+  "Orthodontic",
+  "Veneers",
+  "Gum Treatment",
+  "Fluoride Treatment",
+] as const;
+
+/**
+ * Suggested prices (USD) the billing and quotes builders pre-fill when the
+ * work carries no agreed price yet. Always editable; an accepted quote's
+ * price always wins over these.
+ */
+export const DEFAULT_PRICES: Record<string, number> = {
+  Checkup: 30,
+  "X-Ray": 20,
+  "Teeth Cleaning": 50,
+  Whitening: 150,
+  "Tooth Extraction": 60,
+  "Root Canal": 200,
+  Filling: 50,
+  Crown: 250,
+  Bridge: 500,
+  Implant: 800,
+  Orthodontic: 1500,
+  Veneers: 300,
+  "Gum Treatment": 100,
+  "Fluoride Treatment": 25,
+};
 
 export type InvoiceStatus = "open" | "partial" | "paid" | "cancelled";
 

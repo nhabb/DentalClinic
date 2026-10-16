@@ -10,8 +10,10 @@ import type { PermissionGroup, Role } from "@/lib/api/roles";
 type Props = {
   role: Role;
   catalog: PermissionGroup[];
-  /** Whether the viewer holds `roles:manage`; otherwise the matrix is read-only. */
-  canManage: boolean;
+  /** Whether the viewer holds `roles:edit`; otherwise the matrix is read-only. */
+  canEdit: boolean;
+  /** Whether the viewer holds `roles:delete`; a custom role nobody holds can then be removed. */
+  canDelete: boolean;
   saving: boolean;
   onSave: (permissions: string[]) => Promise<void>;
   onEditDetails: () => void;
@@ -29,7 +31,8 @@ const sameSet = (a: string[], b: string[]) =>
 export function PermissionMatrix({
   role,
   catalog,
-  canManage,
+  canEdit,
+  canDelete,
   saving,
   onSave,
   onEditDetails,
@@ -41,9 +44,9 @@ export function PermissionMatrix({
   // Switching roles (or a save landing) resets the draft to what the server holds.
   useEffect(() => setSelected(role.permissions), [role.key, role.permissions]);
 
-  const editable = canManage && !role.locked;
+  const editable = canEdit && !role.locked;
   const dirty = useMemo(() => !sameSet(selected, role.permissions), [selected, role.permissions]);
-  const deletable = canManage && !role.is_system && role.users_count === 0;
+  const deletable = canDelete && !role.is_system && role.users_count === 0;
 
   const toggle = (key: string) =>
     setSelected((current) =>
@@ -72,9 +75,9 @@ export function PermissionMatrix({
             </p>
           )}
         </div>
-        {canManage && (
+        {(canEdit || deletable) && (
           <div className="flex shrink-0 gap-2">
-            {!role.is_system && (
+            {canEdit && !role.is_system && (
               <Button variant="outline" size="sm" onClick={onEditDetails}>
                 <FaPen /> {t("roles.editDetails")}
               </Button>

@@ -136,7 +136,7 @@ COMMENT ON COLUMN roles.is_system IS 'true for the built-in roles, which cannot 
 
 COMMENT ON TABLE role_permissions IS 'Which permissions a role holds: one row per (role, permission key such as billing:read). The permission catalog is defined in code (src/shared/authorization/permissions.ts).';
 COMMENT ON COLUMN role_permissions.role_id IS 'The role.';
-COMMENT ON COLUMN role_permissions.permission IS 'Permission key in the form area:action (appointments:read, billing:write, roles:manage, ...).';
+COMMENT ON COLUMN role_permissions.permission IS 'Permission key in the form area:action (appointments:read, billing:create, roles:edit, ...).';
 
 -- ── Scheduling ───────────────────────────────────────────────────────────────
 COMMENT ON TABLE appointment_slots IS 'Bookable time slots a doctor offers at a branch. A patient books a slot, which creates an appointment and marks the slot booked.';

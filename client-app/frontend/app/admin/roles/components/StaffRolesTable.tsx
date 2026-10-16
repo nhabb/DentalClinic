@@ -11,18 +11,20 @@ import { PATIENT_ROLE_KEY, type Role, type StaffMember } from "@/lib/api/roles";
 type Props = {
   staff: StaffMember[];
   roles: Role[];
-  /** Whether the viewer holds `staff:manage`; otherwise roles are shown, not changed. */
+  /** Whether the viewer holds `staff:edit`; otherwise roles are shown, not changed. */
   canAssign: boolean;
+  /** Whether the viewer holds `staff:create`, which issues set-password links. */
+  canSendLink: boolean;
   /** The viewer's own user id: nobody may change their own role here. */
   selfId: string | null;
   busyUserId: string | null;
   onAssign: (user: StaffMember, role: string) => void;
-  /** Issue a fresh set-password link for the member (needs staff:manage). */
+  /** Issue a fresh set-password link for the member (needs staff:create). */
   onSendLink: (user: StaffMember) => void;
 };
 
 /** Every staff account with its role, and a selector to move it to another role. */
-export function StaffRolesTable({ staff, roles, canAssign, selfId, busyUserId, onAssign, onSendLink }: Props) {
+export function StaffRolesTable({ staff, roles, canAssign, canSendLink, selfId, busyUserId, onAssign, onSendLink }: Props) {
   const { t } = useTranslation();
   const assignable = roles.filter((r) => r.key !== PATIENT_ROLE_KEY);
   const roleName = (key: string) => roles.find((r) => r.key === key)?.name ?? key;
@@ -40,7 +42,7 @@ export function StaffRolesTable({ staff, roles, canAssign, selfId, busyUserId, o
             <th className="px-4 py-3 text-start font-semibold">{t("roles.email")}</th>
             <th className="px-4 py-3 text-start font-semibold">{t("roles.role")}</th>
             <th className="px-4 py-3 text-start font-semibold">{t("roles.status")}</th>
-            {canAssign && <th className="px-4 py-3 text-end font-semibold">{t("common.actions")}</th>}
+            {canSendLink && <th className="px-4 py-3 text-end font-semibold">{t("common.actions")}</th>}
           </tr>
         </thead>
         <tbody className="divide-y divide-ink-100">
@@ -78,9 +80,9 @@ export function StaffRolesTable({ staff, roles, canAssign, selfId, busyUserId, o
                     {member.is_active ? t("roles.active") : t("roles.inactive")}
                   </Badge>
                 </td>
-                {canAssign && (
+                {canSendLink && (
                   <td className="px-4 py-3 text-end">
-                    {editable && member.is_active && (
+                    {!isSelf && member.is_active && (
                       <Button
                         variant="ghost"
                         size="sm"

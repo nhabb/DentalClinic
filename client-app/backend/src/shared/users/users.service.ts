@@ -302,7 +302,7 @@ export class UsersService {
       !(await this.roles.isAssignableStaffRole(dto.role))
     ) {
       throw new BadRequestException(
-        `"" is not a staff role of this clinic (see GET /roles)`,
+        `"${dto.role}" is not a staff role of this clinic (see GET /roles)`,
       );
     }
     const branch_id =

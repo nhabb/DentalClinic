@@ -19,6 +19,8 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Avatar } from "@/components/ui/Avatar";
 import { CONFIRM_PASSWORD_HEADER, PasswordConfirmModal } from "@/components/billing/PasswordConfirmModal";
+import { NewInvoiceModal } from "@/components/billing/NewInvoiceModal";
+import { TakePaymentModal } from "@/components/billing/TakePaymentModal";
 import {
   daysOverdue,
   Invoice,
@@ -29,7 +31,7 @@ import {
 import { clinicToday as todayIso } from "@/components/billing/quote-doc";
 import {
   FaFileInvoiceDollar,
-  FaDollarSign,
+  FaMoneyBillWave,
   FaCheckCircle,
   FaClock,
   FaHashtag,
@@ -74,9 +76,11 @@ export default function BillingPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("All");
 
-  // Bills are built in the dental chart, so "New bill" only picks the patient.
-  const [showPicker, setShowPicker] = useState(false);
-  const [pickerQuery, setPickerQuery] = useState("");
+  // This page is the one door for money: bills are built here and payments
+  // taken here. The chart only records the clinical work.
+  const [showBuilder, setShowBuilder] = useState(false);
+  const [builderPatientId, setBuilderPatientId] = useState<number | null>(null);
+  const [payingInvoice, setPayingInvoice] = useState<Invoice | null>(null);
 
   // View / payment modal
   const { can } = usePermissions();
@@ -128,6 +132,28 @@ export default function BillingPage() {
   useEffect(() => {
     Promise.all([fetchInvoices(), fetchPatients()]).finally(() => setIsLoading(false));
   }, []);
+
+  /** /admin/billing?patient=<id> (from the chart) opens the builder on that patient. */
+  useEffect(() => {
+    const wanted = Number(new URLSearchParams(window.location.search).get("patient"));
+    if (!wanted) return;
+    window.history.replaceState(null, "", "/admin/billing");
+    setBuilderPatientId(wanted);
+    setShowBuilder(true);
+  }, []);
+
+  /** A new bill is listed at once, and the desk is offered the payment drawer. */
+  const handleInvoiceCreated = async (invoice: Invoice) => {
+    await fetchInvoices();
+    setPayingInvoice(invoice);
+  };
+
+  /** A payment changes the list, the open detail modal and the drawer alike. */
+  const handlePaid = async (invoice: Invoice) => {
+    await fetchInvoices();
+    setPayingInvoice(invoice.remaining_amount > 0 ? invoice : null);
+    setSelectedInvoice((prev) => (prev?.id === invoice.id ? invoice : prev));
+  };
 
   // ── Filtering + stats ────────────────────────────────────────────────────────
 
@@ -287,7 +313,7 @@ export default function BillingPage() {
         <AdminPageHeader
           title={t("billing.title")}
           subtitle={t("billing.subtitle")}
-          onAdd={can("billing:write") ? () => { setPickerQuery(""); setShowPicker(true); } : undefined}
+          onAdd={can("billing:create") ? () => { setBuilderPatientId(null); setShowBuilder(true); } : undefined}
           addLabel="New bill"
           actions={[
             { key: "dashboard", label: t("billing.goToDashboard"), icon: <FaChartLine />, href: "/admin" },
@@ -410,6 +436,15 @@ export default function BillingPage() {
                             <td className="px-4 py-3"><StatusBadge status={inv.status} /></td>
                             <td className="px-4 py-3">
                               <div className="flex items-center gap-1">
+                                {can("billing:create") && inv.status !== "cancelled" && inv.remaining_amount > 0 && (
+                                  <Button
+                                    size="sm"
+                                    className="h-8 whitespace-nowrap"
+                                    onClick={() => setPayingInvoice(inv)}
+                                  >
+                                    <FaMoneyBillWave className="mr-1.5 text-xs" /> Take payment
+                                  </Button>
+                                )}
                                 <button
                                   onClick={() => openViewModal(inv)}
                                   className="p-2 text-brand hover:bg-blue-50 rounded-lg transition-colors"
@@ -463,14 +498,19 @@ export default function BillingPage() {
               {selectedInvoice.quote && (
                 <span><strong>Quote:</strong> {selectedInvoice.quote.quote_number} v{selectedInvoice.quote.version} (estimate ${selectedInvoice.quote.quoted_total.toFixed(2)})</span>
               )}
-              {/* Money is taken on the chart, so the invoice links back to it. */}
+              {can("billing:create") && selectedInvoice.status !== "cancelled" && selectedInvoice.remaining_amount > 0 && (
+                <Button size="sm" onClick={() => setPayingInvoice(selectedInvoice)} className="ml-auto">
+                  <FaMoneyBillWave className="mr-2" /> Take payment
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => router.push(`/admin/patients?patient=${selectedInvoice.patient.id}&tab=chart`)}
-                className="ml-auto"
+                className={selectedInvoice.remaining_amount > 0 ? "" : "ml-auto"}
+                title="See the clinical work this bills"
               >
-                Open in chart
+                Open the chart
               </Button>
               <Button variant="outline" size="sm" onClick={() => printInvoice(selectedInvoice)}>
                 <FaPrint className="mr-2" /> {selectedInvoice.status === "paid" ? "Print receipt" : "Print"}
@@ -582,7 +622,7 @@ export default function BillingPage() {
             )}
 
             {/* Refund — money back to the patient, never more than was received */}
-            {can("billing:write") && selectedInvoice.status !== "cancelled" && selectedInvoice.amount_paid > 0 && (
+            {can("billing:edit") && selectedInvoice.status !== "cancelled" && selectedInvoice.amount_paid > 0 && (
               <details className="border-t border-gray-200 pt-4">
                 <summary className="cursor-pointer font-semibold text-gray-800">Refund money to the patient</summary>
                 <div className="mt-3 space-y-3">
@@ -623,7 +663,7 @@ export default function BillingPage() {
             )}
 
             {/* Void — the invoice is not owed; it stays on record as cancelled */}
-            {can("billing:write") && selectedInvoice.status !== "cancelled" && (
+            {can("billing:edit") && selectedInvoice.status !== "cancelled" && (
               <details className="border-t border-gray-200 pt-4">
                 <summary className="cursor-pointer font-semibold text-gray-800">Cancel this invoice</summary>
                 <div className="mt-3 space-y-3">
@@ -650,47 +690,21 @@ export default function BillingPage() {
         </Modal>
       )}
 
-      {/* ── New bill: pick the patient, build it on their chart ───────────────── */}
-      <Modal
-        isOpen={showPicker}
-        onClose={() => setShowPicker(false)}
-        title="New bill: choose the patient"
-        maxWidth="max-w-lg"
-      >
-        <div className="space-y-3">
-          <p className="text-sm text-gray-500">
-            Bills are built on the dental chart, where the work is, so the
-            invoice always matches what was done. Pick a patient to open theirs.
-          </p>
-          <input
-            type="text"
-            autoFocus
-            value={pickerQuery}
-            onChange={(e) => setPickerQuery(e.target.value)}
-            placeholder="Search by name…"
-            className={inputClass}
-          />
-          <div className="max-h-72 divide-y divide-gray-100 overflow-y-auto rounded-xl border border-gray-200">
-            {patients
-              .filter((p) => p.label.toLowerCase().includes(pickerQuery.trim().toLowerCase()))
-              .slice(0, 50)
-              .map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => router.push(`/admin/patients?patient=${p.id}&tab=chart`)}
-                  className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm hover:bg-gray-50"
-                >
-                  <Avatar name={p.label} size="sm" />
-                  <span className="font-medium text-gray-900">{p.label}</span>
-                </button>
-              ))}
-            {patients.filter((p) => p.label.toLowerCase().includes(pickerQuery.trim().toLowerCase())).length === 0 && (
-              <p className="px-3 py-6 text-center text-sm text-gray-500">No patient matches that name.</p>
-            )}
-          </div>
-        </div>
-      </Modal>
+      {/* ── New bill: the one place an invoice is created ─────────────────────── */}
+      <NewInvoiceModal
+        open={showBuilder}
+        onClose={() => setShowBuilder(false)}
+        patients={patients}
+        initialPatientId={builderPatientId}
+        onCreated={handleInvoiceCreated}
+      />
+
+      {/* ── Take payment: the one place money is received ─────────────────────── */}
+      <TakePaymentModal
+        invoice={payingInvoice}
+        onClose={() => setPayingInvoice(null)}
+        onPaid={handlePaid}
+      />
 
       <PasswordConfirmModal
         open={!!confirm}

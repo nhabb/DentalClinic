@@ -1,0 +1,510 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
+import { FaPlus, FaTrash } from "react-icons/fa";
+import { apiFetch } from "@/lib/api/client";
+import { formatDateBeirut } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/ui/Modal";
+import { FormField, inputClass } from "@/components/ui/FormField";
+import { Avatar } from "@/components/ui/Avatar";
+import { clinicToday, money, readError } from "./quote-doc";
+import {
+  DEFAULT_PRICES,
+  Invoice,
+  normalizeInvoice,
+  PROCEDURES,
+} from "./invoice-doc";
+
+/*
+ * The invoice builder: the one place a bill is created. Pick the patient, tick
+ * the completed chart work to bill (each line carries its record so the same
+ * work can never be billed twice) and add any charge that is not chart work.
+ */
+
+export type PatientOption = { id: number; label: string };
+
+/** The group holding treatments no quote priced. */
+const UNQUOTED = "__unquoted__";
+
+/**
+ * Completed chart work with no invoice yet, as the API returns it: ids are
+ * BigInt on the server and arrive as strings, so they are coerced before they
+ * go back as `record_id`.
+ */
+type BillableRecord = {
+  id: number | string;
+  title: string;
+  tooth_number: string | null;
+  treatment_date: string | null;
+  quoted_amount: number | string | null;
+};
+
+/** Completed work grouped by the quote that priced it. */
+type QuotedGroup = {
+  quote: { id: number | string; quote_number: string; version: number; status: string };
+  items: { id: number | string }[];
+};
+
+/** A line being built: either a chart record or a free charge. */
+type DraftLine = {
+  key: string;
+  recordId: number | null;
+  /** The quote that priced this work, when one did. */
+  quoteLabel: string | null;
+  procedure: string;
+  tooth: string;
+  amount: string;
+  /** Chart work the user has not ticked is left off the invoice. */
+  included: boolean;
+  hint: string;
+};
+
+interface NewInvoiceModalProps {
+  open: boolean;
+  onClose: () => void;
+  patients: PatientOption[];
+  /** Pre-selected patient (deep link from the chart), if any. */
+  initialPatientId?: number | null;
+  /** The new invoice, so the page can list it and offer to take payment. */
+  onCreated: (invoice: Invoice) => void;
+}
+
+export function NewInvoiceModal({
+  open,
+  onClose,
+  patients,
+  initialPatientId,
+  onCreated,
+}: NewInvoiceModalProps) {
+  const [patientId, setPatientId] = useState<number | null>(null);
+  const [search, setSearch] = useState("");
+  const [lines, setLines] = useState<DraftLine[]>([]);
+  const [loadingWork, setLoadingWork] = useState(false);
+  const [procedureDate, setProcedureDate] = useState(clinicToday());
+  const [dueDate, setDueDate] = useState("");
+  const [discount, setDiscount] = useState("");
+  const [discountReason, setDiscountReason] = useState("");
+  const [notes, setNotes] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const reset = useCallback(() => {
+    setPatientId(null);
+    setSearch("");
+    setLines([]);
+    setProcedureDate(clinicToday());
+    setDueDate("");
+    setDiscount("");
+    setDiscountReason("");
+    setNotes("");
+    setError("");
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    reset();
+    if (initialPatientId) setPatientId(initialPatientId);
+  }, [open, initialPatientId, reset]);
+
+  /** The patient's unbilled completed work becomes the starting lines. */
+  useEffect(() => {
+    if (!open || !patientId) return;
+    let cancelled = false;
+    setLoadingWork(true);
+    (async () => {
+      try {
+        const res = await apiFetch(`/api/billing/patients/${patientId}/billable`);
+        if (!res.ok) throw new Error();
+        const json = await res.json();
+        if (cancelled) return;
+        const records: BillableRecord[] = Array.isArray(json.completed_unbilled)
+          ? json.completed_unbilled
+          : [];
+        // Which quote priced each treatment, for the grouping below.
+        const quoteOf = new Map<string, string>();
+        for (const g of (json.quoted ?? []) as QuotedGroup[]) {
+          for (const item of g.items ?? []) {
+            quoteOf.set(String(item.id), `${g.quote.quote_number} v${g.quote.version}`);
+          }
+        }
+        setLines(
+          records.map((r) => ({
+            key: `rec-${r.id}`,
+            recordId: Number(r.id),
+            quoteLabel: quoteOf.get(String(r.id)) ?? null,
+            procedure: r.title,
+            tooth: r.tooth_number ?? "",
+            // The quoted price if a quote agreed one, else the clinic's usual price.
+            amount: String(r.quoted_amount ?? DEFAULT_PRICES[r.title] ?? ""),
+            included: true,
+            hint: r.treatment_date
+              ? `Done ${formatDateBeirut(r.treatment_date)}`
+              : "Chart work",
+          })),
+        );
+      } catch {
+        if (!cancelled) toast.error("Could not load this patient's unbilled work.");
+      } finally {
+        if (!cancelled) setLoadingWork(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, patientId]);
+
+  const setLine = (key: string, patch: Partial<DraftLine>) =>
+    setLines((prev) => prev.map((l) => (l.key === key ? { ...l, ...patch } : l)));
+
+  const addFreeLine = () =>
+    setLines((prev) => [
+      ...prev,
+      {
+        key: `free-${Date.now()}-${prev.length}`,
+        recordId: null,
+        quoteLabel: null,
+        procedure: PROCEDURES[0],
+        tooth: "",
+        amount: "",
+        included: true,
+        hint: "Charge with no chart record",
+      },
+    ]);
+
+  const removeLine = (key: string) =>
+    setLines((prev) => prev.filter((l) => l.key !== key));
+
+  /**
+   * The bill reads by quote and by treatment: lines agreed on a quote sit
+   * under it, and everything else under "no quote". Order is stable so the
+   * list does not jump while prices are typed.
+   */
+  const groupedLines = (() => {
+    const groups = new Map<string, DraftLine[]>();
+    for (const line of lines) {
+      const key = line.quoteLabel ?? UNQUOTED;
+      groups.set(key, [...(groups.get(key) ?? []), line]);
+    }
+    return [...groups.entries()].sort(([a], [b]) =>
+      a === UNQUOTED ? 1 : b === UNQUOTED ? -1 : a.localeCompare(b),
+    );
+  })();
+
+  const included = lines.filter((l) => l.included);
+  const subtotal = included.reduce((s, l) => s + (parseFloat(l.amount) || 0), 0);
+  const draftDiscount = parseFloat(discount) || 0;
+  const total = Math.max(0, subtotal - draftDiscount);
+  const patient = patients.find((p) => p.id === patientId) ?? null;
+
+  const submit = async () => {
+    setError("");
+    if (!patientId) return setError("Choose the patient this bill is for.");
+    if (included.length === 0) return setError("Add at least one line to bill.");
+    for (const l of included) {
+      const amount = parseFloat(l.amount);
+      if (Number.isNaN(amount) || amount < 0)
+        return setError("Every line needs a price of 0 or more.");
+    }
+    if (draftDiscount < 0 || draftDiscount > subtotal)
+      return setError("The discount cannot exceed the lines.");
+    if (draftDiscount > 0 && discountReason.trim().length < 3)
+      return setError("Say why the discount is given.");
+    if (dueDate && dueDate < procedureDate)
+      return setError("The due date cannot be before the work date.");
+
+    setSaving(true);
+    try {
+      const res = await apiFetch("/api/billing/invoices", {
+        method: "POST",
+        body: JSON.stringify({
+          patient_id: patientId,
+          procedure_date: procedureDate,
+          ...(dueDate ? { due_date: dueDate } : {}),
+          ...(draftDiscount > 0
+            ? {
+                discount_amount: draftDiscount,
+                discount_reason: discountReason.trim(),
+              }
+            : {}),
+          ...(notes.trim() ? { notes: notes.trim() } : {}),
+          line_items: included.map((l) => ({
+            ...(l.recordId ? { record_id: l.recordId } : {}),
+            procedure_name: l.procedure,
+            amount: parseFloat(l.amount),
+            ...(l.tooth ? { tooth_number: l.tooth } : {}),
+          })),
+        }),
+      });
+      if (!res.ok) throw new Error(await readError(res, "Could not issue the invoice."));
+      const invoice = normalizeInvoice(await res.json());
+      toast.success(`Invoice ${invoice.invoice_number} issued.`);
+      onCreated(invoice);
+      onClose();
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // ── Patient first, then the bill ───────────────────────────────────────────
+
+  if (!patientId) {
+    const matches = patients
+      .filter((p) => p.label.toLowerCase().includes(search.trim().toLowerCase()))
+      .slice(0, 50);
+    return (
+      <Modal isOpen={open} onClose={onClose} title="New bill: choose the patient" maxWidth="max-w-lg">
+        <div className="space-y-3">
+          <p className="text-sm text-gray-500">
+            Their completed, unbilled chart work is loaded for you to tick; you can
+            add any other charge on top.
+          </p>
+          <input
+            type="text"
+            autoFocus
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by name…"
+            className={inputClass}
+          />
+          <div className="max-h-72 divide-y divide-gray-100 overflow-y-auto rounded-xl border border-gray-200">
+            {matches.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => setPatientId(p.id)}
+                className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm hover:bg-gray-50"
+              >
+                <Avatar name={p.label} size="sm" />
+                <span className="font-medium text-gray-900">{p.label}</span>
+              </button>
+            ))}
+            {matches.length === 0 && (
+              <p className="px-3 py-6 text-center text-sm text-gray-500">
+                No patient matches that name.
+              </p>
+            )}
+          </div>
+        </div>
+      </Modal>
+    );
+  }
+
+  return (
+    <Modal
+      isOpen={open}
+      onClose={onClose}
+      title={`New bill — ${patient?.label ?? "patient"}`}
+      maxWidth="max-w-2xl"
+    >
+      <div className="max-h-[75vh] space-y-4 overflow-y-auto pr-1">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-sm text-gray-500">
+            Ticked chart work is attached to this invoice, so it can never be
+            billed twice.
+          </p>
+          <button
+            type="button"
+            onClick={() => setPatientId(null)}
+            className="shrink-0 text-xs font-medium text-brand hover:underline"
+          >
+            Change patient
+          </button>
+        </div>
+
+        {loadingWork ? (
+          <p className="py-6 text-center text-sm text-gray-500">Loading unbilled work…</p>
+        ) : (
+          <div className="space-y-4">
+            {lines.length === 0 && (
+              <p className="rounded-lg border border-dashed border-gray-200 px-3 py-6 text-center text-sm text-gray-500">
+                No unbilled chart work. Add a charge below.
+              </p>
+            )}
+            {/* By quote, then by treatment: what a charge belongs to is plain. */}
+            {groupedLines.map(([groupLabel, groupLines]) => (
+              <div key={groupLabel} className="space-y-2">
+                <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  {groupLabel === UNQUOTED ? (
+                    "Treatments with no quote"
+                  ) : (
+                    <>
+                      <span className="rounded bg-blue-50 px-1.5 py-0.5 font-mono text-[11px] text-brand">
+                        {groupLabel}
+                      </span>
+                      agreed on this quote
+                    </>
+                  )}
+                  <span className="ml-auto font-normal normal-case text-gray-400">
+                    $
+                    {money(
+                      groupLines
+                        .filter((l) => l.included)
+                        .reduce((s, l) => s + (parseFloat(l.amount) || 0), 0),
+                    )}
+                  </span>
+                </p>
+                {groupLines.map((l) => (
+              <div
+                key={l.key}
+                className={`flex items-center gap-3 rounded-lg border px-3 py-2 ${l.included ? "border-gray-200" : "border-gray-100 opacity-60"}`}
+              >
+                <input
+                  type="checkbox"
+                  checked={l.included}
+                  onChange={(e) => setLine(l.key, { included: e.target.checked })}
+                  aria-label={`Bill ${l.procedure}`}
+                />
+                <div className="min-w-0 flex-1">
+                  {l.recordId ? (
+                    <p className="truncate text-sm text-gray-800">
+                      {l.procedure}
+                      {l.tooth && (
+                        <span className="ml-2 rounded bg-blue-50 px-1.5 py-0.5 text-xs font-semibold text-brand">
+                          Tooth {l.tooth}
+                        </span>
+                      )}
+                    </p>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={l.procedure}
+                        onChange={(e) => setLine(l.key, { procedure: e.target.value })}
+                        className="flex-1 rounded-lg border border-gray-200 px-2 py-1.5 text-sm text-gray-900"
+                      >
+                        {PROCEDURES.map((p) => (
+                          <option key={p} value={p}>
+                            {p}
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        type="text"
+                        value={l.tooth}
+                        onChange={(e) => setLine(l.key, { tooth: e.target.value })}
+                        placeholder="Tooth"
+                        className="w-20 rounded-lg border border-gray-200 px-2 py-1.5 text-sm text-gray-900"
+                      />
+                    </div>
+                  )}
+                  <p className="text-xs text-gray-400">{l.hint}</p>
+                </div>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={l.amount}
+                  onChange={(e) => setLine(l.key, { amount: e.target.value })}
+                  className="w-28 rounded-lg border border-gray-200 px-3 py-2 text-right text-gray-900"
+                />
+                {!l.recordId && (
+                  <button
+                    type="button"
+                    onClick={() => removeLine(l.key)}
+                    className="rounded p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600"
+                    title="Remove this line"
+                  >
+                    <FaTrash className="text-xs" />
+                  </button>
+                )}
+              </div>
+                ))}
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={addFreeLine}
+              className="text-xs font-medium text-brand hover:underline"
+            >
+              <FaPlus className="mr-1 inline text-[10px]" /> Add a charge (consultation,
+              product, fee)
+            </button>
+          </div>
+        )}
+
+        <div className="grid grid-cols-2 gap-3">
+          <FormField label="Work done on *">
+            <input
+              type="date"
+              value={procedureDate}
+              max={clinicToday()}
+              onChange={(e) => setProcedureDate(e.target.value)}
+              className={inputClass}
+            />
+          </FormField>
+          <FormField label="Payment due">
+            <input
+              type="date"
+              value={dueDate}
+              min={procedureDate}
+              onChange={(e) => setDueDate(e.target.value)}
+              className={inputClass}
+            />
+          </FormField>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <FormField label="Discount">
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+              value={discount}
+              onChange={(e) => setDiscount(e.target.value)}
+              className={inputClass}
+            />
+          </FormField>
+          <FormField label={draftDiscount > 0 ? "Reason for the discount *" : "Reason for the discount"}>
+            <input
+              type="text"
+              value={discountReason}
+              onChange={(e) => setDiscountReason(e.target.value)}
+              placeholder="e.g. Family discount"
+              className={inputClass}
+            />
+          </FormField>
+        </div>
+
+        <FormField label="Note on the invoice">
+          <input
+            type="text"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Optional"
+            className={inputClass}
+          />
+        </FormField>
+
+        <div className="space-y-0.5 text-right text-sm text-gray-700">
+          {draftDiscount > 0 && (
+            <>
+              <p>Lines: ${money(subtotal)}</p>
+              <p>Discount: −${money(draftDiscount)}</p>
+            </>
+          )}
+          <p className="font-semibold text-gray-900">Total to bill: ${money(total)}</p>
+        </div>
+
+        {error && (
+          <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+            {error}
+          </p>
+        )}
+
+        <div className="flex items-center justify-end gap-2 border-t border-gray-200 pt-3">
+          <Button variant="outline" onClick={onClose} disabled={saving} className="mr-auto">
+            Cancel
+          </Button>
+          <Button onClick={submit} disabled={saving || included.length === 0}>
+            {saving ? "Issuing…" : `Issue invoice ($${money(total)})`}
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  );
+}

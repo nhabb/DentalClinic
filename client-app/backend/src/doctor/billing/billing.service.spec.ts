@@ -561,3 +561,193 @@ describe('BillingService aging and outstanding (by due date, not by issue date)'
     });
   });
 });
+
+/**
+ * A fake database for creating invoices, with and without chart records.
+ * `quoteRecordIds` is what the accepted quote priced (default: exactly the two
+ * records billed below, i.e. the invoice bills the whole quote); `liveInvoices`
+ * is how many live invoices that quote already carries.
+ */
+function buildForCreate(opts: {
+  billableCount: number;
+  attachCount?: number;
+  quoteRecordIds?: (bigint | null)[];
+  liveInvoices?: number;
+}) {
+  const tx = {
+    treatment_invoices: {
+      create: jest.fn(({ data }: { data: Record<string, unknown> }) =>
+        Promise.resolve({ id: 5n, invoice_number: 'INV-2026-00005', ...data }),
+      ),
+      count: jest.fn().mockResolvedValue(opts.liveInvoices ?? 0),
+    },
+    patient_records: {
+      updateMany: jest.fn(({ where }: { where: { id: { in: bigint[] } } }) =>
+        Promise.resolve({
+          count: opts.attachCount ?? where.id.in.length,
+        }),
+      ),
+    },
+    quote_items: {
+      findFirst: jest.fn().mockResolvedValue({ quote_id: 3n }),
+      findMany: jest.fn().mockResolvedValue(
+        (opts.quoteRecordIds ?? [500n, 501n]).map((record_id) => ({
+          record_id,
+        })),
+      ),
+    },
+  };
+  const prisma = {
+    $transaction: (fn: (t: typeof tx) => Promise<unknown>) => fn(tx),
+    patient_profiles: { findUnique: jest.fn().mockResolvedValue({ id: 7n }) },
+    patient_records: {
+      count: jest.fn().mockResolvedValue(opts.billableCount),
+    },
+    treatment_invoices: {
+      create: jest.fn(({ data }: { data: Record<string, unknown> }) =>
+        Promise.resolve({ id: 6n, invoice_number: 'INV-2026-00006', ...data }),
+      ),
+    },
+  };
+  const audit = { record: jest.fn().mockResolvedValue(undefined) };
+  const service = new BillingService(prisma as never, audit as never);
+  return { service, tx, prisma };
+}
+
+describe('BillingService.create', () => {
+  const dtoWithRecords = {
+    patient_id: 7,
+    procedure_date: '2026-10-15',
+    line_items: [
+      {
+        record_id: 500,
+        procedure_name: 'Crown',
+        amount: 250,
+        tooth_number: '16',
+      },
+      {
+        record_id: 501,
+        procedure_name: 'Filling',
+        amount: 80,
+        tooth_number: '26',
+      },
+    ],
+  };
+
+  it('bills chart records on one invoice, attaching them only while still unbilled', async () => {
+    const { service, tx } = buildForCreate({ billableCount: 2 });
+    const invoice = (await service.create(
+      dtoWithRecords,
+      ACTOR,
+    )) as unknown as {
+      subtotal: number;
+      total_amount: number;
+      quote_id: bigint;
+      created_by: bigint;
+    };
+    expect(invoice).toMatchObject({
+      subtotal: 330,
+      total_amount: 330,
+      quote_id: 3n,
+      created_by: ACTOR,
+    });
+    expect(tx.patient_records.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          id: { in: [500n, 501n] },
+          invoice_id: null,
+          patient_id: 7n,
+          record_type: 'treatment',
+        },
+        data: expect.objectContaining({ invoice_id: 5n }),
+      }),
+    );
+  });
+
+  /*
+   * A quote may carry one live invoice (treatment_invoices_one_live_per_quote).
+   * A treatment plan billed visit by visit must therefore leave quote_id unset
+   * on each part, or the second visit could never be billed at all.
+   */
+  it('leaves quote_id unset when it bills only part of an accepted quote', async () => {
+    const { service } = buildForCreate({
+      billableCount: 1,
+      // The quote also priced record 502, which this invoice does not bill.
+      quoteRecordIds: [500n, 501n, 502n],
+    });
+    const invoice = (await service.create(
+      { ...dtoWithRecords, line_items: [dtoWithRecords.line_items[0]] },
+      ACTOR,
+    )) as unknown as { quote_id: bigint | null; total_amount: number };
+    expect(invoice.quote_id).toBeNull();
+    expect(invoice.total_amount).toBe(250);
+  });
+
+  it('leaves quote_id unset when the quote already has a live invoice', async () => {
+    const { service } = buildForCreate({ billableCount: 2, liveInvoices: 1 });
+    const invoice = (await service.create(
+      dtoWithRecords,
+      ACTOR,
+    )) as unknown as { quote_id: bigint | null };
+    expect(invoice.quote_id).toBeNull();
+  });
+
+  it('turns a lost race for the quote into a 409, never a 500', async () => {
+    const { service, prisma } = buildForCreate({ billableCount: 2 });
+    prisma.$transaction = () =>
+      Promise.reject(
+        new Error(
+          'Unique constraint failed on the constraint: `treatment_invoices_one_live_per_quote`',
+        ),
+      );
+    await expect(service.create(dtoWithRecords, ACTOR)).rejects.toBeInstanceOf(
+      ConflictException,
+    );
+  });
+
+  it('refuses records that are not this patient’s completed unbilled work', async () => {
+    const { service, tx } = buildForCreate({ billableCount: 1 });
+    await expect(service.create(dtoWithRecords, ACTOR)).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+    expect(tx.treatment_invoices.create).not.toHaveBeenCalled();
+  });
+
+  it('refuses the same record on two lines', async () => {
+    const { service } = buildForCreate({ billableCount: 2 });
+    await expect(
+      service.create(
+        {
+          ...dtoWithRecords,
+          line_items: dtoWithRecords.line_items.map((l) => ({
+            ...l,
+            record_id: 500,
+          })),
+        },
+        ACTOR,
+      ),
+    ).rejects.toThrow(/two lines/);
+  });
+
+  it('rolls back when a record was billed a moment ago from another desk', async () => {
+    const { service } = buildForCreate({ billableCount: 2, attachCount: 1 });
+    await expect(service.create(dtoWithRecords, ACTOR)).rejects.toBeInstanceOf(
+      ConflictException,
+    );
+  });
+
+  it('creates a plain invoice without touching records when no line names one', async () => {
+    const { service, tx, prisma } = buildForCreate({ billableCount: 0 });
+    const invoice = (await service.create(
+      {
+        patient_id: 7,
+        procedure_date: '2026-10-15',
+        line_items: [{ procedure_name: 'Checkup', amount: 30 }],
+      },
+      ACTOR,
+    )) as unknown as { total_amount: number };
+    expect(invoice.total_amount).toBe(30);
+    expect(prisma.treatment_invoices.create).toHaveBeenCalledTimes(1);
+    expect(tx.patient_records.updateMany).not.toHaveBeenCalled();
+  });
+});

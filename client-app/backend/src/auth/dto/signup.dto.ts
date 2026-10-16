@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsDateString,
 } from 'class-validator';
+import { IsPhone } from '../../shared/common/phone';
 
 export class SignupDto {
   @IsEmail()
@@ -20,8 +21,7 @@ export class SignupDto {
   @IsString()
   last_name: string;
 
-  @IsOptional()
-  @IsString()
+  @IsPhone()
   phone?: string;
 
   @IsOptional()

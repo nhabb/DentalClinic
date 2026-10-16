@@ -8,6 +8,7 @@ import {
   Matches,
 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsPhone } from '../../common/phone';
 
 export class UpdateUserDto {
   @ApiPropertyOptional()
@@ -25,9 +26,7 @@ export class UpdateUserDto {
   last_name?: string;
 
   @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  @MaxLength(30)
+  @IsPhone()
   phone?: string;
 
   @ApiPropertyOptional()

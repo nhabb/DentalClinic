@@ -31,8 +31,8 @@ describe('PermissionsGuard', () => {
 
   it('passes when the role holds every required permission', () => {
     const { guard, context } = contextFor(
-      { role: 'doctor', permissions: ['billing:read', 'billing:write'] },
-      ['billing:write'],
+      { role: 'doctor', permissions: ['billing:read', 'billing:create'] },
+      ['billing:create'],
     );
     expect(guard.canActivate(context)).toBe(true);
   });
@@ -56,7 +56,7 @@ describe('PermissionsGuard', () => {
   it('always lets the platform superadmin through', () => {
     const { guard, context } = contextFor(
       { role: 'superadmin', permissions: [] },
-      ['roles:manage'],
+      ['roles:edit'],
     );
     expect(guard.canActivate(context)).toBe(true);
   });

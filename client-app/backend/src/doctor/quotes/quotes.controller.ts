@@ -30,8 +30,9 @@ import {
 type AuthedRequest = { user: RequestUser };
 
 /**
- * Quotes are part of billing: reading them needs billing:read, preparing and
- * deciding them billing:write. Deleting a draft is not a money operation, so
+ * Quotes are part of billing: reading them needs billing:read, preparing or
+ * revising them billing:create, deciding them billing:edit and dropping a draft
+ * billing:delete. Deleting a draft is not a money operation, so
  * no password step-up here; sent quotes cannot be deleted at all.
  */
 @ApiBearerAuth()
@@ -71,7 +72,7 @@ export class QuotesController {
   }
 
   @Post()
-  @RequirePermissions('billing:write')
+  @RequirePermissions('billing:create')
   @ApiOperation({
     summary: 'Prepare a quote (draft) for a patient; numbered by the clinic',
   })
@@ -80,14 +81,14 @@ export class QuotesController {
   }
 
   @Patch(':id')
-  @RequirePermissions('billing:write')
+  @RequirePermissions('billing:edit')
   @ApiOperation({ summary: 'Change a draft quote (lines replace the list)' })
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateQuoteDto) {
     return this.quotes.update(BigInt(id), dto);
   }
 
   @Post(':id/send')
-  @RequirePermissions('billing:write')
+  @RequirePermissions('billing:edit')
   @ApiOperation({
     summary: 'Mark the quote as given to the patient; it is frozen from now on',
   })
@@ -96,7 +97,7 @@ export class QuotesController {
   }
 
   @Post(':id/accept')
-  @RequirePermissions('billing:write')
+  @RequirePermissions('billing:edit')
   @ApiOperation({
     summary:
       'The patient accepted: quoted prices are written onto the planned chart records',
@@ -106,14 +107,14 @@ export class QuotesController {
   }
 
   @Post(':id/decline')
-  @RequirePermissions('billing:write')
+  @RequirePermissions('billing:edit')
   @ApiOperation({ summary: 'The patient declined the quote' })
   decline(@Param('id', ParseIntPipe) id: number) {
     return this.quotes.decline(BigInt(id));
   }
 
   @Post(':id/revise')
-  @RequirePermissions('billing:write')
+  @RequirePermissions('billing:create')
   @ApiOperation({
     summary:
       'Start a new version (draft) of this quote; the old one stays as the patient saw it',
@@ -123,7 +124,7 @@ export class QuotesController {
   }
 
   @Post(':id/invoice')
-  @RequirePermissions('billing:write')
+  @RequirePermissions('billing:create')
   @ApiOperation({
     summary:
       'Issue an invoice from an accepted quote: its lines and discount, linked back to the quote (one live invoice per quote)',
@@ -137,7 +138,7 @@ export class QuotesController {
   }
 
   @Delete(':id')
-  @RequirePermissions('billing:write')
+  @RequirePermissions('billing:delete')
   @ApiOperation({ summary: 'Delete a draft quote' })
   remove(@Param('id', ParseIntPipe) id: number, @Req() req: AuthedRequest) {
     return this.quotes.remove(BigInt(id), BigInt(req.user.id));

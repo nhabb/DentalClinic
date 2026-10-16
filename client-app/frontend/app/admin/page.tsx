@@ -415,6 +415,7 @@ export default function AdminDashboard() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-44">
+                                {can("appointments:edit") && can("slots:create") && (
                                 <DropdownMenuItem
                                   onClick={() => {
                                     setPostponeApptId(apt.id);
@@ -424,7 +425,8 @@ export default function AdminDashboard() {
                                 >
                                   <FaCalendarPlus className="text-brand" /> {t("adminDashboard.postpone")}
                                 </DropdownMenuItem>
-                                {can("appointments:write") && (
+                                )}
+                                {can("appointments:delete") && (
                                 <DropdownMenuItem
                                   onClick={() => handleCancelAppointment(apt.id)}
                                   className="text-red-600 focus:text-red-600"
@@ -486,7 +488,7 @@ export default function AdminDashboard() {
               >
                 {t("common.cancel")}
               </button>
-              {(can("appointments:write") && can("slots:manage")) && (
+              {(can("appointments:edit") && can("slots:create")) && (
               <button
                 onClick={handlePostponeSubmit}
                 disabled={!postponeDate || !postponeTime || postponeLoading}

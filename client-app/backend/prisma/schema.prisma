@@ -336,6 +336,23 @@ model patient_profiles {
   user_id                 BigInt               @unique
   emergency_contact_name  String?              @db.VarChar
   emergency_contact_phone String?              @db.VarChar
+  /// How the emergency contact is related to the patient.
+  emergency_contact_relationship   String?     @db.VarChar
+  /// A second person to call in an emergency.
+  emergency_contact_2_name         String?     @db.VarChar
+  emergency_contact_2_phone        String?     @db.VarChar
+  emergency_contact_2_relationship String?     @db.VarChar
+  /// What the patient does for a living, and where.
+  occupation              String?              @db.VarChar
+  employer                String?              @db.VarChar
+  work_phone              String?              @db.VarChar
+  /// National ID or civil record number, as written on the document.
+  national_id             String?              @db.VarChar
+  /// single | married | divorced | widowed | other
+  marital_status          String?              @db.VarChar
+  nationality             String?              @db.VarChar
+  /// Language to speak and write to this patient in: en, ar or fr.
+  preferred_language      String?              @db.VarChar
   blood_type              String?              @db.VarChar
   allergies               String?
   medical_notes           String?
@@ -621,7 +638,7 @@ model roles {
 model role_permissions {
   role_id         BigInt
   organization_id BigInt        @default(dbgenerated("app.current_org_id()"))
-  /// A key from the permission catalog, e.g. "appointments:write".
+  /// A key from the permission catalog, e.g. "appointments:create".
   permission      String        @db.VarChar
   role            roles         @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   organization    organizations @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
@@ -670,6 +687,10 @@ model specialist_consultations {
   record_id         BigInt?
   /// Staff member who asked for the consultation.
   requested_by      BigInt?
+  /// Which way the patient moved: referred_out (we sent them to the outside
+  /// doctor), referred_in (the outside doctor sent them to us) or visiting
+  /// (the outside doctor treated the patient at our clinic).
+  direction         String    @default("referred_out") @db.VarChar
   status            String    @default("requested") @db.VarChar
   consultation_date DateTime? @db.Date
   reason            String
@@ -703,6 +724,13 @@ model dental_labs {
   phone           String?  @db.VarChar
   email           String?  @db.VarChar
   address         String?
+  /// Named person to deal with at the lab.
+  contact_person  String?  @db.VarChar
+  /// Working days the lab usually takes; a new order's due date defaults from this.
+  turnaround_days Int?
+  /// How this lab is paid (30 days, on delivery, ...).
+  payment_terms   String?  @db.VarChar
+  tax_number      String?  @db.VarChar
   notes           String?
   is_active       Boolean  @default(true)
   created_at      DateTime @default(now()) @db.Timestamptz(6)
@@ -733,11 +761,24 @@ model lab_orders {
   /// Teeth concerned, e.g. "14,15" (same notation as patient_records.tooth_number).
   tooth_numbers   String?   @db.VarChar
   shade           String?   @db.VarChar
+  /// What the piece is made of (zirconia, e.max, PFM, acrylic, ...).
+  material        String?   @db.VarChar
+  /// How many pieces this case covers (1-32).
+  units           Int?
+  /// Courier or lab reference for the case in transit.
+  tracking_ref    String?   @db.VarChar
+  /// How the impression was taken: digital (intraoral scan) or physical.
+  impression_method String? @db.VarChar
   status          String    @default("ordered") @db.VarChar
   sent_at         DateTime? @db.Date
   due_at          DateTime? @db.Date
+  /// Day of the try-in or bisque fitting, between sending and fitting.
+  try_in_at       DateTime? @db.Date
   received_at     DateTime? @db.Date
   fitted_at       DateTime? @db.Date
+  /// The earlier order this one remakes; NULL for a first attempt.
+  remake_of_id    BigInt?
+  remake_reason   String?
   /// Lab's charge, for reporting; billed to the patient as usual.
   cost            Decimal?  @db.Decimal(10, 2)
   notes           String?
@@ -751,7 +792,10 @@ model lab_orders {
   appointment  appointments?    @relation(fields: [appointment_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
   record       patient_records? @relation(fields: [record_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
   orderer      users?           @relation("lab_orders_orderer", fields: [ordered_by], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  remake_of    lab_orders?      @relation("lab_orders_remake", fields: [remake_of_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  remakes      lab_orders[]     @relation("lab_orders_remake")
 
+  @@index([remake_of_id], map: "idx_lab_orders_remake_of")
   @@index([organization_id], map: "idx_lab_orders_org")
   @@index([organization_id, branch_id], map: "idx_lab_orders_org_branch")
   @@index([patient_id], map: "idx_lab_orders_patient")

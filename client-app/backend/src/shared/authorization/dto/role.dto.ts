@@ -30,7 +30,7 @@ export class CreateRoleDto {
 
   @ApiProperty({
     type: [String],
-    example: ['appointments:read', 'records:write'],
+    example: ['appointments:read', 'records:create'],
   })
   @IsArray()
   @ArrayUnique()

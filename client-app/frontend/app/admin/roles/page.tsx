@@ -68,8 +68,12 @@ export default function RolesPage() {
   const [addStaffOpen, setAddStaffOpen] = useState(false);
   const [sentLink, setSentLink] = useState<{ member: StaffMember; invite: StaffInvite } | null>(null);
 
-  const canManageRoles = me?.permissions.includes("roles:manage") ?? false;
-  const canAssignStaff = me?.permissions.includes("staff:manage") ?? false;
+  const holds = (permission: string) => me?.permissions.includes(permission) ?? false;
+  const canCreateRoles = holds("roles:create");
+  const canEditRoles = holds("roles:edit");
+  const canDeleteRoles = holds("roles:delete");
+  const canCreateStaff = holds("staff:create");
+  const canAssignStaff = holds("staff:edit");
 
   const loadAll = useCallback(async () => {
     try {
@@ -219,10 +223,10 @@ export default function RolesPage() {
           subtitle={t("roles.subtitle")}
           onAdd={
             tab === "staff"
-              ? canAssignStaff
+              ? canCreateStaff
                 ? () => setAddStaffOpen(true)
                 : undefined
-              : canManageRoles
+              : canCreateRoles
                 ? () => setForm({ open: true, role: null })
                 : undefined
           }
@@ -248,7 +252,8 @@ export default function RolesPage() {
                       <PermissionMatrix
                         role={selectedRole}
                         catalog={catalog}
-                        canManage={canManageRoles}
+                        canEdit={canEditRoles}
+                        canDelete={canDeleteRoles}
                         saving={saving}
                         onSave={savePermissions}
                         onEditDetails={() => setForm({ open: true, role: selectedRole })}
@@ -268,6 +273,7 @@ export default function RolesPage() {
                     staff={staff}
                     roles={roles}
                     canAssign={canAssignStaff}
+                    canSendLink={canCreateStaff}
                     selfId={me?.id ?? null}
                     busyUserId={busyUserId}
                     onAssign={assignRole}

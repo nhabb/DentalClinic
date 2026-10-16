@@ -16,7 +16,8 @@ import { UserAccessService } from '../tenant/user-access.service';
 
 /**
  * Roles and permissions of the caller's clinic. Reading needs `staff:read`
- * (the staff page shows roles), changing anything needs `roles:manage`.
+ * (the staff page shows roles), changing anything needs `roles:create`,
+ * `roles:edit` or `roles:delete`.
  */
 @ApiBearerAuth()
 @ApiTags('Roles & permissions')
@@ -44,14 +45,14 @@ export class RolesController {
   }
 
   @Post('roles')
-  @RequirePermissions('roles:manage')
+  @RequirePermissions('roles:create')
   @ApiOperation({ summary: 'Create a custom role' })
   create(@Body() dto: CreateRoleDto) {
     return this.roles.create(dto);
   }
 
   @Patch('roles/:key')
-  @RequirePermissions('roles:manage')
+  @RequirePermissions('roles:edit')
   @ApiOperation({
     summary: 'Rename a role or replace its permissions (admin stays locked)',
   })
@@ -63,7 +64,7 @@ export class RolesController {
   }
 
   @Delete('roles/:key')
-  @RequirePermissions('roles:manage')
+  @RequirePermissions('roles:delete')
   @ApiOperation({ summary: 'Delete a custom role nobody holds' })
   remove(@Param('key') key: string) {
     return this.roles.remove(key);

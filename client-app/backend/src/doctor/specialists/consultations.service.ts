@@ -105,6 +105,8 @@ export class ConsultationsService {
         appointment_id: dto.appointment_id ? BigInt(dto.appointment_id) : null,
         record_id: dto.record_id ? BigInt(dto.record_id) : null,
         requested_by: requestedBy,
+        // Which way the patient moved; defaults to the common case, we sent them out.
+        direction: dto.direction ?? 'referred_out',
         status: dto.status ?? 'requested',
         consultation_date: toDateOnlyOrNull(dto.consultation_date) ?? null,
         reason: dto.reason,
@@ -166,6 +168,7 @@ export class ConsultationsService {
         ...(dto.record_id !== undefined
           ? { record_id: dto.record_id ? BigInt(dto.record_id) : null }
           : {}),
+        ...(dto.direction !== undefined ? { direction: dto.direction } : {}),
         ...(dto.status !== undefined ? { status: dto.status } : {}),
         ...(dto.consultation_date !== undefined
           ? { consultation_date: toDateOnlyOrNull(dto.consultation_date) }

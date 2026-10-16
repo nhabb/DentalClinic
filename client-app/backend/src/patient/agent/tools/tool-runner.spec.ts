@@ -87,7 +87,7 @@ describe('ToolRunner.run', () => {
     const { runner, roles } = build();
     const out = await runner.run(secretary, 'list_roles', new ToolArgs({}));
     expect(roles.list).not.toHaveBeenCalled();
-    expect(errorOf(out)).toMatch(/lacks the permission: roles:manage/);
+    expect(errorOf(out)).toMatch(/lacks the permission: roles:edit/);
   });
 
   it('refuses a tool name that does not exist', async () => {

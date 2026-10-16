@@ -560,7 +560,7 @@ export default function ExpensesPage() {
             if (ok > 0) toast.success(`${ok} expense${ok > 1 ? "s" : ""} imported.`);
             if (fail > 0) toast.error(`${fail} row${fail > 1 ? "s" : ""} failed.`);
           }}
-          onAdd={can("expenses:write") ? handleOpenAdd : undefined}
+          onAdd={can("expenses:create") ? handleOpenAdd : undefined}
           addLabel={t("expenses.addExpense")}
           actions={[{ key: "analytics", label: "View analytics", icon: <FaDollarSign />, href: "/admin/expenses/analytics" }]}
         />
@@ -770,7 +770,7 @@ export default function ExpensesPage() {
                             >
                               <FaDollarSign />
                             </button>
-                            {can("expenses:write") && (
+                            {can("expenses:edit") && (
                             <button
                               onClick={() => handleOpenEdit(expense)}
                               title={t("expenses.editExpense")}
@@ -779,7 +779,7 @@ export default function ExpensesPage() {
                               <FaEdit />
                             </button>
                             )}
-                            {can("expenses:write") && (
+                            {can("expenses:delete") && (
                             <button
                               onClick={() => handleDelete(expense.id)}
                               disabled={deletingId === expense.id}
@@ -1019,7 +1019,7 @@ export default function ExpensesPage() {
                     />
                   </FormField>
                 </div>
-                {can("expenses:write") && (
+                {can("expenses:create") && (
                 <Button
                   className="w-full bg-brand hover:bg-brand/90"
                   onClick={handleRecordPayment}
@@ -1057,7 +1057,7 @@ export default function ExpensesPage() {
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         <span className="text-sm font-semibold text-green-700">{formatAmount(p.amount)}</span>
-                        {can("expenses:write") && (
+                        {can("expenses:delete") && (
                         <button
                           onClick={() => handleDeletePayment(p.id)}
                           disabled={deletingPaymentId === p.id}

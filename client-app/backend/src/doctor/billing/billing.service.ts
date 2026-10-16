@@ -117,16 +117,44 @@ export class BillingService {
   ) {}
 
   /**
-   * An invoice from the billing page. The number comes from the database
-   * (sequential per clinic), the figures from invoice-math, the creator from
-   * the signed-in user, never from the request body.
+   * An invoice from the billing page, the one place a bill is created. The
+   * number comes from the database (sequential per clinic), the figures from
+   * invoice-math, the creator from the signed-in user, never from the request
+   * body. A line may name a completed, unbilled chart record (record_id);
+   * those records are attached to the invoice in the same transaction so the
+   * work can never be billed twice.
    */
   async create(dto: CreateInvoiceDto, actorId: bigint) {
+    const patientId = BigInt(dto.patient_id);
     const profile = await this.prisma.patient_profiles.findUnique({
-      where: { id: BigInt(dto.patient_id) },
+      where: { id: patientId },
       select: { id: true },
     });
     if (!profile) throw new NotFoundException('Patient profile not found');
+
+    const recordIds = dto.line_items
+      .filter((i) => i.record_id != null)
+      .map((i) => BigInt(i.record_id as number));
+    if (new Set(recordIds.map(String)).size !== recordIds.length) {
+      throw new BadRequestException(
+        'The same chart record cannot be billed on two lines',
+      );
+    }
+    if (recordIds.length > 0) {
+      const billable = await this.prisma.patient_records.count({
+        where: {
+          id: { in: recordIds },
+          patient_id: patientId,
+          record_type: 'treatment',
+          invoice_id: null,
+        },
+      });
+      if (billable !== recordIds.length) {
+        throw new BadRequestException(
+          "Every record_id must be this patient's completed work that is not on an invoice yet",
+        );
+      }
+    }
 
     const procedureDate = toDateOnly(dto.procedure_date);
     const figures = invoiceFigures(
@@ -135,26 +163,217 @@ export class BillingService {
       dto.discount_reason,
     );
 
-    return this.prisma.treatment_invoices.create({
-      data: {
-        // Omitted = database default (home branch, then the organization's default branch).
-        ...(dto.branch_id ? { branch_id: BigInt(dto.branch_id) } : {}),
-        patient_id: profile.id,
-        procedure_date: procedureDate,
-        due_date: dueDateFor(procedureDate, dto.due_date),
-        notes: dto.notes?.trim() || null,
-        ...figures,
-        created_by: actorId,
-        line_items: {
-          create: dto.line_items.map((item) => ({
-            procedure_name: item.procedure_name,
-            amount: round2(item.amount),
-            tooth_number: item.tooth_number ?? null,
-          })),
+    const data = {
+      // Omitted = database default (home branch, then the organization's default branch).
+      ...(dto.branch_id ? { branch_id: BigInt(dto.branch_id) } : {}),
+      patient_id: profile.id,
+      procedure_date: procedureDate,
+      due_date: dueDateFor(procedureDate, dto.due_date),
+      notes: dto.notes?.trim() || null,
+      ...figures,
+      created_by: actorId,
+      line_items: {
+        create: dto.line_items.map((item) => ({
+          procedure_name: item.procedure_name,
+          amount: round2(item.amount),
+          tooth_number: item.tooth_number ?? null,
+        })),
+      },
+    };
+
+    if (recordIds.length === 0) {
+      return this.prisma.treatment_invoices.create({
+        data,
+        include: invoiceInclude,
+      });
+    }
+
+    // Interactive transaction on purpose: the array form is started from a
+    // shared tick and can run under another request's tenant (see tenant-pool.ts).
+    return this.prisma
+      .$transaction(async (tx) => {
+        const invoice = await tx.treatment_invoices.create({
+          data: {
+            ...data,
+            // The accepted quote this invoice bills in full, if any: quoted vs billed stays comparable.
+            quote_id: await this.wholeQuoteBilledBy(tx, recordIds),
+          },
+          include: invoiceInclude,
+        });
+        // Attach only records that are still this patient's unbilled work:
+        // work billed at the same moment from another desk wins the row, and
+        // this transaction rolls back instead of billing it twice (the
+        // database refuses to move a billed record too).
+        const attached = await tx.patient_records.updateMany({
+          where: {
+            id: { in: recordIds },
+            invoice_id: null,
+            patient_id: patientId,
+            record_type: 'treatment',
+          },
+          data: { invoice_id: invoice.id, updated_at: new Date() },
+        });
+        if (attached.count !== recordIds.length) {
+          throw new ConflictException(
+            'Some of this work was billed a moment ago (from its quote or another desk); refresh and try again',
+          );
+        }
+        return invoice;
+      }, REMOTE_TX_OPTIONS)
+      .catch((err: unknown) => {
+        // The quote won a live invoice between the check and the insert.
+        if (/one_live_per_quote/.test((err as Error).message ?? '')) {
+          throw new ConflictException(
+            'An invoice was issued from this quote a moment ago; refresh and check the invoices',
+          );
+        }
+        throw err;
+      });
+  }
+
+  /**
+   * The accepted quote these records were priced on, but only when this
+   * invoice bills the whole of it and it has no live invoice yet.
+   *
+   * A quote may carry one live invoice (`treatment_invoices_one_live_per_quote`,
+   * migration 20261015130000), so stamping `quote_id` on a part would make the
+   * rest of a treatment plan unbillable: a plan billed visit by visit leaves
+   * `quote_id` null on each invoice instead. Billing the whole quote at once is
+   * what `POST /quotes/:id/invoice` is for, and that path still owns the link.
+   */
+  private async wholeQuoteBilledBy(
+    tx: Tx,
+    recordIds: bigint[],
+  ): Promise<bigint | null> {
+    const line = await tx.quote_items.findFirst({
+      where: { record_id: { in: recordIds }, quote: { status: 'accepted' } },
+      orderBy: { quote: { accepted_at: 'desc' } },
+      select: { quote_id: true },
+    });
+    if (!line) return null;
+
+    // Every line of that quote must be on this invoice: a quoted line with no
+    // record of its own (a general charge) can never be, so such a quote is
+    // only ever billed whole from the quotes page.
+    const quoted = await tx.quote_items.findMany({
+      where: { quote_id: line.quote_id },
+      select: { record_id: true },
+    });
+    const billed = new Set(recordIds.map(String));
+    const billsEveryLine = quoted.every(
+      (i) => i.record_id !== null && billed.has(String(i.record_id)),
+    );
+    if (!billsEveryLine) return null;
+
+    const live = await tx.treatment_invoices.count({
+      where: { quote_id: line.quote_id, status: { not: 'cancelled' } },
+    });
+    return live === 0 ? line.quote_id : null;
+  }
+
+  /**
+   * What the billing and quotes pages can act on for one patient: completed
+   * chart work not on an invoice yet (the invoice builder bills it) and open
+   * planned work (the quote builder prices it). Prices are the chart's noted
+   * or quoted prices, editable at billing time.
+   */
+  async listBillable(patientId: bigint) {
+    const profile = await this.prisma.patient_profiles.findUnique({
+      where: { id: patientId },
+      select: { id: true },
+    });
+    if (!profile) throw new NotFoundException('Patient profile not found');
+
+    const select = {
+      id: true,
+      title: true,
+      tooth_number: true,
+      treatment_date: true,
+      quoted_amount: true,
+    };
+    const [completedUnbilled, planned] = await Promise.all([
+      this.prisma.patient_records.findMany({
+        where: {
+          patient_id: patientId,
+          record_type: 'treatment',
+          invoice_id: null,
+        },
+        select,
+        orderBy: [{ treatment_date: 'desc' }, { id: 'desc' }],
+      }),
+      // Planned work billed up front from its quote keeps record_type
+      // treatment_plan but carries an invoice_id; it is no longer open.
+      this.prisma.patient_records.findMany({
+        where: {
+          patient_id: patientId,
+          record_type: 'treatment_plan',
+          invoice_id: null,
+        },
+        select,
+        orderBy: [{ treatment_date: 'asc' }, { id: 'asc' }],
+      }),
+    ]);
+
+    // Billing reads by quote and by treatment, so the desk can see what a
+    // charge belongs to: each quote that priced some of this work, with the
+    // treatments under it, and then the work no quote covers.
+    const quoteLines = await this.prisma.quote_items.findMany({
+      where: {
+        record_id: { in: completedUnbilled.map((r) => r.id) },
+        quote: { status: { in: ['sent', 'accepted'] } },
+      },
+      select: {
+        record_id: true,
+        quoted_amount: true,
+        quote: {
+          select: {
+            id: true,
+            quote_number: true,
+            version: true,
+            status: true,
+            quoted_total: true,
+            quoted_discount: true,
+          },
         },
       },
-      include: invoiceInclude,
     });
+
+    type Group = {
+      quote: (typeof quoteLines)[number]['quote'];
+      /** The agreed price per record, which the invoice builder pre-fills. */
+      items: (typeof completedUnbilled)[number][];
+    };
+    const byQuote = new Map<string, Group>();
+    const quotedRecordIds = new Set<string>();
+    const agreedPrice = new Map<string, unknown>();
+
+    for (const line of quoteLines) {
+      if (line.record_id === null) continue;
+      const key = String(line.quote.id);
+      const group = byQuote.get(key) ?? { quote: line.quote, items: [] };
+      const record = completedUnbilled.find((r) => r.id === line.record_id);
+      if (record) {
+        group.items.push(record);
+        quotedRecordIds.add(String(record.id));
+        agreedPrice.set(String(record.id), line.quoted_amount);
+      }
+      byQuote.set(key, group);
+    }
+
+    return {
+      completed_unbilled: completedUnbilled.map((r) => ({
+        ...r,
+        // What the patient agreed to on a quote wins over the chart's price.
+        quoted_amount: agreedPrice.get(String(r.id)) ?? r.quoted_amount,
+      })),
+      planned,
+      /** Completed work grouped by the quote that priced it. */
+      quoted: [...byQuote.values()],
+      /** Completed work no live quote covers. */
+      unquoted: completedUnbilled.filter(
+        (r) => !quotedRecordIds.has(String(r.id)),
+      ),
+    };
   }
 
   async findAll(filters: {

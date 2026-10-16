@@ -18,7 +18,7 @@ import { analyzeSelect } from './sql-policy';
 export const TOOL_PERMISSIONS: Readonly<Record<string, string | null>> = {
   // Self and roles
   get_my_permissions: null,
-  list_roles: 'roles:manage',
+  list_roles: 'roles:edit',
 
   // Appointments and slots
   list_appointments: 'appointments:read',
@@ -81,10 +81,10 @@ export const TABLE_PERMISSIONS: Readonly<Record<string, string | null>> = {
   expense_payments: 'expenses:read',
   inventory_items: 'inventory:read',
   inventory_movements: 'inventory:read',
-  notifications: 'staff:manage',
-  roles: 'roles:manage',
-  role_permissions: 'roles:manage',
-  audit_logs: 'staff:manage',
+  notifications: 'staff:edit',
+  roles: 'roles:edit',
+  role_permissions: 'roles:edit',
+  audit_logs: 'staff:edit',
   specialists: 'specialists:read',
   specialist_consultations: 'specialists:read',
   dental_labs: 'lab:read',

@@ -30,7 +30,7 @@ export class ExpensesController {
   constructor(private readonly expensesService: ExpensesService) {}
 
   @Post()
-  @RequirePermissions('expenses:write')
+  @RequirePermissions('expenses:create')
   @ApiOperation({ summary: 'Record a new clinic expense' })
   create(@Body() dto: CreateExpenseDto) {
     return this.expensesService.create(dto);
@@ -103,7 +103,7 @@ export class ExpensesController {
   }
 
   @Patch(':id')
-  @RequirePermissions('expenses:write')
+  @RequirePermissions('expenses:edit')
   @ApiOperation({
     summary: 'Update an expense record',
     description:
@@ -120,7 +120,7 @@ export class ExpensesController {
   }
 
   @Post(':id/payments')
-  @RequirePermissions('expenses:write')
+  @RequirePermissions('expenses:create')
   @ApiOperation({
     summary: 'Record a payment (partial or full) against an expense',
   })
@@ -132,7 +132,7 @@ export class ExpensesController {
   }
 
   @Delete(':id/payments/:paymentId')
-  @RequirePermissions('expenses:write')
+  @RequirePermissions('expenses:delete')
   @ApiOperation({
     summary: 'Remove a recorded expense payment and recalculate the balance',
   })
@@ -144,7 +144,7 @@ export class ExpensesController {
   }
 
   @Delete(':id')
-  @RequirePermissions('expenses:write')
+  @RequirePermissions('expenses:delete')
   @ApiOperation({ summary: 'Delete an expense record' })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.expensesService.remove(BigInt(id));

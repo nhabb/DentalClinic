@@ -34,6 +34,9 @@ export class QuoteItemDto {
       'Planned chart record (patient_records.id) this line prices; its quoted_amount is updated when the quote is accepted',
   })
   @IsOptional()
+  // Ids leave the API as strings (BigInt.prototype.toJSON in main.ts), so one
+  // sent straight back is accepted here rather than refused as "not an integer".
+  @Type(() => Number)
   @IsInt()
   record_id?: number;
 

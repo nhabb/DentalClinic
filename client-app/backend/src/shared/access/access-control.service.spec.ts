@@ -34,17 +34,17 @@ describe('AccessControlService', () => {
     });
 
     it('treats the platform superadmin as holding everything', () => {
-      expect(access.hasPermission(superadmin, 'roles:manage')).toBe(true);
+      expect(access.hasPermission(superadmin, 'roles:edit')).toBe(true);
     });
   });
 
   describe('assertSelfOrPermission', () => {
     it('allows users on themselves regardless of permissions', () => {
       expect(() =>
-        access.assertSelfOrPermission(patient, '10', 'staff:manage'),
+        access.assertSelfOrPermission(patient, '10', 'staff:edit'),
       ).not.toThrow();
       expect(() =>
-        access.assertSelfOrPermission(secretary, 2n, 'staff:manage'),
+        access.assertSelfOrPermission(secretary, 2n, 'staff:edit'),
       ).not.toThrow();
     });
 
@@ -53,7 +53,7 @@ describe('AccessControlService', () => {
         access.assertSelfOrPermission(secretary, 11, 'patients:read'),
       ).not.toThrow();
       expect(() =>
-        access.assertSelfOrPermission(secretary, 11, 'staff:manage'),
+        access.assertSelfOrPermission(secretary, 11, 'staff:edit'),
       ).toThrow(ForbiddenException);
       expect(() =>
         access.assertSelfOrPermission(patient, 11, 'patients:read'),

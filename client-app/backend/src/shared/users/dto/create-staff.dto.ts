@@ -7,6 +7,7 @@ import {
   Length,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsPhone } from '../../common/phone';
 
 /** A new patient account created by staff (legacy route; prefer POST /patients). */
 export class RegisterPatientDto {
@@ -25,9 +26,7 @@ export class RegisterPatientDto {
   last_name: string;
 
   @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  @Length(3, 30)
+  @IsPhone()
   phone?: string;
 }
 

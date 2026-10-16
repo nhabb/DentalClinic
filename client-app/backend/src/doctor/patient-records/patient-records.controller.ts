@@ -29,7 +29,7 @@ export class PatientRecordsController {
   constructor(private readonly patientRecordsService: PatientRecordsService) {} //dependency injection of the PatientRecordsService to handle the business logic for patient records, allowing us to keep the controller focused on handling HTTP requests and delegating the actual data manipulation and retrieval logic to the service layer, which is responsible for interacting with the database and implementing the necessary functionality for managing patient records.
 
   @Post()
-  @RequirePermissions('records:write')
+  @RequirePermissions('records:create')
   @ApiOperation({ summary: 'Doctor creates a clinical record for a patient' })
   create(@Body() dto: CreatePatientRecordDto) {
     //it is sent in the request body as JSON, used for POST/PUT requests. Here we expect a JSON object that matches the CreatePatientRecordDto structure, which includes properties like patient_id, record_type, description, and optionally file_url to create a new patient record.
@@ -75,7 +75,7 @@ export class PatientRecordsController {
   }
 
   @Patch(':id')
-  @RequirePermissions('records:write')
+  @RequirePermissions('records:edit')
   @ApiOperation({ summary: 'Doctor updates a patient record' })
   update(
     @Param('id', ParseIntPipe) id: number,
@@ -85,7 +85,7 @@ export class PatientRecordsController {
   }
 
   @Delete(':id')
-  @RequirePermissions('records:write')
+  @RequirePermissions('records:delete')
   @ApiOperation({ summary: 'Doctor deletes a patient record' })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.patientRecordsService.remove(BigInt(id));

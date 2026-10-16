@@ -2,7 +2,6 @@ import {
   ArrayMaxSize,
   ArrayMinSize,
   IsArray,
-  IsBoolean,
   IsDateString,
   IsIn,
   IsNumber,
@@ -59,8 +58,9 @@ export class WorkItemDto {
   status: WorkStatus;
 
   @ApiPropertyOptional({
-    example: 50,
-    description: 'Price; completed items with a price are invoiced',
+    example: 250,
+    description:
+      "Price for this work. Planned work carries it into the patient's quote; the billing page bills it.",
   })
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
@@ -93,21 +93,12 @@ export class RecordWorkDto {
   appointment_id?: number;
 
   @ApiPropertyOptional({
-    description:
-      'Notes applied to the invoice and to items without their own notes',
+    description: 'Notes applied to items without their own notes',
   })
   @IsOptional()
   @IsString()
   @MaxLength(2000)
   notes?: string;
-
-  @ApiPropertyOptional({
-    default: true,
-    description: 'Create an invoice for completed items with a price',
-  })
-  @IsOptional()
-  @IsBoolean()
-  create_invoice?: boolean;
 
   @ApiProperty({ type: [WorkItemDto] })
   @IsArray()

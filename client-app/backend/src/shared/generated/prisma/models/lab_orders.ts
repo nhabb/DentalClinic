@@ -37,6 +37,8 @@ export type Lab_ordersAvgAggregateOutputType = {
   appointment_id: number | null
   record_id: number | null
   ordered_by: number | null
+  units: number | null
+  remake_of_id: number | null
   cost: runtime.Decimal | null
 }
 
@@ -49,6 +51,8 @@ export type Lab_ordersSumAggregateOutputType = {
   appointment_id: bigint | null
   record_id: bigint | null
   ordered_by: bigint | null
+  units: number | null
+  remake_of_id: bigint | null
   cost: runtime.Decimal | null
 }
 
@@ -65,11 +69,18 @@ export type Lab_ordersMinAggregateOutputType = {
   description: string | null
   tooth_numbers: string | null
   shade: string | null
+  material: string | null
+  units: number | null
+  tracking_ref: string | null
+  impression_method: string | null
   status: string | null
   sent_at: Date | null
   due_at: Date | null
+  try_in_at: Date | null
   received_at: Date | null
   fitted_at: Date | null
+  remake_of_id: bigint | null
+  remake_reason: string | null
   cost: runtime.Decimal | null
   notes: string | null
   created_at: Date | null
@@ -89,11 +100,18 @@ export type Lab_ordersMaxAggregateOutputType = {
   description: string | null
   tooth_numbers: string | null
   shade: string | null
+  material: string | null
+  units: number | null
+  tracking_ref: string | null
+  impression_method: string | null
   status: string | null
   sent_at: Date | null
   due_at: Date | null
+  try_in_at: Date | null
   received_at: Date | null
   fitted_at: Date | null
+  remake_of_id: bigint | null
+  remake_reason: string | null
   cost: runtime.Decimal | null
   notes: string | null
   created_at: Date | null
@@ -113,11 +131,18 @@ export type Lab_ordersCountAggregateOutputType = {
   description: number
   tooth_numbers: number
   shade: number
+  material: number
+  units: number
+  tracking_ref: number
+  impression_method: number
   status: number
   sent_at: number
   due_at: number
+  try_in_at: number
   received_at: number
   fitted_at: number
+  remake_of_id: number
+  remake_reason: number
   cost: number
   notes: number
   created_at: number
@@ -135,6 +160,8 @@ export type Lab_ordersAvgAggregateInputType = {
   appointment_id?: true
   record_id?: true
   ordered_by?: true
+  units?: true
+  remake_of_id?: true
   cost?: true
 }
 
@@ -147,6 +174,8 @@ export type Lab_ordersSumAggregateInputType = {
   appointment_id?: true
   record_id?: true
   ordered_by?: true
+  units?: true
+  remake_of_id?: true
   cost?: true
 }
 
@@ -163,11 +192,18 @@ export type Lab_ordersMinAggregateInputType = {
   description?: true
   tooth_numbers?: true
   shade?: true
+  material?: true
+  units?: true
+  tracking_ref?: true
+  impression_method?: true
   status?: true
   sent_at?: true
   due_at?: true
+  try_in_at?: true
   received_at?: true
   fitted_at?: true
+  remake_of_id?: true
+  remake_reason?: true
   cost?: true
   notes?: true
   created_at?: true
@@ -187,11 +223,18 @@ export type Lab_ordersMaxAggregateInputType = {
   description?: true
   tooth_numbers?: true
   shade?: true
+  material?: true
+  units?: true
+  tracking_ref?: true
+  impression_method?: true
   status?: true
   sent_at?: true
   due_at?: true
+  try_in_at?: true
   received_at?: true
   fitted_at?: true
+  remake_of_id?: true
+  remake_reason?: true
   cost?: true
   notes?: true
   created_at?: true
@@ -211,11 +254,18 @@ export type Lab_ordersCountAggregateInputType = {
   description?: true
   tooth_numbers?: true
   shade?: true
+  material?: true
+  units?: true
+  tracking_ref?: true
+  impression_method?: true
   status?: true
   sent_at?: true
   due_at?: true
+  try_in_at?: true
   received_at?: true
   fitted_at?: true
+  remake_of_id?: true
+  remake_reason?: true
   cost?: true
   notes?: true
   created_at?: true
@@ -322,11 +372,18 @@ export type Lab_ordersGroupByOutputType = {
   description: string | null
   tooth_numbers: string | null
   shade: string | null
+  material: string | null
+  units: number | null
+  tracking_ref: string | null
+  impression_method: string | null
   status: string
   sent_at: Date | null
   due_at: Date | null
+  try_in_at: Date | null
   received_at: Date | null
   fitted_at: Date | null
+  remake_of_id: bigint | null
+  remake_reason: string | null
   cost: runtime.Decimal | null
   notes: string | null
   created_at: Date
@@ -369,11 +426,18 @@ export type lab_ordersWhereInput = {
   description?: Prisma.StringNullableFilter<"lab_orders"> | string | null
   tooth_numbers?: Prisma.StringNullableFilter<"lab_orders"> | string | null
   shade?: Prisma.StringNullableFilter<"lab_orders"> | string | null
+  material?: Prisma.StringNullableFilter<"lab_orders"> | string | null
+  units?: Prisma.IntNullableFilter<"lab_orders"> | number | null
+  tracking_ref?: Prisma.StringNullableFilter<"lab_orders"> | string | null
+  impression_method?: Prisma.StringNullableFilter<"lab_orders"> | string | null
   status?: Prisma.StringFilter<"lab_orders"> | string
   sent_at?: Prisma.DateTimeNullableFilter<"lab_orders"> | Date | string | null
   due_at?: Prisma.DateTimeNullableFilter<"lab_orders"> | Date | string | null
+  try_in_at?: Prisma.DateTimeNullableFilter<"lab_orders"> | Date | string | null
   received_at?: Prisma.DateTimeNullableFilter<"lab_orders"> | Date | string | null
   fitted_at?: Prisma.DateTimeNullableFilter<"lab_orders"> | Date | string | null
+  remake_of_id?: Prisma.BigIntNullableFilter<"lab_orders"> | bigint | number | null
+  remake_reason?: Prisma.StringNullableFilter<"lab_orders"> | string | null
   cost?: Prisma.DecimalNullableFilter<"lab_orders"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: Prisma.StringNullableFilter<"lab_orders"> | string | null
   created_at?: Prisma.DateTimeFilter<"lab_orders"> | Date | string
@@ -385,6 +449,8 @@ export type lab_ordersWhereInput = {
   appointment?: Prisma.XOR<Prisma.AppointmentsNullableScalarRelationFilter, Prisma.appointmentsWhereInput> | null
   record?: Prisma.XOR<Prisma.Patient_recordsNullableScalarRelationFilter, Prisma.patient_recordsWhereInput> | null
   orderer?: Prisma.XOR<Prisma.UsersNullableScalarRelationFilter, Prisma.usersWhereInput> | null
+  remake_of?: Prisma.XOR<Prisma.Lab_ordersNullableScalarRelationFilter, Prisma.lab_ordersWhereInput> | null
+  remakes?: Prisma.Lab_ordersListRelationFilter
 }
 
 export type lab_ordersOrderByWithRelationInput = {
@@ -400,11 +466,18 @@ export type lab_ordersOrderByWithRelationInput = {
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   tooth_numbers?: Prisma.SortOrderInput | Prisma.SortOrder
   shade?: Prisma.SortOrderInput | Prisma.SortOrder
+  material?: Prisma.SortOrderInput | Prisma.SortOrder
+  units?: Prisma.SortOrderInput | Prisma.SortOrder
+  tracking_ref?: Prisma.SortOrderInput | Prisma.SortOrder
+  impression_method?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   sent_at?: Prisma.SortOrderInput | Prisma.SortOrder
   due_at?: Prisma.SortOrderInput | Prisma.SortOrder
+  try_in_at?: Prisma.SortOrderInput | Prisma.SortOrder
   received_at?: Prisma.SortOrderInput | Prisma.SortOrder
   fitted_at?: Prisma.SortOrderInput | Prisma.SortOrder
+  remake_of_id?: Prisma.SortOrderInput | Prisma.SortOrder
+  remake_reason?: Prisma.SortOrderInput | Prisma.SortOrder
   cost?: Prisma.SortOrderInput | Prisma.SortOrder
   notes?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrder
@@ -416,6 +489,8 @@ export type lab_ordersOrderByWithRelationInput = {
   appointment?: Prisma.appointmentsOrderByWithRelationInput
   record?: Prisma.patient_recordsOrderByWithRelationInput
   orderer?: Prisma.usersOrderByWithRelationInput
+  remake_of?: Prisma.lab_ordersOrderByWithRelationInput
+  remakes?: Prisma.lab_ordersOrderByRelationAggregateInput
 }
 
 export type lab_ordersWhereUniqueInput = Prisma.AtLeast<{
@@ -434,11 +509,18 @@ export type lab_ordersWhereUniqueInput = Prisma.AtLeast<{
   description?: Prisma.StringNullableFilter<"lab_orders"> | string | null
   tooth_numbers?: Prisma.StringNullableFilter<"lab_orders"> | string | null
   shade?: Prisma.StringNullableFilter<"lab_orders"> | string | null
+  material?: Prisma.StringNullableFilter<"lab_orders"> | string | null
+  units?: Prisma.IntNullableFilter<"lab_orders"> | number | null
+  tracking_ref?: Prisma.StringNullableFilter<"lab_orders"> | string | null
+  impression_method?: Prisma.StringNullableFilter<"lab_orders"> | string | null
   status?: Prisma.StringFilter<"lab_orders"> | string
   sent_at?: Prisma.DateTimeNullableFilter<"lab_orders"> | Date | string | null
   due_at?: Prisma.DateTimeNullableFilter<"lab_orders"> | Date | string | null
+  try_in_at?: Prisma.DateTimeNullableFilter<"lab_orders"> | Date | string | null
   received_at?: Prisma.DateTimeNullableFilter<"lab_orders"> | Date | string | null
   fitted_at?: Prisma.DateTimeNullableFilter<"lab_orders"> | Date | string | null
+  remake_of_id?: Prisma.BigIntNullableFilter<"lab_orders"> | bigint | number | null
+  remake_reason?: Prisma.StringNullableFilter<"lab_orders"> | string | null
   cost?: Prisma.DecimalNullableFilter<"lab_orders"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: Prisma.StringNullableFilter<"lab_orders"> | string | null
   created_at?: Prisma.DateTimeFilter<"lab_orders"> | Date | string
@@ -450,6 +532,8 @@ export type lab_ordersWhereUniqueInput = Prisma.AtLeast<{
   appointment?: Prisma.XOR<Prisma.AppointmentsNullableScalarRelationFilter, Prisma.appointmentsWhereInput> | null
   record?: Prisma.XOR<Prisma.Patient_recordsNullableScalarRelationFilter, Prisma.patient_recordsWhereInput> | null
   orderer?: Prisma.XOR<Prisma.UsersNullableScalarRelationFilter, Prisma.usersWhereInput> | null
+  remake_of?: Prisma.XOR<Prisma.Lab_ordersNullableScalarRelationFilter, Prisma.lab_ordersWhereInput> | null
+  remakes?: Prisma.Lab_ordersListRelationFilter
 }, "id">
 
 export type lab_ordersOrderByWithAggregationInput = {
@@ -465,11 +549,18 @@ export type lab_ordersOrderByWithAggregationInput = {
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   tooth_numbers?: Prisma.SortOrderInput | Prisma.SortOrder
   shade?: Prisma.SortOrderInput | Prisma.SortOrder
+  material?: Prisma.SortOrderInput | Prisma.SortOrder
+  units?: Prisma.SortOrderInput | Prisma.SortOrder
+  tracking_ref?: Prisma.SortOrderInput | Prisma.SortOrder
+  impression_method?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   sent_at?: Prisma.SortOrderInput | Prisma.SortOrder
   due_at?: Prisma.SortOrderInput | Prisma.SortOrder
+  try_in_at?: Prisma.SortOrderInput | Prisma.SortOrder
   received_at?: Prisma.SortOrderInput | Prisma.SortOrder
   fitted_at?: Prisma.SortOrderInput | Prisma.SortOrder
+  remake_of_id?: Prisma.SortOrderInput | Prisma.SortOrder
+  remake_reason?: Prisma.SortOrderInput | Prisma.SortOrder
   cost?: Prisma.SortOrderInput | Prisma.SortOrder
   notes?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrder
@@ -497,11 +588,18 @@ export type lab_ordersScalarWhereWithAggregatesInput = {
   description?: Prisma.StringNullableWithAggregatesFilter<"lab_orders"> | string | null
   tooth_numbers?: Prisma.StringNullableWithAggregatesFilter<"lab_orders"> | string | null
   shade?: Prisma.StringNullableWithAggregatesFilter<"lab_orders"> | string | null
+  material?: Prisma.StringNullableWithAggregatesFilter<"lab_orders"> | string | null
+  units?: Prisma.IntNullableWithAggregatesFilter<"lab_orders"> | number | null
+  tracking_ref?: Prisma.StringNullableWithAggregatesFilter<"lab_orders"> | string | null
+  impression_method?: Prisma.StringNullableWithAggregatesFilter<"lab_orders"> | string | null
   status?: Prisma.StringWithAggregatesFilter<"lab_orders"> | string
   sent_at?: Prisma.DateTimeNullableWithAggregatesFilter<"lab_orders"> | Date | string | null
   due_at?: Prisma.DateTimeNullableWithAggregatesFilter<"lab_orders"> | Date | string | null
+  try_in_at?: Prisma.DateTimeNullableWithAggregatesFilter<"lab_orders"> | Date | string | null
   received_at?: Prisma.DateTimeNullableWithAggregatesFilter<"lab_orders"> | Date | string | null
   fitted_at?: Prisma.DateTimeNullableWithAggregatesFilter<"lab_orders"> | Date | string | null
+  remake_of_id?: Prisma.BigIntNullableWithAggregatesFilter<"lab_orders"> | bigint | number | null
+  remake_reason?: Prisma.StringNullableWithAggregatesFilter<"lab_orders"> | string | null
   cost?: Prisma.DecimalNullableWithAggregatesFilter<"lab_orders"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: Prisma.StringNullableWithAggregatesFilter<"lab_orders"> | string | null
   created_at?: Prisma.DateTimeWithAggregatesFilter<"lab_orders"> | Date | string
@@ -514,11 +612,17 @@ export type lab_ordersCreateInput = {
   description?: string | null
   tooth_numbers?: string | null
   shade?: string | null
+  material?: string | null
+  units?: number | null
+  tracking_ref?: string | null
+  impression_method?: string | null
   status?: string
   sent_at?: Date | string | null
   due_at?: Date | string | null
+  try_in_at?: Date | string | null
   received_at?: Date | string | null
   fitted_at?: Date | string | null
+  remake_reason?: string | null
   cost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: string | null
   created_at?: Date | string
@@ -530,6 +634,8 @@ export type lab_ordersCreateInput = {
   appointment?: Prisma.appointmentsCreateNestedOneWithoutLab_ordersInput
   record?: Prisma.patient_recordsCreateNestedOneWithoutLab_ordersInput
   orderer?: Prisma.usersCreateNestedOneWithoutLab_orders_orderedInput
+  remake_of?: Prisma.lab_ordersCreateNestedOneWithoutRemakesInput
+  remakes?: Prisma.lab_ordersCreateNestedManyWithoutRemake_ofInput
 }
 
 export type lab_ordersUncheckedCreateInput = {
@@ -545,15 +651,23 @@ export type lab_ordersUncheckedCreateInput = {
   description?: string | null
   tooth_numbers?: string | null
   shade?: string | null
+  material?: string | null
+  units?: number | null
+  tracking_ref?: string | null
+  impression_method?: string | null
   status?: string
   sent_at?: Date | string | null
   due_at?: Date | string | null
+  try_in_at?: Date | string | null
   received_at?: Date | string | null
   fitted_at?: Date | string | null
+  remake_of_id?: bigint | number | null
+  remake_reason?: string | null
   cost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
+  remakes?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutRemake_ofInput
 }
 
 export type lab_ordersUpdateInput = {
@@ -562,11 +676,17 @@ export type lab_ordersUpdateInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tooth_numbers?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   shade?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  material?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  units?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tracking_ref?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  impression_method?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   due_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  try_in_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   received_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   fitted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  remake_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -578,6 +698,8 @@ export type lab_ordersUpdateInput = {
   appointment?: Prisma.appointmentsUpdateOneWithoutLab_ordersNestedInput
   record?: Prisma.patient_recordsUpdateOneWithoutLab_ordersNestedInput
   orderer?: Prisma.usersUpdateOneWithoutLab_orders_orderedNestedInput
+  remake_of?: Prisma.lab_ordersUpdateOneWithoutRemakesNestedInput
+  remakes?: Prisma.lab_ordersUpdateManyWithoutRemake_ofNestedInput
 }
 
 export type lab_ordersUncheckedUpdateInput = {
@@ -593,15 +715,23 @@ export type lab_ordersUncheckedUpdateInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tooth_numbers?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   shade?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  material?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  units?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tracking_ref?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  impression_method?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   due_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  try_in_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   received_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   fitted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  remake_of_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  remake_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  remakes?: Prisma.lab_ordersUncheckedUpdateManyWithoutRemake_ofNestedInput
 }
 
 export type lab_ordersCreateManyInput = {
@@ -617,11 +747,18 @@ export type lab_ordersCreateManyInput = {
   description?: string | null
   tooth_numbers?: string | null
   shade?: string | null
+  material?: string | null
+  units?: number | null
+  tracking_ref?: string | null
+  impression_method?: string | null
   status?: string
   sent_at?: Date | string | null
   due_at?: Date | string | null
+  try_in_at?: Date | string | null
   received_at?: Date | string | null
   fitted_at?: Date | string | null
+  remake_of_id?: bigint | number | null
+  remake_reason?: string | null
   cost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: string | null
   created_at?: Date | string
@@ -634,11 +771,17 @@ export type lab_ordersUpdateManyMutationInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tooth_numbers?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   shade?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  material?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  units?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tracking_ref?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  impression_method?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   due_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  try_in_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   received_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   fitted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  remake_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -658,11 +801,18 @@ export type lab_ordersUncheckedUpdateManyInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tooth_numbers?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   shade?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  material?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  units?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tracking_ref?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  impression_method?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   due_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  try_in_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   received_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   fitted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  remake_of_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  remake_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -679,6 +829,11 @@ export type lab_ordersOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
 }
 
+export type Lab_ordersNullableScalarRelationFilter = {
+  is?: Prisma.lab_ordersWhereInput | null
+  isNot?: Prisma.lab_ordersWhereInput | null
+}
+
 export type lab_ordersCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   organization_id?: Prisma.SortOrder
@@ -692,11 +847,18 @@ export type lab_ordersCountOrderByAggregateInput = {
   description?: Prisma.SortOrder
   tooth_numbers?: Prisma.SortOrder
   shade?: Prisma.SortOrder
+  material?: Prisma.SortOrder
+  units?: Prisma.SortOrder
+  tracking_ref?: Prisma.SortOrder
+  impression_method?: Prisma.SortOrder
   status?: Prisma.SortOrder
   sent_at?: Prisma.SortOrder
   due_at?: Prisma.SortOrder
+  try_in_at?: Prisma.SortOrder
   received_at?: Prisma.SortOrder
   fitted_at?: Prisma.SortOrder
+  remake_of_id?: Prisma.SortOrder
+  remake_reason?: Prisma.SortOrder
   cost?: Prisma.SortOrder
   notes?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
@@ -712,6 +874,8 @@ export type lab_ordersAvgOrderByAggregateInput = {
   appointment_id?: Prisma.SortOrder
   record_id?: Prisma.SortOrder
   ordered_by?: Prisma.SortOrder
+  units?: Prisma.SortOrder
+  remake_of_id?: Prisma.SortOrder
   cost?: Prisma.SortOrder
 }
 
@@ -728,11 +892,18 @@ export type lab_ordersMaxOrderByAggregateInput = {
   description?: Prisma.SortOrder
   tooth_numbers?: Prisma.SortOrder
   shade?: Prisma.SortOrder
+  material?: Prisma.SortOrder
+  units?: Prisma.SortOrder
+  tracking_ref?: Prisma.SortOrder
+  impression_method?: Prisma.SortOrder
   status?: Prisma.SortOrder
   sent_at?: Prisma.SortOrder
   due_at?: Prisma.SortOrder
+  try_in_at?: Prisma.SortOrder
   received_at?: Prisma.SortOrder
   fitted_at?: Prisma.SortOrder
+  remake_of_id?: Prisma.SortOrder
+  remake_reason?: Prisma.SortOrder
   cost?: Prisma.SortOrder
   notes?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
@@ -752,11 +923,18 @@ export type lab_ordersMinOrderByAggregateInput = {
   description?: Prisma.SortOrder
   tooth_numbers?: Prisma.SortOrder
   shade?: Prisma.SortOrder
+  material?: Prisma.SortOrder
+  units?: Prisma.SortOrder
+  tracking_ref?: Prisma.SortOrder
+  impression_method?: Prisma.SortOrder
   status?: Prisma.SortOrder
   sent_at?: Prisma.SortOrder
   due_at?: Prisma.SortOrder
+  try_in_at?: Prisma.SortOrder
   received_at?: Prisma.SortOrder
   fitted_at?: Prisma.SortOrder
+  remake_of_id?: Prisma.SortOrder
+  remake_reason?: Prisma.SortOrder
   cost?: Prisma.SortOrder
   notes?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
@@ -772,6 +950,8 @@ export type lab_ordersSumOrderByAggregateInput = {
   appointment_id?: Prisma.SortOrder
   record_id?: Prisma.SortOrder
   ordered_by?: Prisma.SortOrder
+  units?: Prisma.SortOrder
+  remake_of_id?: Prisma.SortOrder
   cost?: Prisma.SortOrder
 }
 
@@ -1069,17 +1249,81 @@ export type lab_ordersUncheckedUpdateManyWithoutLabNestedInput = {
   deleteMany?: Prisma.lab_ordersScalarWhereInput | Prisma.lab_ordersScalarWhereInput[]
 }
 
+export type lab_ordersCreateNestedOneWithoutRemakesInput = {
+  create?: Prisma.XOR<Prisma.lab_ordersCreateWithoutRemakesInput, Prisma.lab_ordersUncheckedCreateWithoutRemakesInput>
+  connectOrCreate?: Prisma.lab_ordersCreateOrConnectWithoutRemakesInput
+  connect?: Prisma.lab_ordersWhereUniqueInput
+}
+
+export type lab_ordersCreateNestedManyWithoutRemake_ofInput = {
+  create?: Prisma.XOR<Prisma.lab_ordersCreateWithoutRemake_ofInput, Prisma.lab_ordersUncheckedCreateWithoutRemake_ofInput> | Prisma.lab_ordersCreateWithoutRemake_ofInput[] | Prisma.lab_ordersUncheckedCreateWithoutRemake_ofInput[]
+  connectOrCreate?: Prisma.lab_ordersCreateOrConnectWithoutRemake_ofInput | Prisma.lab_ordersCreateOrConnectWithoutRemake_ofInput[]
+  createMany?: Prisma.lab_ordersCreateManyRemake_ofInputEnvelope
+  connect?: Prisma.lab_ordersWhereUniqueInput | Prisma.lab_ordersWhereUniqueInput[]
+}
+
+export type lab_ordersUncheckedCreateNestedManyWithoutRemake_ofInput = {
+  create?: Prisma.XOR<Prisma.lab_ordersCreateWithoutRemake_ofInput, Prisma.lab_ordersUncheckedCreateWithoutRemake_ofInput> | Prisma.lab_ordersCreateWithoutRemake_ofInput[] | Prisma.lab_ordersUncheckedCreateWithoutRemake_ofInput[]
+  connectOrCreate?: Prisma.lab_ordersCreateOrConnectWithoutRemake_ofInput | Prisma.lab_ordersCreateOrConnectWithoutRemake_ofInput[]
+  createMany?: Prisma.lab_ordersCreateManyRemake_ofInputEnvelope
+  connect?: Prisma.lab_ordersWhereUniqueInput | Prisma.lab_ordersWhereUniqueInput[]
+}
+
+export type lab_ordersUpdateOneWithoutRemakesNestedInput = {
+  create?: Prisma.XOR<Prisma.lab_ordersCreateWithoutRemakesInput, Prisma.lab_ordersUncheckedCreateWithoutRemakesInput>
+  connectOrCreate?: Prisma.lab_ordersCreateOrConnectWithoutRemakesInput
+  upsert?: Prisma.lab_ordersUpsertWithoutRemakesInput
+  disconnect?: Prisma.lab_ordersWhereInput | boolean
+  delete?: Prisma.lab_ordersWhereInput | boolean
+  connect?: Prisma.lab_ordersWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.lab_ordersUpdateToOneWithWhereWithoutRemakesInput, Prisma.lab_ordersUpdateWithoutRemakesInput>, Prisma.lab_ordersUncheckedUpdateWithoutRemakesInput>
+}
+
+export type lab_ordersUpdateManyWithoutRemake_ofNestedInput = {
+  create?: Prisma.XOR<Prisma.lab_ordersCreateWithoutRemake_ofInput, Prisma.lab_ordersUncheckedCreateWithoutRemake_ofInput> | Prisma.lab_ordersCreateWithoutRemake_ofInput[] | Prisma.lab_ordersUncheckedCreateWithoutRemake_ofInput[]
+  connectOrCreate?: Prisma.lab_ordersCreateOrConnectWithoutRemake_ofInput | Prisma.lab_ordersCreateOrConnectWithoutRemake_ofInput[]
+  upsert?: Prisma.lab_ordersUpsertWithWhereUniqueWithoutRemake_ofInput | Prisma.lab_ordersUpsertWithWhereUniqueWithoutRemake_ofInput[]
+  createMany?: Prisma.lab_ordersCreateManyRemake_ofInputEnvelope
+  set?: Prisma.lab_ordersWhereUniqueInput | Prisma.lab_ordersWhereUniqueInput[]
+  disconnect?: Prisma.lab_ordersWhereUniqueInput | Prisma.lab_ordersWhereUniqueInput[]
+  delete?: Prisma.lab_ordersWhereUniqueInput | Prisma.lab_ordersWhereUniqueInput[]
+  connect?: Prisma.lab_ordersWhereUniqueInput | Prisma.lab_ordersWhereUniqueInput[]
+  update?: Prisma.lab_ordersUpdateWithWhereUniqueWithoutRemake_ofInput | Prisma.lab_ordersUpdateWithWhereUniqueWithoutRemake_ofInput[]
+  updateMany?: Prisma.lab_ordersUpdateManyWithWhereWithoutRemake_ofInput | Prisma.lab_ordersUpdateManyWithWhereWithoutRemake_ofInput[]
+  deleteMany?: Prisma.lab_ordersScalarWhereInput | Prisma.lab_ordersScalarWhereInput[]
+}
+
+export type lab_ordersUncheckedUpdateManyWithoutRemake_ofNestedInput = {
+  create?: Prisma.XOR<Prisma.lab_ordersCreateWithoutRemake_ofInput, Prisma.lab_ordersUncheckedCreateWithoutRemake_ofInput> | Prisma.lab_ordersCreateWithoutRemake_ofInput[] | Prisma.lab_ordersUncheckedCreateWithoutRemake_ofInput[]
+  connectOrCreate?: Prisma.lab_ordersCreateOrConnectWithoutRemake_ofInput | Prisma.lab_ordersCreateOrConnectWithoutRemake_ofInput[]
+  upsert?: Prisma.lab_ordersUpsertWithWhereUniqueWithoutRemake_ofInput | Prisma.lab_ordersUpsertWithWhereUniqueWithoutRemake_ofInput[]
+  createMany?: Prisma.lab_ordersCreateManyRemake_ofInputEnvelope
+  set?: Prisma.lab_ordersWhereUniqueInput | Prisma.lab_ordersWhereUniqueInput[]
+  disconnect?: Prisma.lab_ordersWhereUniqueInput | Prisma.lab_ordersWhereUniqueInput[]
+  delete?: Prisma.lab_ordersWhereUniqueInput | Prisma.lab_ordersWhereUniqueInput[]
+  connect?: Prisma.lab_ordersWhereUniqueInput | Prisma.lab_ordersWhereUniqueInput[]
+  update?: Prisma.lab_ordersUpdateWithWhereUniqueWithoutRemake_ofInput | Prisma.lab_ordersUpdateWithWhereUniqueWithoutRemake_ofInput[]
+  updateMany?: Prisma.lab_ordersUpdateManyWithWhereWithoutRemake_ofInput | Prisma.lab_ordersUpdateManyWithWhereWithoutRemake_ofInput[]
+  deleteMany?: Prisma.lab_ordersScalarWhereInput | Prisma.lab_ordersScalarWhereInput[]
+}
+
 export type lab_ordersCreateWithoutOrganizationInput = {
   id?: bigint | number
   work_type: string
   description?: string | null
   tooth_numbers?: string | null
   shade?: string | null
+  material?: string | null
+  units?: number | null
+  tracking_ref?: string | null
+  impression_method?: string | null
   status?: string
   sent_at?: Date | string | null
   due_at?: Date | string | null
+  try_in_at?: Date | string | null
   received_at?: Date | string | null
   fitted_at?: Date | string | null
+  remake_reason?: string | null
   cost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: string | null
   created_at?: Date | string
@@ -1090,6 +1334,8 @@ export type lab_ordersCreateWithoutOrganizationInput = {
   appointment?: Prisma.appointmentsCreateNestedOneWithoutLab_ordersInput
   record?: Prisma.patient_recordsCreateNestedOneWithoutLab_ordersInput
   orderer?: Prisma.usersCreateNestedOneWithoutLab_orders_orderedInput
+  remake_of?: Prisma.lab_ordersCreateNestedOneWithoutRemakesInput
+  remakes?: Prisma.lab_ordersCreateNestedManyWithoutRemake_ofInput
 }
 
 export type lab_ordersUncheckedCreateWithoutOrganizationInput = {
@@ -1104,15 +1350,23 @@ export type lab_ordersUncheckedCreateWithoutOrganizationInput = {
   description?: string | null
   tooth_numbers?: string | null
   shade?: string | null
+  material?: string | null
+  units?: number | null
+  tracking_ref?: string | null
+  impression_method?: string | null
   status?: string
   sent_at?: Date | string | null
   due_at?: Date | string | null
+  try_in_at?: Date | string | null
   received_at?: Date | string | null
   fitted_at?: Date | string | null
+  remake_of_id?: bigint | number | null
+  remake_reason?: string | null
   cost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
+  remakes?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutRemake_ofInput
 }
 
 export type lab_ordersCreateOrConnectWithoutOrganizationInput = {
@@ -1157,11 +1411,18 @@ export type lab_ordersScalarWhereInput = {
   description?: Prisma.StringNullableFilter<"lab_orders"> | string | null
   tooth_numbers?: Prisma.StringNullableFilter<"lab_orders"> | string | null
   shade?: Prisma.StringNullableFilter<"lab_orders"> | string | null
+  material?: Prisma.StringNullableFilter<"lab_orders"> | string | null
+  units?: Prisma.IntNullableFilter<"lab_orders"> | number | null
+  tracking_ref?: Prisma.StringNullableFilter<"lab_orders"> | string | null
+  impression_method?: Prisma.StringNullableFilter<"lab_orders"> | string | null
   status?: Prisma.StringFilter<"lab_orders"> | string
   sent_at?: Prisma.DateTimeNullableFilter<"lab_orders"> | Date | string | null
   due_at?: Prisma.DateTimeNullableFilter<"lab_orders"> | Date | string | null
+  try_in_at?: Prisma.DateTimeNullableFilter<"lab_orders"> | Date | string | null
   received_at?: Prisma.DateTimeNullableFilter<"lab_orders"> | Date | string | null
   fitted_at?: Prisma.DateTimeNullableFilter<"lab_orders"> | Date | string | null
+  remake_of_id?: Prisma.BigIntNullableFilter<"lab_orders"> | bigint | number | null
+  remake_reason?: Prisma.StringNullableFilter<"lab_orders"> | string | null
   cost?: Prisma.DecimalNullableFilter<"lab_orders"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: Prisma.StringNullableFilter<"lab_orders"> | string | null
   created_at?: Prisma.DateTimeFilter<"lab_orders"> | Date | string
@@ -1174,11 +1435,17 @@ export type lab_ordersCreateWithoutBranchInput = {
   description?: string | null
   tooth_numbers?: string | null
   shade?: string | null
+  material?: string | null
+  units?: number | null
+  tracking_ref?: string | null
+  impression_method?: string | null
   status?: string
   sent_at?: Date | string | null
   due_at?: Date | string | null
+  try_in_at?: Date | string | null
   received_at?: Date | string | null
   fitted_at?: Date | string | null
+  remake_reason?: string | null
   cost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: string | null
   created_at?: Date | string
@@ -1189,6 +1456,8 @@ export type lab_ordersCreateWithoutBranchInput = {
   appointment?: Prisma.appointmentsCreateNestedOneWithoutLab_ordersInput
   record?: Prisma.patient_recordsCreateNestedOneWithoutLab_ordersInput
   orderer?: Prisma.usersCreateNestedOneWithoutLab_orders_orderedInput
+  remake_of?: Prisma.lab_ordersCreateNestedOneWithoutRemakesInput
+  remakes?: Prisma.lab_ordersCreateNestedManyWithoutRemake_ofInput
 }
 
 export type lab_ordersUncheckedCreateWithoutBranchInput = {
@@ -1203,15 +1472,23 @@ export type lab_ordersUncheckedCreateWithoutBranchInput = {
   description?: string | null
   tooth_numbers?: string | null
   shade?: string | null
+  material?: string | null
+  units?: number | null
+  tracking_ref?: string | null
+  impression_method?: string | null
   status?: string
   sent_at?: Date | string | null
   due_at?: Date | string | null
+  try_in_at?: Date | string | null
   received_at?: Date | string | null
   fitted_at?: Date | string | null
+  remake_of_id?: bigint | number | null
+  remake_reason?: string | null
   cost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
+  remakes?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutRemake_ofInput
 }
 
 export type lab_ordersCreateOrConnectWithoutBranchInput = {
@@ -1246,11 +1523,17 @@ export type lab_ordersCreateWithoutAppointmentInput = {
   description?: string | null
   tooth_numbers?: string | null
   shade?: string | null
+  material?: string | null
+  units?: number | null
+  tracking_ref?: string | null
+  impression_method?: string | null
   status?: string
   sent_at?: Date | string | null
   due_at?: Date | string | null
+  try_in_at?: Date | string | null
   received_at?: Date | string | null
   fitted_at?: Date | string | null
+  remake_reason?: string | null
   cost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: string | null
   created_at?: Date | string
@@ -1261,6 +1544,8 @@ export type lab_ordersCreateWithoutAppointmentInput = {
   lab: Prisma.dental_labsCreateNestedOneWithoutLab_ordersInput
   record?: Prisma.patient_recordsCreateNestedOneWithoutLab_ordersInput
   orderer?: Prisma.usersCreateNestedOneWithoutLab_orders_orderedInput
+  remake_of?: Prisma.lab_ordersCreateNestedOneWithoutRemakesInput
+  remakes?: Prisma.lab_ordersCreateNestedManyWithoutRemake_ofInput
 }
 
 export type lab_ordersUncheckedCreateWithoutAppointmentInput = {
@@ -1275,15 +1560,23 @@ export type lab_ordersUncheckedCreateWithoutAppointmentInput = {
   description?: string | null
   tooth_numbers?: string | null
   shade?: string | null
+  material?: string | null
+  units?: number | null
+  tracking_ref?: string | null
+  impression_method?: string | null
   status?: string
   sent_at?: Date | string | null
   due_at?: Date | string | null
+  try_in_at?: Date | string | null
   received_at?: Date | string | null
   fitted_at?: Date | string | null
+  remake_of_id?: bigint | number | null
+  remake_reason?: string | null
   cost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
+  remakes?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutRemake_ofInput
 }
 
 export type lab_ordersCreateOrConnectWithoutAppointmentInput = {
@@ -1318,11 +1611,17 @@ export type lab_ordersCreateWithoutPatientInput = {
   description?: string | null
   tooth_numbers?: string | null
   shade?: string | null
+  material?: string | null
+  units?: number | null
+  tracking_ref?: string | null
+  impression_method?: string | null
   status?: string
   sent_at?: Date | string | null
   due_at?: Date | string | null
+  try_in_at?: Date | string | null
   received_at?: Date | string | null
   fitted_at?: Date | string | null
+  remake_reason?: string | null
   cost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: string | null
   created_at?: Date | string
@@ -1333,6 +1632,8 @@ export type lab_ordersCreateWithoutPatientInput = {
   appointment?: Prisma.appointmentsCreateNestedOneWithoutLab_ordersInput
   record?: Prisma.patient_recordsCreateNestedOneWithoutLab_ordersInput
   orderer?: Prisma.usersCreateNestedOneWithoutLab_orders_orderedInput
+  remake_of?: Prisma.lab_ordersCreateNestedOneWithoutRemakesInput
+  remakes?: Prisma.lab_ordersCreateNestedManyWithoutRemake_ofInput
 }
 
 export type lab_ordersUncheckedCreateWithoutPatientInput = {
@@ -1347,15 +1648,23 @@ export type lab_ordersUncheckedCreateWithoutPatientInput = {
   description?: string | null
   tooth_numbers?: string | null
   shade?: string | null
+  material?: string | null
+  units?: number | null
+  tracking_ref?: string | null
+  impression_method?: string | null
   status?: string
   sent_at?: Date | string | null
   due_at?: Date | string | null
+  try_in_at?: Date | string | null
   received_at?: Date | string | null
   fitted_at?: Date | string | null
+  remake_of_id?: bigint | number | null
+  remake_reason?: string | null
   cost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
+  remakes?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutRemake_ofInput
 }
 
 export type lab_ordersCreateOrConnectWithoutPatientInput = {
@@ -1390,11 +1699,17 @@ export type lab_ordersCreateWithoutRecordInput = {
   description?: string | null
   tooth_numbers?: string | null
   shade?: string | null
+  material?: string | null
+  units?: number | null
+  tracking_ref?: string | null
+  impression_method?: string | null
   status?: string
   sent_at?: Date | string | null
   due_at?: Date | string | null
+  try_in_at?: Date | string | null
   received_at?: Date | string | null
   fitted_at?: Date | string | null
+  remake_reason?: string | null
   cost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: string | null
   created_at?: Date | string
@@ -1405,6 +1720,8 @@ export type lab_ordersCreateWithoutRecordInput = {
   lab: Prisma.dental_labsCreateNestedOneWithoutLab_ordersInput
   appointment?: Prisma.appointmentsCreateNestedOneWithoutLab_ordersInput
   orderer?: Prisma.usersCreateNestedOneWithoutLab_orders_orderedInput
+  remake_of?: Prisma.lab_ordersCreateNestedOneWithoutRemakesInput
+  remakes?: Prisma.lab_ordersCreateNestedManyWithoutRemake_ofInput
 }
 
 export type lab_ordersUncheckedCreateWithoutRecordInput = {
@@ -1419,15 +1736,23 @@ export type lab_ordersUncheckedCreateWithoutRecordInput = {
   description?: string | null
   tooth_numbers?: string | null
   shade?: string | null
+  material?: string | null
+  units?: number | null
+  tracking_ref?: string | null
+  impression_method?: string | null
   status?: string
   sent_at?: Date | string | null
   due_at?: Date | string | null
+  try_in_at?: Date | string | null
   received_at?: Date | string | null
   fitted_at?: Date | string | null
+  remake_of_id?: bigint | number | null
+  remake_reason?: string | null
   cost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
+  remakes?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutRemake_ofInput
 }
 
 export type lab_ordersCreateOrConnectWithoutRecordInput = {
@@ -1462,11 +1787,17 @@ export type lab_ordersCreateWithoutOrdererInput = {
   description?: string | null
   tooth_numbers?: string | null
   shade?: string | null
+  material?: string | null
+  units?: number | null
+  tracking_ref?: string | null
+  impression_method?: string | null
   status?: string
   sent_at?: Date | string | null
   due_at?: Date | string | null
+  try_in_at?: Date | string | null
   received_at?: Date | string | null
   fitted_at?: Date | string | null
+  remake_reason?: string | null
   cost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: string | null
   created_at?: Date | string
@@ -1477,6 +1808,8 @@ export type lab_ordersCreateWithoutOrdererInput = {
   lab: Prisma.dental_labsCreateNestedOneWithoutLab_ordersInput
   appointment?: Prisma.appointmentsCreateNestedOneWithoutLab_ordersInput
   record?: Prisma.patient_recordsCreateNestedOneWithoutLab_ordersInput
+  remake_of?: Prisma.lab_ordersCreateNestedOneWithoutRemakesInput
+  remakes?: Prisma.lab_ordersCreateNestedManyWithoutRemake_ofInput
 }
 
 export type lab_ordersUncheckedCreateWithoutOrdererInput = {
@@ -1491,15 +1824,23 @@ export type lab_ordersUncheckedCreateWithoutOrdererInput = {
   description?: string | null
   tooth_numbers?: string | null
   shade?: string | null
+  material?: string | null
+  units?: number | null
+  tracking_ref?: string | null
+  impression_method?: string | null
   status?: string
   sent_at?: Date | string | null
   due_at?: Date | string | null
+  try_in_at?: Date | string | null
   received_at?: Date | string | null
   fitted_at?: Date | string | null
+  remake_of_id?: bigint | number | null
+  remake_reason?: string | null
   cost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
+  remakes?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutRemake_ofInput
 }
 
 export type lab_ordersCreateOrConnectWithoutOrdererInput = {
@@ -1534,11 +1875,17 @@ export type lab_ordersCreateWithoutLabInput = {
   description?: string | null
   tooth_numbers?: string | null
   shade?: string | null
+  material?: string | null
+  units?: number | null
+  tracking_ref?: string | null
+  impression_method?: string | null
   status?: string
   sent_at?: Date | string | null
   due_at?: Date | string | null
+  try_in_at?: Date | string | null
   received_at?: Date | string | null
   fitted_at?: Date | string | null
+  remake_reason?: string | null
   cost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: string | null
   created_at?: Date | string
@@ -1549,6 +1896,8 @@ export type lab_ordersCreateWithoutLabInput = {
   appointment?: Prisma.appointmentsCreateNestedOneWithoutLab_ordersInput
   record?: Prisma.patient_recordsCreateNestedOneWithoutLab_ordersInput
   orderer?: Prisma.usersCreateNestedOneWithoutLab_orders_orderedInput
+  remake_of?: Prisma.lab_ordersCreateNestedOneWithoutRemakesInput
+  remakes?: Prisma.lab_ordersCreateNestedManyWithoutRemake_ofInput
 }
 
 export type lab_ordersUncheckedCreateWithoutLabInput = {
@@ -1563,15 +1912,23 @@ export type lab_ordersUncheckedCreateWithoutLabInput = {
   description?: string | null
   tooth_numbers?: string | null
   shade?: string | null
+  material?: string | null
+  units?: number | null
+  tracking_ref?: string | null
+  impression_method?: string | null
   status?: string
   sent_at?: Date | string | null
   due_at?: Date | string | null
+  try_in_at?: Date | string | null
   received_at?: Date | string | null
   fitted_at?: Date | string | null
+  remake_of_id?: bigint | number | null
+  remake_reason?: string | null
   cost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: string | null
   created_at?: Date | string
   updated_at?: Date | string
+  remakes?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutRemake_ofInput
 }
 
 export type lab_ordersCreateOrConnectWithoutLabInput = {
@@ -1600,6 +1957,234 @@ export type lab_ordersUpdateManyWithWhereWithoutLabInput = {
   data: Prisma.XOR<Prisma.lab_ordersUpdateManyMutationInput, Prisma.lab_ordersUncheckedUpdateManyWithoutLabInput>
 }
 
+export type lab_ordersCreateWithoutRemakesInput = {
+  id?: bigint | number
+  work_type: string
+  description?: string | null
+  tooth_numbers?: string | null
+  shade?: string | null
+  material?: string | null
+  units?: number | null
+  tracking_ref?: string | null
+  impression_method?: string | null
+  status?: string
+  sent_at?: Date | string | null
+  due_at?: Date | string | null
+  try_in_at?: Date | string | null
+  received_at?: Date | string | null
+  fitted_at?: Date | string | null
+  remake_reason?: string | null
+  cost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  notes?: string | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  organization?: Prisma.organizationsCreateNestedOneWithoutLab_ordersInput
+  branch?: Prisma.branchesCreateNestedOneWithoutLab_ordersInput
+  patient: Prisma.patient_profilesCreateNestedOneWithoutLab_ordersInput
+  lab: Prisma.dental_labsCreateNestedOneWithoutLab_ordersInput
+  appointment?: Prisma.appointmentsCreateNestedOneWithoutLab_ordersInput
+  record?: Prisma.patient_recordsCreateNestedOneWithoutLab_ordersInput
+  orderer?: Prisma.usersCreateNestedOneWithoutLab_orders_orderedInput
+  remake_of?: Prisma.lab_ordersCreateNestedOneWithoutRemakesInput
+}
+
+export type lab_ordersUncheckedCreateWithoutRemakesInput = {
+  id?: bigint | number
+  organization_id?: bigint | number
+  branch_id?: bigint | number | null
+  patient_id: bigint | number
+  lab_id: bigint | number
+  appointment_id?: bigint | number | null
+  record_id?: bigint | number | null
+  ordered_by?: bigint | number | null
+  work_type: string
+  description?: string | null
+  tooth_numbers?: string | null
+  shade?: string | null
+  material?: string | null
+  units?: number | null
+  tracking_ref?: string | null
+  impression_method?: string | null
+  status?: string
+  sent_at?: Date | string | null
+  due_at?: Date | string | null
+  try_in_at?: Date | string | null
+  received_at?: Date | string | null
+  fitted_at?: Date | string | null
+  remake_of_id?: bigint | number | null
+  remake_reason?: string | null
+  cost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  notes?: string | null
+  created_at?: Date | string
+  updated_at?: Date | string
+}
+
+export type lab_ordersCreateOrConnectWithoutRemakesInput = {
+  where: Prisma.lab_ordersWhereUniqueInput
+  create: Prisma.XOR<Prisma.lab_ordersCreateWithoutRemakesInput, Prisma.lab_ordersUncheckedCreateWithoutRemakesInput>
+}
+
+export type lab_ordersCreateWithoutRemake_ofInput = {
+  id?: bigint | number
+  work_type: string
+  description?: string | null
+  tooth_numbers?: string | null
+  shade?: string | null
+  material?: string | null
+  units?: number | null
+  tracking_ref?: string | null
+  impression_method?: string | null
+  status?: string
+  sent_at?: Date | string | null
+  due_at?: Date | string | null
+  try_in_at?: Date | string | null
+  received_at?: Date | string | null
+  fitted_at?: Date | string | null
+  remake_reason?: string | null
+  cost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  notes?: string | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  organization?: Prisma.organizationsCreateNestedOneWithoutLab_ordersInput
+  branch?: Prisma.branchesCreateNestedOneWithoutLab_ordersInput
+  patient: Prisma.patient_profilesCreateNestedOneWithoutLab_ordersInput
+  lab: Prisma.dental_labsCreateNestedOneWithoutLab_ordersInput
+  appointment?: Prisma.appointmentsCreateNestedOneWithoutLab_ordersInput
+  record?: Prisma.patient_recordsCreateNestedOneWithoutLab_ordersInput
+  orderer?: Prisma.usersCreateNestedOneWithoutLab_orders_orderedInput
+  remakes?: Prisma.lab_ordersCreateNestedManyWithoutRemake_ofInput
+}
+
+export type lab_ordersUncheckedCreateWithoutRemake_ofInput = {
+  id?: bigint | number
+  organization_id?: bigint | number
+  branch_id?: bigint | number | null
+  patient_id: bigint | number
+  lab_id: bigint | number
+  appointment_id?: bigint | number | null
+  record_id?: bigint | number | null
+  ordered_by?: bigint | number | null
+  work_type: string
+  description?: string | null
+  tooth_numbers?: string | null
+  shade?: string | null
+  material?: string | null
+  units?: number | null
+  tracking_ref?: string | null
+  impression_method?: string | null
+  status?: string
+  sent_at?: Date | string | null
+  due_at?: Date | string | null
+  try_in_at?: Date | string | null
+  received_at?: Date | string | null
+  fitted_at?: Date | string | null
+  remake_reason?: string | null
+  cost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  notes?: string | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  remakes?: Prisma.lab_ordersUncheckedCreateNestedManyWithoutRemake_ofInput
+}
+
+export type lab_ordersCreateOrConnectWithoutRemake_ofInput = {
+  where: Prisma.lab_ordersWhereUniqueInput
+  create: Prisma.XOR<Prisma.lab_ordersCreateWithoutRemake_ofInput, Prisma.lab_ordersUncheckedCreateWithoutRemake_ofInput>
+}
+
+export type lab_ordersCreateManyRemake_ofInputEnvelope = {
+  data: Prisma.lab_ordersCreateManyRemake_ofInput | Prisma.lab_ordersCreateManyRemake_ofInput[]
+  skipDuplicates?: boolean
+}
+
+export type lab_ordersUpsertWithoutRemakesInput = {
+  update: Prisma.XOR<Prisma.lab_ordersUpdateWithoutRemakesInput, Prisma.lab_ordersUncheckedUpdateWithoutRemakesInput>
+  create: Prisma.XOR<Prisma.lab_ordersCreateWithoutRemakesInput, Prisma.lab_ordersUncheckedCreateWithoutRemakesInput>
+  where?: Prisma.lab_ordersWhereInput
+}
+
+export type lab_ordersUpdateToOneWithWhereWithoutRemakesInput = {
+  where?: Prisma.lab_ordersWhereInput
+  data: Prisma.XOR<Prisma.lab_ordersUpdateWithoutRemakesInput, Prisma.lab_ordersUncheckedUpdateWithoutRemakesInput>
+}
+
+export type lab_ordersUpdateWithoutRemakesInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  work_type?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tooth_numbers?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shade?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  material?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  units?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tracking_ref?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  impression_method?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  due_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  try_in_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  received_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  fitted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  remake_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  organization?: Prisma.organizationsUpdateOneRequiredWithoutLab_ordersNestedInput
+  branch?: Prisma.branchesUpdateOneWithoutLab_ordersNestedInput
+  patient?: Prisma.patient_profilesUpdateOneRequiredWithoutLab_ordersNestedInput
+  lab?: Prisma.dental_labsUpdateOneRequiredWithoutLab_ordersNestedInput
+  appointment?: Prisma.appointmentsUpdateOneWithoutLab_ordersNestedInput
+  record?: Prisma.patient_recordsUpdateOneWithoutLab_ordersNestedInput
+  orderer?: Prisma.usersUpdateOneWithoutLab_orders_orderedNestedInput
+  remake_of?: Prisma.lab_ordersUpdateOneWithoutRemakesNestedInput
+}
+
+export type lab_ordersUncheckedUpdateWithoutRemakesInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  branch_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  lab_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  appointment_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  record_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  ordered_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  work_type?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tooth_numbers?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shade?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  material?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  units?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tracking_ref?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  impression_method?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  due_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  try_in_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  received_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  fitted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  remake_of_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  remake_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type lab_ordersUpsertWithWhereUniqueWithoutRemake_ofInput = {
+  where: Prisma.lab_ordersWhereUniqueInput
+  update: Prisma.XOR<Prisma.lab_ordersUpdateWithoutRemake_ofInput, Prisma.lab_ordersUncheckedUpdateWithoutRemake_ofInput>
+  create: Prisma.XOR<Prisma.lab_ordersCreateWithoutRemake_ofInput, Prisma.lab_ordersUncheckedCreateWithoutRemake_ofInput>
+}
+
+export type lab_ordersUpdateWithWhereUniqueWithoutRemake_ofInput = {
+  where: Prisma.lab_ordersWhereUniqueInput
+  data: Prisma.XOR<Prisma.lab_ordersUpdateWithoutRemake_ofInput, Prisma.lab_ordersUncheckedUpdateWithoutRemake_ofInput>
+}
+
+export type lab_ordersUpdateManyWithWhereWithoutRemake_ofInput = {
+  where: Prisma.lab_ordersScalarWhereInput
+  data: Prisma.XOR<Prisma.lab_ordersUpdateManyMutationInput, Prisma.lab_ordersUncheckedUpdateManyWithoutRemake_ofInput>
+}
+
 export type lab_ordersCreateManyOrganizationInput = {
   id?: bigint | number
   branch_id?: bigint | number | null
@@ -1612,11 +2197,18 @@ export type lab_ordersCreateManyOrganizationInput = {
   description?: string | null
   tooth_numbers?: string | null
   shade?: string | null
+  material?: string | null
+  units?: number | null
+  tracking_ref?: string | null
+  impression_method?: string | null
   status?: string
   sent_at?: Date | string | null
   due_at?: Date | string | null
+  try_in_at?: Date | string | null
   received_at?: Date | string | null
   fitted_at?: Date | string | null
+  remake_of_id?: bigint | number | null
+  remake_reason?: string | null
   cost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: string | null
   created_at?: Date | string
@@ -1629,11 +2221,17 @@ export type lab_ordersUpdateWithoutOrganizationInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tooth_numbers?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   shade?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  material?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  units?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tracking_ref?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  impression_method?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   due_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  try_in_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   received_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   fitted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  remake_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1644,6 +2242,8 @@ export type lab_ordersUpdateWithoutOrganizationInput = {
   appointment?: Prisma.appointmentsUpdateOneWithoutLab_ordersNestedInput
   record?: Prisma.patient_recordsUpdateOneWithoutLab_ordersNestedInput
   orderer?: Prisma.usersUpdateOneWithoutLab_orders_orderedNestedInput
+  remake_of?: Prisma.lab_ordersUpdateOneWithoutRemakesNestedInput
+  remakes?: Prisma.lab_ordersUpdateManyWithoutRemake_ofNestedInput
 }
 
 export type lab_ordersUncheckedUpdateWithoutOrganizationInput = {
@@ -1658,15 +2258,23 @@ export type lab_ordersUncheckedUpdateWithoutOrganizationInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tooth_numbers?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   shade?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  material?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  units?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tracking_ref?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  impression_method?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   due_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  try_in_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   received_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   fitted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  remake_of_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  remake_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  remakes?: Prisma.lab_ordersUncheckedUpdateManyWithoutRemake_ofNestedInput
 }
 
 export type lab_ordersUncheckedUpdateManyWithoutOrganizationInput = {
@@ -1681,11 +2289,18 @@ export type lab_ordersUncheckedUpdateManyWithoutOrganizationInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tooth_numbers?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   shade?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  material?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  units?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tracking_ref?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  impression_method?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   due_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  try_in_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   received_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   fitted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  remake_of_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  remake_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1704,11 +2319,18 @@ export type lab_ordersCreateManyBranchInput = {
   description?: string | null
   tooth_numbers?: string | null
   shade?: string | null
+  material?: string | null
+  units?: number | null
+  tracking_ref?: string | null
+  impression_method?: string | null
   status?: string
   sent_at?: Date | string | null
   due_at?: Date | string | null
+  try_in_at?: Date | string | null
   received_at?: Date | string | null
   fitted_at?: Date | string | null
+  remake_of_id?: bigint | number | null
+  remake_reason?: string | null
   cost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: string | null
   created_at?: Date | string
@@ -1721,11 +2343,17 @@ export type lab_ordersUpdateWithoutBranchInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tooth_numbers?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   shade?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  material?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  units?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tracking_ref?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  impression_method?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   due_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  try_in_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   received_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   fitted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  remake_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1736,6 +2364,8 @@ export type lab_ordersUpdateWithoutBranchInput = {
   appointment?: Prisma.appointmentsUpdateOneWithoutLab_ordersNestedInput
   record?: Prisma.patient_recordsUpdateOneWithoutLab_ordersNestedInput
   orderer?: Prisma.usersUpdateOneWithoutLab_orders_orderedNestedInput
+  remake_of?: Prisma.lab_ordersUpdateOneWithoutRemakesNestedInput
+  remakes?: Prisma.lab_ordersUpdateManyWithoutRemake_ofNestedInput
 }
 
 export type lab_ordersUncheckedUpdateWithoutBranchInput = {
@@ -1750,15 +2380,23 @@ export type lab_ordersUncheckedUpdateWithoutBranchInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tooth_numbers?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   shade?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  material?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  units?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tracking_ref?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  impression_method?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   due_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  try_in_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   received_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   fitted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  remake_of_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  remake_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  remakes?: Prisma.lab_ordersUncheckedUpdateManyWithoutRemake_ofNestedInput
 }
 
 export type lab_ordersUncheckedUpdateManyWithoutBranchInput = {
@@ -1773,11 +2411,18 @@ export type lab_ordersUncheckedUpdateManyWithoutBranchInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tooth_numbers?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   shade?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  material?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  units?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tracking_ref?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  impression_method?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   due_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  try_in_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   received_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   fitted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  remake_of_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  remake_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1796,11 +2441,18 @@ export type lab_ordersCreateManyAppointmentInput = {
   description?: string | null
   tooth_numbers?: string | null
   shade?: string | null
+  material?: string | null
+  units?: number | null
+  tracking_ref?: string | null
+  impression_method?: string | null
   status?: string
   sent_at?: Date | string | null
   due_at?: Date | string | null
+  try_in_at?: Date | string | null
   received_at?: Date | string | null
   fitted_at?: Date | string | null
+  remake_of_id?: bigint | number | null
+  remake_reason?: string | null
   cost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: string | null
   created_at?: Date | string
@@ -1813,11 +2465,17 @@ export type lab_ordersUpdateWithoutAppointmentInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tooth_numbers?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   shade?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  material?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  units?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tracking_ref?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  impression_method?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   due_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  try_in_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   received_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   fitted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  remake_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1828,6 +2486,8 @@ export type lab_ordersUpdateWithoutAppointmentInput = {
   lab?: Prisma.dental_labsUpdateOneRequiredWithoutLab_ordersNestedInput
   record?: Prisma.patient_recordsUpdateOneWithoutLab_ordersNestedInput
   orderer?: Prisma.usersUpdateOneWithoutLab_orders_orderedNestedInput
+  remake_of?: Prisma.lab_ordersUpdateOneWithoutRemakesNestedInput
+  remakes?: Prisma.lab_ordersUpdateManyWithoutRemake_ofNestedInput
 }
 
 export type lab_ordersUncheckedUpdateWithoutAppointmentInput = {
@@ -1842,15 +2502,23 @@ export type lab_ordersUncheckedUpdateWithoutAppointmentInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tooth_numbers?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   shade?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  material?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  units?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tracking_ref?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  impression_method?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   due_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  try_in_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   received_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   fitted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  remake_of_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  remake_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  remakes?: Prisma.lab_ordersUncheckedUpdateManyWithoutRemake_ofNestedInput
 }
 
 export type lab_ordersUncheckedUpdateManyWithoutAppointmentInput = {
@@ -1865,11 +2533,18 @@ export type lab_ordersUncheckedUpdateManyWithoutAppointmentInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tooth_numbers?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   shade?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  material?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  units?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tracking_ref?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  impression_method?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   due_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  try_in_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   received_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   fitted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  remake_of_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  remake_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1888,11 +2563,18 @@ export type lab_ordersCreateManyPatientInput = {
   description?: string | null
   tooth_numbers?: string | null
   shade?: string | null
+  material?: string | null
+  units?: number | null
+  tracking_ref?: string | null
+  impression_method?: string | null
   status?: string
   sent_at?: Date | string | null
   due_at?: Date | string | null
+  try_in_at?: Date | string | null
   received_at?: Date | string | null
   fitted_at?: Date | string | null
+  remake_of_id?: bigint | number | null
+  remake_reason?: string | null
   cost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: string | null
   created_at?: Date | string
@@ -1905,11 +2587,17 @@ export type lab_ordersUpdateWithoutPatientInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tooth_numbers?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   shade?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  material?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  units?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tracking_ref?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  impression_method?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   due_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  try_in_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   received_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   fitted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  remake_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1920,6 +2608,8 @@ export type lab_ordersUpdateWithoutPatientInput = {
   appointment?: Prisma.appointmentsUpdateOneWithoutLab_ordersNestedInput
   record?: Prisma.patient_recordsUpdateOneWithoutLab_ordersNestedInput
   orderer?: Prisma.usersUpdateOneWithoutLab_orders_orderedNestedInput
+  remake_of?: Prisma.lab_ordersUpdateOneWithoutRemakesNestedInput
+  remakes?: Prisma.lab_ordersUpdateManyWithoutRemake_ofNestedInput
 }
 
 export type lab_ordersUncheckedUpdateWithoutPatientInput = {
@@ -1934,15 +2624,23 @@ export type lab_ordersUncheckedUpdateWithoutPatientInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tooth_numbers?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   shade?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  material?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  units?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tracking_ref?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  impression_method?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   due_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  try_in_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   received_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   fitted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  remake_of_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  remake_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  remakes?: Prisma.lab_ordersUncheckedUpdateManyWithoutRemake_ofNestedInput
 }
 
 export type lab_ordersUncheckedUpdateManyWithoutPatientInput = {
@@ -1957,11 +2655,18 @@ export type lab_ordersUncheckedUpdateManyWithoutPatientInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tooth_numbers?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   shade?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  material?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  units?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tracking_ref?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  impression_method?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   due_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  try_in_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   received_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   fitted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  remake_of_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  remake_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1980,11 +2685,18 @@ export type lab_ordersCreateManyRecordInput = {
   description?: string | null
   tooth_numbers?: string | null
   shade?: string | null
+  material?: string | null
+  units?: number | null
+  tracking_ref?: string | null
+  impression_method?: string | null
   status?: string
   sent_at?: Date | string | null
   due_at?: Date | string | null
+  try_in_at?: Date | string | null
   received_at?: Date | string | null
   fitted_at?: Date | string | null
+  remake_of_id?: bigint | number | null
+  remake_reason?: string | null
   cost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: string | null
   created_at?: Date | string
@@ -1997,11 +2709,17 @@ export type lab_ordersUpdateWithoutRecordInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tooth_numbers?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   shade?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  material?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  units?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tracking_ref?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  impression_method?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   due_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  try_in_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   received_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   fitted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  remake_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2012,6 +2730,8 @@ export type lab_ordersUpdateWithoutRecordInput = {
   lab?: Prisma.dental_labsUpdateOneRequiredWithoutLab_ordersNestedInput
   appointment?: Prisma.appointmentsUpdateOneWithoutLab_ordersNestedInput
   orderer?: Prisma.usersUpdateOneWithoutLab_orders_orderedNestedInput
+  remake_of?: Prisma.lab_ordersUpdateOneWithoutRemakesNestedInput
+  remakes?: Prisma.lab_ordersUpdateManyWithoutRemake_ofNestedInput
 }
 
 export type lab_ordersUncheckedUpdateWithoutRecordInput = {
@@ -2026,15 +2746,23 @@ export type lab_ordersUncheckedUpdateWithoutRecordInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tooth_numbers?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   shade?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  material?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  units?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tracking_ref?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  impression_method?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   due_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  try_in_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   received_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   fitted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  remake_of_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  remake_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  remakes?: Prisma.lab_ordersUncheckedUpdateManyWithoutRemake_ofNestedInput
 }
 
 export type lab_ordersUncheckedUpdateManyWithoutRecordInput = {
@@ -2049,11 +2777,18 @@ export type lab_ordersUncheckedUpdateManyWithoutRecordInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tooth_numbers?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   shade?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  material?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  units?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tracking_ref?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  impression_method?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   due_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  try_in_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   received_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   fitted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  remake_of_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  remake_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2072,11 +2807,18 @@ export type lab_ordersCreateManyOrdererInput = {
   description?: string | null
   tooth_numbers?: string | null
   shade?: string | null
+  material?: string | null
+  units?: number | null
+  tracking_ref?: string | null
+  impression_method?: string | null
   status?: string
   sent_at?: Date | string | null
   due_at?: Date | string | null
+  try_in_at?: Date | string | null
   received_at?: Date | string | null
   fitted_at?: Date | string | null
+  remake_of_id?: bigint | number | null
+  remake_reason?: string | null
   cost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: string | null
   created_at?: Date | string
@@ -2089,11 +2831,17 @@ export type lab_ordersUpdateWithoutOrdererInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tooth_numbers?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   shade?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  material?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  units?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tracking_ref?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  impression_method?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   due_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  try_in_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   received_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   fitted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  remake_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2104,6 +2852,8 @@ export type lab_ordersUpdateWithoutOrdererInput = {
   lab?: Prisma.dental_labsUpdateOneRequiredWithoutLab_ordersNestedInput
   appointment?: Prisma.appointmentsUpdateOneWithoutLab_ordersNestedInput
   record?: Prisma.patient_recordsUpdateOneWithoutLab_ordersNestedInput
+  remake_of?: Prisma.lab_ordersUpdateOneWithoutRemakesNestedInput
+  remakes?: Prisma.lab_ordersUpdateManyWithoutRemake_ofNestedInput
 }
 
 export type lab_ordersUncheckedUpdateWithoutOrdererInput = {
@@ -2118,15 +2868,23 @@ export type lab_ordersUncheckedUpdateWithoutOrdererInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tooth_numbers?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   shade?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  material?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  units?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tracking_ref?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  impression_method?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   due_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  try_in_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   received_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   fitted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  remake_of_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  remake_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  remakes?: Prisma.lab_ordersUncheckedUpdateManyWithoutRemake_ofNestedInput
 }
 
 export type lab_ordersUncheckedUpdateManyWithoutOrdererInput = {
@@ -2141,11 +2899,18 @@ export type lab_ordersUncheckedUpdateManyWithoutOrdererInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tooth_numbers?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   shade?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  material?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  units?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tracking_ref?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  impression_method?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   due_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  try_in_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   received_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   fitted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  remake_of_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  remake_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2164,11 +2929,18 @@ export type lab_ordersCreateManyLabInput = {
   description?: string | null
   tooth_numbers?: string | null
   shade?: string | null
+  material?: string | null
+  units?: number | null
+  tracking_ref?: string | null
+  impression_method?: string | null
   status?: string
   sent_at?: Date | string | null
   due_at?: Date | string | null
+  try_in_at?: Date | string | null
   received_at?: Date | string | null
   fitted_at?: Date | string | null
+  remake_of_id?: bigint | number | null
+  remake_reason?: string | null
   cost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: string | null
   created_at?: Date | string
@@ -2181,11 +2953,17 @@ export type lab_ordersUpdateWithoutLabInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tooth_numbers?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   shade?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  material?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  units?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tracking_ref?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  impression_method?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   due_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  try_in_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   received_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   fitted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  remake_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2196,6 +2974,8 @@ export type lab_ordersUpdateWithoutLabInput = {
   appointment?: Prisma.appointmentsUpdateOneWithoutLab_ordersNestedInput
   record?: Prisma.patient_recordsUpdateOneWithoutLab_ordersNestedInput
   orderer?: Prisma.usersUpdateOneWithoutLab_orders_orderedNestedInput
+  remake_of?: Prisma.lab_ordersUpdateOneWithoutRemakesNestedInput
+  remakes?: Prisma.lab_ordersUpdateManyWithoutRemake_ofNestedInput
 }
 
 export type lab_ordersUncheckedUpdateWithoutLabInput = {
@@ -2210,15 +2990,23 @@ export type lab_ordersUncheckedUpdateWithoutLabInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tooth_numbers?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   shade?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  material?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  units?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tracking_ref?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  impression_method?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   due_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  try_in_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   received_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   fitted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  remake_of_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  remake_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  remakes?: Prisma.lab_ordersUncheckedUpdateManyWithoutRemake_ofNestedInput
 }
 
 export type lab_ordersUncheckedUpdateManyWithoutLabInput = {
@@ -2233,17 +3021,175 @@ export type lab_ordersUncheckedUpdateManyWithoutLabInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tooth_numbers?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   shade?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  material?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  units?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tracking_ref?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  impression_method?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   due_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  try_in_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   received_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   fitted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  remake_of_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  remake_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
+export type lab_ordersCreateManyRemake_ofInput = {
+  id?: bigint | number
+  organization_id?: bigint | number
+  branch_id?: bigint | number | null
+  patient_id: bigint | number
+  lab_id: bigint | number
+  appointment_id?: bigint | number | null
+  record_id?: bigint | number | null
+  ordered_by?: bigint | number | null
+  work_type: string
+  description?: string | null
+  tooth_numbers?: string | null
+  shade?: string | null
+  material?: string | null
+  units?: number | null
+  tracking_ref?: string | null
+  impression_method?: string | null
+  status?: string
+  sent_at?: Date | string | null
+  due_at?: Date | string | null
+  try_in_at?: Date | string | null
+  received_at?: Date | string | null
+  fitted_at?: Date | string | null
+  remake_reason?: string | null
+  cost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  notes?: string | null
+  created_at?: Date | string
+  updated_at?: Date | string
+}
+
+export type lab_ordersUpdateWithoutRemake_ofInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  work_type?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tooth_numbers?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shade?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  material?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  units?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tracking_ref?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  impression_method?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  due_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  try_in_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  received_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  fitted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  remake_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  organization?: Prisma.organizationsUpdateOneRequiredWithoutLab_ordersNestedInput
+  branch?: Prisma.branchesUpdateOneWithoutLab_ordersNestedInput
+  patient?: Prisma.patient_profilesUpdateOneRequiredWithoutLab_ordersNestedInput
+  lab?: Prisma.dental_labsUpdateOneRequiredWithoutLab_ordersNestedInput
+  appointment?: Prisma.appointmentsUpdateOneWithoutLab_ordersNestedInput
+  record?: Prisma.patient_recordsUpdateOneWithoutLab_ordersNestedInput
+  orderer?: Prisma.usersUpdateOneWithoutLab_orders_orderedNestedInput
+  remakes?: Prisma.lab_ordersUpdateManyWithoutRemake_ofNestedInput
+}
+
+export type lab_ordersUncheckedUpdateWithoutRemake_ofInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  branch_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  lab_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  appointment_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  record_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  ordered_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  work_type?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tooth_numbers?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shade?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  material?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  units?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tracking_ref?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  impression_method?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  due_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  try_in_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  received_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  fitted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  remake_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  remakes?: Prisma.lab_ordersUncheckedUpdateManyWithoutRemake_ofNestedInput
+}
+
+export type lab_ordersUncheckedUpdateManyWithoutRemake_ofInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  branch_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  lab_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  appointment_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  record_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  ordered_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  work_type?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tooth_numbers?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shade?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  material?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  units?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tracking_ref?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  impression_method?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  due_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  try_in_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  received_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  fitted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  remake_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cost?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+
+/**
+ * Count Type Lab_ordersCountOutputType
+ */
+
+export type Lab_ordersCountOutputType = {
+  remakes: number
+}
+
+export type Lab_ordersCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  remakes?: boolean | Lab_ordersCountOutputTypeCountRemakesArgs
+}
+
+/**
+ * Lab_ordersCountOutputType without action
+ */
+export type Lab_ordersCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Lab_ordersCountOutputType
+   */
+  select?: Prisma.Lab_ordersCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * Lab_ordersCountOutputType without action
+ */
+export type Lab_ordersCountOutputTypeCountRemakesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.lab_ordersWhereInput
+}
 
 
 export type lab_ordersSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -2259,11 +3205,18 @@ export type lab_ordersSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   description?: boolean
   tooth_numbers?: boolean
   shade?: boolean
+  material?: boolean
+  units?: boolean
+  tracking_ref?: boolean
+  impression_method?: boolean
   status?: boolean
   sent_at?: boolean
   due_at?: boolean
+  try_in_at?: boolean
   received_at?: boolean
   fitted_at?: boolean
+  remake_of_id?: boolean
+  remake_reason?: boolean
   cost?: boolean
   notes?: boolean
   created_at?: boolean
@@ -2275,6 +3228,9 @@ export type lab_ordersSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   appointment?: boolean | Prisma.lab_orders$appointmentArgs<ExtArgs>
   record?: boolean | Prisma.lab_orders$recordArgs<ExtArgs>
   orderer?: boolean | Prisma.lab_orders$ordererArgs<ExtArgs>
+  remake_of?: boolean | Prisma.lab_orders$remake_ofArgs<ExtArgs>
+  remakes?: boolean | Prisma.lab_orders$remakesArgs<ExtArgs>
+  _count?: boolean | Prisma.Lab_ordersCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["lab_orders"]>
 
 export type lab_ordersSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -2290,11 +3246,18 @@ export type lab_ordersSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ex
   description?: boolean
   tooth_numbers?: boolean
   shade?: boolean
+  material?: boolean
+  units?: boolean
+  tracking_ref?: boolean
+  impression_method?: boolean
   status?: boolean
   sent_at?: boolean
   due_at?: boolean
+  try_in_at?: boolean
   received_at?: boolean
   fitted_at?: boolean
+  remake_of_id?: boolean
+  remake_reason?: boolean
   cost?: boolean
   notes?: boolean
   created_at?: boolean
@@ -2306,6 +3269,7 @@ export type lab_ordersSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ex
   appointment?: boolean | Prisma.lab_orders$appointmentArgs<ExtArgs>
   record?: boolean | Prisma.lab_orders$recordArgs<ExtArgs>
   orderer?: boolean | Prisma.lab_orders$ordererArgs<ExtArgs>
+  remake_of?: boolean | Prisma.lab_orders$remake_ofArgs<ExtArgs>
 }, ExtArgs["result"]["lab_orders"]>
 
 export type lab_ordersSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -2321,11 +3285,18 @@ export type lab_ordersSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ex
   description?: boolean
   tooth_numbers?: boolean
   shade?: boolean
+  material?: boolean
+  units?: boolean
+  tracking_ref?: boolean
+  impression_method?: boolean
   status?: boolean
   sent_at?: boolean
   due_at?: boolean
+  try_in_at?: boolean
   received_at?: boolean
   fitted_at?: boolean
+  remake_of_id?: boolean
+  remake_reason?: boolean
   cost?: boolean
   notes?: boolean
   created_at?: boolean
@@ -2337,6 +3308,7 @@ export type lab_ordersSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ex
   appointment?: boolean | Prisma.lab_orders$appointmentArgs<ExtArgs>
   record?: boolean | Prisma.lab_orders$recordArgs<ExtArgs>
   orderer?: boolean | Prisma.lab_orders$ordererArgs<ExtArgs>
+  remake_of?: boolean | Prisma.lab_orders$remake_ofArgs<ExtArgs>
 }, ExtArgs["result"]["lab_orders"]>
 
 export type lab_ordersSelectScalar = {
@@ -2352,18 +3324,25 @@ export type lab_ordersSelectScalar = {
   description?: boolean
   tooth_numbers?: boolean
   shade?: boolean
+  material?: boolean
+  units?: boolean
+  tracking_ref?: boolean
+  impression_method?: boolean
   status?: boolean
   sent_at?: boolean
   due_at?: boolean
+  try_in_at?: boolean
   received_at?: boolean
   fitted_at?: boolean
+  remake_of_id?: boolean
+  remake_reason?: boolean
   cost?: boolean
   notes?: boolean
   created_at?: boolean
   updated_at?: boolean
 }
 
-export type lab_ordersOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "organization_id" | "branch_id" | "patient_id" | "lab_id" | "appointment_id" | "record_id" | "ordered_by" | "work_type" | "description" | "tooth_numbers" | "shade" | "status" | "sent_at" | "due_at" | "received_at" | "fitted_at" | "cost" | "notes" | "created_at" | "updated_at", ExtArgs["result"]["lab_orders"]>
+export type lab_ordersOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "organization_id" | "branch_id" | "patient_id" | "lab_id" | "appointment_id" | "record_id" | "ordered_by" | "work_type" | "description" | "tooth_numbers" | "shade" | "material" | "units" | "tracking_ref" | "impression_method" | "status" | "sent_at" | "due_at" | "try_in_at" | "received_at" | "fitted_at" | "remake_of_id" | "remake_reason" | "cost" | "notes" | "created_at" | "updated_at", ExtArgs["result"]["lab_orders"]>
 export type lab_ordersInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   organization?: boolean | Prisma.organizationsDefaultArgs<ExtArgs>
   branch?: boolean | Prisma.lab_orders$branchArgs<ExtArgs>
@@ -2372,6 +3351,9 @@ export type lab_ordersInclude<ExtArgs extends runtime.Types.Extensions.InternalA
   appointment?: boolean | Prisma.lab_orders$appointmentArgs<ExtArgs>
   record?: boolean | Prisma.lab_orders$recordArgs<ExtArgs>
   orderer?: boolean | Prisma.lab_orders$ordererArgs<ExtArgs>
+  remake_of?: boolean | Prisma.lab_orders$remake_ofArgs<ExtArgs>
+  remakes?: boolean | Prisma.lab_orders$remakesArgs<ExtArgs>
+  _count?: boolean | Prisma.Lab_ordersCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type lab_ordersIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   organization?: boolean | Prisma.organizationsDefaultArgs<ExtArgs>
@@ -2381,6 +3363,7 @@ export type lab_ordersIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.E
   appointment?: boolean | Prisma.lab_orders$appointmentArgs<ExtArgs>
   record?: boolean | Prisma.lab_orders$recordArgs<ExtArgs>
   orderer?: boolean | Prisma.lab_orders$ordererArgs<ExtArgs>
+  remake_of?: boolean | Prisma.lab_orders$remake_ofArgs<ExtArgs>
 }
 export type lab_ordersIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   organization?: boolean | Prisma.organizationsDefaultArgs<ExtArgs>
@@ -2390,6 +3373,7 @@ export type lab_ordersIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   appointment?: boolean | Prisma.lab_orders$appointmentArgs<ExtArgs>
   record?: boolean | Prisma.lab_orders$recordArgs<ExtArgs>
   orderer?: boolean | Prisma.lab_orders$ordererArgs<ExtArgs>
+  remake_of?: boolean | Prisma.lab_orders$remake_ofArgs<ExtArgs>
 }
 
 export type $lab_ordersPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2402,6 +3386,8 @@ export type $lab_ordersPayload<ExtArgs extends runtime.Types.Extensions.Internal
     appointment: Prisma.$appointmentsPayload<ExtArgs> | null
     record: Prisma.$patient_recordsPayload<ExtArgs> | null
     orderer: Prisma.$usersPayload<ExtArgs> | null
+    remake_of: Prisma.$lab_ordersPayload<ExtArgs> | null
+    remakes: Prisma.$lab_ordersPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: bigint
@@ -2425,11 +3411,36 @@ export type $lab_ordersPayload<ExtArgs extends runtime.Types.Extensions.Internal
      */
     tooth_numbers: string | null
     shade: string | null
+    /**
+     * What the piece is made of (zirconia, e.max, PFM, acrylic, ...).
+     */
+    material: string | null
+    /**
+     * How many pieces this case covers (1-32).
+     */
+    units: number | null
+    /**
+     * Courier or lab reference for the case in transit.
+     */
+    tracking_ref: string | null
+    /**
+     * How the impression was taken: digital (intraoral scan) or physical.
+     */
+    impression_method: string | null
     status: string
     sent_at: Date | null
     due_at: Date | null
+    /**
+     * Day of the try-in or bisque fitting, between sending and fitting.
+     */
+    try_in_at: Date | null
     received_at: Date | null
     fitted_at: Date | null
+    /**
+     * The earlier order this one remakes; NULL for a first attempt.
+     */
+    remake_of_id: bigint | null
+    remake_reason: string | null
     /**
      * Lab's charge, for reporting; billed to the patient as usual.
      */
@@ -2838,6 +3849,8 @@ export interface Prisma__lab_ordersClient<T, Null = never, ExtArgs extends runti
   appointment<T extends Prisma.lab_orders$appointmentArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.lab_orders$appointmentArgs<ExtArgs>>): Prisma.Prisma__appointmentsClient<runtime.Types.Result.GetResult<Prisma.$appointmentsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   record<T extends Prisma.lab_orders$recordArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.lab_orders$recordArgs<ExtArgs>>): Prisma.Prisma__patient_recordsClient<runtime.Types.Result.GetResult<Prisma.$patient_recordsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   orderer<T extends Prisma.lab_orders$ordererArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.lab_orders$ordererArgs<ExtArgs>>): Prisma.Prisma__usersClient<runtime.Types.Result.GetResult<Prisma.$usersPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  remake_of<T extends Prisma.lab_orders$remake_ofArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.lab_orders$remake_ofArgs<ExtArgs>>): Prisma.Prisma__lab_ordersClient<runtime.Types.Result.GetResult<Prisma.$lab_ordersPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  remakes<T extends Prisma.lab_orders$remakesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.lab_orders$remakesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$lab_ordersPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2879,11 +3892,18 @@ export interface lab_ordersFieldRefs {
   readonly description: Prisma.FieldRef<"lab_orders", 'String'>
   readonly tooth_numbers: Prisma.FieldRef<"lab_orders", 'String'>
   readonly shade: Prisma.FieldRef<"lab_orders", 'String'>
+  readonly material: Prisma.FieldRef<"lab_orders", 'String'>
+  readonly units: Prisma.FieldRef<"lab_orders", 'Int'>
+  readonly tracking_ref: Prisma.FieldRef<"lab_orders", 'String'>
+  readonly impression_method: Prisma.FieldRef<"lab_orders", 'String'>
   readonly status: Prisma.FieldRef<"lab_orders", 'String'>
   readonly sent_at: Prisma.FieldRef<"lab_orders", 'DateTime'>
   readonly due_at: Prisma.FieldRef<"lab_orders", 'DateTime'>
+  readonly try_in_at: Prisma.FieldRef<"lab_orders", 'DateTime'>
   readonly received_at: Prisma.FieldRef<"lab_orders", 'DateTime'>
   readonly fitted_at: Prisma.FieldRef<"lab_orders", 'DateTime'>
+  readonly remake_of_id: Prisma.FieldRef<"lab_orders", 'BigInt'>
+  readonly remake_reason: Prisma.FieldRef<"lab_orders", 'String'>
   readonly cost: Prisma.FieldRef<"lab_orders", 'Decimal'>
   readonly notes: Prisma.FieldRef<"lab_orders", 'String'>
   readonly created_at: Prisma.FieldRef<"lab_orders", 'DateTime'>
@@ -3362,6 +4382,49 @@ export type lab_orders$ordererArgs<ExtArgs extends runtime.Types.Extensions.Inte
    */
   include?: Prisma.usersInclude<ExtArgs> | null
   where?: Prisma.usersWhereInput
+}
+
+/**
+ * lab_orders.remake_of
+ */
+export type lab_orders$remake_ofArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the lab_orders
+   */
+  select?: Prisma.lab_ordersSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the lab_orders
+   */
+  omit?: Prisma.lab_ordersOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.lab_ordersInclude<ExtArgs> | null
+  where?: Prisma.lab_ordersWhereInput
+}
+
+/**
+ * lab_orders.remakes
+ */
+export type lab_orders$remakesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the lab_orders
+   */
+  select?: Prisma.lab_ordersSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the lab_orders
+   */
+  omit?: Prisma.lab_ordersOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.lab_ordersInclude<ExtArgs> | null
+  where?: Prisma.lab_ordersWhereInput
+  orderBy?: Prisma.lab_ordersOrderByWithRelationInput | Prisma.lab_ordersOrderByWithRelationInput[]
+  cursor?: Prisma.lab_ordersWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.Lab_ordersScalarFieldEnum | Prisma.Lab_ordersScalarFieldEnum[]
 }
 
 /**

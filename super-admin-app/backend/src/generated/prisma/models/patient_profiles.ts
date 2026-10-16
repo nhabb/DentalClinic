@@ -44,6 +44,17 @@ export type Patient_profilesMinAggregateOutputType = {
   user_id: bigint | null
   emergency_contact_name: string | null
   emergency_contact_phone: string | null
+  emergency_contact_relationship: string | null
+  emergency_contact_2_name: string | null
+  emergency_contact_2_phone: string | null
+  emergency_contact_2_relationship: string | null
+  occupation: string | null
+  employer: string | null
+  work_phone: string | null
+  national_id: string | null
+  marital_status: string | null
+  nationality: string | null
+  preferred_language: string | null
   blood_type: string | null
   allergies: string | null
   medical_notes: string | null
@@ -64,6 +75,17 @@ export type Patient_profilesMaxAggregateOutputType = {
   user_id: bigint | null
   emergency_contact_name: string | null
   emergency_contact_phone: string | null
+  emergency_contact_relationship: string | null
+  emergency_contact_2_name: string | null
+  emergency_contact_2_phone: string | null
+  emergency_contact_2_relationship: string | null
+  occupation: string | null
+  employer: string | null
+  work_phone: string | null
+  national_id: string | null
+  marital_status: string | null
+  nationality: string | null
+  preferred_language: string | null
   blood_type: string | null
   allergies: string | null
   medical_notes: string | null
@@ -84,6 +106,17 @@ export type Patient_profilesCountAggregateOutputType = {
   user_id: number
   emergency_contact_name: number
   emergency_contact_phone: number
+  emergency_contact_relationship: number
+  emergency_contact_2_name: number
+  emergency_contact_2_phone: number
+  emergency_contact_2_relationship: number
+  occupation: number
+  employer: number
+  work_phone: number
+  national_id: number
+  marital_status: number
+  nationality: number
+  preferred_language: number
   blood_type: number
   allergies: number
   medical_notes: number
@@ -118,6 +151,17 @@ export type Patient_profilesMinAggregateInputType = {
   user_id?: true
   emergency_contact_name?: true
   emergency_contact_phone?: true
+  emergency_contact_relationship?: true
+  emergency_contact_2_name?: true
+  emergency_contact_2_phone?: true
+  emergency_contact_2_relationship?: true
+  occupation?: true
+  employer?: true
+  work_phone?: true
+  national_id?: true
+  marital_status?: true
+  nationality?: true
+  preferred_language?: true
   blood_type?: true
   allergies?: true
   medical_notes?: true
@@ -138,6 +182,17 @@ export type Patient_profilesMaxAggregateInputType = {
   user_id?: true
   emergency_contact_name?: true
   emergency_contact_phone?: true
+  emergency_contact_relationship?: true
+  emergency_contact_2_name?: true
+  emergency_contact_2_phone?: true
+  emergency_contact_2_relationship?: true
+  occupation?: true
+  employer?: true
+  work_phone?: true
+  national_id?: true
+  marital_status?: true
+  nationality?: true
+  preferred_language?: true
   blood_type?: true
   allergies?: true
   medical_notes?: true
@@ -158,6 +213,17 @@ export type Patient_profilesCountAggregateInputType = {
   user_id?: true
   emergency_contact_name?: true
   emergency_contact_phone?: true
+  emergency_contact_relationship?: true
+  emergency_contact_2_name?: true
+  emergency_contact_2_phone?: true
+  emergency_contact_2_relationship?: true
+  occupation?: true
+  employer?: true
+  work_phone?: true
+  national_id?: true
+  marital_status?: true
+  nationality?: true
+  preferred_language?: true
   blood_type?: true
   allergies?: true
   medical_notes?: true
@@ -265,6 +331,17 @@ export type Patient_profilesGroupByOutputType = {
   user_id: bigint
   emergency_contact_name: string | null
   emergency_contact_phone: string | null
+  emergency_contact_relationship: string | null
+  emergency_contact_2_name: string | null
+  emergency_contact_2_phone: string | null
+  emergency_contact_2_relationship: string | null
+  occupation: string | null
+  employer: string | null
+  work_phone: string | null
+  national_id: string | null
+  marital_status: string | null
+  nationality: string | null
+  preferred_language: string | null
   blood_type: string | null
   allergies: string | null
   medical_notes: string | null
@@ -308,6 +385,17 @@ export type patient_profilesWhereInput = {
   user_id?: Prisma.BigIntFilter<"patient_profiles"> | bigint | number
   emergency_contact_name?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
   emergency_contact_phone?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  emergency_contact_relationship?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  emergency_contact_2_name?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  emergency_contact_2_phone?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  emergency_contact_2_relationship?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  occupation?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  employer?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  work_phone?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  national_id?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  marital_status?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  nationality?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  preferred_language?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
   blood_type?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
   allergies?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
   medical_notes?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
@@ -337,6 +425,17 @@ export type patient_profilesOrderByWithRelationInput = {
   user_id?: Prisma.SortOrder
   emergency_contact_name?: Prisma.SortOrderInput | Prisma.SortOrder
   emergency_contact_phone?: Prisma.SortOrderInput | Prisma.SortOrder
+  emergency_contact_relationship?: Prisma.SortOrderInput | Prisma.SortOrder
+  emergency_contact_2_name?: Prisma.SortOrderInput | Prisma.SortOrder
+  emergency_contact_2_phone?: Prisma.SortOrderInput | Prisma.SortOrder
+  emergency_contact_2_relationship?: Prisma.SortOrderInput | Prisma.SortOrder
+  occupation?: Prisma.SortOrderInput | Prisma.SortOrder
+  employer?: Prisma.SortOrderInput | Prisma.SortOrder
+  work_phone?: Prisma.SortOrderInput | Prisma.SortOrder
+  national_id?: Prisma.SortOrderInput | Prisma.SortOrder
+  marital_status?: Prisma.SortOrderInput | Prisma.SortOrder
+  nationality?: Prisma.SortOrderInput | Prisma.SortOrder
+  preferred_language?: Prisma.SortOrderInput | Prisma.SortOrder
   blood_type?: Prisma.SortOrderInput | Prisma.SortOrder
   allergies?: Prisma.SortOrderInput | Prisma.SortOrder
   medical_notes?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -369,6 +468,17 @@ export type patient_profilesWhereUniqueInput = Prisma.AtLeast<{
   organization_id?: Prisma.BigIntFilter<"patient_profiles"> | bigint | number
   emergency_contact_name?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
   emergency_contact_phone?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  emergency_contact_relationship?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  emergency_contact_2_name?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  emergency_contact_2_phone?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  emergency_contact_2_relationship?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  occupation?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  employer?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  work_phone?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  national_id?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  marital_status?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  nationality?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  preferred_language?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
   blood_type?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
   allergies?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
   medical_notes?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
@@ -398,6 +508,17 @@ export type patient_profilesOrderByWithAggregationInput = {
   user_id?: Prisma.SortOrder
   emergency_contact_name?: Prisma.SortOrderInput | Prisma.SortOrder
   emergency_contact_phone?: Prisma.SortOrderInput | Prisma.SortOrder
+  emergency_contact_relationship?: Prisma.SortOrderInput | Prisma.SortOrder
+  emergency_contact_2_name?: Prisma.SortOrderInput | Prisma.SortOrder
+  emergency_contact_2_phone?: Prisma.SortOrderInput | Prisma.SortOrder
+  emergency_contact_2_relationship?: Prisma.SortOrderInput | Prisma.SortOrder
+  occupation?: Prisma.SortOrderInput | Prisma.SortOrder
+  employer?: Prisma.SortOrderInput | Prisma.SortOrder
+  work_phone?: Prisma.SortOrderInput | Prisma.SortOrder
+  national_id?: Prisma.SortOrderInput | Prisma.SortOrder
+  marital_status?: Prisma.SortOrderInput | Prisma.SortOrder
+  nationality?: Prisma.SortOrderInput | Prisma.SortOrder
+  preferred_language?: Prisma.SortOrderInput | Prisma.SortOrder
   blood_type?: Prisma.SortOrderInput | Prisma.SortOrder
   allergies?: Prisma.SortOrderInput | Prisma.SortOrder
   medical_notes?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -426,6 +547,17 @@ export type patient_profilesScalarWhereWithAggregatesInput = {
   user_id?: Prisma.BigIntWithAggregatesFilter<"patient_profiles"> | bigint | number
   emergency_contact_name?: Prisma.StringNullableWithAggregatesFilter<"patient_profiles"> | string | null
   emergency_contact_phone?: Prisma.StringNullableWithAggregatesFilter<"patient_profiles"> | string | null
+  emergency_contact_relationship?: Prisma.StringNullableWithAggregatesFilter<"patient_profiles"> | string | null
+  emergency_contact_2_name?: Prisma.StringNullableWithAggregatesFilter<"patient_profiles"> | string | null
+  emergency_contact_2_phone?: Prisma.StringNullableWithAggregatesFilter<"patient_profiles"> | string | null
+  emergency_contact_2_relationship?: Prisma.StringNullableWithAggregatesFilter<"patient_profiles"> | string | null
+  occupation?: Prisma.StringNullableWithAggregatesFilter<"patient_profiles"> | string | null
+  employer?: Prisma.StringNullableWithAggregatesFilter<"patient_profiles"> | string | null
+  work_phone?: Prisma.StringNullableWithAggregatesFilter<"patient_profiles"> | string | null
+  national_id?: Prisma.StringNullableWithAggregatesFilter<"patient_profiles"> | string | null
+  marital_status?: Prisma.StringNullableWithAggregatesFilter<"patient_profiles"> | string | null
+  nationality?: Prisma.StringNullableWithAggregatesFilter<"patient_profiles"> | string | null
+  preferred_language?: Prisma.StringNullableWithAggregatesFilter<"patient_profiles"> | string | null
   blood_type?: Prisma.StringNullableWithAggregatesFilter<"patient_profiles"> | string | null
   allergies?: Prisma.StringNullableWithAggregatesFilter<"patient_profiles"> | string | null
   medical_notes?: Prisma.StringNullableWithAggregatesFilter<"patient_profiles"> | string | null
@@ -444,6 +576,17 @@ export type patient_profilesCreateInput = {
   id?: bigint | number
   emergency_contact_name?: string | null
   emergency_contact_phone?: string | null
+  emergency_contact_relationship?: string | null
+  emergency_contact_2_name?: string | null
+  emergency_contact_2_phone?: string | null
+  emergency_contact_2_relationship?: string | null
+  occupation?: string | null
+  employer?: string | null
+  work_phone?: string | null
+  national_id?: string | null
+  marital_status?: string | null
+  nationality?: string | null
+  preferred_language?: string | null
   blood_type?: string | null
   allergies?: string | null
   medical_notes?: string | null
@@ -473,6 +616,17 @@ export type patient_profilesUncheckedCreateInput = {
   user_id: bigint | number
   emergency_contact_name?: string | null
   emergency_contact_phone?: string | null
+  emergency_contact_relationship?: string | null
+  emergency_contact_2_name?: string | null
+  emergency_contact_2_phone?: string | null
+  emergency_contact_2_relationship?: string | null
+  occupation?: string | null
+  employer?: string | null
+  work_phone?: string | null
+  national_id?: string | null
+  marital_status?: string | null
+  nationality?: string | null
+  preferred_language?: string | null
   blood_type?: string | null
   allergies?: string | null
   medical_notes?: string | null
@@ -498,6 +652,17 @@ export type patient_profilesUpdateInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   emergency_contact_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emergency_contact_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  employer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  work_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  national_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferred_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   blood_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   allergies?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -527,6 +692,17 @@ export type patient_profilesUncheckedUpdateInput = {
   user_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   emergency_contact_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emergency_contact_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  employer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  work_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  national_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferred_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   blood_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   allergies?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -554,6 +730,17 @@ export type patient_profilesCreateManyInput = {
   user_id: bigint | number
   emergency_contact_name?: string | null
   emergency_contact_phone?: string | null
+  emergency_contact_relationship?: string | null
+  emergency_contact_2_name?: string | null
+  emergency_contact_2_phone?: string | null
+  emergency_contact_2_relationship?: string | null
+  occupation?: string | null
+  employer?: string | null
+  work_phone?: string | null
+  national_id?: string | null
+  marital_status?: string | null
+  nationality?: string | null
+  preferred_language?: string | null
   blood_type?: string | null
   allergies?: string | null
   medical_notes?: string | null
@@ -572,6 +759,17 @@ export type patient_profilesUpdateManyMutationInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   emergency_contact_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emergency_contact_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  employer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  work_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  national_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferred_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   blood_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   allergies?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -592,6 +790,17 @@ export type patient_profilesUncheckedUpdateManyInput = {
   user_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   emergency_contact_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emergency_contact_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  employer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  work_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  national_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferred_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   blood_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   allergies?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -627,6 +836,17 @@ export type patient_profilesCountOrderByAggregateInput = {
   user_id?: Prisma.SortOrder
   emergency_contact_name?: Prisma.SortOrder
   emergency_contact_phone?: Prisma.SortOrder
+  emergency_contact_relationship?: Prisma.SortOrder
+  emergency_contact_2_name?: Prisma.SortOrder
+  emergency_contact_2_phone?: Prisma.SortOrder
+  emergency_contact_2_relationship?: Prisma.SortOrder
+  occupation?: Prisma.SortOrder
+  employer?: Prisma.SortOrder
+  work_phone?: Prisma.SortOrder
+  national_id?: Prisma.SortOrder
+  marital_status?: Prisma.SortOrder
+  nationality?: Prisma.SortOrder
+  preferred_language?: Prisma.SortOrder
   blood_type?: Prisma.SortOrder
   allergies?: Prisma.SortOrder
   medical_notes?: Prisma.SortOrder
@@ -653,6 +873,17 @@ export type patient_profilesMaxOrderByAggregateInput = {
   user_id?: Prisma.SortOrder
   emergency_contact_name?: Prisma.SortOrder
   emergency_contact_phone?: Prisma.SortOrder
+  emergency_contact_relationship?: Prisma.SortOrder
+  emergency_contact_2_name?: Prisma.SortOrder
+  emergency_contact_2_phone?: Prisma.SortOrder
+  emergency_contact_2_relationship?: Prisma.SortOrder
+  occupation?: Prisma.SortOrder
+  employer?: Prisma.SortOrder
+  work_phone?: Prisma.SortOrder
+  national_id?: Prisma.SortOrder
+  marital_status?: Prisma.SortOrder
+  nationality?: Prisma.SortOrder
+  preferred_language?: Prisma.SortOrder
   blood_type?: Prisma.SortOrder
   allergies?: Prisma.SortOrder
   medical_notes?: Prisma.SortOrder
@@ -673,6 +904,17 @@ export type patient_profilesMinOrderByAggregateInput = {
   user_id?: Prisma.SortOrder
   emergency_contact_name?: Prisma.SortOrder
   emergency_contact_phone?: Prisma.SortOrder
+  emergency_contact_relationship?: Prisma.SortOrder
+  emergency_contact_2_name?: Prisma.SortOrder
+  emergency_contact_2_phone?: Prisma.SortOrder
+  emergency_contact_2_relationship?: Prisma.SortOrder
+  occupation?: Prisma.SortOrder
+  employer?: Prisma.SortOrder
+  work_phone?: Prisma.SortOrder
+  national_id?: Prisma.SortOrder
+  marital_status?: Prisma.SortOrder
+  nationality?: Prisma.SortOrder
+  preferred_language?: Prisma.SortOrder
   blood_type?: Prisma.SortOrder
   allergies?: Prisma.SortOrder
   medical_notes?: Prisma.SortOrder
@@ -874,6 +1116,17 @@ export type patient_profilesCreateWithoutOrganizationInput = {
   id?: bigint | number
   emergency_contact_name?: string | null
   emergency_contact_phone?: string | null
+  emergency_contact_relationship?: string | null
+  emergency_contact_2_name?: string | null
+  emergency_contact_2_phone?: string | null
+  emergency_contact_2_relationship?: string | null
+  occupation?: string | null
+  employer?: string | null
+  work_phone?: string | null
+  national_id?: string | null
+  marital_status?: string | null
+  nationality?: string | null
+  preferred_language?: string | null
   blood_type?: string | null
   allergies?: string | null
   medical_notes?: string | null
@@ -901,6 +1154,17 @@ export type patient_profilesUncheckedCreateWithoutOrganizationInput = {
   user_id: bigint | number
   emergency_contact_name?: string | null
   emergency_contact_phone?: string | null
+  emergency_contact_relationship?: string | null
+  emergency_contact_2_name?: string | null
+  emergency_contact_2_phone?: string | null
+  emergency_contact_2_relationship?: string | null
+  occupation?: string | null
+  employer?: string | null
+  work_phone?: string | null
+  national_id?: string | null
+  marital_status?: string | null
+  nationality?: string | null
+  preferred_language?: string | null
   blood_type?: string | null
   allergies?: string | null
   medical_notes?: string | null
@@ -957,6 +1221,17 @@ export type patient_profilesScalarWhereInput = {
   user_id?: Prisma.BigIntFilter<"patient_profiles"> | bigint | number
   emergency_contact_name?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
   emergency_contact_phone?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  emergency_contact_relationship?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  emergency_contact_2_name?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  emergency_contact_2_phone?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  emergency_contact_2_relationship?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  occupation?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  employer?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  work_phone?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  national_id?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  marital_status?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  nationality?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
+  preferred_language?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
   blood_type?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
   allergies?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
   medical_notes?: Prisma.StringNullableFilter<"patient_profiles"> | string | null
@@ -975,6 +1250,17 @@ export type patient_profilesCreateWithoutAppointmentsInput = {
   id?: bigint | number
   emergency_contact_name?: string | null
   emergency_contact_phone?: string | null
+  emergency_contact_relationship?: string | null
+  emergency_contact_2_name?: string | null
+  emergency_contact_2_phone?: string | null
+  emergency_contact_2_relationship?: string | null
+  occupation?: string | null
+  employer?: string | null
+  work_phone?: string | null
+  national_id?: string | null
+  marital_status?: string | null
+  nationality?: string | null
+  preferred_language?: string | null
   blood_type?: string | null
   allergies?: string | null
   medical_notes?: string | null
@@ -1003,6 +1289,17 @@ export type patient_profilesUncheckedCreateWithoutAppointmentsInput = {
   user_id: bigint | number
   emergency_contact_name?: string | null
   emergency_contact_phone?: string | null
+  emergency_contact_relationship?: string | null
+  emergency_contact_2_name?: string | null
+  emergency_contact_2_phone?: string | null
+  emergency_contact_2_relationship?: string | null
+  occupation?: string | null
+  employer?: string | null
+  work_phone?: string | null
+  national_id?: string | null
+  marital_status?: string | null
+  nationality?: string | null
+  preferred_language?: string | null
   blood_type?: string | null
   allergies?: string | null
   medical_notes?: string | null
@@ -1043,6 +1340,17 @@ export type patient_profilesUpdateWithoutAppointmentsInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   emergency_contact_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emergency_contact_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  employer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  work_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  national_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferred_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   blood_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   allergies?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1071,6 +1379,17 @@ export type patient_profilesUncheckedUpdateWithoutAppointmentsInput = {
   user_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   emergency_contact_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emergency_contact_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  employer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  work_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  national_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferred_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   blood_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   allergies?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1095,6 +1414,17 @@ export type patient_profilesCreateWithoutPatient_documentsInput = {
   id?: bigint | number
   emergency_contact_name?: string | null
   emergency_contact_phone?: string | null
+  emergency_contact_relationship?: string | null
+  emergency_contact_2_name?: string | null
+  emergency_contact_2_phone?: string | null
+  emergency_contact_2_relationship?: string | null
+  occupation?: string | null
+  employer?: string | null
+  work_phone?: string | null
+  national_id?: string | null
+  marital_status?: string | null
+  nationality?: string | null
+  preferred_language?: string | null
   blood_type?: string | null
   allergies?: string | null
   medical_notes?: string | null
@@ -1123,6 +1453,17 @@ export type patient_profilesUncheckedCreateWithoutPatient_documentsInput = {
   user_id: bigint | number
   emergency_contact_name?: string | null
   emergency_contact_phone?: string | null
+  emergency_contact_relationship?: string | null
+  emergency_contact_2_name?: string | null
+  emergency_contact_2_phone?: string | null
+  emergency_contact_2_relationship?: string | null
+  occupation?: string | null
+  employer?: string | null
+  work_phone?: string | null
+  national_id?: string | null
+  marital_status?: string | null
+  nationality?: string | null
+  preferred_language?: string | null
   blood_type?: string | null
   allergies?: string | null
   medical_notes?: string | null
@@ -1163,6 +1504,17 @@ export type patient_profilesUpdateWithoutPatient_documentsInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   emergency_contact_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emergency_contact_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  employer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  work_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  national_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferred_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   blood_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   allergies?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1191,6 +1543,17 @@ export type patient_profilesUncheckedUpdateWithoutPatient_documentsInput = {
   user_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   emergency_contact_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emergency_contact_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  employer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  work_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  national_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferred_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   blood_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   allergies?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1215,6 +1578,17 @@ export type patient_profilesCreateWithoutPatient_recordsInput = {
   id?: bigint | number
   emergency_contact_name?: string | null
   emergency_contact_phone?: string | null
+  emergency_contact_relationship?: string | null
+  emergency_contact_2_name?: string | null
+  emergency_contact_2_phone?: string | null
+  emergency_contact_2_relationship?: string | null
+  occupation?: string | null
+  employer?: string | null
+  work_phone?: string | null
+  national_id?: string | null
+  marital_status?: string | null
+  nationality?: string | null
+  preferred_language?: string | null
   blood_type?: string | null
   allergies?: string | null
   medical_notes?: string | null
@@ -1243,6 +1617,17 @@ export type patient_profilesUncheckedCreateWithoutPatient_recordsInput = {
   user_id: bigint | number
   emergency_contact_name?: string | null
   emergency_contact_phone?: string | null
+  emergency_contact_relationship?: string | null
+  emergency_contact_2_name?: string | null
+  emergency_contact_2_phone?: string | null
+  emergency_contact_2_relationship?: string | null
+  occupation?: string | null
+  employer?: string | null
+  work_phone?: string | null
+  national_id?: string | null
+  marital_status?: string | null
+  nationality?: string | null
+  preferred_language?: string | null
   blood_type?: string | null
   allergies?: string | null
   medical_notes?: string | null
@@ -1283,6 +1668,17 @@ export type patient_profilesUpdateWithoutPatient_recordsInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   emergency_contact_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emergency_contact_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  employer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  work_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  national_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferred_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   blood_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   allergies?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1311,6 +1707,17 @@ export type patient_profilesUncheckedUpdateWithoutPatient_recordsInput = {
   user_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   emergency_contact_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emergency_contact_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  employer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  work_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  national_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferred_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   blood_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   allergies?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1335,6 +1742,17 @@ export type patient_profilesCreateWithoutUsersInput = {
   id?: bigint | number
   emergency_contact_name?: string | null
   emergency_contact_phone?: string | null
+  emergency_contact_relationship?: string | null
+  emergency_contact_2_name?: string | null
+  emergency_contact_2_phone?: string | null
+  emergency_contact_2_relationship?: string | null
+  occupation?: string | null
+  employer?: string | null
+  work_phone?: string | null
+  national_id?: string | null
+  marital_status?: string | null
+  nationality?: string | null
+  preferred_language?: string | null
   blood_type?: string | null
   allergies?: string | null
   medical_notes?: string | null
@@ -1362,6 +1780,17 @@ export type patient_profilesUncheckedCreateWithoutUsersInput = {
   organization_id?: bigint | number
   emergency_contact_name?: string | null
   emergency_contact_phone?: string | null
+  emergency_contact_relationship?: string | null
+  emergency_contact_2_name?: string | null
+  emergency_contact_2_phone?: string | null
+  emergency_contact_2_relationship?: string | null
+  occupation?: string | null
+  employer?: string | null
+  work_phone?: string | null
+  national_id?: string | null
+  marital_status?: string | null
+  nationality?: string | null
+  preferred_language?: string | null
   blood_type?: string | null
   allergies?: string | null
   medical_notes?: string | null
@@ -1403,6 +1832,17 @@ export type patient_profilesUpdateWithoutUsersInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   emergency_contact_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emergency_contact_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  employer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  work_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  national_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferred_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   blood_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   allergies?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1430,6 +1870,17 @@ export type patient_profilesUncheckedUpdateWithoutUsersInput = {
   organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   emergency_contact_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emergency_contact_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  employer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  work_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  national_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferred_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   blood_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   allergies?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1455,6 +1906,17 @@ export type patient_profilesCreateWithoutTreatment_invoicesInput = {
   id?: bigint | number
   emergency_contact_name?: string | null
   emergency_contact_phone?: string | null
+  emergency_contact_relationship?: string | null
+  emergency_contact_2_name?: string | null
+  emergency_contact_2_phone?: string | null
+  emergency_contact_2_relationship?: string | null
+  occupation?: string | null
+  employer?: string | null
+  work_phone?: string | null
+  national_id?: string | null
+  marital_status?: string | null
+  nationality?: string | null
+  preferred_language?: string | null
   blood_type?: string | null
   allergies?: string | null
   medical_notes?: string | null
@@ -1483,6 +1945,17 @@ export type patient_profilesUncheckedCreateWithoutTreatment_invoicesInput = {
   user_id: bigint | number
   emergency_contact_name?: string | null
   emergency_contact_phone?: string | null
+  emergency_contact_relationship?: string | null
+  emergency_contact_2_name?: string | null
+  emergency_contact_2_phone?: string | null
+  emergency_contact_2_relationship?: string | null
+  occupation?: string | null
+  employer?: string | null
+  work_phone?: string | null
+  national_id?: string | null
+  marital_status?: string | null
+  nationality?: string | null
+  preferred_language?: string | null
   blood_type?: string | null
   allergies?: string | null
   medical_notes?: string | null
@@ -1523,6 +1996,17 @@ export type patient_profilesUpdateWithoutTreatment_invoicesInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   emergency_contact_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emergency_contact_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  employer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  work_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  national_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferred_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   blood_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   allergies?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1551,6 +2035,17 @@ export type patient_profilesUncheckedUpdateWithoutTreatment_invoicesInput = {
   user_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   emergency_contact_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emergency_contact_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  employer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  work_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  national_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferred_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   blood_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   allergies?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1575,6 +2070,17 @@ export type patient_profilesCreateWithoutSpecialist_consultationsInput = {
   id?: bigint | number
   emergency_contact_name?: string | null
   emergency_contact_phone?: string | null
+  emergency_contact_relationship?: string | null
+  emergency_contact_2_name?: string | null
+  emergency_contact_2_phone?: string | null
+  emergency_contact_2_relationship?: string | null
+  occupation?: string | null
+  employer?: string | null
+  work_phone?: string | null
+  national_id?: string | null
+  marital_status?: string | null
+  nationality?: string | null
+  preferred_language?: string | null
   blood_type?: string | null
   allergies?: string | null
   medical_notes?: string | null
@@ -1603,6 +2109,17 @@ export type patient_profilesUncheckedCreateWithoutSpecialist_consultationsInput 
   user_id: bigint | number
   emergency_contact_name?: string | null
   emergency_contact_phone?: string | null
+  emergency_contact_relationship?: string | null
+  emergency_contact_2_name?: string | null
+  emergency_contact_2_phone?: string | null
+  emergency_contact_2_relationship?: string | null
+  occupation?: string | null
+  employer?: string | null
+  work_phone?: string | null
+  national_id?: string | null
+  marital_status?: string | null
+  nationality?: string | null
+  preferred_language?: string | null
   blood_type?: string | null
   allergies?: string | null
   medical_notes?: string | null
@@ -1643,6 +2160,17 @@ export type patient_profilesUpdateWithoutSpecialist_consultationsInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   emergency_contact_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emergency_contact_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  employer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  work_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  national_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferred_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   blood_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   allergies?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1671,6 +2199,17 @@ export type patient_profilesUncheckedUpdateWithoutSpecialist_consultationsInput 
   user_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   emergency_contact_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emergency_contact_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  employer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  work_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  national_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferred_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   blood_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   allergies?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1695,6 +2234,17 @@ export type patient_profilesCreateWithoutLab_ordersInput = {
   id?: bigint | number
   emergency_contact_name?: string | null
   emergency_contact_phone?: string | null
+  emergency_contact_relationship?: string | null
+  emergency_contact_2_name?: string | null
+  emergency_contact_2_phone?: string | null
+  emergency_contact_2_relationship?: string | null
+  occupation?: string | null
+  employer?: string | null
+  work_phone?: string | null
+  national_id?: string | null
+  marital_status?: string | null
+  nationality?: string | null
+  preferred_language?: string | null
   blood_type?: string | null
   allergies?: string | null
   medical_notes?: string | null
@@ -1723,6 +2273,17 @@ export type patient_profilesUncheckedCreateWithoutLab_ordersInput = {
   user_id: bigint | number
   emergency_contact_name?: string | null
   emergency_contact_phone?: string | null
+  emergency_contact_relationship?: string | null
+  emergency_contact_2_name?: string | null
+  emergency_contact_2_phone?: string | null
+  emergency_contact_2_relationship?: string | null
+  occupation?: string | null
+  employer?: string | null
+  work_phone?: string | null
+  national_id?: string | null
+  marital_status?: string | null
+  nationality?: string | null
+  preferred_language?: string | null
   blood_type?: string | null
   allergies?: string | null
   medical_notes?: string | null
@@ -1763,6 +2324,17 @@ export type patient_profilesUpdateWithoutLab_ordersInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   emergency_contact_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emergency_contact_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  employer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  work_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  national_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferred_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   blood_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   allergies?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1791,6 +2363,17 @@ export type patient_profilesUncheckedUpdateWithoutLab_ordersInput = {
   user_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   emergency_contact_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emergency_contact_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  employer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  work_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  national_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferred_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   blood_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   allergies?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1815,6 +2398,17 @@ export type patient_profilesCreateWithoutQuotesInput = {
   id?: bigint | number
   emergency_contact_name?: string | null
   emergency_contact_phone?: string | null
+  emergency_contact_relationship?: string | null
+  emergency_contact_2_name?: string | null
+  emergency_contact_2_phone?: string | null
+  emergency_contact_2_relationship?: string | null
+  occupation?: string | null
+  employer?: string | null
+  work_phone?: string | null
+  national_id?: string | null
+  marital_status?: string | null
+  nationality?: string | null
+  preferred_language?: string | null
   blood_type?: string | null
   allergies?: string | null
   medical_notes?: string | null
@@ -1843,6 +2437,17 @@ export type patient_profilesUncheckedCreateWithoutQuotesInput = {
   user_id: bigint | number
   emergency_contact_name?: string | null
   emergency_contact_phone?: string | null
+  emergency_contact_relationship?: string | null
+  emergency_contact_2_name?: string | null
+  emergency_contact_2_phone?: string | null
+  emergency_contact_2_relationship?: string | null
+  occupation?: string | null
+  employer?: string | null
+  work_phone?: string | null
+  national_id?: string | null
+  marital_status?: string | null
+  nationality?: string | null
+  preferred_language?: string | null
   blood_type?: string | null
   allergies?: string | null
   medical_notes?: string | null
@@ -1883,6 +2488,17 @@ export type patient_profilesUpdateWithoutQuotesInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   emergency_contact_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emergency_contact_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  employer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  work_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  national_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferred_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   blood_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   allergies?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1911,6 +2527,17 @@ export type patient_profilesUncheckedUpdateWithoutQuotesInput = {
   user_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   emergency_contact_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emergency_contact_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  employer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  work_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  national_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferred_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   blood_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   allergies?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1936,6 +2563,17 @@ export type patient_profilesCreateManyOrganizationInput = {
   user_id: bigint | number
   emergency_contact_name?: string | null
   emergency_contact_phone?: string | null
+  emergency_contact_relationship?: string | null
+  emergency_contact_2_name?: string | null
+  emergency_contact_2_phone?: string | null
+  emergency_contact_2_relationship?: string | null
+  occupation?: string | null
+  employer?: string | null
+  work_phone?: string | null
+  national_id?: string | null
+  marital_status?: string | null
+  nationality?: string | null
+  preferred_language?: string | null
   blood_type?: string | null
   allergies?: string | null
   medical_notes?: string | null
@@ -1954,6 +2592,17 @@ export type patient_profilesUpdateWithoutOrganizationInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   emergency_contact_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emergency_contact_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  employer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  work_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  national_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferred_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   blood_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   allergies?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1981,6 +2630,17 @@ export type patient_profilesUncheckedUpdateWithoutOrganizationInput = {
   user_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   emergency_contact_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emergency_contact_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  employer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  work_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  national_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferred_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   blood_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   allergies?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2007,6 +2667,17 @@ export type patient_profilesUncheckedUpdateManyWithoutOrganizationInput = {
   user_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   emergency_contact_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emergency_contact_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emergency_contact_2_relationship?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  occupation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  employer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  work_phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  national_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  marital_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preferred_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   blood_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   allergies?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   medical_notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2112,6 +2783,17 @@ export type patient_profilesSelect<ExtArgs extends runtime.Types.Extensions.Inte
   user_id?: boolean
   emergency_contact_name?: boolean
   emergency_contact_phone?: boolean
+  emergency_contact_relationship?: boolean
+  emergency_contact_2_name?: boolean
+  emergency_contact_2_phone?: boolean
+  emergency_contact_2_relationship?: boolean
+  occupation?: boolean
+  employer?: boolean
+  work_phone?: boolean
+  national_id?: boolean
+  marital_status?: boolean
+  nationality?: boolean
+  preferred_language?: boolean
   blood_type?: boolean
   allergies?: boolean
   medical_notes?: boolean
@@ -2142,6 +2824,17 @@ export type patient_profilesSelectCreateManyAndReturn<ExtArgs extends runtime.Ty
   user_id?: boolean
   emergency_contact_name?: boolean
   emergency_contact_phone?: boolean
+  emergency_contact_relationship?: boolean
+  emergency_contact_2_name?: boolean
+  emergency_contact_2_phone?: boolean
+  emergency_contact_2_relationship?: boolean
+  occupation?: boolean
+  employer?: boolean
+  work_phone?: boolean
+  national_id?: boolean
+  marital_status?: boolean
+  nationality?: boolean
+  preferred_language?: boolean
   blood_type?: boolean
   allergies?: boolean
   medical_notes?: boolean
@@ -2164,6 +2857,17 @@ export type patient_profilesSelectUpdateManyAndReturn<ExtArgs extends runtime.Ty
   user_id?: boolean
   emergency_contact_name?: boolean
   emergency_contact_phone?: boolean
+  emergency_contact_relationship?: boolean
+  emergency_contact_2_name?: boolean
+  emergency_contact_2_phone?: boolean
+  emergency_contact_2_relationship?: boolean
+  occupation?: boolean
+  employer?: boolean
+  work_phone?: boolean
+  national_id?: boolean
+  marital_status?: boolean
+  nationality?: boolean
+  preferred_language?: boolean
   blood_type?: boolean
   allergies?: boolean
   medical_notes?: boolean
@@ -2186,6 +2890,17 @@ export type patient_profilesSelectScalar = {
   user_id?: boolean
   emergency_contact_name?: boolean
   emergency_contact_phone?: boolean
+  emergency_contact_relationship?: boolean
+  emergency_contact_2_name?: boolean
+  emergency_contact_2_phone?: boolean
+  emergency_contact_2_relationship?: boolean
+  occupation?: boolean
+  employer?: boolean
+  work_phone?: boolean
+  national_id?: boolean
+  marital_status?: boolean
+  nationality?: boolean
+  preferred_language?: boolean
   blood_type?: boolean
   allergies?: boolean
   medical_notes?: boolean
@@ -2200,7 +2915,7 @@ export type patient_profilesSelectScalar = {
   photo_url?: boolean
 }
 
-export type patient_profilesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "organization_id" | "user_id" | "emergency_contact_name" | "emergency_contact_phone" | "blood_type" | "allergies" | "medical_notes" | "created_at" | "updated_at" | "city" | "current_medications" | "governate" | "insurance_policy" | "insurance_provider" | "profile_complete" | "photo_url", ExtArgs["result"]["patient_profiles"]>
+export type patient_profilesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "organization_id" | "user_id" | "emergency_contact_name" | "emergency_contact_phone" | "emergency_contact_relationship" | "emergency_contact_2_name" | "emergency_contact_2_phone" | "emergency_contact_2_relationship" | "occupation" | "employer" | "work_phone" | "national_id" | "marital_status" | "nationality" | "preferred_language" | "blood_type" | "allergies" | "medical_notes" | "created_at" | "updated_at" | "city" | "current_medications" | "governate" | "insurance_policy" | "insurance_provider" | "profile_complete" | "photo_url", ExtArgs["result"]["patient_profiles"]>
 export type patient_profilesInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   organization?: boolean | Prisma.organizationsDefaultArgs<ExtArgs>
   appointments?: boolean | Prisma.patient_profiles$appointmentsArgs<ExtArgs>
@@ -2241,6 +2956,35 @@ export type $patient_profilesPayload<ExtArgs extends runtime.Types.Extensions.In
     user_id: bigint
     emergency_contact_name: string | null
     emergency_contact_phone: string | null
+    /**
+     * How the emergency contact is related to the patient.
+     */
+    emergency_contact_relationship: string | null
+    /**
+     * A second person to call in an emergency.
+     */
+    emergency_contact_2_name: string | null
+    emergency_contact_2_phone: string | null
+    emergency_contact_2_relationship: string | null
+    /**
+     * What the patient does for a living, and where.
+     */
+    occupation: string | null
+    employer: string | null
+    work_phone: string | null
+    /**
+     * National ID or civil record number, as written on the document.
+     */
+    national_id: string | null
+    /**
+     * single | married | divorced | widowed | other
+     */
+    marital_status: string | null
+    nationality: string | null
+    /**
+     * Language to speak and write to this patient in: en, ar or fr.
+     */
+    preferred_language: string | null
     blood_type: string | null
     allergies: string | null
     medical_notes: string | null
@@ -2690,6 +3434,17 @@ export interface patient_profilesFieldRefs {
   readonly user_id: Prisma.FieldRef<"patient_profiles", 'BigInt'>
   readonly emergency_contact_name: Prisma.FieldRef<"patient_profiles", 'String'>
   readonly emergency_contact_phone: Prisma.FieldRef<"patient_profiles", 'String'>
+  readonly emergency_contact_relationship: Prisma.FieldRef<"patient_profiles", 'String'>
+  readonly emergency_contact_2_name: Prisma.FieldRef<"patient_profiles", 'String'>
+  readonly emergency_contact_2_phone: Prisma.FieldRef<"patient_profiles", 'String'>
+  readonly emergency_contact_2_relationship: Prisma.FieldRef<"patient_profiles", 'String'>
+  readonly occupation: Prisma.FieldRef<"patient_profiles", 'String'>
+  readonly employer: Prisma.FieldRef<"patient_profiles", 'String'>
+  readonly work_phone: Prisma.FieldRef<"patient_profiles", 'String'>
+  readonly national_id: Prisma.FieldRef<"patient_profiles", 'String'>
+  readonly marital_status: Prisma.FieldRef<"patient_profiles", 'String'>
+  readonly nationality: Prisma.FieldRef<"patient_profiles", 'String'>
+  readonly preferred_language: Prisma.FieldRef<"patient_profiles", 'String'>
   readonly blood_type: Prisma.FieldRef<"patient_profiles", 'String'>
   readonly allergies: Prisma.FieldRef<"patient_profiles", 'String'>
   readonly medical_notes: Prisma.FieldRef<"patient_profiles", 'String'>

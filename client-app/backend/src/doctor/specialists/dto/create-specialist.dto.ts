@@ -6,6 +6,7 @@ import {
   IsString,
   MaxLength,
 } from 'class-validator';
+import { IsPhone } from '../../../shared/common/phone';
 
 export class CreateSpecialistDto {
   @ApiProperty({ example: 'Dr. Rana Khoury' })
@@ -19,9 +20,7 @@ export class CreateSpecialistDto {
   specialty: string;
 
   @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  @MaxLength(50)
+  @IsPhone()
   phone?: string;
 
   @ApiPropertyOptional()

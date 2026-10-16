@@ -35,8 +35,8 @@ const NAV_COMMANDS: NavCommand[] = [
 
 /** What each quick action needs; the screen it opens is checked too. */
 const ACTION_PERMISSION: Record<string, string> = {
-  "new-appointment": "appointments:write",
-  "new-patient": "patients:write",
+  "new-appointment": "appointments:create",
+  "new-patient": "patients:create",
 };
 
 const ACTION_COMMANDS: NavCommand[] = [

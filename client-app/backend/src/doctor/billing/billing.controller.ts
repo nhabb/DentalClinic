@@ -102,11 +102,23 @@ export class BillingController {
     return this.billingService.listInvoicePayments(limit);
   }
 
-  @Post('invoices')
-  @RequirePermissions('billing:write')
+  @Get('patients/:patientId/billable')
+  @RequirePermissions('billing:read', 'records:read')
   @ApiOperation({
     summary:
-      'Issue an invoice (numbered by the clinic) with procedure lines, an optional discount and a due date',
+      "One patient's unbilled completed chart work (for the invoice builder) and open planned work (for the quote builder)",
+    description:
+      'Returns clinical chart rows, so it needs records:read as well as billing:read.',
+  })
+  listBillable(@Param('patientId', ParseIntPipe) patientId: number) {
+    return this.billingService.listBillable(BigInt(patientId));
+  }
+
+  @Post('invoices')
+  @RequirePermissions('billing:create')
+  @ApiOperation({
+    summary:
+      'Issue an invoice (numbered by the clinic) with procedure lines, an optional discount and a due date. A line naming a chart record bills that work and attaches it.',
   })
   createInvoice(@Body() dto: CreateInvoiceDto, @Req() req: AuthedRequest) {
     return this.billingService.create(dto, BigInt(req.user.id));
@@ -163,7 +175,7 @@ export class BillingController {
   }
 
   @Post('invoices/:id/payments')
-  @RequirePermissions('billing:write')
+  @RequirePermissions('billing:create')
   @ApiOperation({
     summary: 'Record a payment (partial or full) against a treatment invoice',
   })
@@ -180,7 +192,7 @@ export class BillingController {
   }
 
   @Post('invoices/:id/refunds')
-  @RequirePermissions('billing:write')
+  @RequirePermissions('billing:edit')
   @ApiOperation({
     summary:
       'Return money to the patient: a refund row with a reason, never above what was received',
@@ -194,7 +206,7 @@ export class BillingController {
   }
 
   @Post('invoices/:id/void')
-  @RequirePermissions('billing:write')
+  @RequirePermissions('billing:edit')
   @ApiOperation({
     summary:
       'Cancel an invoice that is not owed: it stays on record as cancelled with the reason. Refund first if anything was paid.',
