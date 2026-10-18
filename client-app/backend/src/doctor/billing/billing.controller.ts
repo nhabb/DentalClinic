@@ -25,6 +25,13 @@ import {
   ConfirmedAdminGuard,
 } from '../../shared/step-up/confirmed-admin.guard';
 import { BillingService } from './billing.service';
+import { PatientLedgerService } from './patient-ledger.service';
+import { PlanService } from '../quotes/plan.service';
+import {
+  ApplyCreditDto,
+  RefundCreditDto,
+  TakePaymentDto,
+} from './dto/ledger.dto';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { RecordPaymentDto } from './dto/record-payment.dto';
 import { RefundDto } from './dto/refund.dto';
@@ -51,7 +58,11 @@ const PASSWORD_HEADER = {
 @ApiTags('Billing')
 @Controller('billing')
 export class BillingController {
-  constructor(private readonly billingService: BillingService) {}
+  constructor(
+    private readonly billingService: BillingService,
+    private readonly ledgerService: PatientLedgerService,
+    private readonly plans: PlanService,
+  ) {}
 
   @Get('summary')
   @ApiOperation({
@@ -93,13 +104,22 @@ export class BillingController {
 
   @Get('invoice-payments')
   @ApiOperation({
-    summary: 'List raw payment and refund rows (for charts)',
+    summary:
+      'Every payment and refund, newest first: who paid, how, which bills it reached and who took it',
+    description:
+      'Windowed on payment_date — the day the money moved, which is the day every other report counts it on.',
   })
   @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'from', required: false, description: 'Start date YYYY-MM-DD' })
+  @ApiQuery({ name: 'to', required: false, description: 'End date YYYY-MM-DD' })
+  @ApiQuery({ name: 'method', required: false, description: 'cash | card | …' })
   listInvoicePayments(
     @Query('limit', new DefaultValuePipe(500), ParseIntPipe) limit: number,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('method') method?: string,
   ) {
-    return this.billingService.listInvoicePayments(limit);
+    return this.billingService.listInvoicePayments(limit, { from, to, method });
   }
 
   @Get('patients/:patientId/billable')
@@ -112,6 +132,97 @@ export class BillingController {
   })
   listBillable(@Param('patientId', ParseIntPipe) patientId: number) {
     return this.billingService.listBillable(BigInt(patientId));
+  }
+
+  // ── The patient ledger ───────────────────────────────────────────────────
+  // Money belongs to the patient, not to one invoice: a deposit on an accepted
+  // plan arrives long before the bills it will pay. These routes take money
+  // without naming an invoice, then move it onto the bills as they are issued.
+
+  @Get('patients/:patientId/ledger')
+  @ApiOperation({
+    summary:
+      "One patient's account: credit on hand, what is still owed, and every payment with the invoices it was applied to",
+  })
+  ledger(@Param('patientId', ParseIntPipe) patientId: number) {
+    return this.ledgerService.ledger(BigInt(patientId));
+  }
+
+  @Get('patients/:patientId/statement')
+  @ApiOperation({
+    summary:
+      'The patient statement: their plan with where each line stands, every bill and payment, and the four figures kept apart (plan total, billed, received, credit) with Due now and Remaining on plan',
+  })
+  async statement(@Param('patientId', ParseIntPipe) patientId: number) {
+    const id = BigInt(patientId);
+    return this.ledgerService.statement(id, await this.plans.read(id));
+  }
+
+  @Post('patients/:patientId/payments')
+  @RequirePermissions('billing:create')
+  @ApiOperation({
+    summary:
+      'Take money from a patient without naming an invoice (a deposit, or a payment at a visit); settles their open invoices oldest first unless auto_apply is false',
+  })
+  takePayment(
+    @Param('patientId', ParseIntPipe) patientId: number,
+    @Body() dto: TakePaymentDto,
+    @Req() req: AuthedRequest,
+  ) {
+    return this.ledgerService.takePayment(
+      BigInt(patientId),
+      dto,
+      BigInt(req.user.id),
+    );
+  }
+
+  @Post('payments/:paymentId/allocations')
+  @RequirePermissions('billing:edit')
+  @ApiOperation({
+    summary:
+      "Apply part of a patient's existing payment to one of their invoices",
+  })
+  applyCredit(
+    @Param('paymentId', ParseIntPipe) paymentId: number,
+    @Body() dto: ApplyCreditDto,
+    @Req() req: AuthedRequest,
+  ) {
+    return this.ledgerService.applyCredit(
+      BigInt(paymentId),
+      dto,
+      BigInt(req.user.id),
+    );
+  }
+
+  @Delete('allocations/:id')
+  @RequirePermissions('billing:edit')
+  @ApiOperation({
+    summary:
+      'Take money back off an invoice and return it to the patient credit (not a refund: no money leaves the clinic)',
+  })
+  unapplyCredit(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: AuthedRequest,
+  ) {
+    return this.ledgerService.unapplyCredit(BigInt(id), BigInt(req.user.id));
+  }
+
+  @Post('patients/:patientId/credit-refunds')
+  @RequirePermissions('billing:edit')
+  @ApiOperation({
+    summary:
+      'Hand unapplied credit back to the patient, with a reason (an abandoned plan)',
+  })
+  refundCredit(
+    @Param('patientId', ParseIntPipe) patientId: number,
+    @Body() dto: RefundCreditDto,
+    @Req() req: AuthedRequest,
+  ) {
+    return this.ledgerService.refundCredit(
+      BigInt(patientId),
+      dto,
+      BigInt(req.user.id),
+    );
   }
 
   @Post('invoices')

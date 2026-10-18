@@ -11,6 +11,7 @@ import { useTranslation } from "@/lib/i18n";
 import { usePermissions } from "@/lib/permissions";
 import { DEFAULT_PRICES } from "@/components/billing/invoice-doc";
 import { PlanQuoteBand } from "@/components/chart/PlanQuoteBand";
+import type { Plan } from "@/components/billing/quote-doc";
 import AdminSidebar from "@/components/ui/AdminSidebar";
 import { StatsCard } from "@/components/ui/StatsCard";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
@@ -21,6 +22,7 @@ import { ListToolbar, toolbarSelectClass, toolbarIconButtonClass, toolbarSegment
 import { AdminPageHeader } from "@/components/ui/AdminPageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Drawer } from "@/components/ui/Drawer";
+import { Modal } from "@/components/ui/Modal";
 import { BulkActionBar } from "@/components/ui/BulkActionBar";
 import { useImportExport } from "@/components/ui/useImportExport";
 import ToothChart, { type ToothState } from "@/components/dental/ToothChart";
@@ -47,6 +49,7 @@ import {
   FaAllergies,
   FaNotesMedical,
   FaCheckCircle,
+  FaLock,
   FaEdit,
   FaIdCard,
   FaFileAlt,
@@ -54,8 +57,6 @@ import {
   FaDownload,
   FaTrash,
   FaClock,
-  FaClipboardList,
-  FaFileInvoiceDollar,
   FaThLarge,
   FaList,
   FaChevronRight,
@@ -217,17 +218,21 @@ interface ChartHistoryEntry {
   doctor: string;
   notes: string;
   /**
-   * Whether this work is already on an invoice. No figure is kept: the chart
-   * shows no money, it only needs to know that billed work is locked.
+   * Whether this work is already on an invoice. That — not any document's
+   * status — is what locks a line: its price belongs to the invoice now.
    */
   billed: boolean;
-  /** Price planned for this work; null when none was given. */
+  /** The invoice that froze it, so the row can say which one. */
+  invoiceNumber: string | null;
+  /** Price planned for this work; null when nobody has priced it yet. */
   price: number | null;
 }
 
 interface ChartData {
   teeth: Record<string, ToothState>;
   history: ChartHistoryEntry[];
+  /** The estimate, computed from these same rows by the API. */
+  plan: Plan | null;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -252,8 +257,10 @@ function mapChart(raw: any): ChartData {
     doctor: r.users ? `Dr. ${r.users.first_name} ${r.users.last_name}` : "",
     notes: r.description ?? "",
     billed: r.invoice?.id != null,
+    invoiceNumber: r.invoice?.invoice_number ?? null,
     price: r.quoted_amount != null && r.quoted_amount !== "" ? Number(r.quoted_amount) : null,
   }));
+  const plan: Plan | null = raw?.plan ?? null;
   // Every treatment per tooth (history is newest first) so hovering a tooth
   // can list all of them, not just the latest.
   for (const h of history) {
@@ -265,7 +272,7 @@ function mapChart(raw: any): ChartData {
       status: h.status,
     });
   }
-  return { teeth, history };
+  return { teeth, history, plan };
 }
 
 const emptyNewPatient = {
@@ -281,6 +288,56 @@ const emptyNewPatient = {
   insurance: "",
   notes: "",
 };
+
+/** One patient row, as every screen in this page expects it. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapPatientRow(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  p: any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  users: any[] = [],
+  visitsByPatient: Record<number, number> = {},
+  lastVisitByPatient: Record<number, string> = {},
+): Patient {
+  // date_of_birth lives on users, returned as p.users.date_of_birth
+  const userEmbed = p.users;
+  const user = users.find((u) => u.id === p.user_id || u.id === String(p.user_id));
+  const dob = userEmbed?.date_of_birth || user?.date_of_birth || "";
+  const dobStr = dob ? (typeof dob === "string" ? dob.split("T")[0] : new Date(dob).toISOString().split("T")[0]) : "";
+  const isActive = userEmbed ? userEmbed.is_active !== false : (user?.is_active !== false);
+  return {
+    id: Number(p.id),
+    userId: userEmbed ? Number(userEmbed.id) : (user ? Number(user.id) : 0),
+    name: userEmbed ? `${userEmbed.first_name} ${userEmbed.last_name}` : (user ? `${user.first_name} ${user.last_name}` : `Patient #${p.id}`),
+    email: userEmbed?.email || user?.email || "",
+    phone: userEmbed?.phone || user?.phone || "",
+    dateOfBirth: dobStr,
+    address: `${p.city || ""}, ${p.governate || ""}`.trim().replace(/^,\s*|,\s*$/, ""),
+    bloodType: p.blood_type || "",
+    allergies: p.allergies ? p.allergies.split(",").map((a: string) => a.trim()).filter(Boolean) : [],
+    insurance: p.insurance_provider || "",
+    registeredDate: (userEmbed?.created_at || user?.created_at || "").split("T")[0],
+    lastVisit: lastVisitByPatient[Number(p.id)] || "",
+    totalVisits: visitsByPatient[Number(p.id)] || 0,
+    status: isActive ? "active" : "inactive",
+    notes: p.medical_notes || "",
+    occupation: p.occupation || "",
+    employer: p.employer || "",
+    workPhone: p.work_phone || "",
+    emergencyName: p.emergency_contact_name || "",
+    emergencyPhone: p.emergency_contact_phone || "",
+    emergencyRelationship: p.emergency_contact_relationship || "",
+    emergency2Name: p.emergency_contact_2_name || "",
+    emergency2Phone: p.emergency_contact_2_phone || "",
+    emergency2Relationship: p.emergency_contact_2_relationship || "",
+    nationalId: p.national_id || "",
+    maritalStatus: p.marital_status || "",
+    nationality: p.nationality || "",
+    preferredLanguage: p.preferred_language || "",
+    photoUrl: userEmbed?.avatar_url || user?.avatar_url || getStoredPhoto(userEmbed?.email || user?.email || ""),
+    mustSetPassword: userEmbed?.must_set_password === true || user?.must_set_password === true,
+  };
+}
 
 export default function PatientsPage() {
   const router = useRouter();
@@ -400,6 +457,8 @@ export default function PatientsPage() {
   const [completing, setCompleting] = useState(false);
   const [removingRecordId, setRemovingRecordId] = useState<number | null>(null);
   const [repricingId, setRepricingId] = useState<number | null>(null);
+  /** The billed line whose frozen price somebody just tried to change. */
+  const [frozenPrice, setFrozenPrice] = useState<ChartHistoryEntry | null>(null);
   const { can } = usePermissions();
 
   // Bumped whenever the plan changed, so the estimate band rebuilds itself.
@@ -454,46 +513,9 @@ export default function PatientsPage() {
         }
       }
 
-      const mapped = (patientsData.data || []).map((p: any) => {
-        // date_of_birth lives on users, returned as p.users.date_of_birth
-        const userEmbed = p.users;
-        const user = users.find((u) => u.id === p.user_id || u.id === String(p.user_id));
-        const dob = userEmbed?.date_of_birth || user?.date_of_birth || "";
-        const dobStr = dob ? (typeof dob === "string" ? dob.split("T")[0] : new Date(dob).toISOString().split("T")[0]) : "";
-        const isActive = userEmbed ? userEmbed.is_active !== false : (user?.is_active !== false);
-        return {
-          id: Number(p.id),
-          userId: userEmbed ? Number(userEmbed.id) : (user ? Number(user.id) : 0),
-          name: userEmbed ? `${userEmbed.first_name} ${userEmbed.last_name}` : (user ? `${user.first_name} ${user.last_name}` : `Patient #${p.id}`),
-          email: userEmbed?.email || user?.email || "",
-          phone: userEmbed?.phone || user?.phone || "",
-          dateOfBirth: dobStr,
-          address: `${p.city || ""}, ${p.governate || ""}`.trim().replace(/^,\s*|,\s*$/, ""),
-          bloodType: p.blood_type || "",
-          allergies: p.allergies ? p.allergies.split(",").map((a: string) => a.trim()).filter(Boolean) : [],
-          insurance: p.insurance_provider || "",
-          registeredDate: (userEmbed?.created_at || user?.created_at || "").split("T")[0],
-          lastVisit: lastVisitByPatient[Number(p.id)] || "",
-          totalVisits: visitsByPatient[Number(p.id)] || 0,
-          status: isActive ? "active" : "inactive",
-          notes: p.medical_notes || "",
-          occupation: p.occupation || "",
-          employer: p.employer || "",
-          workPhone: p.work_phone || "",
-          emergencyName: p.emergency_contact_name || "",
-          emergencyPhone: p.emergency_contact_phone || "",
-          emergencyRelationship: p.emergency_contact_relationship || "",
-          emergency2Name: p.emergency_contact_2_name || "",
-          emergency2Phone: p.emergency_contact_2_phone || "",
-          emergency2Relationship: p.emergency_contact_2_relationship || "",
-          nationalId: p.national_id || "",
-          maritalStatus: p.marital_status || "",
-          nationality: p.nationality || "",
-          preferredLanguage: p.preferred_language || "",
-          photoUrl: userEmbed?.avatar_url || user?.avatar_url || getStoredPhoto(userEmbed?.email || user?.email || ""),
-          mustSetPassword: userEmbed?.must_set_password === true || user?.must_set_password === true,
-        };
-      });
+      const mapped = (patientsData.data || []).map((p: any) =>
+        mapPatientRow(p, users, visitsByPatient, lastVisitByPatient),
+      );
       setPatients(mapped);
     } catch (e) {
       console.error("Failed to fetch patients", e);
@@ -950,14 +972,30 @@ export default function PatientsPage() {
     const params = new URLSearchParams(window.location.search);
     const wanted = Number(params.get("patient"));
     if (!wanted) return;
-    const patient = patients.find((p) => p.id === wanted);
+    const wantChart = params.get("tab") === "chart";
     window.history.replaceState(null, "", "/admin/patients");
-    if (!patient) {
-      toast.error("That patient is not in your clinic.");
+
+    const open = (patient: Patient) =>
+      wantChart ? openPatientChart(patient) : openPatientDetails(patient);
+
+    const listed = patients.find((p) => p.id === wanted);
+    if (listed) {
+      open(listed);
       return;
     }
-    if (params.get("tab") === "chart") openPatientChart(patient);
-    else openPatientDetails(patient);
+
+    // The list is one page of many, so not finding them here means
+    // nothing about whether they exist. Ask for that one patient
+    // rather than telling the user they are not in the clinic.
+    void (async () => {
+      try {
+        const res = await apiFetch(`/api/patients/${wanted}`);
+        if (!res.ok) throw new Error();
+        open(mapPatientRow(await res.json()));
+      } catch {
+        toast.error("That patient could not be opened.");
+      }
+    })();
     // openPatient* are stable for this purpose; the link is read once per load.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patients]);
@@ -970,7 +1008,7 @@ export default function PatientsPage() {
       setChart(mapChart(await res.json()));
       setChartPatientId(patientId);
     } catch {
-      setChart({ teeth: {}, history: [] });
+      setChart({ teeth: {}, history: [], plan: null });
       setChartPatientId(patientId);
     } finally {
       setChartLoading(false);
@@ -1081,7 +1119,9 @@ export default function PatientsPage() {
   // ── Complete planned work / remove ─────────────────────────────────────────
 
   /** Planned work is what the chart can mark as done. */
-  const isCompletable = (h: ChartHistoryEntry) => h.status === "planned";
+  // Work already on a bill is not "to do": billing it up front is a real
+  // flow, so a billed row can be planned, but it must not be selectable.
+  const isCompletable = (h: ChartHistoryEntry) => h.status === "planned" && !h.billed;
 
   const toggleCompleteSelection = (id: number) =>
     setCompleteSelection((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -2191,39 +2231,16 @@ export default function PatientsPage() {
                         </div>
                       </div>
 
-                      {/* The plan is the quote: it is built here and follows the plan. */}
+                      {/* The plan IS the chart rows above; this only adds them up. */}
                       {can("billing:read") && (
                         <PlanQuoteBand
                           patientId={selectedPatient.id}
-                          reloadToken={planToken}
-                          canConfirm={can("billing:edit")}
+                          plan={chart?.plan ?? null}
+                          canConfirm={can("billing:create")}
+                          canSeeMoney={can("billing:read")}
                           onChanged={refreshChart}
+                          patientName={selectedPatient.name}
                         />
-                      )}
-
-                      {/* Billing stays its own page; this only points at it. */}
-                      {can("billing:read") && (
-                        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 bg-gray-50/60 px-4 py-3">
-                          <p className="text-sm text-gray-600">
-                            Completed work is billed on the billing page, by quote and by
-                            treatment.
-                          </p>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => router.push(`/admin/billing/quotes?patient=${selectedPatient.id}`)}
-                            >
-                              <FaClipboardList className="mr-2 rtl:mr-0 rtl:ml-2" /> All quotes
-                            </Button>
-                            <Button
-                              size="sm"
-                              onClick={() => router.push(`/admin/billing?patient=${selectedPatient.id}`)}
-                            >
-                              <FaFileInvoiceDollar className="mr-2 rtl:mr-0 rtl:ml-2" /> Billing
-                            </Button>
-                          </div>
-                        </div>
                       )}
 
                       {/* History */}
@@ -2316,13 +2333,35 @@ export default function PatientsPage() {
                                       )}
                                     </td>
                                     <td className="py-2.5 px-3 text-gray-600 whitespace-nowrap">{h.doctor || "—"}</td>
-                                    {/* Planned work is priced right here; the estimate follows. */}
+                                    {/*
+                                      Work is priced right here, and stays
+                                      repriceable until it is billed — a plan
+                                      is allowed to change part-way through
+                                      treatment. A billed row shows the price
+                                      the invoice froze, with a lock: this
+                                      column is money, so it must never read
+                                      "Billed" instead of an amount, and the
+                                      figure you agreed must never disappear.
+                                    */}
                                     <td className="py-2.5 px-3 text-gray-600 whitespace-nowrap">
                                       {h.billed ? (
-                                        <span className="px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 text-[11px] font-medium">
-                                          Billed
-                                        </span>
-                                      ) : h.status === "planned" && can("records:edit") ? (
+                                        <button
+                                          type="button"
+                                          onClick={() => setFrozenPrice(h)}
+                                          aria-label={`Why the price of ${h.procedure} cannot be changed`}
+                                          title={
+                                            h.invoiceNumber
+                                              ? `Billed on ${h.invoiceNumber} — click to see why this price cannot be changed`
+                                              : "Billed — click to see why this price cannot be changed"
+                                          }
+                                          className="press inline-flex items-center gap-1.5 rounded-lg px-1.5 py-0.5 hover:bg-honey-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400"
+                                        >
+                                          <span className="font-medium text-gray-800">
+                                            {h.price != null ? `${h.price.toFixed(2)}` : "—"}
+                                          </span>
+                                          <FaLock className="text-[10px] text-gray-400" aria-hidden />
+                                        </button>
+                                      ) : h.status !== "missing" && can("records:edit") ? (
                                         <span className="inline-flex items-center gap-1">
                                           <span className="text-gray-400">$</span>
                                           <input
@@ -2349,7 +2388,7 @@ export default function PatientsPage() {
                                     </td>
                                     <td className="py-2.5 px-3">
                                       <div className="flex items-center justify-end gap-1.5">
-                                        {can("records:edit") && h.status === "planned" && (
+                                        {can("records:edit") && isCompletable(h) && (
                                           <Button
                                             size="sm"
                                             variant="outline"
@@ -3182,6 +3221,64 @@ export default function PatientsPage() {
           </div>
         )}
       </Drawer>
+
+      {/* Why a billed price will not budge.
+
+          The row renders no input for billed work, so clicking the price
+          used to do nothing and the only explanation lived in a hover
+          title — invisible on a touch screen, invisible to a keyboard, and
+          only findable by someone who already suspected it was there. */}
+      {frozenPrice && (
+        <Modal
+          isOpen={!!frozenPrice}
+          onClose={() => setFrozenPrice(null)}
+          title="This price is on a bill"
+          description={
+            frozenPrice.invoiceNumber
+              ? `${frozenPrice.procedure} was billed on ${frozenPrice.invoiceNumber}`
+              : `${frozenPrice.procedure} has been billed`
+          }
+          maxWidth="max-w-md"
+        >
+          <div className="space-y-3 text-sm text-ink-700">
+            <p>
+              A bill’s lines cannot be changed after it is issued — that is what
+              keeps the invoice, the receipt and the books saying the same thing.
+              {frozenPrice.price != null && (
+                <>
+                  {" "}This work was billed at{" "}
+                  <strong className="tabular-nums">
+                    ${frozenPrice.price.toFixed(2)}
+                  </strong>
+                  .
+                </>
+              )}
+            </p>
+            <p>
+              To charge a different amount, cancel that bill and issue a new
+              one. If money has already been received on it, refund that first.
+            </p>
+            <p className="text-xs text-ink-500">
+              Everything on this plan that is not on a bill can still be
+              repriced here.
+            </p>
+            <div className="flex flex-wrap justify-end gap-2 border-t border-ink-200/70 pt-3">
+              <Button variant="outline" onClick={() => setFrozenPrice(null)}>
+                Close
+              </Button>
+              {can("billing:read") && selectedPatient && (
+                <Button
+                  onClick={() =>
+                    router.push(`/admin/billing?patient=${selectedPatient.id}`)
+                  }
+                >
+                  Open the money file
+                </Button>
+              )}
+            </div>
+          </div>
+        </Modal>
+      )}
 
       <BulkActionBar
         count={selectedIds.size}

@@ -38,9 +38,12 @@ function build(records: Rec[]) {
       createMany: jest.fn().mockResolvedValue({ count: 1 }),
     },
   };
-  const planQuote = { sync: jest.fn().mockResolvedValue(undefined) };
-  const service = new PatientWorkService(prisma as never, planQuote as never);
-  return { service, tx, prisma, planQuote };
+  const plan = {
+    ensure: jest.fn().mockResolvedValue({ id: 1n }),
+    read: jest.fn().mockResolvedValue({ lines: [], totals: { plan: 0 } }),
+  };
+  const service = new PatientWorkService(prisma as never, plan as never);
+  return { service, tx, prisma, plan };
 }
 
 const ACTOR = 21n;
@@ -173,5 +176,73 @@ describe('PatientWorkService.recordWork', () => {
       [{ data: { tooth_number: string | null }[] }],
     ];
     expect(call.data[0].tooth_number).toBeNull();
+  });
+});
+
+// ── Repricing billed work ───────────────────────────────────────────────────
+
+/**
+ * The refusal has to carry its own explanation. "Already on an invoice" left
+ * the reader hunting for which one, with no idea what to do instead — and on
+ * the chart the only hint was a hover tooltip, which is no hint at all on a
+ * touch screen or a keyboard.
+ */
+function buildReprice(record: {
+  invoice_id: bigint | null;
+  invoice?: { invoice_number: string } | null;
+  record_type?: string;
+}) {
+  const prisma = {
+    patient_records: {
+      findFirst: jest.fn().mockResolvedValue({
+        id: 500n,
+        patient_id: 7n,
+        record_type: record.record_type ?? 'treatment_plan',
+        invoice_id: record.invoice_id,
+        invoice: record.invoice ?? null,
+      }),
+      update: jest.fn().mockResolvedValue({}),
+      findMany: jest.fn().mockResolvedValue([]),
+    },
+    patient_profiles: { findUnique: jest.fn().mockResolvedValue({ id: 7n }) },
+  };
+  const plan = { read: jest.fn().mockResolvedValue({ lines: [], totals: { plan: 0 } }) };
+  return {
+    service: new PatientWorkService(prisma as never, plan as never),
+    prisma,
+  };
+}
+
+describe('PatientWorkService.repriceRecord', () => {
+  it('names the bill that froze the price, and what to do instead', async () => {
+    const { service, prisma } = buildReprice({
+      invoice_id: 70n,
+      invoice: { invoice_number: 'INV-2026-00040' },
+    });
+    await expect(service.repriceRecord(500n, 400, 1n)).rejects.toThrow(
+      BadRequestException,
+    );
+    await expect(service.repriceRecord(500n, 400, 1n)).rejects.toThrow(
+      /INV-2026-00040/,
+    );
+    await expect(service.repriceRecord(500n, 400, 1n)).rejects.toThrow(
+      /cancel that bill and issue a new one/i,
+    );
+    expect(prisma.patient_records.update).not.toHaveBeenCalled();
+  });
+
+  it('still refuses helpfully when the bill cannot be named', async () => {
+    const { service } = buildReprice({ invoice_id: 70n, invoice: null });
+    await expect(service.repriceRecord(500n, 400, 1n)).rejects.toThrow(
+      /belongs to that bill/i,
+    );
+  });
+
+  it('reprices unbilled work without complaint', async () => {
+    const { service, prisma } = buildReprice({ invoice_id: null });
+    await service.repriceRecord(500n, 400, 1n);
+    expect(prisma.patient_records.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ quoted_amount: 400 }) }),
+    );
   });
 });

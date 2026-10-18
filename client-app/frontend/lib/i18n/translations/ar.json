@@ -363,15 +363,22 @@
       "سبت"
     ]
   },
+  "money": {
+    "planTotal": "إجمالي الخطة",
+    "notYetBilled": "لم تُفوتر بعد",
+    "billed": "مفوتر",
+    "paid": "مدفوع",
+    "unpaid": "غير مدفوع",
+    "creditOnAccount": "رصيد في الحساب",
+    "billTotal": "إجمالي الفاتورة",
+    "acrossTheClinic": "على مستوى العيادة",
+    "bills": "الفواتير"
+  },
   "billing": {
     "invoicesCount": "فواتير",
-    "title": "الفواتير العلاجية",
-    "subtitle": "إنشاء فواتير العلاجات وتسجيل مدفوعات المرضى",
+    "title": "الفوترة",
+    "subtitle": "كل فاتورة، كل خطة، كل دفعة",
     "newInvoice": "فاتورة جديدة",
-    "totalInvoiced": "إجمالي الفواتير",
-    "totalCollected": "إجمالي المحصّل",
-    "outstanding": "المستحق",
-    "totalInvoices": "عدد الفواتير",
     "searchPlaceholder": "البحث باسم المريض...",
     "statusAll": "الكل",
     "statusOpen": "مفتوحة",
@@ -383,8 +390,6 @@
     "colDate": "التاريخ",
     "colProcedures": "الإجراءات",
     "colTotal": "الإجمالي",
-    "colPaid": "المدفوع",
-    "colRemaining": "المتبقي",
     "colStatus": "الحالة",
     "createInvoice": "إنشاء فاتورة علاجية",
     "createInvoiceBtn": "إنشاء الفاتورة",

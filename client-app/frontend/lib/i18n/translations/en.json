@@ -363,15 +363,22 @@
       "Sat"
     ]
   },
+  "money": {
+    "planTotal": "Plan total",
+    "notYetBilled": "Not yet billed",
+    "billed": "Billed",
+    "paid": "Paid",
+    "unpaid": "Unpaid",
+    "creditOnAccount": "Credit on account",
+    "billTotal": "Bill total",
+    "acrossTheClinic": "Across the clinic",
+    "bills": "Bills"
+  },
   "billing": {
     "invoicesCount": "invoices",
-    "title": "Treatment Billing",
-    "subtitle": "Create treatment invoices and record patient payments",
+    "title": "Billing",
+    "subtitle": "Every bill, every plan, every payment",
     "newInvoice": "New Invoice",
-    "totalInvoiced": "Total Invoiced",
-    "totalCollected": "Total Collected",
-    "outstanding": "Outstanding",
-    "totalInvoices": "Total Invoices",
     "searchPlaceholder": "Search by patient name...",
     "statusAll": "All",
     "statusOpen": "Open",
@@ -383,8 +390,6 @@
     "colDate": "Date",
     "colProcedures": "Procedures",
     "colTotal": "Total",
-    "colPaid": "Paid",
-    "colRemaining": "Remaining",
     "colStatus": "Status",
     "createInvoice": "Create Treatment Invoice",
     "createInvoiceBtn": "Create Invoice",

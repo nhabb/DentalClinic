@@ -4,6 +4,7 @@ import {
   deriveInvoiceStatus,
   dueDateFor,
   invoiceFigures,
+  isNotYetDue,
   paymentDateFor,
 } from './invoice-math';
 import { clinicTodayIso } from '../../shared/common/date-only';
@@ -81,6 +82,61 @@ describe('daysOverdue', () => {
     expect(daysOverdue(new Date('2026-10-14T12:00:00Z'), now)).toBe(1);
     expect(daysOverdue(new Date('2026-07-07T00:00:00Z'), now)).toBe(100);
   });
+});
+
+describe('isNotYetDue', () => {
+  const now = new Date('2026-10-15T09:30:00.000Z');
+
+  it('is true only while the due date is still ahead on the clinic calendar', () => {
+    expect(isNotYetDue(new Date('2026-10-20T12:00:00Z'), now)).toBe(true);
+    // Due today is not late, but it is not "not yet due" either.
+    expect(isNotYetDue(new Date('2026-10-15T00:00:00Z'), now)).toBe(false);
+    expect(isNotYetDue(new Date('2026-10-14T12:00:00Z'), now)).toBe(false);
+  });
+
+  /*
+   * The pair that used to disagree. The aging report derived its own "today"
+   * from the server's UTC date while asking `daysOverdue` the same question on
+   * the clinic's calendar, so for a few hours each night one invoice could be
+   * both "not yet due" and overdue. The implication below is what makes that
+   * impossible, and it is swept across a whole day in a zone east of UTC and
+   * one west of it, because the two directions fail differently.
+   */
+  describe.each(['Asia/Beirut', 'America/Los_Angeles', 'UTC'])(
+    'in %s',
+    (zone) => {
+      it('never calls a balance not-yet-due while it is also overdue', () => {
+        jest.resetModules();
+        const previous = process.env.CLINIC_TIMEZONE;
+        process.env.CLINIC_TIMEZONE = zone;
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
+          const math = require('./invoice-math') as typeof import('./invoice-math');
+          for (let hour = 0; hour < 24; hour++) {
+            const at = new Date(
+              `2026-10-15T${String(hour).padStart(2, '0')}:30:00.000Z`,
+            );
+            for (const due of [
+              '2026-10-13',
+              '2026-10-14',
+              '2026-10-15',
+              '2026-10-16',
+              '2026-10-17',
+            ]) {
+              const dueDate = new Date(`${due}T00:00:00.000Z`);
+              if (math.isNotYetDue(dueDate, at)) {
+                expect(math.daysOverdue(dueDate, at)).toBe(0);
+              }
+            }
+          }
+        } finally {
+          if (previous === undefined) delete process.env.CLINIC_TIMEZONE;
+          else process.env.CLINIC_TIMEZONE = previous;
+          jest.resetModules();
+        }
+      });
+    },
+  );
 });
 
 describe('deriveInvoiceStatus', () => {

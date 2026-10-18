@@ -25,13 +25,13 @@ import {
 
 export type PatientOption = { id: number; label: string };
 
-/** The group holding treatments no quote priced. */
-const UNQUOTED = "__unquoted__";
-
 /**
- * Completed chart work with no invoice yet, as the API returns it: ids are
- * BigInt on the server and arrive as strings, so they are coerced before they
- * go back as `record_id`.
+ * One line of the patient's plan that is not on an invoice yet, as the API
+ * returns it. Planned and completed work both appear: billing a crown before
+ * it is cut is ordinary, and the plan is the only place either kind lives.
+ *
+ * Ids are BigInt on the server and arrive as strings, so they are coerced
+ * before they go back as `record_id`.
  */
 type BillableRecord = {
   id: number | string;
@@ -39,20 +39,14 @@ type BillableRecord = {
   tooth_number: string | null;
   treatment_date: string | null;
   quoted_amount: number | string | null;
-};
-
-/** Completed work grouped by the quote that priced it. */
-type QuotedGroup = {
-  quote: { id: number | string; quote_number: string; version: number; status: string };
-  items: { id: number | string }[];
+  /** Done, or planned and not done yet. Both are billable. */
+  state: "planned" | "done";
 };
 
 /** A line being built: either a chart record or a free charge. */
 type DraftLine = {
   key: string;
   recordId: number | null;
-  /** The quote that priced this work, when one did. */
-  quoteLabel: string | null;
   procedure: string;
   tooth: string;
   amount: string;
@@ -119,29 +113,26 @@ export function NewInvoiceModal({
         if (!res.ok) throw new Error();
         const json = await res.json();
         if (cancelled) return;
-        const records: BillableRecord[] = Array.isArray(json.completed_unbilled)
-          ? json.completed_unbilled
+        const records: BillableRecord[] = Array.isArray(json.plan_unbilled)
+          ? json.plan_unbilled
           : [];
-        // Which quote priced each treatment, for the grouping below.
-        const quoteOf = new Map<string, string>();
-        for (const g of (json.quoted ?? []) as QuotedGroup[]) {
-          for (const item of g.items ?? []) {
-            quoteOf.set(String(item.id), `${g.quote.quote_number} v${g.quote.version}`);
-          }
-        }
         setLines(
           records.map((r) => ({
             key: `rec-${r.id}`,
             recordId: Number(r.id),
-            quoteLabel: quoteOf.get(String(r.id)) ?? null,
             procedure: r.title,
-            tooth: r.tooth_number ?? "",
-            // The quoted price if a quote agreed one, else the clinic's usual price.
-            amount: String(r.quoted_amount ?? DEFAULT_PRICES[r.title] ?? ""),
+            tooth: r.tooth_number ?? '',
+            // The price the plan carries; the chart is where it was set.
+            amount: String(r.quoted_amount ?? DEFAULT_PRICES[r.title] ?? ''),
             included: true,
-            hint: r.treatment_date
-              ? `Done ${formatDateBeirut(r.treatment_date)}`
-              : "Chart work",
+            // Planned work bills as readily as completed work: a patient
+            // paying for a crown before it is cut is the ordinary case.
+            hint:
+              r.state === 'done'
+                ? r.treatment_date
+                  ? `Done ${formatDateBeirut(r.treatment_date)}`
+                  : 'Done'
+                : 'Planned, not done yet',
           })),
         );
       } catch {
@@ -164,7 +155,6 @@ export function NewInvoiceModal({
       {
         key: `free-${Date.now()}-${prev.length}`,
         recordId: null,
-        quoteLabel: null,
         procedure: PROCEDURES[0],
         tooth: "",
         amount: "",
@@ -176,23 +166,16 @@ export function NewInvoiceModal({
   const removeLine = (key: string) =>
     setLines((prev) => prev.filter((l) => l.key !== key));
 
-  /**
-   * The bill reads by quote and by treatment: lines agreed on a quote sit
-   * under it, and everything else under "no quote". Order is stable so the
-   * list does not jump while prices are typed.
-   */
-  const groupedLines = (() => {
-    const groups = new Map<string, DraftLine[]>();
-    for (const line of lines) {
-      const key = line.quoteLabel ?? UNQUOTED;
-      groups.set(key, [...(groups.get(key) ?? []), line]);
-    }
-    return [...groups.entries()].sort(([a], [b]) =>
-      a === UNQUOTED ? 1 : b === UNQUOTED ? -1 : a.localeCompare(b),
-    );
-  })();
+  // One plan, one list: a patient has a single plan, so there is nothing to
+  // group the lines by any more.
+  const orderedLines = lines;
 
   const included = lines.filter((l) => l.included);
+  /** Tick or untick the whole list at once; the header box shows which it is. */
+  const allIncluded = lines.length > 0 && included.length === lines.length;
+  const someIncluded = included.length > 0;
+  const setAllIncluded = (include: boolean) =>
+    setLines((prev) => prev.map((l) => ({ ...l, included: include })));
   const subtotal = included.reduce((s, l) => s + (parseFloat(l.amount) || 0), 0);
   const draftDiscount = parseFloat(discount) || 0;
   const total = Math.max(0, subtotal - draftDiscount);
@@ -324,30 +307,37 @@ export function NewInvoiceModal({
                 No unbilled chart work. Add a charge below.
               </p>
             )}
-            {/* By quote, then by treatment: what a charge belongs to is plain. */}
-            {groupedLines.map(([groupLabel, groupLines]) => (
-              <div key={groupLabel} className="space-y-2">
-                <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
-                  {groupLabel === UNQUOTED ? (
-                    "Treatments with no quote"
-                  ) : (
-                    <>
-                      <span className="rounded bg-blue-50 px-1.5 py-0.5 font-mono text-[11px] text-brand">
-                        {groupLabel}
-                      </span>
-                      agreed on this quote
-                    </>
-                  )}
-                  <span className="ml-auto font-normal normal-case text-gray-400">
-                    $
-                    {money(
-                      groupLines
-                        .filter((l) => l.included)
-                        .reduce((s, l) => s + (parseFloat(l.amount) || 0), 0),
-                    )}
-                  </span>
-                </p>
-                {groupLines.map((l) => (
+            {/* Tick everything, or clear it. A part-ticked list shows the
+                box half-filled rather than claiming either. */}
+            {lines.length > 0 && (
+              <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+                <input
+                  id="bill-all-lines"
+                  type="checkbox"
+                  checked={allIncluded}
+                  ref={(el) => {
+                    if (el) el.indeterminate = someIncluded && !allIncluded;
+                  }}
+                  onChange={(e) => setAllIncluded(e.target.checked)}
+                />
+                <label
+                  htmlFor="bill-all-lines"
+                  className="flex-1 cursor-pointer select-none text-sm font-medium text-gray-700"
+                >
+                  {allIncluded
+                    ? `All ${lines.length} lines ticked`
+                    : someIncluded
+                      ? `${included.length} of ${lines.length} ticked`
+                      : "Nothing ticked"}
+                </label>
+                <span className="text-sm font-semibold tabular-nums text-gray-900">
+                  ${money(subtotal)}
+                </span>
+              </div>
+            )}
+            {/* One plan, one list. Each row says whether the work is done or
+                still only planned; both are billable. */}
+            {orderedLines.map((l) => (
               <div
                 key={l.key}
                 className={`flex items-center gap-3 rounded-lg border px-3 py-2 ${l.included ? "border-gray-200" : "border-gray-100 opacity-60"}`}
@@ -411,8 +401,6 @@ export function NewInvoiceModal({
                     <FaTrash className="text-xs" />
                   </button>
                 )}
-              </div>
-                ))}
               </div>
             ))}
             <button

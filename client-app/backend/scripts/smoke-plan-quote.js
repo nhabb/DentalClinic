@@ -1,7 +1,14 @@
 /**
- * The flow asked for: plan and price on the chart, the quote builds itself
- * and keeps following the plan, confirmation is a human step, and billing
- * reads by quote and treatment.
+ * The plan is the quote.
+ *
+ * One living plan per patient, built on the chart, editable all the way
+ * through treatment — including after the patient agreed and after part of it
+ * has been billed. The only thing that freezes is a line that is on a bill.
+ *
+ * The previous version of this file asserted the opposite ("planning more work
+ * leaves the accepted plan exactly as agreed", "the new work starts a fresh
+ * draft of its own"), which is the behaviour that made a plan impossible to
+ * change mid-treatment.
  */
 const { api, login } = require('./lib/smoke-helpers');
 
@@ -14,176 +21,240 @@ const today = () => new Date().toISOString().slice(0, 10);
   const doctor = await login('doctor@demo.com', 'demo123');
   const as = { token: doctor.token };
 
-  // A throwaway patient so the run is repeatable.
   const stamp = Date.now();
   const created = await api('POST', '/patients', {
     ...as,
     body: {
-      email: `plan-quote-${stamp}@example.com`,
+      email: `plan-${stamp}@example.com`,
       first_name: 'Plan',
-      last_name: 'Quote',
+      last_name: 'Living',
       phone: '+961 70 000 000',
     },
   });
   const patientId = num(created.json?.id);
   rec('throwaway patient created', created.status === 201 && patientId > 0, `status ${created.status}`);
 
-  const quoteFor = async () => {
-    const res = await api('GET', `/quotes?patient_id=${patientId}&limit=10`, as);
-    const open = (res.json?.data ?? []).filter((q) =>
-      ['draft', 'sent', 'accepted'].includes(q.status),
-    );
-    return open[0] ?? null;
-  };
+  const plan = async () =>
+    (await api('GET', `/quotes/patients/${patientId}`, as)).json;
 
-  // 1. Plan priced work on the chart.
-  const planned = await api('POST', '/patient-work', {
-    ...as,
-    body: {
-      patient_id: patientId,
-      treatment_date: today(),
-      items: [
-        { tooth_number: '11', procedure_name: 'Crown', status: 'planned', amount: 250 },
-        { tooth_number: '21', procedure_name: 'Crown', status: 'planned', amount: 250 },
-      ],
-    },
-  });
+  const addWork = (items) =>
+    api('POST', '/patient-work', {
+      ...as,
+      body: { patient_id: patientId, treatment_date: today(), items },
+    });
+
+  // ── 1. The plan is built on the chart ──────────────────────────────────
+  const planned = await addWork([
+    { tooth_number: '11', procedure_name: 'Crown', status: 'planned', amount: 250 },
+    { tooth_number: '21', procedure_name: 'Crown', status: 'planned', amount: 250 },
+  ]);
   rec('plan two crowns with prices', planned.status === 201, `status ${planned.status}`);
 
-  let q = await quoteFor();
-  rec('a quote built itself from the plan', !!q, q ? `${q.quote_number} ${q.status}` : 'none');
-  rec('it is a draft, waiting to be confirmed', q?.status === 'draft', `status ${q?.status}`);
-  rec('its total is the plan (250 + 250)', num(q?.quoted_total) === 500, `total ${q?.quoted_total}`);
+  let p = await plan();
+  rec('the chart work IS the plan, no second list', p?.lines?.length === 2, `${p?.lines?.length} lines`);
+  rec('the plan has a number', !!p?.quote_number, `${p?.quote_number}`);
+  rec('its total is the plan (250 + 250)', num(p?.totals?.plan) === 500, `total ${p?.totals?.plan}`);
+  rec('every line is still only planned', p?.counts?.planned === 2, JSON.stringify(p?.counts));
 
-  // 2. Add work to the plan: the quote follows.
-  const more = await api('POST', '/patient-work', {
+  // ── 2. Giving it to the patient records what they were handed ──────────
+  const send1 = await api('POST', `/quotes/${num(p.quote_id)}/send`, as);
+  rec('give the plan to the patient', send1.status === 201, `status ${send1.status}`);
+  rec('one dated record of what they were handed', send1.json?.sends?.length === 1,
+    `${send1.json?.sends?.length} sends`);
+
+  const accept = await api('POST', `/quotes/${num(p.quote_id)}/accept`, as);
+  rec('record that the patient agreed', accept.status === 201 && !!accept.json?.accepted_at,
+    `accepted_at ${accept.json?.accepted_at ? 'set' : 'missing'}`);
+  rec('the agreement is for the plan as it stands',
+    accept.json?.agreement_stale === false, `stale ${accept.json?.agreement_stale}`);
+
+  // ── 3. The plan changes mid-treatment: THE case that was impossible ────
+  const added = await addWork([
+    { tooth_number: '16', procedure_name: 'Filling', status: 'planned', amount: 120 },
+  ]);
+  rec('work can be added after the patient agreed', added.status === 201, `status ${added.status}`);
+
+  p = await plan();
+  rec('the SAME plan grew; no second plan appeared',
+    p?.lines?.length === 3 && num(p?.totals?.plan) === 620,
+    `${p?.lines?.length} lines, total ${p?.totals?.plan}`);
+
+  // The agreement was for the plan as it was. It is now for a plan that no
+  // longer exists, and the desk has to take it again.
+  rec('adding work makes the agreement stale',
+    p?.agreement_stale === true, `stale ${p?.agreement_stale}`);
+  rec('but the date they first agreed is not thrown away',
+    !!p?.accepted_at, `accepted_at ${p?.accepted_at ? 'kept' : 'lost'}`);
+
+  const reAccept = await api('POST', `/quotes/${num(p.quote_id)}/accept`, as);
+  rec('agreeing again clears it', reAccept.json?.agreement_stale === false,
+    `stale ${reAccept.json?.agreement_stale}`);
+
+  // Repricing is a change to the deal; completing and billing are not.
+  const toReprice = p.lines.find((l) => l.tooth === '16');
+  await api('PATCH', `/patient-work/records/${num(toReprice.record_id)}/price`, {
+    ...as,
+    body: { amount: 130 },
+  });
+  p = await plan();
+  rec('repricing a line makes it stale too', p?.agreement_stale === true,
+    `stale ${p?.agreement_stale}`);
+  await api('POST', `/quotes/${num(p.quote_id)}/accept`, as);
+  p = await plan();
+  rec('and agreeing again settles it', p?.agreement_stale === false,
+    `stale ${p?.agreement_stale}`);
+
+  // ── 4. Bill one line; it freezes, the rest stays editable ──────────────
+  const crown = p.lines.find((l) => l.tooth === '11');
+  const billed = await api('POST', '/billing/invoices', {
     ...as,
     body: {
       patient_id: patientId,
-      treatment_date: today(),
-      items: [
-        { tooth_number: '36', procedure_name: 'Root Canal', status: 'planned', amount: 200 },
+      procedure_date: today(),
+      line_items: [
+        { record_id: num(crown.record_id), procedure_name: 'Crown', amount: 250, tooth_number: '11' },
       ],
     },
   });
-  q = await quoteFor();
-  rec(
-    'adding to the plan changes the quote automatically (700)',
-    more.status === 201 && num(q?.quoted_total) === 700,
-    `total ${q?.quoted_total}`,
-  );
-  rec('and it is still the same quote, not a new one', (q?.items ?? []).length === 3, `${q?.items?.length} lines`);
+  rec('bill one line of the plan', billed.status === 201, `status ${billed.status}`);
 
-  // 3. Reprice one planned treatment on the chart: the quote follows.
-  const chart = await api('GET', `/patient-work/chart/${patientId}`, as);
-  const crown = (chart.json?.history ?? []).find((r) => r.tooth_number === '11');
-  const repriced = await api('PATCH', `/patient-work/records/${num(crown?.id)}/price`, {
+  p = await plan();
+  const billedLine = p.lines.find((l) => num(l.record_id) === num(crown.record_id));
+  rec('the billed line stays in the plan, locked, with its price',
+    billedLine?.state === 'billed' && billedLine?.locked === true && num(billedLine?.amount) === 250,
+    `state ${billedLine?.state} locked ${billedLine?.locked} amount ${billedLine?.amount}`);
+  rec('the plan total still covers the whole course of treatment',
+    num(p?.totals?.plan) === 630 && num(p?.totals?.billed_value) === 250,
+    `plan ${p?.totals?.plan} billed ${p?.totals?.billed_value}`);
+  rec('billing the work does NOT demand a fresh agreement',
+    p?.agreement_stale === false, `stale ${p?.agreement_stale}`);
+
+  const repriceBilled = await api('PATCH', `/patient-work/records/${num(crown.record_id)}/price`, {
     ...as,
     body: { amount: 400 },
   });
-  q = await quoteFor();
-  rec(
-    'repricing a planned treatment changes the quote (850)',
-    repriced.status === 200 && num(q?.quoted_total) === 850,
-    `status ${repriced.status} total ${q?.quoted_total}`,
-  );
+  rec('a billed line cannot be repriced: that price is the invoice’s',
+    repriceBilled.status === 400, `status ${repriceBilled.status}`);
 
-  // 4. Confirm it: a human step.
-  const accepted = await api('POST', `/quotes/${num(q?.id)}/accept`, as);
-  rec('the quote is confirmed by a person', accepted.json?.status === 'accepted', `status ${accepted.status}`);
-
-  // 5. It keeps following the plan after acceptance, as asked.
-  const afterAccept = await api('POST', '/patient-work', {
+  // ── 5. An unbilled line is still repriceable, billed or not ────────────
+  const other = p.lines.find((l) => l.tooth === '21');
+  const repriceOpen = await api('PATCH', `/patient-work/records/${num(other.record_id)}/price`, {
     ...as,
-    body: {
-      patient_id: patientId,
-      treatment_date: today(),
-      items: [
-        { tooth_number: '46', procedure_name: 'Filling', status: 'planned', amount: 50 },
-      ],
-    },
+    body: { amount: 300 },
   });
-  q = await quoteFor();
-  rec(
-    'changing the plan after acceptance still updates the quote (900)',
-    afterAccept.status === 201 && num(q?.quoted_total) === 900,
-    `total ${q?.quoted_total} status ${q?.status}`,
-  );
+  rec('an unbilled line can still be repriced mid-treatment', repriceOpen.status === 200,
+    `status ${repriceOpen.status}`);
 
-  // 6. Dropping planned work shrinks it again.
-  const filling = (await api('GET', `/patient-work/chart/${patientId}`, as)).json.history.find(
-    (r) => r.tooth_number === '46',
-  );
-  await api('DELETE', `/patient-work/records/${num(filling?.id)}`, as);
-  q = await quoteFor();
-  rec('removing planned work shrinks the quote (850)', num(q?.quoted_total) === 850, `total ${q?.quoted_total}`);
+  p = await plan();
+  rec('and the plan total moves with it', num(p?.totals?.plan) === 680, `total ${p?.totals?.plan}`);
 
-  // 7. Complete the work, then bill it: billing reads by quote and treatment.
-  const toComplete = (await api('GET', `/patient-work/chart/${patientId}`, as)).json.history
-    .filter((r) => r.record_type === 'treatment_plan')
-    .map((r) => ({ record_id: num(r.id) }));
-  await api('POST', '/patient-work/complete', {
+  // Completing work does not price it, and it stays repriceable until billed.
+  const done = await api('POST', '/patient-work/complete', {
     ...as,
-    body: { patient_id: patientId, items: toComplete },
+    body: { patient_id: patientId, treatment_date: today(), items: [{ record_id: num(other.record_id) }] },
   });
-
-  const billable = await api('GET', `/billing/patients/${patientId}/billable`, as);
-  const groups = billable.json?.quoted ?? [];
-  rec(
-    'the billing page groups the work under its quote',
-    groups.length === 1 && (groups[0].items ?? []).length === 3,
-    `${groups.length} quote group(s), ${(groups[0]?.items ?? []).length} treatments`,
-  );
-  rec(
-    'and prices each treatment at what the quote agreed',
-    (billable.json?.completed_unbilled ?? []).some((r) => num(r.quoted_amount) === 400),
-    `prices ${(billable.json?.completed_unbilled ?? []).map((r) => r.quoted_amount).join(', ')}`,
-  );
-
-  // 8. Bill it, then prove the billed quote is frozen against plan changes.
-  const lines = (billable.json?.completed_unbilled ?? []).map((r) => ({
-    record_id: r.id,
-    procedure_name: r.title,
-    ...(r.tooth_number ? { tooth_number: r.tooth_number } : {}),
-    amount: num(r.quoted_amount),
-  }));
-  const invoice = await api('POST', '/billing/invoices', {
+  rec('mark that work done', done.status === 201, `status ${done.status}`);
+  const repriceDone = await api('PATCH', `/patient-work/records/${num(other.record_id)}/price`, {
     ...as,
-    body: { patient_id: patientId, procedure_date: today(), line_items: lines },
+    body: { amount: 320 },
   });
-  rec('the invoice bills the quoted treatments', invoice.status === 201 && num(invoice.json?.total_amount) === 850,
-      `status ${invoice.status} total ${invoice.json?.total_amount}`);
+  rec('completed-but-unbilled work is still repriceable', repriceDone.status === 200,
+    `status ${repriceDone.status}`);
 
-  const billedQuote = await api('GET', `/quotes/${num(q?.id)}`, as);
-  const totalBefore = num(billedQuote.json?.quoted_total);
-  await api('POST', '/patient-work', {
+  // ── 6. Sending again records a second, different figure ────────────────
+  const send2 = await api('POST', `/quotes/${num(p.quote_id)}/send`, as);
+  const sends = send2.json?.sends ?? [];
+  rec('two sendings, two different totals kept',
+    sends.length === 2 && num(sends[0].quoted_total) !== num(sends[1].quoted_total),
+    sends.map((s) => s.quoted_total).join(' / '));
+
+  // ── 7. Only treatment work is in the plan ──────────────────────────────
+  await addWork([{ tooth_number: '31', procedure_name: 'Missing tooth', status: 'missing' }]);
+  p = await plan();
+  rec('a missing tooth is a finding, not plan work',
+    p?.lines?.every((l) => l.procedure !== 'Missing tooth'),
+    `${p?.lines?.length} lines`);
+
+  // ── 8. An unpriced line is reported, never counted as free ─────────────
+  await addWork([{ tooth_number: '36', procedure_name: 'Filling', status: 'planned' }]);
+  p = await plan();
+  rec('a line nobody priced is counted, not treated as zero',
+    p?.totals?.unpriced_count === 1,
+    `unpriced ${p?.totals?.unpriced_count}, total ${p?.totals?.plan}`);
+
+  // ── 9. The statement keeps the money side and the chart side apart ────
+  const st = await api(`GET`, `/billing/patients/${patientId}/statement`, as);
+  const f = st.json?.figures ?? {};
+  const pf = st.json?.plan_figures ?? {};
+  rec(`the statement keeps what is owed apart from what is unbilled`,
+    st.status === 200 &&
+      num(pf.plan_value) === num(p?.totals?.plan) &&
+      num(f.billed) === 250 &&
+      num(pf.unbilled_value) === num(p?.totals?.plan) - 250,
+    `plan ${pf.plan_value} billed ${f.billed} unpaid ${f.due_now} not-yet-billed ${pf.unbilled_value}`);
+
+  // ── 10. The plan says how far the money got ───────────────────────────
+  // What the chart could never tell anyone before: a line said "billed" and
+  // stopped there, however much of that bill had been paid.
+  const invoiceId = num(billed.json?.id);
+  const lineNow = async () =>
+    (await plan()).lines.find((l) => num(l.record_id) === num(crown.record_id));
+
+  let line = await lineNow();
+  rec(`before any payment the billed line reads billed, on an unpaid bill`,
+    line?.state === `billed` && line?.invoice_status === `open`,
+    `state ${line?.state} invoice ${line?.invoice_status}`);
+
+  const part = await api(`POST`, `/billing/patients/${patientId}/payments`, {
     ...as,
-    body: {
-      patient_id: patientId,
-      treatment_date: today(),
-      items: [{ tooth_number: '16', procedure_name: 'Veneers', status: 'planned', amount: 300 }],
-    },
+    body: { amount: 100, payment_method: `cash`, invoice_id: invoiceId },
   });
-  const after = await api('GET', `/quotes/${num(q?.id)}/`.replace(/\/$/, ''), as);
-  rec(
-    'a quote that was billed is left alone by later plan changes',
-    num(after.json?.quoted_total) === totalBefore,
-    `${totalBefore} -> ${after.json?.quoted_total}`,
-  );
-  const fresh = await quoteFor();
-  rec(
-    'and the new planned work starts a fresh draft instead',
-    !!fresh && num(fresh.id) !== num(q?.id) && fresh.status === 'draft',
-    fresh ? `${fresh.quote_number} ${fresh.status} total ${fresh.quoted_total}` : 'none',
-  );
-})()
-  .then(() => {
-    console.table(rows);
-    const f = rows.filter((r) => r.ok === 'FAIL').length;
-    console.log(f ? `${f} check(s) FAILED` : `all ${rows.length} checks passed`);
-    process.exit(f ? 1 : 0);
-  })
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
+  rec(`take 100 of the 250 owed`, part.status === 201, `status ${part.status}`);
+  line = await lineNow();
+  rec(`the plan line now reads part paid`,
+    line?.state === `part_paid` && line?.invoice_status === `partial`,
+    `state ${line?.state} invoice ${line?.invoice_status}`);
+
+  const rest = await api(`POST`, `/billing/patients/${patientId}/payments`, {
+    ...as,
+    body: { amount: 150, payment_method: `cash`, invoice_id: invoiceId },
   });
+  rec(`take the remaining 150`, rest.status === 201, `status ${rest.status}`);
+  line = await lineNow();
+  rec(`the plan line reads paid, still frozen at the price its bill froze`,
+    line?.state === `paid` && line?.locked === true && num(line?.amount) === 250,
+    `state ${line?.state} locked ${line?.locked} amount ${line?.amount}`);
+
+  p = await plan();
+  rec(`the plan reports its own settlement, counting each bill once`,
+    num(p?.settlement?.invoice_count) === 1 &&
+      num(p?.settlement?.invoiced_total) === 250 &&
+      num(p?.settlement?.received) === 250 &&
+      num(p?.settlement?.due) === 0,
+    JSON.stringify(p?.settlement));
+
+  // The assertion that answers "the numbers disagree between screens": the
+  // chart and the billing page are reading one truth.
+  const st2 = await api(`GET`, `/billing/patients/${patientId}/statement`, as);
+  const f2 = st2.json?.figures ?? {};
+  rec(`the plan and the statement agree on what is unpaid`,
+    num(p?.settlement?.due) === num(f2.due_now),
+    `plan ${p?.settlement?.due} vs statement ${f2.due_now}`);
+  rec(`and the statement still balances: billed - paid = unpaid`,
+    Math.abs(num(f2.billed) - num(f2.applied) - num(f2.due_now)) < 0.005 &&
+      Math.abs(num(f2.received) - num(f2.applied) - num(f2.credit_held)) < 0.005,
+    JSON.stringify(f2));
+
+  rec(`paying is not pricing: the unpriced line is still counted`,
+    num(p?.totals?.unpriced_count) === 1,
+    `unpriced ${p?.totals?.unpriced_count}`);
+
+  console.table(rows);
+  const failed = rows.filter((r) => r.ok === 'FAIL').length;
+  console.log(failed ? `${failed} check(s) FAILED` : `all ${rows.length} checks passed`);
+  process.exit(failed ? 1 : 0);
+})().catch((err) => {
+  console.table(rows);
+  console.error('FATAL', err.message);
+  process.exit(1);
+});

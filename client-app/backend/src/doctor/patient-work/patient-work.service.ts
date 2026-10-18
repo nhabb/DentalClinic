@@ -11,7 +11,10 @@ import {
 } from '../../shared/prisma/prisma.service';
 import { RecordWorkDto, WorkStatus } from './dto/record-work.dto';
 import { CompleteWorkDto } from './dto/complete-work.dto';
-import { PlanQuoteService } from '../quotes/plan-quote.service';
+import { PlanService } from '../quotes/plan.service';
+import { PLAN_RECORD_TYPES } from '../quotes/plan-record-types';
+
+type PlanRecordType = (typeof PLAN_RECORD_TYPES)[number];
 
 export type ToothStatus = 'healthy' | 'treated' | 'planned' | 'missing';
 
@@ -44,6 +47,9 @@ const historyInclude = {
   invoice: {
     select: {
       id: true,
+      // The chart names the bill that froze a price, so it has to be told
+      // which one: without this the row could only say "billed".
+      invoice_number: true,
       status: true,
       total_amount: true,
       remaining_amount: true,
@@ -73,7 +79,7 @@ type TxOp = (tx: Tx) => Promise<unknown>;
 export class PatientWorkService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly planQuote: PlanQuoteService,
+    private readonly plan: PlanService,
   ) {}
 
   /**
@@ -89,24 +95,32 @@ export class PatientWorkService {
         patient_id: true,
         record_type: true,
         invoice_id: true,
+        // Named in the refusal below: "already on an invoice" leaves the
+        // reader hunting for which one.
+        invoice: { select: { invoice_number: true } },
       },
     });
     if (!record) throw new NotFoundException('Work record not found');
-    if (record.record_type !== 'treatment_plan') {
-      throw new BadRequestException(
-        'Only planned work is priced on the chart; completed work is priced when it is billed',
-      );
+    if (!PLAN_RECORD_TYPES.includes(record.record_type as PlanRecordType)) {
+      throw new BadRequestException('Only treatment work carries a price');
     }
+    // The only lock on a price is the invoice. Planned work and work already
+    // done can both be repriced while they are unbilled, because a plan is
+    // allowed to change part-way through treatment; once a line is on a bill
+    // its price belongs to that bill, and the patient_records_billed_once
+    // trigger says the same thing in the database.
     if (record.invoice_id) {
+      const bill = record.invoice?.invoice_number ?? 'a bill';
       throw new BadRequestException(
-        'This work is already on an invoice; its price belongs to that invoice',
+        `This work is on ${bill}; its price belongs to that bill now. ` +
+          'To charge a different amount, cancel that bill and issue a new one ' +
+          '(refund anything received on it first).',
       );
     }
     await this.prisma.patient_records.update({
       where: { id: recordId },
       data: { quoted_amount: round2(amount), updated_at: new Date() },
     });
-    await this.planQuote.sync(record.patient_id, actorId);
     return { chart: await this.getChart(record.patient_id) };
   }
 
@@ -175,6 +189,9 @@ export class PatientWorkService {
     return {
       teeth,
       history: [...records].reverse(),
+      // The estimate travels with the chart it is computed from, so the two
+      // can never show different figures and the screen needs one request.
+      plan: await this.plan.read(patientId),
     };
   }
 
@@ -219,7 +236,7 @@ export class PatientWorkService {
       data: dto.items.map(recordData),
     });
     // Planning priced work changes the plan, so the quote follows it.
-    await this.planQuote.sync(patientId, actorId);
+    await this.plan.ensure(patientId, actorId);
 
     const chart = await this.getChart(patientId);
     return {
@@ -279,7 +296,7 @@ export class PatientWorkService {
 
     await this.runOps(ops);
     // Completed work is no longer planned, so it leaves the quote.
-    await this.planQuote.sync(patientId, null);
+    
     return {
       completed: records.length,
       chart: await this.getChart(patientId),
@@ -300,7 +317,7 @@ export class PatientWorkService {
       );
     }
     await this.prisma.patient_records.delete({ where: { id: recordId } });
-    await this.planQuote.sync(record.patient_id, null);
+    
     return { removed: true, chart: await this.getChart(record.patient_id) };
   }
 }

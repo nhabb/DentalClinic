@@ -70,6 +70,7 @@ export const ModelName = {
   treatment_invoices: 'treatment_invoices',
   invoice_line_items: 'invoice_line_items',
   invoice_payments: 'invoice_payments',
+  payment_allocations: 'payment_allocations',
   roles: 'roles',
   role_permissions: 'role_permissions',
   specialists: 'specialists',
@@ -79,7 +80,7 @@ export const ModelName = {
   agent_conversations: 'agent_conversations',
   agent_usage: 'agent_usage',
   quotes: 'quotes',
-  quote_items: 'quote_items'
+  quote_sends: 'quote_sends'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -422,7 +423,6 @@ export const Treatment_invoicesScalarFieldEnum = {
   cancelled_at: 'cancelled_at',
   cancelled_by: 'cancelled_by',
   cancel_reason: 'cancel_reason',
-  quote_id: 'quote_id',
   created_at: 'created_at',
   updated_at: 'updated_at'
 } as const
@@ -446,10 +446,11 @@ export type Invoice_line_itemsScalarFieldEnum = (typeof Invoice_line_itemsScalar
 export const Invoice_paymentsScalarFieldEnum = {
   id: 'id',
   organization_id: 'organization_id',
-  invoice_id: 'invoice_id',
+  patient_id: 'patient_id',
   amount: 'amount',
   payment_method: 'payment_method',
   kind: 'kind',
+  refund_scope: 'refund_scope',
   reason: 'reason',
   notes: 'notes',
   payment_date: 'payment_date',
@@ -458,6 +459,19 @@ export const Invoice_paymentsScalarFieldEnum = {
 } as const
 
 export type Invoice_paymentsScalarFieldEnum = (typeof Invoice_paymentsScalarFieldEnum)[keyof typeof Invoice_paymentsScalarFieldEnum]
+
+
+export const Payment_allocationsScalarFieldEnum = {
+  id: 'id',
+  organization_id: 'organization_id',
+  payment_id: 'payment_id',
+  invoice_id: 'invoice_id',
+  amount: 'amount',
+  created_by: 'created_by',
+  created_at: 'created_at'
+} as const
+
+export type Payment_allocationsScalarFieldEnum = (typeof Payment_allocationsScalarFieldEnum)[keyof typeof Payment_allocationsScalarFieldEnum]
 
 
 export const RolesScalarFieldEnum = {
@@ -611,17 +625,10 @@ export const QuotesScalarFieldEnum = {
   branch_id: 'branch_id',
   patient_id: 'patient_id',
   quote_number: 'quote_number',
-  version: 'version',
-  supersedes_id: 'supersedes_id',
-  status: 'status',
-  valid_until: 'valid_until',
-  quoted_discount: 'quoted_discount',
-  quoted_total: 'quoted_total',
   notes: 'notes',
   created_by: 'created_by',
-  sent_at: 'sent_at',
   accepted_at: 'accepted_at',
-  declined_at: 'declined_at',
+  accepted_digest: 'accepted_digest',
   created_at: 'created_at',
   updated_at: 'updated_at'
 } as const
@@ -629,19 +636,17 @@ export const QuotesScalarFieldEnum = {
 export type QuotesScalarFieldEnum = (typeof QuotesScalarFieldEnum)[keyof typeof QuotesScalarFieldEnum]
 
 
-export const Quote_itemsScalarFieldEnum = {
+export const Quote_sendsScalarFieldEnum = {
   id: 'id',
   organization_id: 'organization_id',
   quote_id: 'quote_id',
-  record_id: 'record_id',
-  procedure_name: 'procedure_name',
-  tooth_number: 'tooth_number',
-  description: 'description',
-  quoted_amount: 'quoted_amount',
+  sent_by: 'sent_by',
+  quoted_total: 'quoted_total',
+  quoted_lines: 'quoted_lines',
   created_at: 'created_at'
 } as const
 
-export type Quote_itemsScalarFieldEnum = (typeof Quote_itemsScalarFieldEnum)[keyof typeof Quote_itemsScalarFieldEnum]
+export type Quote_sendsScalarFieldEnum = (typeof Quote_sendsScalarFieldEnum)[keyof typeof Quote_sendsScalarFieldEnum]
 
 
 export const SortOrder = {

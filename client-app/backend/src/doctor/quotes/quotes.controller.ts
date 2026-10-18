@@ -1,146 +1,94 @@
 import {
   Body,
   Controller,
-  DefaultValuePipe,
-  Delete,
   Get,
   Param,
   ParseIntPipe,
   Patch,
   Post,
-  Query,
   Req,
 } from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiQuery,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { RequirePermissions } from '../../shared/authorization/permissions.decorator';
 import type { RequestUser } from '../../shared/common/guards/jwt-auth.guard';
-import { QuotesService } from './quotes.service';
-import {
-  CreateQuoteDto,
-  InvoiceFromQuoteDto,
-  QUOTE_STATUSES,
-  UpdateQuoteDto,
-} from './dto/quote.dto';
+import { PlanService } from './plan.service';
+import { UpdatePlanNotesDto } from './dto/quote.dto';
 
 type AuthedRequest = { user: RequestUser };
 
 /**
- * Quotes are part of billing: reading them needs billing:read, preparing or
- * revising them billing:create, deciding them billing:edit and dropping a draft
- * billing:delete. Deleting a draft is not a money operation, so
- * no password step-up here; sent quotes cannot be deleted at all.
+ * The treatment plan, which is also the quote.
+ *
+ * There is one plan per patient and it is built on the dental chart, so there
+ * is nothing here that creates or edits plan lines: adding, repricing and
+ * completing work are `/patient-work` routes, because they are clinical acts.
+ * What is left is reading the plan, handing it to the patient, recording that
+ * they agreed, and a note.
+ *
+ * Reading needs billing:read; giving it to a patient or recording their
+ * acceptance needs billing:create, the same key that prepares any other
+ * document.
  */
 @ApiBearerAuth()
 @RequirePermissions('billing:read')
-@ApiTags('Quotes')
+@ApiTags('Treatment plans')
 @Controller('quotes')
 export class QuotesController {
-  constructor(private readonly quotes: QuotesService) {}
+  constructor(private readonly plans: PlanService) {}
 
   @Get()
-  @ApiOperation({ summary: 'List quotes, newest first' })
-  @ApiQuery({ name: 'patient_id', required: false, type: Number })
-  @ApiQuery({ name: 'status', required: false, enum: QUOTE_STATUSES })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  findAll(
-    @Query('patient_id', new DefaultValuePipe(0), ParseIntPipe)
-    patient_id: number,
-    @Query('status') status?: string,
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
-    @Query('limit', new DefaultValuePipe(50), ParseIntPipe) limit?: number,
-  ) {
-    return this.quotes.findAll({
-      patient_id: patient_id || undefined,
-      status,
-      page,
-      limit,
-    });
+  @ApiOperation({ summary: "Every patient's treatment plan, newest first" })
+  list() {
+    return this.plans.list();
+  }
+
+  @Get('patients/:patientId')
+  @ApiOperation({
+    summary:
+      "One patient's plan: its lines with where each stands, the figures, and when it was last given to them",
+  })
+  readForPatient(@Param('patientId', ParseIntPipe) patientId: number) {
+    return this.plans.read(BigInt(patientId));
   }
 
   @Get(':id')
-  @ApiOperation({
-    summary: 'One quote with its lines and the invoices born from it',
-  })
+  @ApiOperation({ summary: 'A treatment plan by its own id' })
   findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.quotes.findOne(BigInt(id));
-  }
-
-  @Post()
-  @RequirePermissions('billing:create')
-  @ApiOperation({
-    summary: 'Prepare a quote (draft) for a patient; numbered by the clinic',
-  })
-  create(@Body() dto: CreateQuoteDto, @Req() req: AuthedRequest) {
-    return this.quotes.create(dto, BigInt(req.user.id));
-  }
-
-  @Patch(':id')
-  @RequirePermissions('billing:edit')
-  @ApiOperation({ summary: 'Change a draft quote (lines replace the list)' })
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateQuoteDto) {
-    return this.quotes.update(BigInt(id), dto);
+    return this.plans.readById(BigInt(id));
   }
 
   @Post(':id/send')
-  @RequirePermissions('billing:edit')
+  @RequirePermissions('billing:create')
   @ApiOperation({
-    summary: 'Mark the quote as given to the patient; it is frozen from now on',
+    summary:
+      'Give the plan to the patient: stamps a dated record of exactly what they were handed',
   })
-  send(@Param('id', ParseIntPipe) id: number) {
-    return this.quotes.send(BigInt(id));
+  send(@Param('id', ParseIntPipe) id: number, @Req() req: AuthedRequest) {
+    return this.plans.send(BigInt(id), BigInt(req.user.id));
   }
 
   @Post(':id/accept')
-  @RequirePermissions('billing:edit')
+  @RequirePermissions('billing:create')
   @ApiOperation({
     summary:
-      'The patient accepted: quoted prices are written onto the planned chart records',
+      'Record that the patient agreed. A dated fact; the plan stays editable, because treatment changes',
   })
   accept(@Param('id', ParseIntPipe) id: number, @Req() req: AuthedRequest) {
-    return this.quotes.accept(BigInt(id), BigInt(req.user.id));
+    return this.plans.accept(BigInt(id), BigInt(req.user.id));
   }
 
-  @Post(':id/decline')
-  @RequirePermissions('billing:edit')
-  @ApiOperation({ summary: 'The patient declined the quote' })
-  decline(@Param('id', ParseIntPipe) id: number) {
-    return this.quotes.decline(BigInt(id));
-  }
-
-  @Post(':id/revise')
+  @Patch(':id/notes')
   @RequirePermissions('billing:create')
-  @ApiOperation({
-    summary:
-      'Start a new version (draft) of this quote; the old one stays as the patient saw it',
-  })
-  revise(@Param('id', ParseIntPipe) id: number, @Req() req: AuthedRequest) {
-    return this.quotes.revise(BigInt(id), BigInt(req.user.id));
-  }
-
-  @Post(':id/invoice')
-  @RequirePermissions('billing:create')
-  @ApiOperation({
-    summary:
-      'Issue an invoice from an accepted quote: its lines and discount, linked back to the quote (one live invoice per quote)',
-  })
-  createInvoice(
+  @ApiOperation({ summary: 'A note on the plan' })
+  setNotes(
     @Param('id', ParseIntPipe) id: number,
-    @Body() dto: InvoiceFromQuoteDto,
+    @Body() dto: UpdatePlanNotesDto,
     @Req() req: AuthedRequest,
   ) {
-    return this.quotes.createInvoice(BigInt(id), dto, BigInt(req.user.id));
-  }
-
-  @Delete(':id')
-  @RequirePermissions('billing:delete')
-  @ApiOperation({ summary: 'Delete a draft quote' })
-  remove(@Param('id', ParseIntPipe) id: number, @Req() req: AuthedRequest) {
-    return this.quotes.remove(BigInt(id), BigInt(req.user.id));
+    return this.plans.setNotes(
+      BigInt(id),
+      dto.notes ?? null,
+      BigInt(req.user.id),
+    );
   }
 }

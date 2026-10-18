@@ -363,15 +363,22 @@
       "Sam"
     ]
   },
+  "money": {
+    "planTotal": "Total du plan",
+    "notYetBilled": "Pas encore facturé",
+    "billed": "Facturé",
+    "paid": "Payé",
+    "unpaid": "Impayé",
+    "creditOnAccount": "Crédit sur le compte",
+    "billTotal": "Total de la facture",
+    "acrossTheClinic": "Dans toute la clinique",
+    "bills": "Factures"
+  },
   "billing": {
     "invoicesCount": "factures",
-    "title": "Facturation des traitements",
-    "subtitle": "Créez des factures de traitement et enregistrez les paiements patients",
+    "title": "Facturation",
+    "subtitle": "Chaque facture, chaque plan, chaque paiement",
     "newInvoice": "Nouvelle facture",
-    "totalInvoiced": "Total facturé",
-    "totalCollected": "Total collecté",
-    "outstanding": "En attente",
-    "totalInvoices": "Total des factures",
     "searchPlaceholder": "Rechercher par nom de patient...",
     "statusAll": "Tous",
     "statusOpen": "Ouvertes",
@@ -383,8 +390,6 @@
     "colDate": "Date",
     "colProcedures": "Actes",
     "colTotal": "Total",
-    "colPaid": "Payé",
-    "colRemaining": "Reste",
     "colStatus": "Statut",
     "createInvoice": "Créer une facture de traitement",
     "createInvoiceBtn": "Créer la facture",

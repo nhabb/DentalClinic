@@ -229,14 +229,15 @@ GRANT USAGE, SELECT ON SEQUENCE quotes_id_seq, quote_items_id_seq TO dental_app;
 
 -- ── 6. The assistant reads quotes with billing:read ────────────────────────
 
-GRANT SELECT ON quotes, quote_items TO dental_agent;
+-- quote_items was dropped by 20261018130000 (the plan is the quote): the chart
+-- rows are the plan, so a second list of the same procedures no longer exists.
+GRANT SELECT ON quotes TO dental_agent;
 DO $$
 DECLARE
     entry TEXT[];
 BEGIN
     FOREACH entry SLICE 1 IN ARRAY ARRAY[
-        ['quotes',      'billing:read'],
-        ['quote_items', 'billing:read']
+        ['quotes',      'billing:read']
     ] LOOP
         EXECUTE format('DROP POLICY IF EXISTS agent_permission ON public.%I', entry[1]);
         EXECUTE format(

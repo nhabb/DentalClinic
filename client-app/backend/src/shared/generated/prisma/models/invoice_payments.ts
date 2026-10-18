@@ -29,7 +29,7 @@ export type AggregateInvoice_payments = {
 export type Invoice_paymentsAvgAggregateOutputType = {
   id: number | null
   organization_id: number | null
-  invoice_id: number | null
+  patient_id: number | null
   amount: runtime.Decimal | null
   created_by: number | null
 }
@@ -37,7 +37,7 @@ export type Invoice_paymentsAvgAggregateOutputType = {
 export type Invoice_paymentsSumAggregateOutputType = {
   id: bigint | null
   organization_id: bigint | null
-  invoice_id: bigint | null
+  patient_id: bigint | null
   amount: runtime.Decimal | null
   created_by: bigint | null
 }
@@ -45,10 +45,11 @@ export type Invoice_paymentsSumAggregateOutputType = {
 export type Invoice_paymentsMinAggregateOutputType = {
   id: bigint | null
   organization_id: bigint | null
-  invoice_id: bigint | null
+  patient_id: bigint | null
   amount: runtime.Decimal | null
   payment_method: string | null
   kind: string | null
+  refund_scope: string | null
   reason: string | null
   notes: string | null
   payment_date: Date | null
@@ -59,10 +60,11 @@ export type Invoice_paymentsMinAggregateOutputType = {
 export type Invoice_paymentsMaxAggregateOutputType = {
   id: bigint | null
   organization_id: bigint | null
-  invoice_id: bigint | null
+  patient_id: bigint | null
   amount: runtime.Decimal | null
   payment_method: string | null
   kind: string | null
+  refund_scope: string | null
   reason: string | null
   notes: string | null
   payment_date: Date | null
@@ -73,10 +75,11 @@ export type Invoice_paymentsMaxAggregateOutputType = {
 export type Invoice_paymentsCountAggregateOutputType = {
   id: number
   organization_id: number
-  invoice_id: number
+  patient_id: number
   amount: number
   payment_method: number
   kind: number
+  refund_scope: number
   reason: number
   notes: number
   payment_date: number
@@ -89,7 +92,7 @@ export type Invoice_paymentsCountAggregateOutputType = {
 export type Invoice_paymentsAvgAggregateInputType = {
   id?: true
   organization_id?: true
-  invoice_id?: true
+  patient_id?: true
   amount?: true
   created_by?: true
 }
@@ -97,7 +100,7 @@ export type Invoice_paymentsAvgAggregateInputType = {
 export type Invoice_paymentsSumAggregateInputType = {
   id?: true
   organization_id?: true
-  invoice_id?: true
+  patient_id?: true
   amount?: true
   created_by?: true
 }
@@ -105,10 +108,11 @@ export type Invoice_paymentsSumAggregateInputType = {
 export type Invoice_paymentsMinAggregateInputType = {
   id?: true
   organization_id?: true
-  invoice_id?: true
+  patient_id?: true
   amount?: true
   payment_method?: true
   kind?: true
+  refund_scope?: true
   reason?: true
   notes?: true
   payment_date?: true
@@ -119,10 +123,11 @@ export type Invoice_paymentsMinAggregateInputType = {
 export type Invoice_paymentsMaxAggregateInputType = {
   id?: true
   organization_id?: true
-  invoice_id?: true
+  patient_id?: true
   amount?: true
   payment_method?: true
   kind?: true
+  refund_scope?: true
   reason?: true
   notes?: true
   payment_date?: true
@@ -133,10 +138,11 @@ export type Invoice_paymentsMaxAggregateInputType = {
 export type Invoice_paymentsCountAggregateInputType = {
   id?: true
   organization_id?: true
-  invoice_id?: true
+  patient_id?: true
   amount?: true
   payment_method?: true
   kind?: true
+  refund_scope?: true
   reason?: true
   notes?: true
   payment_date?: true
@@ -234,10 +240,11 @@ export type invoice_paymentsGroupByArgs<ExtArgs extends runtime.Types.Extensions
 export type Invoice_paymentsGroupByOutputType = {
   id: bigint
   organization_id: bigint
-  invoice_id: bigint
+  patient_id: bigint
   amount: runtime.Decimal
   payment_method: string
   kind: string
+  refund_scope: string | null
   reason: string | null
   notes: string | null
   payment_date: Date
@@ -271,35 +278,39 @@ export type invoice_paymentsWhereInput = {
   NOT?: Prisma.invoice_paymentsWhereInput | Prisma.invoice_paymentsWhereInput[]
   id?: Prisma.BigIntFilter<"invoice_payments"> | bigint | number
   organization_id?: Prisma.BigIntFilter<"invoice_payments"> | bigint | number
-  invoice_id?: Prisma.BigIntFilter<"invoice_payments"> | bigint | number
+  patient_id?: Prisma.BigIntFilter<"invoice_payments"> | bigint | number
   amount?: Prisma.DecimalFilter<"invoice_payments"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   payment_method?: Prisma.StringFilter<"invoice_payments"> | string
   kind?: Prisma.StringFilter<"invoice_payments"> | string
+  refund_scope?: Prisma.StringNullableFilter<"invoice_payments"> | string | null
   reason?: Prisma.StringNullableFilter<"invoice_payments"> | string | null
   notes?: Prisma.StringNullableFilter<"invoice_payments"> | string | null
   payment_date?: Prisma.DateTimeFilter<"invoice_payments"> | Date | string
   created_by?: Prisma.BigIntNullableFilter<"invoice_payments"> | bigint | number | null
   created_at?: Prisma.DateTimeFilter<"invoice_payments"> | Date | string
   organization?: Prisma.XOR<Prisma.OrganizationsScalarRelationFilter, Prisma.organizationsWhereInput>
-  invoice?: Prisma.XOR<Prisma.Treatment_invoicesScalarRelationFilter, Prisma.treatment_invoicesWhereInput>
+  patient?: Prisma.XOR<Prisma.Patient_profilesScalarRelationFilter, Prisma.patient_profilesWhereInput>
   creator?: Prisma.XOR<Prisma.UsersNullableScalarRelationFilter, Prisma.usersWhereInput> | null
+  allocations?: Prisma.Payment_allocationsListRelationFilter
 }
 
 export type invoice_paymentsOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   organization_id?: Prisma.SortOrder
-  invoice_id?: Prisma.SortOrder
+  patient_id?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   payment_method?: Prisma.SortOrder
   kind?: Prisma.SortOrder
+  refund_scope?: Prisma.SortOrderInput | Prisma.SortOrder
   reason?: Prisma.SortOrderInput | Prisma.SortOrder
   notes?: Prisma.SortOrderInput | Prisma.SortOrder
   payment_date?: Prisma.SortOrder
   created_by?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrder
   organization?: Prisma.organizationsOrderByWithRelationInput
-  invoice?: Prisma.treatment_invoicesOrderByWithRelationInput
+  patient?: Prisma.patient_profilesOrderByWithRelationInput
   creator?: Prisma.usersOrderByWithRelationInput
+  allocations?: Prisma.payment_allocationsOrderByRelationAggregateInput
 }
 
 export type invoice_paymentsWhereUniqueInput = Prisma.AtLeast<{
@@ -308,27 +319,30 @@ export type invoice_paymentsWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.invoice_paymentsWhereInput[]
   NOT?: Prisma.invoice_paymentsWhereInput | Prisma.invoice_paymentsWhereInput[]
   organization_id?: Prisma.BigIntFilter<"invoice_payments"> | bigint | number
-  invoice_id?: Prisma.BigIntFilter<"invoice_payments"> | bigint | number
+  patient_id?: Prisma.BigIntFilter<"invoice_payments"> | bigint | number
   amount?: Prisma.DecimalFilter<"invoice_payments"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   payment_method?: Prisma.StringFilter<"invoice_payments"> | string
   kind?: Prisma.StringFilter<"invoice_payments"> | string
+  refund_scope?: Prisma.StringNullableFilter<"invoice_payments"> | string | null
   reason?: Prisma.StringNullableFilter<"invoice_payments"> | string | null
   notes?: Prisma.StringNullableFilter<"invoice_payments"> | string | null
   payment_date?: Prisma.DateTimeFilter<"invoice_payments"> | Date | string
   created_by?: Prisma.BigIntNullableFilter<"invoice_payments"> | bigint | number | null
   created_at?: Prisma.DateTimeFilter<"invoice_payments"> | Date | string
   organization?: Prisma.XOR<Prisma.OrganizationsScalarRelationFilter, Prisma.organizationsWhereInput>
-  invoice?: Prisma.XOR<Prisma.Treatment_invoicesScalarRelationFilter, Prisma.treatment_invoicesWhereInput>
+  patient?: Prisma.XOR<Prisma.Patient_profilesScalarRelationFilter, Prisma.patient_profilesWhereInput>
   creator?: Prisma.XOR<Prisma.UsersNullableScalarRelationFilter, Prisma.usersWhereInput> | null
+  allocations?: Prisma.Payment_allocationsListRelationFilter
 }, "id">
 
 export type invoice_paymentsOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   organization_id?: Prisma.SortOrder
-  invoice_id?: Prisma.SortOrder
+  patient_id?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   payment_method?: Prisma.SortOrder
   kind?: Prisma.SortOrder
+  refund_scope?: Prisma.SortOrderInput | Prisma.SortOrder
   reason?: Prisma.SortOrderInput | Prisma.SortOrder
   notes?: Prisma.SortOrderInput | Prisma.SortOrder
   payment_date?: Prisma.SortOrder
@@ -347,10 +361,11 @@ export type invoice_paymentsScalarWhereWithAggregatesInput = {
   NOT?: Prisma.invoice_paymentsScalarWhereWithAggregatesInput | Prisma.invoice_paymentsScalarWhereWithAggregatesInput[]
   id?: Prisma.BigIntWithAggregatesFilter<"invoice_payments"> | bigint | number
   organization_id?: Prisma.BigIntWithAggregatesFilter<"invoice_payments"> | bigint | number
-  invoice_id?: Prisma.BigIntWithAggregatesFilter<"invoice_payments"> | bigint | number
+  patient_id?: Prisma.BigIntWithAggregatesFilter<"invoice_payments"> | bigint | number
   amount?: Prisma.DecimalWithAggregatesFilter<"invoice_payments"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   payment_method?: Prisma.StringWithAggregatesFilter<"invoice_payments"> | string
   kind?: Prisma.StringWithAggregatesFilter<"invoice_payments"> | string
+  refund_scope?: Prisma.StringNullableWithAggregatesFilter<"invoice_payments"> | string | null
   reason?: Prisma.StringNullableWithAggregatesFilter<"invoice_payments"> | string | null
   notes?: Prisma.StringNullableWithAggregatesFilter<"invoice_payments"> | string | null
   payment_date?: Prisma.DateTimeWithAggregatesFilter<"invoice_payments"> | Date | string
@@ -363,27 +378,31 @@ export type invoice_paymentsCreateInput = {
   amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   payment_method?: string
   kind?: string
+  refund_scope?: string | null
   reason?: string | null
   notes?: string | null
   payment_date?: Date | string
   created_at?: Date | string
   organization?: Prisma.organizationsCreateNestedOneWithoutInvoice_paymentsInput
-  invoice: Prisma.treatment_invoicesCreateNestedOneWithoutInvoice_paymentsInput
+  patient: Prisma.patient_profilesCreateNestedOneWithoutInvoice_paymentsInput
   creator?: Prisma.usersCreateNestedOneWithoutInvoice_payments_createdInput
+  allocations?: Prisma.payment_allocationsCreateNestedManyWithoutPaymentInput
 }
 
 export type invoice_paymentsUncheckedCreateInput = {
   id?: bigint | number
   organization_id?: bigint | number
-  invoice_id: bigint | number
+  patient_id: bigint | number
   amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   payment_method?: string
   kind?: string
+  refund_scope?: string | null
   reason?: string | null
   notes?: string | null
   payment_date?: Date | string
   created_by?: bigint | number | null
   created_at?: Date | string
+  allocations?: Prisma.payment_allocationsUncheckedCreateNestedManyWithoutPaymentInput
 }
 
 export type invoice_paymentsUpdateInput = {
@@ -391,36 +410,41 @@ export type invoice_paymentsUpdateInput = {
   amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   payment_method?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.StringFieldUpdateOperationsInput | string
+  refund_scope?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   payment_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   organization?: Prisma.organizationsUpdateOneRequiredWithoutInvoice_paymentsNestedInput
-  invoice?: Prisma.treatment_invoicesUpdateOneRequiredWithoutInvoice_paymentsNestedInput
+  patient?: Prisma.patient_profilesUpdateOneRequiredWithoutInvoice_paymentsNestedInput
   creator?: Prisma.usersUpdateOneWithoutInvoice_payments_createdNestedInput
+  allocations?: Prisma.payment_allocationsUpdateManyWithoutPaymentNestedInput
 }
 
 export type invoice_paymentsUncheckedUpdateInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  invoice_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   payment_method?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.StringFieldUpdateOperationsInput | string
+  refund_scope?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   payment_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  allocations?: Prisma.payment_allocationsUncheckedUpdateManyWithoutPaymentNestedInput
 }
 
 export type invoice_paymentsCreateManyInput = {
   id?: bigint | number
   organization_id?: bigint | number
-  invoice_id: bigint | number
+  patient_id: bigint | number
   amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   payment_method?: string
   kind?: string
+  refund_scope?: string | null
   reason?: string | null
   notes?: string | null
   payment_date?: Date | string
@@ -433,6 +457,7 @@ export type invoice_paymentsUpdateManyMutationInput = {
   amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   payment_method?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.StringFieldUpdateOperationsInput | string
+  refund_scope?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   payment_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -442,10 +467,11 @@ export type invoice_paymentsUpdateManyMutationInput = {
 export type invoice_paymentsUncheckedUpdateManyInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  invoice_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   payment_method?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.StringFieldUpdateOperationsInput | string
+  refund_scope?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   payment_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -466,10 +492,11 @@ export type invoice_paymentsOrderByRelationAggregateInput = {
 export type invoice_paymentsCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   organization_id?: Prisma.SortOrder
-  invoice_id?: Prisma.SortOrder
+  patient_id?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   payment_method?: Prisma.SortOrder
   kind?: Prisma.SortOrder
+  refund_scope?: Prisma.SortOrder
   reason?: Prisma.SortOrder
   notes?: Prisma.SortOrder
   payment_date?: Prisma.SortOrder
@@ -480,7 +507,7 @@ export type invoice_paymentsCountOrderByAggregateInput = {
 export type invoice_paymentsAvgOrderByAggregateInput = {
   id?: Prisma.SortOrder
   organization_id?: Prisma.SortOrder
-  invoice_id?: Prisma.SortOrder
+  patient_id?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   created_by?: Prisma.SortOrder
 }
@@ -488,10 +515,11 @@ export type invoice_paymentsAvgOrderByAggregateInput = {
 export type invoice_paymentsMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   organization_id?: Prisma.SortOrder
-  invoice_id?: Prisma.SortOrder
+  patient_id?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   payment_method?: Prisma.SortOrder
   kind?: Prisma.SortOrder
+  refund_scope?: Prisma.SortOrder
   reason?: Prisma.SortOrder
   notes?: Prisma.SortOrder
   payment_date?: Prisma.SortOrder
@@ -502,10 +530,11 @@ export type invoice_paymentsMaxOrderByAggregateInput = {
 export type invoice_paymentsMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   organization_id?: Prisma.SortOrder
-  invoice_id?: Prisma.SortOrder
+  patient_id?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   payment_method?: Prisma.SortOrder
   kind?: Prisma.SortOrder
+  refund_scope?: Prisma.SortOrder
   reason?: Prisma.SortOrder
   notes?: Prisma.SortOrder
   payment_date?: Prisma.SortOrder
@@ -516,9 +545,14 @@ export type invoice_paymentsMinOrderByAggregateInput = {
 export type invoice_paymentsSumOrderByAggregateInput = {
   id?: Prisma.SortOrder
   organization_id?: Prisma.SortOrder
-  invoice_id?: Prisma.SortOrder
+  patient_id?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   created_by?: Prisma.SortOrder
+}
+
+export type Invoice_paymentsScalarRelationFilter = {
+  is?: Prisma.invoice_paymentsWhereInput
+  isNot?: Prisma.invoice_paymentsWhereInput
 }
 
 export type invoice_paymentsCreateNestedManyWithoutOrganizationInput = {
@@ -560,6 +594,48 @@ export type invoice_paymentsUncheckedUpdateManyWithoutOrganizationNestedInput = 
   connect?: Prisma.invoice_paymentsWhereUniqueInput | Prisma.invoice_paymentsWhereUniqueInput[]
   update?: Prisma.invoice_paymentsUpdateWithWhereUniqueWithoutOrganizationInput | Prisma.invoice_paymentsUpdateWithWhereUniqueWithoutOrganizationInput[]
   updateMany?: Prisma.invoice_paymentsUpdateManyWithWhereWithoutOrganizationInput | Prisma.invoice_paymentsUpdateManyWithWhereWithoutOrganizationInput[]
+  deleteMany?: Prisma.invoice_paymentsScalarWhereInput | Prisma.invoice_paymentsScalarWhereInput[]
+}
+
+export type invoice_paymentsCreateNestedManyWithoutPatientInput = {
+  create?: Prisma.XOR<Prisma.invoice_paymentsCreateWithoutPatientInput, Prisma.invoice_paymentsUncheckedCreateWithoutPatientInput> | Prisma.invoice_paymentsCreateWithoutPatientInput[] | Prisma.invoice_paymentsUncheckedCreateWithoutPatientInput[]
+  connectOrCreate?: Prisma.invoice_paymentsCreateOrConnectWithoutPatientInput | Prisma.invoice_paymentsCreateOrConnectWithoutPatientInput[]
+  createMany?: Prisma.invoice_paymentsCreateManyPatientInputEnvelope
+  connect?: Prisma.invoice_paymentsWhereUniqueInput | Prisma.invoice_paymentsWhereUniqueInput[]
+}
+
+export type invoice_paymentsUncheckedCreateNestedManyWithoutPatientInput = {
+  create?: Prisma.XOR<Prisma.invoice_paymentsCreateWithoutPatientInput, Prisma.invoice_paymentsUncheckedCreateWithoutPatientInput> | Prisma.invoice_paymentsCreateWithoutPatientInput[] | Prisma.invoice_paymentsUncheckedCreateWithoutPatientInput[]
+  connectOrCreate?: Prisma.invoice_paymentsCreateOrConnectWithoutPatientInput | Prisma.invoice_paymentsCreateOrConnectWithoutPatientInput[]
+  createMany?: Prisma.invoice_paymentsCreateManyPatientInputEnvelope
+  connect?: Prisma.invoice_paymentsWhereUniqueInput | Prisma.invoice_paymentsWhereUniqueInput[]
+}
+
+export type invoice_paymentsUpdateManyWithoutPatientNestedInput = {
+  create?: Prisma.XOR<Prisma.invoice_paymentsCreateWithoutPatientInput, Prisma.invoice_paymentsUncheckedCreateWithoutPatientInput> | Prisma.invoice_paymentsCreateWithoutPatientInput[] | Prisma.invoice_paymentsUncheckedCreateWithoutPatientInput[]
+  connectOrCreate?: Prisma.invoice_paymentsCreateOrConnectWithoutPatientInput | Prisma.invoice_paymentsCreateOrConnectWithoutPatientInput[]
+  upsert?: Prisma.invoice_paymentsUpsertWithWhereUniqueWithoutPatientInput | Prisma.invoice_paymentsUpsertWithWhereUniqueWithoutPatientInput[]
+  createMany?: Prisma.invoice_paymentsCreateManyPatientInputEnvelope
+  set?: Prisma.invoice_paymentsWhereUniqueInput | Prisma.invoice_paymentsWhereUniqueInput[]
+  disconnect?: Prisma.invoice_paymentsWhereUniqueInput | Prisma.invoice_paymentsWhereUniqueInput[]
+  delete?: Prisma.invoice_paymentsWhereUniqueInput | Prisma.invoice_paymentsWhereUniqueInput[]
+  connect?: Prisma.invoice_paymentsWhereUniqueInput | Prisma.invoice_paymentsWhereUniqueInput[]
+  update?: Prisma.invoice_paymentsUpdateWithWhereUniqueWithoutPatientInput | Prisma.invoice_paymentsUpdateWithWhereUniqueWithoutPatientInput[]
+  updateMany?: Prisma.invoice_paymentsUpdateManyWithWhereWithoutPatientInput | Prisma.invoice_paymentsUpdateManyWithWhereWithoutPatientInput[]
+  deleteMany?: Prisma.invoice_paymentsScalarWhereInput | Prisma.invoice_paymentsScalarWhereInput[]
+}
+
+export type invoice_paymentsUncheckedUpdateManyWithoutPatientNestedInput = {
+  create?: Prisma.XOR<Prisma.invoice_paymentsCreateWithoutPatientInput, Prisma.invoice_paymentsUncheckedCreateWithoutPatientInput> | Prisma.invoice_paymentsCreateWithoutPatientInput[] | Prisma.invoice_paymentsUncheckedCreateWithoutPatientInput[]
+  connectOrCreate?: Prisma.invoice_paymentsCreateOrConnectWithoutPatientInput | Prisma.invoice_paymentsCreateOrConnectWithoutPatientInput[]
+  upsert?: Prisma.invoice_paymentsUpsertWithWhereUniqueWithoutPatientInput | Prisma.invoice_paymentsUpsertWithWhereUniqueWithoutPatientInput[]
+  createMany?: Prisma.invoice_paymentsCreateManyPatientInputEnvelope
+  set?: Prisma.invoice_paymentsWhereUniqueInput | Prisma.invoice_paymentsWhereUniqueInput[]
+  disconnect?: Prisma.invoice_paymentsWhereUniqueInput | Prisma.invoice_paymentsWhereUniqueInput[]
+  delete?: Prisma.invoice_paymentsWhereUniqueInput | Prisma.invoice_paymentsWhereUniqueInput[]
+  connect?: Prisma.invoice_paymentsWhereUniqueInput | Prisma.invoice_paymentsWhereUniqueInput[]
+  update?: Prisma.invoice_paymentsUpdateWithWhereUniqueWithoutPatientInput | Prisma.invoice_paymentsUpdateWithWhereUniqueWithoutPatientInput[]
+  updateMany?: Prisma.invoice_paymentsUpdateManyWithWhereWithoutPatientInput | Prisma.invoice_paymentsUpdateManyWithWhereWithoutPatientInput[]
   deleteMany?: Prisma.invoice_paymentsScalarWhereInput | Prisma.invoice_paymentsScalarWhereInput[]
 }
 
@@ -605,46 +681,18 @@ export type invoice_paymentsUncheckedUpdateManyWithoutCreatorNestedInput = {
   deleteMany?: Prisma.invoice_paymentsScalarWhereInput | Prisma.invoice_paymentsScalarWhereInput[]
 }
 
-export type invoice_paymentsCreateNestedManyWithoutInvoiceInput = {
-  create?: Prisma.XOR<Prisma.invoice_paymentsCreateWithoutInvoiceInput, Prisma.invoice_paymentsUncheckedCreateWithoutInvoiceInput> | Prisma.invoice_paymentsCreateWithoutInvoiceInput[] | Prisma.invoice_paymentsUncheckedCreateWithoutInvoiceInput[]
-  connectOrCreate?: Prisma.invoice_paymentsCreateOrConnectWithoutInvoiceInput | Prisma.invoice_paymentsCreateOrConnectWithoutInvoiceInput[]
-  createMany?: Prisma.invoice_paymentsCreateManyInvoiceInputEnvelope
-  connect?: Prisma.invoice_paymentsWhereUniqueInput | Prisma.invoice_paymentsWhereUniqueInput[]
+export type invoice_paymentsCreateNestedOneWithoutAllocationsInput = {
+  create?: Prisma.XOR<Prisma.invoice_paymentsCreateWithoutAllocationsInput, Prisma.invoice_paymentsUncheckedCreateWithoutAllocationsInput>
+  connectOrCreate?: Prisma.invoice_paymentsCreateOrConnectWithoutAllocationsInput
+  connect?: Prisma.invoice_paymentsWhereUniqueInput
 }
 
-export type invoice_paymentsUncheckedCreateNestedManyWithoutInvoiceInput = {
-  create?: Prisma.XOR<Prisma.invoice_paymentsCreateWithoutInvoiceInput, Prisma.invoice_paymentsUncheckedCreateWithoutInvoiceInput> | Prisma.invoice_paymentsCreateWithoutInvoiceInput[] | Prisma.invoice_paymentsUncheckedCreateWithoutInvoiceInput[]
-  connectOrCreate?: Prisma.invoice_paymentsCreateOrConnectWithoutInvoiceInput | Prisma.invoice_paymentsCreateOrConnectWithoutInvoiceInput[]
-  createMany?: Prisma.invoice_paymentsCreateManyInvoiceInputEnvelope
-  connect?: Prisma.invoice_paymentsWhereUniqueInput | Prisma.invoice_paymentsWhereUniqueInput[]
-}
-
-export type invoice_paymentsUpdateManyWithoutInvoiceNestedInput = {
-  create?: Prisma.XOR<Prisma.invoice_paymentsCreateWithoutInvoiceInput, Prisma.invoice_paymentsUncheckedCreateWithoutInvoiceInput> | Prisma.invoice_paymentsCreateWithoutInvoiceInput[] | Prisma.invoice_paymentsUncheckedCreateWithoutInvoiceInput[]
-  connectOrCreate?: Prisma.invoice_paymentsCreateOrConnectWithoutInvoiceInput | Prisma.invoice_paymentsCreateOrConnectWithoutInvoiceInput[]
-  upsert?: Prisma.invoice_paymentsUpsertWithWhereUniqueWithoutInvoiceInput | Prisma.invoice_paymentsUpsertWithWhereUniqueWithoutInvoiceInput[]
-  createMany?: Prisma.invoice_paymentsCreateManyInvoiceInputEnvelope
-  set?: Prisma.invoice_paymentsWhereUniqueInput | Prisma.invoice_paymentsWhereUniqueInput[]
-  disconnect?: Prisma.invoice_paymentsWhereUniqueInput | Prisma.invoice_paymentsWhereUniqueInput[]
-  delete?: Prisma.invoice_paymentsWhereUniqueInput | Prisma.invoice_paymentsWhereUniqueInput[]
-  connect?: Prisma.invoice_paymentsWhereUniqueInput | Prisma.invoice_paymentsWhereUniqueInput[]
-  update?: Prisma.invoice_paymentsUpdateWithWhereUniqueWithoutInvoiceInput | Prisma.invoice_paymentsUpdateWithWhereUniqueWithoutInvoiceInput[]
-  updateMany?: Prisma.invoice_paymentsUpdateManyWithWhereWithoutInvoiceInput | Prisma.invoice_paymentsUpdateManyWithWhereWithoutInvoiceInput[]
-  deleteMany?: Prisma.invoice_paymentsScalarWhereInput | Prisma.invoice_paymentsScalarWhereInput[]
-}
-
-export type invoice_paymentsUncheckedUpdateManyWithoutInvoiceNestedInput = {
-  create?: Prisma.XOR<Prisma.invoice_paymentsCreateWithoutInvoiceInput, Prisma.invoice_paymentsUncheckedCreateWithoutInvoiceInput> | Prisma.invoice_paymentsCreateWithoutInvoiceInput[] | Prisma.invoice_paymentsUncheckedCreateWithoutInvoiceInput[]
-  connectOrCreate?: Prisma.invoice_paymentsCreateOrConnectWithoutInvoiceInput | Prisma.invoice_paymentsCreateOrConnectWithoutInvoiceInput[]
-  upsert?: Prisma.invoice_paymentsUpsertWithWhereUniqueWithoutInvoiceInput | Prisma.invoice_paymentsUpsertWithWhereUniqueWithoutInvoiceInput[]
-  createMany?: Prisma.invoice_paymentsCreateManyInvoiceInputEnvelope
-  set?: Prisma.invoice_paymentsWhereUniqueInput | Prisma.invoice_paymentsWhereUniqueInput[]
-  disconnect?: Prisma.invoice_paymentsWhereUniqueInput | Prisma.invoice_paymentsWhereUniqueInput[]
-  delete?: Prisma.invoice_paymentsWhereUniqueInput | Prisma.invoice_paymentsWhereUniqueInput[]
-  connect?: Prisma.invoice_paymentsWhereUniqueInput | Prisma.invoice_paymentsWhereUniqueInput[]
-  update?: Prisma.invoice_paymentsUpdateWithWhereUniqueWithoutInvoiceInput | Prisma.invoice_paymentsUpdateWithWhereUniqueWithoutInvoiceInput[]
-  updateMany?: Prisma.invoice_paymentsUpdateManyWithWhereWithoutInvoiceInput | Prisma.invoice_paymentsUpdateManyWithWhereWithoutInvoiceInput[]
-  deleteMany?: Prisma.invoice_paymentsScalarWhereInput | Prisma.invoice_paymentsScalarWhereInput[]
+export type invoice_paymentsUpdateOneRequiredWithoutAllocationsNestedInput = {
+  create?: Prisma.XOR<Prisma.invoice_paymentsCreateWithoutAllocationsInput, Prisma.invoice_paymentsUncheckedCreateWithoutAllocationsInput>
+  connectOrCreate?: Prisma.invoice_paymentsCreateOrConnectWithoutAllocationsInput
+  upsert?: Prisma.invoice_paymentsUpsertWithoutAllocationsInput
+  connect?: Prisma.invoice_paymentsWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.invoice_paymentsUpdateToOneWithWhereWithoutAllocationsInput, Prisma.invoice_paymentsUpdateWithoutAllocationsInput>, Prisma.invoice_paymentsUncheckedUpdateWithoutAllocationsInput>
 }
 
 export type invoice_paymentsCreateWithoutOrganizationInput = {
@@ -652,25 +700,29 @@ export type invoice_paymentsCreateWithoutOrganizationInput = {
   amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   payment_method?: string
   kind?: string
+  refund_scope?: string | null
   reason?: string | null
   notes?: string | null
   payment_date?: Date | string
   created_at?: Date | string
-  invoice: Prisma.treatment_invoicesCreateNestedOneWithoutInvoice_paymentsInput
+  patient: Prisma.patient_profilesCreateNestedOneWithoutInvoice_paymentsInput
   creator?: Prisma.usersCreateNestedOneWithoutInvoice_payments_createdInput
+  allocations?: Prisma.payment_allocationsCreateNestedManyWithoutPaymentInput
 }
 
 export type invoice_paymentsUncheckedCreateWithoutOrganizationInput = {
   id?: bigint | number
-  invoice_id: bigint | number
+  patient_id: bigint | number
   amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   payment_method?: string
   kind?: string
+  refund_scope?: string | null
   reason?: string | null
   notes?: string | null
   payment_date?: Date | string
   created_by?: bigint | number | null
   created_at?: Date | string
+  allocations?: Prisma.payment_allocationsUncheckedCreateNestedManyWithoutPaymentInput
 }
 
 export type invoice_paymentsCreateOrConnectWithoutOrganizationInput = {
@@ -705,10 +757,11 @@ export type invoice_paymentsScalarWhereInput = {
   NOT?: Prisma.invoice_paymentsScalarWhereInput | Prisma.invoice_paymentsScalarWhereInput[]
   id?: Prisma.BigIntFilter<"invoice_payments"> | bigint | number
   organization_id?: Prisma.BigIntFilter<"invoice_payments"> | bigint | number
-  invoice_id?: Prisma.BigIntFilter<"invoice_payments"> | bigint | number
+  patient_id?: Prisma.BigIntFilter<"invoice_payments"> | bigint | number
   amount?: Prisma.DecimalFilter<"invoice_payments"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   payment_method?: Prisma.StringFilter<"invoice_payments"> | string
   kind?: Prisma.StringFilter<"invoice_payments"> | string
+  refund_scope?: Prisma.StringNullableFilter<"invoice_payments"> | string | null
   reason?: Prisma.StringNullableFilter<"invoice_payments"> | string | null
   notes?: Prisma.StringNullableFilter<"invoice_payments"> | string | null
   payment_date?: Prisma.DateTimeFilter<"invoice_payments"> | Date | string
@@ -716,30 +769,90 @@ export type invoice_paymentsScalarWhereInput = {
   created_at?: Prisma.DateTimeFilter<"invoice_payments"> | Date | string
 }
 
-export type invoice_paymentsCreateWithoutCreatorInput = {
+export type invoice_paymentsCreateWithoutPatientInput = {
   id?: bigint | number
   amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   payment_method?: string
   kind?: string
+  refund_scope?: string | null
   reason?: string | null
   notes?: string | null
   payment_date?: Date | string
   created_at?: Date | string
   organization?: Prisma.organizationsCreateNestedOneWithoutInvoice_paymentsInput
-  invoice: Prisma.treatment_invoicesCreateNestedOneWithoutInvoice_paymentsInput
+  creator?: Prisma.usersCreateNestedOneWithoutInvoice_payments_createdInput
+  allocations?: Prisma.payment_allocationsCreateNestedManyWithoutPaymentInput
+}
+
+export type invoice_paymentsUncheckedCreateWithoutPatientInput = {
+  id?: bigint | number
+  organization_id?: bigint | number
+  amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  payment_method?: string
+  kind?: string
+  refund_scope?: string | null
+  reason?: string | null
+  notes?: string | null
+  payment_date?: Date | string
+  created_by?: bigint | number | null
+  created_at?: Date | string
+  allocations?: Prisma.payment_allocationsUncheckedCreateNestedManyWithoutPaymentInput
+}
+
+export type invoice_paymentsCreateOrConnectWithoutPatientInput = {
+  where: Prisma.invoice_paymentsWhereUniqueInput
+  create: Prisma.XOR<Prisma.invoice_paymentsCreateWithoutPatientInput, Prisma.invoice_paymentsUncheckedCreateWithoutPatientInput>
+}
+
+export type invoice_paymentsCreateManyPatientInputEnvelope = {
+  data: Prisma.invoice_paymentsCreateManyPatientInput | Prisma.invoice_paymentsCreateManyPatientInput[]
+  skipDuplicates?: boolean
+}
+
+export type invoice_paymentsUpsertWithWhereUniqueWithoutPatientInput = {
+  where: Prisma.invoice_paymentsWhereUniqueInput
+  update: Prisma.XOR<Prisma.invoice_paymentsUpdateWithoutPatientInput, Prisma.invoice_paymentsUncheckedUpdateWithoutPatientInput>
+  create: Prisma.XOR<Prisma.invoice_paymentsCreateWithoutPatientInput, Prisma.invoice_paymentsUncheckedCreateWithoutPatientInput>
+}
+
+export type invoice_paymentsUpdateWithWhereUniqueWithoutPatientInput = {
+  where: Prisma.invoice_paymentsWhereUniqueInput
+  data: Prisma.XOR<Prisma.invoice_paymentsUpdateWithoutPatientInput, Prisma.invoice_paymentsUncheckedUpdateWithoutPatientInput>
+}
+
+export type invoice_paymentsUpdateManyWithWhereWithoutPatientInput = {
+  where: Prisma.invoice_paymentsScalarWhereInput
+  data: Prisma.XOR<Prisma.invoice_paymentsUpdateManyMutationInput, Prisma.invoice_paymentsUncheckedUpdateManyWithoutPatientInput>
+}
+
+export type invoice_paymentsCreateWithoutCreatorInput = {
+  id?: bigint | number
+  amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  payment_method?: string
+  kind?: string
+  refund_scope?: string | null
+  reason?: string | null
+  notes?: string | null
+  payment_date?: Date | string
+  created_at?: Date | string
+  organization?: Prisma.organizationsCreateNestedOneWithoutInvoice_paymentsInput
+  patient: Prisma.patient_profilesCreateNestedOneWithoutInvoice_paymentsInput
+  allocations?: Prisma.payment_allocationsCreateNestedManyWithoutPaymentInput
 }
 
 export type invoice_paymentsUncheckedCreateWithoutCreatorInput = {
   id?: bigint | number
   organization_id?: bigint | number
-  invoice_id: bigint | number
+  patient_id: bigint | number
   amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   payment_method?: string
   kind?: string
+  refund_scope?: string | null
   reason?: string | null
   notes?: string | null
   payment_date?: Date | string
   created_at?: Date | string
+  allocations?: Prisma.payment_allocationsUncheckedCreateNestedManyWithoutPaymentInput
 }
 
 export type invoice_paymentsCreateOrConnectWithoutCreatorInput = {
@@ -768,25 +881,29 @@ export type invoice_paymentsUpdateManyWithWhereWithoutCreatorInput = {
   data: Prisma.XOR<Prisma.invoice_paymentsUpdateManyMutationInput, Prisma.invoice_paymentsUncheckedUpdateManyWithoutCreatorInput>
 }
 
-export type invoice_paymentsCreateWithoutInvoiceInput = {
+export type invoice_paymentsCreateWithoutAllocationsInput = {
   id?: bigint | number
   amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   payment_method?: string
   kind?: string
+  refund_scope?: string | null
   reason?: string | null
   notes?: string | null
   payment_date?: Date | string
   created_at?: Date | string
   organization?: Prisma.organizationsCreateNestedOneWithoutInvoice_paymentsInput
+  patient: Prisma.patient_profilesCreateNestedOneWithoutInvoice_paymentsInput
   creator?: Prisma.usersCreateNestedOneWithoutInvoice_payments_createdInput
 }
 
-export type invoice_paymentsUncheckedCreateWithoutInvoiceInput = {
+export type invoice_paymentsUncheckedCreateWithoutAllocationsInput = {
   id?: bigint | number
   organization_id?: bigint | number
+  patient_id: bigint | number
   amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   payment_method?: string
   kind?: string
+  refund_scope?: string | null
   reason?: string | null
   notes?: string | null
   payment_date?: Date | string
@@ -794,38 +911,59 @@ export type invoice_paymentsUncheckedCreateWithoutInvoiceInput = {
   created_at?: Date | string
 }
 
-export type invoice_paymentsCreateOrConnectWithoutInvoiceInput = {
+export type invoice_paymentsCreateOrConnectWithoutAllocationsInput = {
   where: Prisma.invoice_paymentsWhereUniqueInput
-  create: Prisma.XOR<Prisma.invoice_paymentsCreateWithoutInvoiceInput, Prisma.invoice_paymentsUncheckedCreateWithoutInvoiceInput>
+  create: Prisma.XOR<Prisma.invoice_paymentsCreateWithoutAllocationsInput, Prisma.invoice_paymentsUncheckedCreateWithoutAllocationsInput>
 }
 
-export type invoice_paymentsCreateManyInvoiceInputEnvelope = {
-  data: Prisma.invoice_paymentsCreateManyInvoiceInput | Prisma.invoice_paymentsCreateManyInvoiceInput[]
-  skipDuplicates?: boolean
+export type invoice_paymentsUpsertWithoutAllocationsInput = {
+  update: Prisma.XOR<Prisma.invoice_paymentsUpdateWithoutAllocationsInput, Prisma.invoice_paymentsUncheckedUpdateWithoutAllocationsInput>
+  create: Prisma.XOR<Prisma.invoice_paymentsCreateWithoutAllocationsInput, Prisma.invoice_paymentsUncheckedCreateWithoutAllocationsInput>
+  where?: Prisma.invoice_paymentsWhereInput
 }
 
-export type invoice_paymentsUpsertWithWhereUniqueWithoutInvoiceInput = {
-  where: Prisma.invoice_paymentsWhereUniqueInput
-  update: Prisma.XOR<Prisma.invoice_paymentsUpdateWithoutInvoiceInput, Prisma.invoice_paymentsUncheckedUpdateWithoutInvoiceInput>
-  create: Prisma.XOR<Prisma.invoice_paymentsCreateWithoutInvoiceInput, Prisma.invoice_paymentsUncheckedCreateWithoutInvoiceInput>
+export type invoice_paymentsUpdateToOneWithWhereWithoutAllocationsInput = {
+  where?: Prisma.invoice_paymentsWhereInput
+  data: Prisma.XOR<Prisma.invoice_paymentsUpdateWithoutAllocationsInput, Prisma.invoice_paymentsUncheckedUpdateWithoutAllocationsInput>
 }
 
-export type invoice_paymentsUpdateWithWhereUniqueWithoutInvoiceInput = {
-  where: Prisma.invoice_paymentsWhereUniqueInput
-  data: Prisma.XOR<Prisma.invoice_paymentsUpdateWithoutInvoiceInput, Prisma.invoice_paymentsUncheckedUpdateWithoutInvoiceInput>
+export type invoice_paymentsUpdateWithoutAllocationsInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  payment_method?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.StringFieldUpdateOperationsInput | string
+  refund_scope?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  payment_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  organization?: Prisma.organizationsUpdateOneRequiredWithoutInvoice_paymentsNestedInput
+  patient?: Prisma.patient_profilesUpdateOneRequiredWithoutInvoice_paymentsNestedInput
+  creator?: Prisma.usersUpdateOneWithoutInvoice_payments_createdNestedInput
 }
 
-export type invoice_paymentsUpdateManyWithWhereWithoutInvoiceInput = {
-  where: Prisma.invoice_paymentsScalarWhereInput
-  data: Prisma.XOR<Prisma.invoice_paymentsUpdateManyMutationInput, Prisma.invoice_paymentsUncheckedUpdateManyWithoutInvoiceInput>
+export type invoice_paymentsUncheckedUpdateWithoutAllocationsInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  payment_method?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.StringFieldUpdateOperationsInput | string
+  refund_scope?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  payment_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type invoice_paymentsCreateManyOrganizationInput = {
   id?: bigint | number
-  invoice_id: bigint | number
+  patient_id: bigint | number
   amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   payment_method?: string
   kind?: string
+  refund_scope?: string | null
   reason?: string | null
   notes?: string | null
   payment_date?: Date | string
@@ -838,20 +976,38 @@ export type invoice_paymentsUpdateWithoutOrganizationInput = {
   amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   payment_method?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.StringFieldUpdateOperationsInput | string
+  refund_scope?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   payment_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  invoice?: Prisma.treatment_invoicesUpdateOneRequiredWithoutInvoice_paymentsNestedInput
+  patient?: Prisma.patient_profilesUpdateOneRequiredWithoutInvoice_paymentsNestedInput
   creator?: Prisma.usersUpdateOneWithoutInvoice_payments_createdNestedInput
+  allocations?: Prisma.payment_allocationsUpdateManyWithoutPaymentNestedInput
 }
 
 export type invoice_paymentsUncheckedUpdateWithoutOrganizationInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  invoice_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   payment_method?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.StringFieldUpdateOperationsInput | string
+  refund_scope?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  payment_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  allocations?: Prisma.payment_allocationsUncheckedUpdateManyWithoutPaymentNestedInput
+}
+
+export type invoice_paymentsUncheckedUpdateManyWithoutOrganizationInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  payment_method?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.StringFieldUpdateOperationsInput | string
+  refund_scope?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   payment_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -859,12 +1015,57 @@ export type invoice_paymentsUncheckedUpdateWithoutOrganizationInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
-export type invoice_paymentsUncheckedUpdateManyWithoutOrganizationInput = {
+export type invoice_paymentsCreateManyPatientInput = {
+  id?: bigint | number
+  organization_id?: bigint | number
+  amount: runtime.Decimal | runtime.DecimalJsLike | number | string
+  payment_method?: string
+  kind?: string
+  refund_scope?: string | null
+  reason?: string | null
+  notes?: string | null
+  payment_date?: Date | string
+  created_by?: bigint | number | null
+  created_at?: Date | string
+}
+
+export type invoice_paymentsUpdateWithoutPatientInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  invoice_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   payment_method?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.StringFieldUpdateOperationsInput | string
+  refund_scope?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  payment_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  organization?: Prisma.organizationsUpdateOneRequiredWithoutInvoice_paymentsNestedInput
+  creator?: Prisma.usersUpdateOneWithoutInvoice_payments_createdNestedInput
+  allocations?: Prisma.payment_allocationsUpdateManyWithoutPaymentNestedInput
+}
+
+export type invoice_paymentsUncheckedUpdateWithoutPatientInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  payment_method?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.StringFieldUpdateOperationsInput | string
+  refund_scope?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  payment_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  allocations?: Prisma.payment_allocationsUncheckedUpdateManyWithoutPaymentNestedInput
+}
+
+export type invoice_paymentsUncheckedUpdateManyWithoutPatientInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  payment_method?: Prisma.StringFieldUpdateOperationsInput | string
+  kind?: Prisma.StringFieldUpdateOperationsInput | string
+  refund_scope?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   payment_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -875,10 +1076,11 @@ export type invoice_paymentsUncheckedUpdateManyWithoutOrganizationInput = {
 export type invoice_paymentsCreateManyCreatorInput = {
   id?: bigint | number
   organization_id?: bigint | number
-  invoice_id: bigint | number
+  patient_id: bigint | number
   amount: runtime.Decimal | runtime.DecimalJsLike | number | string
   payment_method?: string
   kind?: string
+  refund_scope?: string | null
   reason?: string | null
   notes?: string | null
   payment_date?: Date | string
@@ -890,152 +1092,140 @@ export type invoice_paymentsUpdateWithoutCreatorInput = {
   amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   payment_method?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.StringFieldUpdateOperationsInput | string
+  refund_scope?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   payment_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   organization?: Prisma.organizationsUpdateOneRequiredWithoutInvoice_paymentsNestedInput
-  invoice?: Prisma.treatment_invoicesUpdateOneRequiredWithoutInvoice_paymentsNestedInput
+  patient?: Prisma.patient_profilesUpdateOneRequiredWithoutInvoice_paymentsNestedInput
+  allocations?: Prisma.payment_allocationsUpdateManyWithoutPaymentNestedInput
 }
 
 export type invoice_paymentsUncheckedUpdateWithoutCreatorInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  invoice_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   payment_method?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.StringFieldUpdateOperationsInput | string
+  refund_scope?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   payment_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  allocations?: Prisma.payment_allocationsUncheckedUpdateManyWithoutPaymentNestedInput
 }
 
 export type invoice_paymentsUncheckedUpdateManyWithoutCreatorInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  invoice_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   payment_method?: Prisma.StringFieldUpdateOperationsInput | string
   kind?: Prisma.StringFieldUpdateOperationsInput | string
+  refund_scope?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   payment_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
-export type invoice_paymentsCreateManyInvoiceInput = {
-  id?: bigint | number
-  organization_id?: bigint | number
-  amount: runtime.Decimal | runtime.DecimalJsLike | number | string
-  payment_method?: string
-  kind?: string
-  reason?: string | null
-  notes?: string | null
-  payment_date?: Date | string
-  created_by?: bigint | number | null
-  created_at?: Date | string
+
+/**
+ * Count Type Invoice_paymentsCountOutputType
+ */
+
+export type Invoice_paymentsCountOutputType = {
+  allocations: number
 }
 
-export type invoice_paymentsUpdateWithoutInvoiceInput = {
-  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  payment_method?: Prisma.StringFieldUpdateOperationsInput | string
-  kind?: Prisma.StringFieldUpdateOperationsInput | string
-  reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  payment_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  organization?: Prisma.organizationsUpdateOneRequiredWithoutInvoice_paymentsNestedInput
-  creator?: Prisma.usersUpdateOneWithoutInvoice_payments_createdNestedInput
+export type Invoice_paymentsCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  allocations?: boolean | Invoice_paymentsCountOutputTypeCountAllocationsArgs
 }
 
-export type invoice_paymentsUncheckedUpdateWithoutInvoiceInput = {
-  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  payment_method?: Prisma.StringFieldUpdateOperationsInput | string
-  kind?: Prisma.StringFieldUpdateOperationsInput | string
-  reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  payment_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+/**
+ * Invoice_paymentsCountOutputType without action
+ */
+export type Invoice_paymentsCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Invoice_paymentsCountOutputType
+   */
+  select?: Prisma.Invoice_paymentsCountOutputTypeSelect<ExtArgs> | null
 }
 
-export type invoice_paymentsUncheckedUpdateManyWithoutInvoiceInput = {
-  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  amount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  payment_method?: Prisma.StringFieldUpdateOperationsInput | string
-  kind?: Prisma.StringFieldUpdateOperationsInput | string
-  reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  payment_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+/**
+ * Invoice_paymentsCountOutputType without action
+ */
+export type Invoice_paymentsCountOutputTypeCountAllocationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.payment_allocationsWhereInput
 }
-
 
 
 export type invoice_paymentsSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   organization_id?: boolean
-  invoice_id?: boolean
+  patient_id?: boolean
   amount?: boolean
   payment_method?: boolean
   kind?: boolean
+  refund_scope?: boolean
   reason?: boolean
   notes?: boolean
   payment_date?: boolean
   created_by?: boolean
   created_at?: boolean
   organization?: boolean | Prisma.organizationsDefaultArgs<ExtArgs>
-  invoice?: boolean | Prisma.treatment_invoicesDefaultArgs<ExtArgs>
+  patient?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
   creator?: boolean | Prisma.invoice_payments$creatorArgs<ExtArgs>
+  allocations?: boolean | Prisma.invoice_payments$allocationsArgs<ExtArgs>
+  _count?: boolean | Prisma.Invoice_paymentsCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["invoice_payments"]>
 
 export type invoice_paymentsSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   organization_id?: boolean
-  invoice_id?: boolean
+  patient_id?: boolean
   amount?: boolean
   payment_method?: boolean
   kind?: boolean
+  refund_scope?: boolean
   reason?: boolean
   notes?: boolean
   payment_date?: boolean
   created_by?: boolean
   created_at?: boolean
   organization?: boolean | Prisma.organizationsDefaultArgs<ExtArgs>
-  invoice?: boolean | Prisma.treatment_invoicesDefaultArgs<ExtArgs>
+  patient?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
   creator?: boolean | Prisma.invoice_payments$creatorArgs<ExtArgs>
 }, ExtArgs["result"]["invoice_payments"]>
 
 export type invoice_paymentsSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   organization_id?: boolean
-  invoice_id?: boolean
+  patient_id?: boolean
   amount?: boolean
   payment_method?: boolean
   kind?: boolean
+  refund_scope?: boolean
   reason?: boolean
   notes?: boolean
   payment_date?: boolean
   created_by?: boolean
   created_at?: boolean
   organization?: boolean | Prisma.organizationsDefaultArgs<ExtArgs>
-  invoice?: boolean | Prisma.treatment_invoicesDefaultArgs<ExtArgs>
+  patient?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
   creator?: boolean | Prisma.invoice_payments$creatorArgs<ExtArgs>
 }, ExtArgs["result"]["invoice_payments"]>
 
 export type invoice_paymentsSelectScalar = {
   id?: boolean
   organization_id?: boolean
-  invoice_id?: boolean
+  patient_id?: boolean
   amount?: boolean
   payment_method?: boolean
   kind?: boolean
+  refund_scope?: boolean
   reason?: boolean
   notes?: boolean
   payment_date?: boolean
@@ -1043,20 +1233,22 @@ export type invoice_paymentsSelectScalar = {
   created_at?: boolean
 }
 
-export type invoice_paymentsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "organization_id" | "invoice_id" | "amount" | "payment_method" | "kind" | "reason" | "notes" | "payment_date" | "created_by" | "created_at", ExtArgs["result"]["invoice_payments"]>
+export type invoice_paymentsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "organization_id" | "patient_id" | "amount" | "payment_method" | "kind" | "refund_scope" | "reason" | "notes" | "payment_date" | "created_by" | "created_at", ExtArgs["result"]["invoice_payments"]>
 export type invoice_paymentsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   organization?: boolean | Prisma.organizationsDefaultArgs<ExtArgs>
-  invoice?: boolean | Prisma.treatment_invoicesDefaultArgs<ExtArgs>
+  patient?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
   creator?: boolean | Prisma.invoice_payments$creatorArgs<ExtArgs>
+  allocations?: boolean | Prisma.invoice_payments$allocationsArgs<ExtArgs>
+  _count?: boolean | Prisma.Invoice_paymentsCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type invoice_paymentsIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   organization?: boolean | Prisma.organizationsDefaultArgs<ExtArgs>
-  invoice?: boolean | Prisma.treatment_invoicesDefaultArgs<ExtArgs>
+  patient?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
   creator?: boolean | Prisma.invoice_payments$creatorArgs<ExtArgs>
 }
 export type invoice_paymentsIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   organization?: boolean | Prisma.organizationsDefaultArgs<ExtArgs>
-  invoice?: boolean | Prisma.treatment_invoicesDefaultArgs<ExtArgs>
+  patient?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
   creator?: boolean | Prisma.invoice_payments$creatorArgs<ExtArgs>
 }
 
@@ -1064,19 +1256,27 @@ export type $invoice_paymentsPayload<ExtArgs extends runtime.Types.Extensions.In
   name: "invoice_payments"
   objects: {
     organization: Prisma.$organizationsPayload<ExtArgs>
-    invoice: Prisma.$treatment_invoicesPayload<ExtArgs>
+    patient: Prisma.$patient_profilesPayload<ExtArgs>
     creator: Prisma.$usersPayload<ExtArgs> | null
+    allocations: Prisma.$payment_allocationsPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: bigint
     organization_id: bigint
-    invoice_id: bigint
+    /**
+     * The patient whose money this is. Credit and invoices never cross patients.
+     */
+    patient_id: bigint
     amount: runtime.Decimal
     payment_method: string
     /**
      * payment (money received) | refund (money returned); a refund is a positive amount that reduces amount_paid.
      */
     kind: string
+    /**
+     * For kind = refund only: invoice (taken back off a named bill; carries an allocation) | credit (unapplied credit handed back; touches no invoice). NULL for payments.
+     */
+    refund_scope: string | null
     /**
      * Required for refunds.
      */
@@ -1483,8 +1683,9 @@ readonly fields: invoice_paymentsFieldRefs;
 export interface Prisma__invoice_paymentsClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   organization<T extends Prisma.organizationsDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.organizationsDefaultArgs<ExtArgs>>): Prisma.Prisma__organizationsClient<runtime.Types.Result.GetResult<Prisma.$organizationsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-  invoice<T extends Prisma.treatment_invoicesDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.treatment_invoicesDefaultArgs<ExtArgs>>): Prisma.Prisma__treatment_invoicesClient<runtime.Types.Result.GetResult<Prisma.$treatment_invoicesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  patient<T extends Prisma.patient_profilesDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.patient_profilesDefaultArgs<ExtArgs>>): Prisma.Prisma__patient_profilesClient<runtime.Types.Result.GetResult<Prisma.$patient_profilesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   creator<T extends Prisma.invoice_payments$creatorArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.invoice_payments$creatorArgs<ExtArgs>>): Prisma.Prisma__usersClient<runtime.Types.Result.GetResult<Prisma.$usersPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  allocations<T extends Prisma.invoice_payments$allocationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.invoice_payments$allocationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$payment_allocationsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1516,10 +1717,11 @@ export interface Prisma__invoice_paymentsClient<T, Null = never, ExtArgs extends
 export interface invoice_paymentsFieldRefs {
   readonly id: Prisma.FieldRef<"invoice_payments", 'BigInt'>
   readonly organization_id: Prisma.FieldRef<"invoice_payments", 'BigInt'>
-  readonly invoice_id: Prisma.FieldRef<"invoice_payments", 'BigInt'>
+  readonly patient_id: Prisma.FieldRef<"invoice_payments", 'BigInt'>
   readonly amount: Prisma.FieldRef<"invoice_payments", 'Decimal'>
   readonly payment_method: Prisma.FieldRef<"invoice_payments", 'String'>
   readonly kind: Prisma.FieldRef<"invoice_payments", 'String'>
+  readonly refund_scope: Prisma.FieldRef<"invoice_payments", 'String'>
   readonly reason: Prisma.FieldRef<"invoice_payments", 'String'>
   readonly notes: Prisma.FieldRef<"invoice_payments", 'String'>
   readonly payment_date: Prisma.FieldRef<"invoice_payments", 'DateTime'>
@@ -1942,6 +2144,30 @@ export type invoice_payments$creatorArgs<ExtArgs extends runtime.Types.Extension
    */
   include?: Prisma.usersInclude<ExtArgs> | null
   where?: Prisma.usersWhereInput
+}
+
+/**
+ * invoice_payments.allocations
+ */
+export type invoice_payments$allocationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the payment_allocations
+   */
+  select?: Prisma.payment_allocationsSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the payment_allocations
+   */
+  omit?: Prisma.payment_allocationsOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.payment_allocationsInclude<ExtArgs> | null
+  where?: Prisma.payment_allocationsWhereInput
+  orderBy?: Prisma.payment_allocationsOrderByWithRelationInput | Prisma.payment_allocationsOrderByWithRelationInput[]
+  cursor?: Prisma.payment_allocationsWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.Payment_allocationsScalarFieldEnum | Prisma.Payment_allocationsScalarFieldEnum[]
 }
 
 /**

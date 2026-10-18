@@ -245,8 +245,15 @@ COMMENT ON COLUMN invoice_line_items.procedure_name IS 'Procedure from the clini
 COMMENT ON COLUMN invoice_line_items.amount IS 'Price charged for this line.';
 COMMENT ON COLUMN invoice_line_items.tooth_number IS 'FDI tooth number the procedure was on, if one tooth.';
 
-COMMENT ON TABLE invoice_payments IS 'Money received from patients. Every payment belongs to one invoice; this is the only place patient payments are stored.';
-COMMENT ON COLUMN invoice_payments.invoice_id IS 'The invoice being paid.';
+-- Money belongs to the patient, not to an invoice: invoice_id was dropped in
+-- 20261017120000_patient_ledger_allocations and payment_allocations took over.
+-- Commenting that column here would make this file fail on a re-run.
+COMMENT ON TABLE invoice_payments IS 'Money that moved between the clinic and a patient: received (kind = payment) or returned (kind = refund). A payment belongs to a patient, not to an invoice; payment_allocations says which invoices it pays down. A payment with no allocation (or a part of one) is credit on the patient account.';
+COMMENT ON COLUMN invoice_payments.patient_id IS 'The patient whose money this is. Credit and invoices never cross patients.';
+COMMENT ON COLUMN invoice_payments.kind IS 'payment (money received) | refund (money returned).';
+COMMENT ON COLUMN invoice_payments.refund_scope IS 'For kind = refund only: invoice (money taken back off a named bill; carries an allocation) | credit (unapplied credit handed back; touches no invoice). NULL for payments.';
+COMMENT ON COLUMN invoice_payments.reason IS 'Why money was returned. Required for refunds.';
+COMMENT ON COLUMN invoice_payments.payment_date IS 'The day the money moved; reports use this, not created_at.';
 COMMENT ON COLUMN invoice_payments.amount IS 'Amount received (positive).';
 COMMENT ON COLUMN invoice_payments.payment_method IS 'cash | card | insurance | bank_transfer.';
 COMMENT ON COLUMN invoice_payments.notes IS 'Free notes (receipt number, insurer reference, ...).';

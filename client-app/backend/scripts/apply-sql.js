@@ -44,6 +44,11 @@ async function main() {
     console.log('Done.');
   } catch (err) {
     console.error(`Failed: ${err.message}`);
+    // Postgres puts the useful part of a dependency or constraint failure in
+    // DETAIL and HINT ("because other objects depend on it" alone says nothing).
+    if (err.detail) console.error(`  detail: ${err.detail}`);
+    if (err.hint) console.error(`  hint: ${err.hint}`);
+    if (err.where) console.error(`  where: ${err.where}`);
     if (err.position) {
       const upTo = sql.slice(0, Number(err.position));
       console.error(`  at line ${upTo.split('\n').length}`);

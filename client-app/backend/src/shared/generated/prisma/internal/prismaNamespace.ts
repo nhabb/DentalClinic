@@ -403,6 +403,7 @@ export const ModelName = {
   treatment_invoices: 'treatment_invoices',
   invoice_line_items: 'invoice_line_items',
   invoice_payments: 'invoice_payments',
+  payment_allocations: 'payment_allocations',
   roles: 'roles',
   role_permissions: 'role_permissions',
   specialists: 'specialists',
@@ -412,7 +413,7 @@ export const ModelName = {
   agent_conversations: 'agent_conversations',
   agent_usage: 'agent_usage',
   quotes: 'quotes',
-  quote_items: 'quote_items'
+  quote_sends: 'quote_sends'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -428,7 +429,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "organizations" | "document_sequences" | "branches" | "appointment_slots" | "appointments" | "audit_logs" | "clinic_profile" | "inventory_items" | "inventory_movements" | "notifications" | "patient_documents" | "patient_profiles" | "patient_records" | "users" | "expenses" | "expense_payments" | "treatment_invoices" | "invoice_line_items" | "invoice_payments" | "roles" | "role_permissions" | "specialists" | "specialist_consultations" | "dental_labs" | "lab_orders" | "agent_conversations" | "agent_usage" | "quotes" | "quote_items"
+    modelProps: "organizations" | "document_sequences" | "branches" | "appointment_slots" | "appointments" | "audit_logs" | "clinic_profile" | "inventory_items" | "inventory_movements" | "notifications" | "patient_documents" | "patient_profiles" | "patient_records" | "users" | "expenses" | "expense_payments" | "treatment_invoices" | "invoice_line_items" | "invoice_payments" | "payment_allocations" | "roles" | "role_permissions" | "specialists" | "specialist_consultations" | "dental_labs" | "lab_orders" | "agent_conversations" | "agent_usage" | "quotes" | "quote_sends"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1838,6 +1839,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    payment_allocations: {
+      payload: Prisma.$payment_allocationsPayload<ExtArgs>
+      fields: Prisma.payment_allocationsFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.payment_allocationsFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$payment_allocationsPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.payment_allocationsFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$payment_allocationsPayload>
+        }
+        findFirst: {
+          args: Prisma.payment_allocationsFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$payment_allocationsPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.payment_allocationsFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$payment_allocationsPayload>
+        }
+        findMany: {
+          args: Prisma.payment_allocationsFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$payment_allocationsPayload>[]
+        }
+        create: {
+          args: Prisma.payment_allocationsCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$payment_allocationsPayload>
+        }
+        createMany: {
+          args: Prisma.payment_allocationsCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.payment_allocationsCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$payment_allocationsPayload>[]
+        }
+        delete: {
+          args: Prisma.payment_allocationsDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$payment_allocationsPayload>
+        }
+        update: {
+          args: Prisma.payment_allocationsUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$payment_allocationsPayload>
+        }
+        deleteMany: {
+          args: Prisma.payment_allocationsDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.payment_allocationsUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.payment_allocationsUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$payment_allocationsPayload>[]
+        }
+        upsert: {
+          args: Prisma.payment_allocationsUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$payment_allocationsPayload>
+        }
+        aggregate: {
+          args: Prisma.Payment_allocationsAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePayment_allocations>
+        }
+        groupBy: {
+          args: Prisma.payment_allocationsGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Payment_allocationsGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.payment_allocationsCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Payment_allocationsCountAggregateOutputType> | number
+        }
+      }
+    }
     roles: {
       payload: Prisma.$rolesPayload<ExtArgs>
       fields: Prisma.rolesFieldRefs
@@ -2504,77 +2579,77 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
-    quote_items: {
-      payload: Prisma.$quote_itemsPayload<ExtArgs>
-      fields: Prisma.quote_itemsFieldRefs
+    quote_sends: {
+      payload: Prisma.$quote_sendsPayload<ExtArgs>
+      fields: Prisma.quote_sendsFieldRefs
       operations: {
         findUnique: {
-          args: Prisma.quote_itemsFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$quote_itemsPayload> | null
+          args: Prisma.quote_sendsFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$quote_sendsPayload> | null
         }
         findUniqueOrThrow: {
-          args: Prisma.quote_itemsFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$quote_itemsPayload>
+          args: Prisma.quote_sendsFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$quote_sendsPayload>
         }
         findFirst: {
-          args: Prisma.quote_itemsFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$quote_itemsPayload> | null
+          args: Prisma.quote_sendsFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$quote_sendsPayload> | null
         }
         findFirstOrThrow: {
-          args: Prisma.quote_itemsFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$quote_itemsPayload>
+          args: Prisma.quote_sendsFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$quote_sendsPayload>
         }
         findMany: {
-          args: Prisma.quote_itemsFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$quote_itemsPayload>[]
+          args: Prisma.quote_sendsFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$quote_sendsPayload>[]
         }
         create: {
-          args: Prisma.quote_itemsCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$quote_itemsPayload>
+          args: Prisma.quote_sendsCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$quote_sendsPayload>
         }
         createMany: {
-          args: Prisma.quote_itemsCreateManyArgs<ExtArgs>
+          args: Prisma.quote_sendsCreateManyArgs<ExtArgs>
           result: BatchPayload
         }
         createManyAndReturn: {
-          args: Prisma.quote_itemsCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$quote_itemsPayload>[]
+          args: Prisma.quote_sendsCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$quote_sendsPayload>[]
         }
         delete: {
-          args: Prisma.quote_itemsDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$quote_itemsPayload>
+          args: Prisma.quote_sendsDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$quote_sendsPayload>
         }
         update: {
-          args: Prisma.quote_itemsUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$quote_itemsPayload>
+          args: Prisma.quote_sendsUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$quote_sendsPayload>
         }
         deleteMany: {
-          args: Prisma.quote_itemsDeleteManyArgs<ExtArgs>
+          args: Prisma.quote_sendsDeleteManyArgs<ExtArgs>
           result: BatchPayload
         }
         updateMany: {
-          args: Prisma.quote_itemsUpdateManyArgs<ExtArgs>
+          args: Prisma.quote_sendsUpdateManyArgs<ExtArgs>
           result: BatchPayload
         }
         updateManyAndReturn: {
-          args: Prisma.quote_itemsUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$quote_itemsPayload>[]
+          args: Prisma.quote_sendsUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$quote_sendsPayload>[]
         }
         upsert: {
-          args: Prisma.quote_itemsUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$quote_itemsPayload>
+          args: Prisma.quote_sendsUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$quote_sendsPayload>
         }
         aggregate: {
-          args: Prisma.Quote_itemsAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateQuote_items>
+          args: Prisma.Quote_sendsAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateQuote_sends>
         }
         groupBy: {
-          args: Prisma.quote_itemsGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.Quote_itemsGroupByOutputType>[]
+          args: Prisma.quote_sendsGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Quote_sendsGroupByOutputType>[]
         }
         count: {
-          args: Prisma.quote_itemsCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.Quote_itemsCountAggregateOutputType> | number
+          args: Prisma.quote_sendsCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Quote_sendsCountAggregateOutputType> | number
         }
       }
     }
@@ -2941,7 +3016,6 @@ export const Treatment_invoicesScalarFieldEnum = {
   cancelled_at: 'cancelled_at',
   cancelled_by: 'cancelled_by',
   cancel_reason: 'cancel_reason',
-  quote_id: 'quote_id',
   created_at: 'created_at',
   updated_at: 'updated_at'
 } as const
@@ -2965,10 +3039,11 @@ export type Invoice_line_itemsScalarFieldEnum = (typeof Invoice_line_itemsScalar
 export const Invoice_paymentsScalarFieldEnum = {
   id: 'id',
   organization_id: 'organization_id',
-  invoice_id: 'invoice_id',
+  patient_id: 'patient_id',
   amount: 'amount',
   payment_method: 'payment_method',
   kind: 'kind',
+  refund_scope: 'refund_scope',
   reason: 'reason',
   notes: 'notes',
   payment_date: 'payment_date',
@@ -2977,6 +3052,19 @@ export const Invoice_paymentsScalarFieldEnum = {
 } as const
 
 export type Invoice_paymentsScalarFieldEnum = (typeof Invoice_paymentsScalarFieldEnum)[keyof typeof Invoice_paymentsScalarFieldEnum]
+
+
+export const Payment_allocationsScalarFieldEnum = {
+  id: 'id',
+  organization_id: 'organization_id',
+  payment_id: 'payment_id',
+  invoice_id: 'invoice_id',
+  amount: 'amount',
+  created_by: 'created_by',
+  created_at: 'created_at'
+} as const
+
+export type Payment_allocationsScalarFieldEnum = (typeof Payment_allocationsScalarFieldEnum)[keyof typeof Payment_allocationsScalarFieldEnum]
 
 
 export const RolesScalarFieldEnum = {
@@ -3130,17 +3218,10 @@ export const QuotesScalarFieldEnum = {
   branch_id: 'branch_id',
   patient_id: 'patient_id',
   quote_number: 'quote_number',
-  version: 'version',
-  supersedes_id: 'supersedes_id',
-  status: 'status',
-  valid_until: 'valid_until',
-  quoted_discount: 'quoted_discount',
-  quoted_total: 'quoted_total',
   notes: 'notes',
   created_by: 'created_by',
-  sent_at: 'sent_at',
   accepted_at: 'accepted_at',
-  declined_at: 'declined_at',
+  accepted_digest: 'accepted_digest',
   created_at: 'created_at',
   updated_at: 'updated_at'
 } as const
@@ -3148,19 +3229,17 @@ export const QuotesScalarFieldEnum = {
 export type QuotesScalarFieldEnum = (typeof QuotesScalarFieldEnum)[keyof typeof QuotesScalarFieldEnum]
 
 
-export const Quote_itemsScalarFieldEnum = {
+export const Quote_sendsScalarFieldEnum = {
   id: 'id',
   organization_id: 'organization_id',
   quote_id: 'quote_id',
-  record_id: 'record_id',
-  procedure_name: 'procedure_name',
-  tooth_number: 'tooth_number',
-  description: 'description',
-  quoted_amount: 'quoted_amount',
+  sent_by: 'sent_by',
+  quoted_total: 'quoted_total',
+  quoted_lines: 'quoted_lines',
   created_at: 'created_at'
 } as const
 
-export type Quote_itemsScalarFieldEnum = (typeof Quote_itemsScalarFieldEnum)[keyof typeof Quote_itemsScalarFieldEnum]
+export type Quote_sendsScalarFieldEnum = (typeof Quote_sendsScalarFieldEnum)[keyof typeof Quote_sendsScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -3435,6 +3514,7 @@ export type GlobalOmitConfig = {
   treatment_invoices?: Prisma.treatment_invoicesOmit
   invoice_line_items?: Prisma.invoice_line_itemsOmit
   invoice_payments?: Prisma.invoice_paymentsOmit
+  payment_allocations?: Prisma.payment_allocationsOmit
   roles?: Prisma.rolesOmit
   role_permissions?: Prisma.role_permissionsOmit
   specialists?: Prisma.specialistsOmit
@@ -3444,7 +3524,7 @@ export type GlobalOmitConfig = {
   agent_conversations?: Prisma.agent_conversationsOmit
   agent_usage?: Prisma.agent_usageOmit
   quotes?: Prisma.quotesOmit
-  quote_items?: Prisma.quote_itemsOmit
+  quote_sends?: Prisma.quote_sendsOmit
 }
 
 /* Types for Logging */

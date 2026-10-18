@@ -1,56 +1,20 @@
--- Quote amounts are prices: the assistant sees them only with pricing:read.
+-- Superseded by 20261018130000_plan_is_the_quote_drop. Intentionally a no-op.
 --
--- Same mechanism as 20261013200000_pricing_permission_and_agent_views: the SQL
--- tool's role reads a view in schema `agent` instead of the table, and the
--- view blanks the price columns unless the caller holds pricing:read. The view
--- owner (dental_agent_views) is held to the same table permission as the app
--- (billing:read) by a restrictive policy.
+-- This migration gated the price columns of `quotes` and `quote_items` behind
+-- pricing:read, by giving each a view in schema `agent`. Both views are gone:
 --
--- Apply with:  node scripts/apply-sql.js prisma/migrations/20261014200100_quotes_agent_pricing_views/migration.sql
+--   * quote_items was dropped — the chart rows are the plan, so there is no
+--     second list of procedures to price;
+--   * quotes lost quoted_total and quoted_discount — a plan's total is summed
+--     from its chart rows, so the header holds no price at all and the
+--     assistant reads the table directly.
+--
+-- The statements are kept here as a record of what used to be, but they are
+-- not re-runnable: they reference columns and a table that no longer exist, so
+-- running them would fail. The end state they aimed at is now set by
+-- 20261018130000 (for quotes) and 20261018111000 (for quote_sends, which is
+-- where a plan's prices live now).
+--
+-- Nothing to apply.
 
-BEGIN;
-
-GRANT SELECT ON public.quotes, public.quote_items TO dental_agent_views;
--- Changing a view's owner needs the new owner to hold CREATE on the schema
--- (idempotent; also carried by the migration that created the schema).
-GRANT CREATE, USAGE ON SCHEMA agent TO dental_agent_views;
-
-DO $$
-DECLARE
-    entry TEXT[];
-BEGIN
-    FOREACH entry SLICE 1 IN ARRAY ARRAY[
-        ['quotes',      'billing:read'],
-        ['quote_items', 'billing:read']
-    ] LOOP
-        EXECUTE format('DROP POLICY IF EXISTS agent_views_permission ON public.%I', entry[1]);
-        EXECUTE format(
-            'CREATE POLICY agent_views_permission ON public.%I AS RESTRICTIVE FOR SELECT TO dental_agent_views '
-            'USING (app.agent_may(%L))',
-            entry[1], entry[2]);
-    END LOOP;
-END $$;
-
-CREATE OR REPLACE VIEW agent.quotes AS
-SELECT id, organization_id, branch_id, patient_id, version, supersedes_id, status, valid_until,
-       CASE WHEN app.agent_has('pricing:read') THEN quoted_total END AS quoted_total,
-       notes, created_by, sent_at, accepted_at, declined_at, created_at, updated_at
-FROM public.quotes;
-
-CREATE OR REPLACE VIEW agent.quote_items AS
-SELECT id, organization_id, quote_id, record_id, procedure_name, tooth_number, description,
-       CASE WHEN app.agent_has('pricing:read') THEN quoted_amount END AS quoted_amount,
-       created_at
-FROM public.quote_items;
-
-ALTER VIEW agent.quotes OWNER TO dental_agent_views;
-ALTER VIEW agent.quote_items OWNER TO dental_agent_views;
-
-GRANT SELECT ON
-    agent.quotes, agent.quote_items
-TO dental_agent;
-REVOKE SELECT ON
-    public.quotes, public.quote_items
-FROM dental_agent;
-
-COMMIT;
+SELECT 1;
