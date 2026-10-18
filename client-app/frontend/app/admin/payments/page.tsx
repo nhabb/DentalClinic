@@ -216,6 +216,48 @@ export default function PaymentsPage() {
     void load();
   }, [load, moneyMoved]);
 
+  /**
+   * `/admin/payments?patient=<id>` opens that patient’s money file — where
+   * Billing sends the desk after issuing a bill, since taking the money for
+   * it is this page’s job.
+   *
+   * Read inside the effect and not in a lazy initial state: the page is
+   * server-rendered first, where there is no window, and hydration would
+   * keep that empty answer.
+   */
+  const [deepLinkDone, setDeepLinkDone] = useState(false);
+  useEffect(() => {
+    if (deepLinkDone || isLoading) return;
+    setDeepLinkDone(true);
+    const params = new URLSearchParams(window.location.search);
+    const wanted = Number(params.get("patient"));
+    if (!wanted) return;
+    window.history.replaceState(null, "", "/admin/payments");
+
+    // The name is known from a bill they owe, or from the money that has
+    // moved; failing both, ask for the patient rather than guessing.
+    const fromOwed = owed.find((r) => r.patient_id === wanted)?.patient_name;
+    const fromTaken = taken.find((r) => r.patient_id === wanted)?.patient_name;
+    if (fromOwed || fromTaken) {
+      setDrawerPatient({ id: wanted, label: (fromOwed || fromTaken) as string });
+      return;
+    }
+    void (async () => {
+      try {
+        const res = await apiFetch(`/api/patients/${wanted}`);
+        if (!res.ok) throw new Error();
+        const p = await res.json();
+        const label = p?.users
+          ? `${p.users.first_name} ${p.users.last_name}`.trim()
+          : `Patient #${wanted}`;
+        setDrawerPatient({ id: wanted, label });
+      } catch {
+        toast.error("That patient could not be opened.");
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deepLinkDone, isLoading]);
+
   const fetchPatients = useCallback(async () => {
     try {
       const res = await apiFetch("/api/patients");
@@ -582,6 +624,7 @@ export default function PaymentsPage() {
             inv ? setPayingInvoice(inv) : setDepositPatient(drawerPatient)
           }
           onViewInvoice={() => router.push(`/admin/billing?patient=${drawerPatient.id}`)}
+          allowMoneyActs
           onChanged={refresh}
           refreshToken={moneyMoved}
         />

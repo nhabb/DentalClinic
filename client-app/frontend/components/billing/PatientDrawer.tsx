@@ -280,6 +280,17 @@ type Props = {
   onTakePayment?: (invoice: Invoice | null) => void;
   /** Open the bill builder for this patient. */
   onNewBill?: () => void;
+  /**
+   * May this drawer move money that is already in — credit onto a bill,
+   * an allocation undone, credit handed back? Only the Payments page says
+   * yes; Billing reads the same history without being able to move it.
+   */
+  allowMoneyActs?: boolean;
+  /**
+   * May it act on the plan — give it to the patient, record that they
+   * agreed? Only Billing says yes: a plan is a document, not money.
+   */
+  allowPlanActs?: boolean;
   /** Bumped by the page when money moved elsewhere, so this redraws with it. */
   refreshToken?: number;
   /** Money moved in here, so the page behind should refresh too. */
@@ -294,12 +305,14 @@ export function PatientDrawer({
   onViewInvoice,
   onTakePayment,
   onNewBill,
+  allowMoneyActs = false,
+  allowPlanActs = false,
   refreshToken = 0,
   onChanged,
 }: Props) {
   const { can } = usePermissions();
   const canTake = can("billing:create");
-  const canMove = can("billing:edit");
+  const canMove = allowMoneyActs && can("billing:edit");
 
   const [statement, setStatement] = useState<Statement | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -893,7 +906,7 @@ export function PatientDrawer({
 
                   {plan && planLines.length > 0 && (
                     <div className="flex flex-wrap items-center gap-2 border-t border-ink-200/70 pt-3">
-                      {canTake && plan.quote_id && (
+                      {allowPlanActs && canTake && plan.quote_id && (
                         <Button
                           size="sm"
                           disabled={busy}
@@ -909,7 +922,8 @@ export function PatientDrawer({
                       >
                         <FaPrint /> Print
                       </Button>
-                      {canTake &&
+                      {allowPlanActs &&
+                        canTake &&
                         plan.quote_id &&
                         (!plan.accepted_at || plan.agreement_stale) && (
                           <Button

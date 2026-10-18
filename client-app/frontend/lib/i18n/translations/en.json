@@ -377,7 +377,7 @@
   "billing": {
     "invoicesCount": "invoices",
     "title": "Billing",
-    "subtitle": "Every bill, every plan, every payment",
+    "subtitle": "Make and correct bills, and keep every treatment plan",
     "newInvoice": "New Invoice",
     "searchPlaceholder": "Search by patient name...",
     "statusAll": "All",

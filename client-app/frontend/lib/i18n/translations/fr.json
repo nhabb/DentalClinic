@@ -377,7 +377,7 @@
   "billing": {
     "invoicesCount": "factures",
     "title": "Facturation",
-    "subtitle": "Chaque facture, chaque plan, chaque paiement",
+    "subtitle": "Créer et corriger les factures, et suivre chaque plan de traitement",
     "newInvoice": "Nouvelle facture",
     "searchPlaceholder": "Rechercher par nom de patient...",
     "statusAll": "Tous",

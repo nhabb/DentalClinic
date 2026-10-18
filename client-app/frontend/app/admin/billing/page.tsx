@@ -29,7 +29,6 @@ import { CONFIRM_PASSWORD_HEADER, PasswordConfirmModal } from "@/components/bill
 import { NewInvoiceModal } from "@/components/billing/NewInvoiceModal";
 import { PatientDrawer, type PatientDrawerTab } from "@/components/billing/PatientDrawer";
 import { QuotesPanel } from "@/components/billing/QuotesPanel";
-import { TakePaymentModal, type PayingPatient } from "@/components/billing/TakePaymentModal";
 import { Tabs } from "@/components/ui/Tabs";
 import {
   daysOverdue,
@@ -41,7 +40,6 @@ import {
 import { clinicToday as todayIso } from "@/components/billing/quote-doc";
 import {
   FaFileInvoiceDollar,
-  FaMoneyBillWave,
   FaCheckCircle,
   FaClock,
   FaHashtag,
@@ -86,7 +84,6 @@ export default function BillingPage() {
   // taken here. The chart only records the clinical work.
   const [showBuilder, setShowBuilder] = useState(false);
   const [builderPatientId, setBuilderPatientId] = useState<number | null>(null);
-  const [payingInvoice, setPayingInvoice] = useState<Invoice | null>(null);
 
   // View / payment modal
   const { can } = usePermissions();
@@ -97,8 +94,6 @@ export default function BillingPage() {
   /** The patient whose money file is open, and where it opened. */
   const [drawerPatient, setDrawerPatient] = useState<PatientOption | null>(null);
   const [drawerTab, setDrawerTab] = useState<PatientDrawerTab>("timeline");
-  /** Taking money with no bill named: a deposit on the patient's account. */
-  const [depositPatient, setDepositPatient] = useState<PayingPatient | null>(null);
   /** Bumped whenever money moves, so an open money file redraws with it. */
   const [moneyMoved, setMoneyMoved] = useState(0);
   /** The clinic's own figures, from the server — not a sum of one page of rows. */
@@ -215,21 +210,23 @@ export default function BillingPage() {
     setMoneyMoved((n) => n + 1);
   };
 
-  /** A new bill is listed at once, and the desk is offered the payment drawer. */
+  /**
+   * A new bill is listed at once. Taking the money for it is the other
+   * page’s job, so the desk is pointed at it rather than handed a payment
+   * form on the page that makes documents.
+   */
   const handleInvoiceCreated = async (invoice: Invoice) => {
     await refreshMoney();
-    setPayingInvoice(invoice);
+    toast.success(`${invoice.invoice_number} issued.`, {
+      action: can("billing:create")
+        ? {
+            label: "Take payment",
+            onClick: () => router.push(`/admin/payments?patient=${invoice.patient.id}`),
+          }
+        : undefined,
+    });
   };
 
-  /** A payment changes the list, the open detail modal and the drawer alike. */
-  // `invoice` is null when the money was taken with no bill named (a deposit),
-  // in which case there is no row to redraw — just the refreshed list.
-  const handlePaid = async (invoice: Invoice | null) => {
-    await refreshMoney();
-    if (!invoice) return setPayingInvoice(null);
-    setPayingInvoice(invoice.remaining_amount > 0 ? invoice : null);
-    setSelectedInvoice((prev) => (prev?.id === invoice.id ? invoice : prev));
-  };
 
   // ── Filtering + stats ────────────────────────────────────────────────────────
 
@@ -587,15 +584,6 @@ export default function BillingPage() {
                             <td className="px-4 py-3"><StatusBadge status={inv.status} /></td>
                             <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                               <div className="flex items-center gap-1">
-                                {can("billing:create") && inv.status !== "cancelled" && inv.remaining_amount > 0 && (
-                                  <Button
-                                    size="sm"
-                                    className="h-8 whitespace-nowrap"
-                                    onClick={() => setPayingInvoice(inv)}
-                                  >
-                                    <FaMoneyBillWave className="mr-1.5 text-xs" /> Take payment
-                                  </Button>
-                                )}
                                 <button
                                   onClick={() => openViewModal(inv)}
                                   className="p-2 text-brand hover:bg-blue-50 rounded-lg transition-colors"
@@ -640,9 +628,8 @@ export default function BillingPage() {
           onClose={() => setDrawerPatient(null)}
           initialTab={drawerTab}
           onViewInvoice={(inv) => openViewModal(inv)}
-          onTakePayment={(inv) =>
-            inv ? setPayingInvoice(inv) : setDepositPatient(drawerPatient)
-          }
+          /* No onTakePayment: money is received on the Payments page. */
+          allowPlanActs
           onNewBill={() => {
             setBuilderPatientId(Number(drawerPatient.id));
             setShowBuilder(true);
@@ -671,10 +658,10 @@ export default function BillingPage() {
                 )}
               </span>
               <span><strong>{t("billing.statusLabel")}</strong> <StatusBadge status={selectedInvoice.status} /></span>
-              {can("billing:create") && selectedInvoice.status !== "cancelled" && selectedInvoice.remaining_amount > 0 && (
-                <Button size="sm" onClick={() => setPayingInvoice(selectedInvoice)} className="ml-auto">
-                  <FaMoneyBillWave className="mr-2" /> Take payment
-                </Button>
+              {selectedInvoice.status !== "cancelled" && selectedInvoice.remaining_amount > 0 && (
+                <span className="ms-auto text-xs text-ink-500">
+                  Money is received on the Payments page.
+                </span>
               )}
               <Button
                 variant="outline"
@@ -885,16 +872,6 @@ export default function BillingPage() {
         onCreated={handleInvoiceCreated}
       />
 
-      {/* ── Take payment: the one place money is received ─────────────────────── */}
-      {/* One payment form: a bill is named, or it is a deposit on the
-          patient’s account. There is no second form anywhere. */}
-      <TakePaymentModal
-        invoice={payingInvoice}
-        patient={depositPatient}
-        open={!!depositPatient}
-        onClose={() => { setPayingInvoice(null); setDepositPatient(null); }}
-        onPaid={(inv) => { setDepositPatient(null); void handlePaid(inv); }}
-      />
 
       <PasswordConfirmModal
         open={!!confirm}

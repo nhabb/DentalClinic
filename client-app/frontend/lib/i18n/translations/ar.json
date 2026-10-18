@@ -377,7 +377,7 @@
   "billing": {
     "invoicesCount": "فواتير",
     "title": "الفوترة",
-    "subtitle": "كل فاتورة، كل خطة، كل دفعة",
+    "subtitle": "إنشاء الفواتير وتصحيحها، ومتابعة كل خطة علاج",
     "newInvoice": "فاتورة جديدة",
     "searchPlaceholder": "البحث باسم المريض...",
     "statusAll": "الكل",
