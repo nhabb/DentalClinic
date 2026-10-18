@@ -32,14 +32,14 @@ export class AppointmentSlotsController {
   constructor(private readonly slotsService: AppointmentSlotsService) {}
 
   @Post('bulk')
-  @RequirePermissions('slots:manage')
+  @RequirePermissions('slots:create')
   @ApiOperation({ summary: 'Create multiple slots from a time range' })
   createBulk(@Body() dto: CreateBulkSlotsDto) {
     return this.slotsService.createBulk(dto);
   }
 
   @Post()
-  @RequirePermissions('slots:manage')
+  @RequirePermissions('slots:create')
   @ApiOperation({ summary: 'Create a single available slot' })
   create(@Body() dto: CreateSlotDto) {
     return this.slotsService.create(dto);
@@ -104,7 +104,7 @@ export class AppointmentSlotsController {
   }
 
   @Delete(':id')
-  @RequirePermissions('slots:manage')
+  @RequirePermissions('slots:delete')
   @ApiOperation({ summary: 'Delete an unbooked slot' })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.slotsService.remove(BigInt(id));

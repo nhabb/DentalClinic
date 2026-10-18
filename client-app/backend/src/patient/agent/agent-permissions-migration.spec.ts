@@ -30,15 +30,21 @@ describe('agent permissions migrations', () => {
   });
 
   it('create one restrictive policy per permission-gated table, with the same permission', () => {
-    const pairs = migrations
-      .flatMap((m) => [
-        ...m.sql.matchAll(/\['([a-z_]+)',\s*'([a-z_]+:[a-z_]+)'\]/g),
-      ])
-      .map((m) => [m[1], m[2]] as const);
+    // Migrations are read oldest first and a later one replaces the policy of an
+    // earlier one (a permission key can be renamed), so the last pair for a table
+    // is the one in force.
+    const inForce = new Map<string, string>();
+    for (const migration of migrations) {
+      for (const match of migration.sql.matchAll(
+        /\['([a-z_]+)',\s*'([a-z_]+:[a-z_]+)'\]/g,
+      )) {
+        inForce.set(match[1], match[2]);
+      }
+    }
     const fromCode = Object.entries(TABLE_PERMISSIONS)
       .filter((e): e is [string, string] => e[1] !== null)
       .sort();
-    expect([...pairs].sort()).toEqual(fromCode);
+    expect([...inForce.entries()].sort()).toEqual(fromCode);
   });
 
   it('grant SELECT on exactly the tables the assistant may read', () => {

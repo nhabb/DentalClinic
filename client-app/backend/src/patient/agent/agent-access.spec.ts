@@ -100,7 +100,7 @@ describe('agent access: running a tool', () => {
 
   it('names the missing permission with its label', () => {
     expect(toolDenial(doctor, 'list_roles')).toMatch(
-      /lacks the permission: roles:manage \(Edit roles and permissions/,
+      /lacks the permission: roles:edit \(Edit roles and their permissions/,
     );
   });
 
@@ -142,13 +142,13 @@ describe('agent access: raw SQL and permissions', () => {
         doctor,
         'SELECT r.key FROM roles r JOIN role_permissions rp ON rp.role_id = r.id',
       ),
-    ).toMatch(/lacks the permission: roles:manage/);
+    ).toMatch(/lacks the permission: roles:edit/);
     expect(
       sqlDenial(
         secretary,
         'SELECT * FROM appointments WHERE id IN (SELECT record_id FROM audit_logs)',
       ),
-    ).toMatch(/lacks the permission: staff:manage/);
+    ).toMatch(/lacks the permission: staff:edit/);
     expect(
       sqlDenial(nobody, 'SELECT * FROM (SELECT * FROM patient_profiles) x'),
     ).toMatch(/lacks the permission: patients:read/);
@@ -208,8 +208,8 @@ describe('agent access: raw SQL and permissions', () => {
 describe('agent access: describing permissions', () => {
   it('splits the catalog into granted and denied for the user', () => {
     const { granted, denied } = describeAccess(doctor);
-    expect(granted.map((p) => p.key)).toContain('billing:write');
-    expect(denied.map((p) => p.key)).toContain('roles:manage');
+    expect(granted.map((p) => p.key)).toContain('billing:create');
+    expect(denied.map((p) => p.key)).toContain('roles:edit');
     expect(granted.length + denied.length).toBe(ALL_PERMISSIONS.length);
     expect(describeAccess(admin).denied).toEqual([]);
   });

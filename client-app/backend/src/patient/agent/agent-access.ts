@@ -18,7 +18,7 @@ import { analyzeSelect } from './sql-policy';
 export const TOOL_PERMISSIONS: Readonly<Record<string, string | null>> = {
   // Self and roles
   get_my_permissions: null,
-  list_roles: 'roles:manage',
+  list_roles: 'roles:edit',
 
   // Appointments and slots
   list_appointments: 'appointments:read',
@@ -75,16 +75,17 @@ export const TABLE_PERMISSIONS: Readonly<Record<string, string | null>> = {
   treatment_invoices: 'billing:read',
   invoice_line_items: 'billing:read',
   invoice_payments: 'billing:read',
+  payment_allocations: 'billing:read',
   quotes: 'billing:read',
-  quote_items: 'billing:read',
+  quote_sends: 'billing:read',
   expenses: 'expenses:read',
   expense_payments: 'expenses:read',
   inventory_items: 'inventory:read',
   inventory_movements: 'inventory:read',
-  notifications: 'staff:manage',
-  roles: 'roles:manage',
-  role_permissions: 'roles:manage',
-  audit_logs: 'staff:manage',
+  notifications: 'staff:edit',
+  roles: 'roles:edit',
+  role_permissions: 'roles:edit',
+  audit_logs: 'staff:edit',
   specialists: 'specialists:read',
   specialist_consultations: 'specialists:read',
   dental_labs: 'lab:read',
@@ -103,8 +104,7 @@ export const PRICING_PERMISSION = 'pricing:read';
 
 export const PRICING_COLUMNS: Readonly<Record<string, readonly string[]>> = {
   patient_records: ['quoted_amount'],
-  quotes: ['quoted_total', 'quoted_discount'],
-  quote_items: ['quoted_amount'],
+  quote_sends: ['quoted_total', 'quoted_lines'],
   lab_orders: ['cost'],
   specialist_consultations: ['fee'],
   inventory_items: ['cost_price'],

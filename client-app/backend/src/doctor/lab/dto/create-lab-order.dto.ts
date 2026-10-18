@@ -25,6 +25,24 @@ export const LAB_WORK_TYPES = [
 ] as const;
 export type LabWorkType = (typeof LAB_WORK_TYPES)[number];
 
+/** What a piece is made of. 'other' keeps the list from blocking a new material. */
+export const LAB_MATERIALS = [
+  'zirconia',
+  'emax',
+  'pfm',
+  'full_metal',
+  'acrylic',
+  'composite',
+  'ceramic',
+  'flexible',
+  'other',
+] as const;
+export type LabMaterial = (typeof LAB_MATERIALS)[number];
+
+/** How the impression reached the lab. */
+export const IMPRESSION_METHODS = ['digital', 'physical'] as const;
+export type ImpressionMethod = (typeof IMPRESSION_METHODS)[number];
+
 export const LAB_ORDER_STATUSES = [
   'ordered',
   'sent',
@@ -83,6 +101,67 @@ export class CreateLabOrderDto {
   @IsString()
   @MaxLength(50)
   shade?: string;
+
+  @ApiPropertyOptional({
+    enum: LAB_MATERIALS,
+    description: 'What the piece is made of',
+  })
+  @IsOptional()
+  @IsIn(LAB_MATERIALS)
+  material?: LabMaterial;
+
+  @ApiPropertyOptional({
+    example: 3,
+    description: 'How many pieces or units this case covers',
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(32)
+  units?: number;
+
+  @ApiPropertyOptional({
+    description: 'Courier or lab reference for the case in transit',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  tracking_ref?: string;
+
+  @ApiPropertyOptional({
+    enum: IMPRESSION_METHODS,
+    description: 'digital (intraoral scan) or physical',
+  })
+  @IsOptional()
+  @IsIn(IMPRESSION_METHODS)
+  impression_method?: ImpressionMethod;
+
+  @ApiPropertyOptional({
+    description: 'Try-in or bisque fitting on, YYYY-MM-DD',
+  })
+  @IsOptional()
+  @IsDateString()
+  try_in_at?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'The earlier lab order this one remakes; leave out for a first attempt',
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  remake_of_id?: number;
+
+  @ApiPropertyOptional({
+    example: 'Shade too light, patient refused',
+    description:
+      'Why the earlier piece had to be remade; required with remake_of_id',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(1000)
+  remake_reason?: string;
 
   @ApiPropertyOptional({ enum: LAB_ORDER_STATUSES, default: 'ordered' })
   @IsOptional()

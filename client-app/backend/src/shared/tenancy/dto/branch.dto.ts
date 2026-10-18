@@ -7,6 +7,7 @@ import {
   MaxLength,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsPhone } from '../../common/phone';
 
 export class CreateBranchDto {
   @ApiProperty({ example: 'Tyre Branch' })
@@ -42,9 +43,7 @@ export class CreateBranchDto {
   governate?: string;
 
   @ApiPropertyOptional({ example: '+961 7 123 456' })
-  @IsOptional()
-  @IsString()
-  @MaxLength(30)
+  @IsPhone()
   phone?: string;
 
   @ApiPropertyOptional()
@@ -105,9 +104,7 @@ export class UpdateBranchDto {
   governate?: string;
 
   @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  @MaxLength(30)
+  @IsPhone()
   phone?: string;
 
   @ApiPropertyOptional()

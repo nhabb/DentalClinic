@@ -14,8 +14,10 @@ import type * as Prisma from "../internal/prismaNamespace"
 
 /**
  * Model quotes
- * A priced treatment plan given to a patient: a numbered, versioned estimate of planned work.
- * Not money: never counted as income or outstanding. draft -> sent -> accepted | declined | expired.
+ * The header of one patient's living treatment plan: its number, notes and the
+ * day they agreed. The plan itself is their patient_records, and the totals are
+ * summed from those — nothing is duplicated here, so nothing can drift. What a
+ * patient was actually handed is in quote_sends.
  */
 export type quotesModel = runtime.Types.Result.DefaultSelection<Prisma.$quotesPayload>
 
@@ -32,10 +34,6 @@ export type QuotesAvgAggregateOutputType = {
   organization_id: number | null
   branch_id: number | null
   patient_id: number | null
-  version: number | null
-  supersedes_id: number | null
-  quoted_discount: runtime.Decimal | null
-  quoted_total: runtime.Decimal | null
   created_by: number | null
 }
 
@@ -44,10 +42,6 @@ export type QuotesSumAggregateOutputType = {
   organization_id: bigint | null
   branch_id: bigint | null
   patient_id: bigint | null
-  version: number | null
-  supersedes_id: bigint | null
-  quoted_discount: runtime.Decimal | null
-  quoted_total: runtime.Decimal | null
   created_by: bigint | null
 }
 
@@ -57,17 +51,10 @@ export type QuotesMinAggregateOutputType = {
   branch_id: bigint | null
   patient_id: bigint | null
   quote_number: string | null
-  version: number | null
-  supersedes_id: bigint | null
-  status: string | null
-  valid_until: Date | null
-  quoted_discount: runtime.Decimal | null
-  quoted_total: runtime.Decimal | null
   notes: string | null
   created_by: bigint | null
-  sent_at: Date | null
   accepted_at: Date | null
-  declined_at: Date | null
+  accepted_digest: string | null
   created_at: Date | null
   updated_at: Date | null
 }
@@ -78,17 +65,10 @@ export type QuotesMaxAggregateOutputType = {
   branch_id: bigint | null
   patient_id: bigint | null
   quote_number: string | null
-  version: number | null
-  supersedes_id: bigint | null
-  status: string | null
-  valid_until: Date | null
-  quoted_discount: runtime.Decimal | null
-  quoted_total: runtime.Decimal | null
   notes: string | null
   created_by: bigint | null
-  sent_at: Date | null
   accepted_at: Date | null
-  declined_at: Date | null
+  accepted_digest: string | null
   created_at: Date | null
   updated_at: Date | null
 }
@@ -99,17 +79,10 @@ export type QuotesCountAggregateOutputType = {
   branch_id: number
   patient_id: number
   quote_number: number
-  version: number
-  supersedes_id: number
-  status: number
-  valid_until: number
-  quoted_discount: number
-  quoted_total: number
   notes: number
   created_by: number
-  sent_at: number
   accepted_at: number
-  declined_at: number
+  accepted_digest: number
   created_at: number
   updated_at: number
   _all: number
@@ -121,10 +94,6 @@ export type QuotesAvgAggregateInputType = {
   organization_id?: true
   branch_id?: true
   patient_id?: true
-  version?: true
-  supersedes_id?: true
-  quoted_discount?: true
-  quoted_total?: true
   created_by?: true
 }
 
@@ -133,10 +102,6 @@ export type QuotesSumAggregateInputType = {
   organization_id?: true
   branch_id?: true
   patient_id?: true
-  version?: true
-  supersedes_id?: true
-  quoted_discount?: true
-  quoted_total?: true
   created_by?: true
 }
 
@@ -146,17 +111,10 @@ export type QuotesMinAggregateInputType = {
   branch_id?: true
   patient_id?: true
   quote_number?: true
-  version?: true
-  supersedes_id?: true
-  status?: true
-  valid_until?: true
-  quoted_discount?: true
-  quoted_total?: true
   notes?: true
   created_by?: true
-  sent_at?: true
   accepted_at?: true
-  declined_at?: true
+  accepted_digest?: true
   created_at?: true
   updated_at?: true
 }
@@ -167,17 +125,10 @@ export type QuotesMaxAggregateInputType = {
   branch_id?: true
   patient_id?: true
   quote_number?: true
-  version?: true
-  supersedes_id?: true
-  status?: true
-  valid_until?: true
-  quoted_discount?: true
-  quoted_total?: true
   notes?: true
   created_by?: true
-  sent_at?: true
   accepted_at?: true
-  declined_at?: true
+  accepted_digest?: true
   created_at?: true
   updated_at?: true
 }
@@ -188,17 +139,10 @@ export type QuotesCountAggregateInputType = {
   branch_id?: true
   patient_id?: true
   quote_number?: true
-  version?: true
-  supersedes_id?: true
-  status?: true
-  valid_until?: true
-  quoted_discount?: true
-  quoted_total?: true
   notes?: true
   created_by?: true
-  sent_at?: true
   accepted_at?: true
-  declined_at?: true
+  accepted_digest?: true
   created_at?: true
   updated_at?: true
   _all?: true
@@ -296,17 +240,10 @@ export type QuotesGroupByOutputType = {
   branch_id: bigint | null
   patient_id: bigint
   quote_number: string
-  version: number
-  supersedes_id: bigint | null
-  status: string
-  valid_until: Date | null
-  quoted_discount: runtime.Decimal
-  quoted_total: runtime.Decimal
   notes: string | null
   created_by: bigint | null
-  sent_at: Date | null
   accepted_at: Date | null
-  declined_at: Date | null
+  accepted_digest: string | null
   created_at: Date
   updated_at: Date
   _count: QuotesCountAggregateOutputType | null
@@ -340,27 +277,17 @@ export type quotesWhereInput = {
   branch_id?: Prisma.BigIntNullableFilter<"quotes"> | bigint | number | null
   patient_id?: Prisma.BigIntFilter<"quotes"> | bigint | number
   quote_number?: Prisma.StringFilter<"quotes"> | string
-  version?: Prisma.IntFilter<"quotes"> | number
-  supersedes_id?: Prisma.BigIntNullableFilter<"quotes"> | bigint | number | null
-  status?: Prisma.StringFilter<"quotes"> | string
-  valid_until?: Prisma.DateTimeNullableFilter<"quotes"> | Date | string | null
-  quoted_discount?: Prisma.DecimalFilter<"quotes"> | runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: Prisma.DecimalFilter<"quotes"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   notes?: Prisma.StringNullableFilter<"quotes"> | string | null
   created_by?: Prisma.BigIntNullableFilter<"quotes"> | bigint | number | null
-  sent_at?: Prisma.DateTimeNullableFilter<"quotes"> | Date | string | null
   accepted_at?: Prisma.DateTimeNullableFilter<"quotes"> | Date | string | null
-  declined_at?: Prisma.DateTimeNullableFilter<"quotes"> | Date | string | null
+  accepted_digest?: Prisma.StringNullableFilter<"quotes"> | string | null
   created_at?: Prisma.DateTimeFilter<"quotes"> | Date | string
   updated_at?: Prisma.DateTimeFilter<"quotes"> | Date | string
   organization?: Prisma.XOR<Prisma.OrganizationsScalarRelationFilter, Prisma.organizationsWhereInput>
   branch?: Prisma.XOR<Prisma.BranchesNullableScalarRelationFilter, Prisma.branchesWhereInput> | null
   patient?: Prisma.XOR<Prisma.Patient_profilesScalarRelationFilter, Prisma.patient_profilesWhereInput>
-  supersedes?: Prisma.XOR<Prisma.QuotesNullableScalarRelationFilter, Prisma.quotesWhereInput> | null
-  revisions?: Prisma.QuotesListRelationFilter
   creator?: Prisma.XOR<Prisma.UsersNullableScalarRelationFilter, Prisma.usersWhereInput> | null
-  items?: Prisma.Quote_itemsListRelationFilter
-  invoices?: Prisma.Treatment_invoicesListRelationFilter
+  sends?: Prisma.Quote_sendsListRelationFilter
 }
 
 export type quotesOrderByWithRelationInput = {
@@ -369,61 +296,41 @@ export type quotesOrderByWithRelationInput = {
   branch_id?: Prisma.SortOrderInput | Prisma.SortOrder
   patient_id?: Prisma.SortOrder
   quote_number?: Prisma.SortOrder
-  version?: Prisma.SortOrder
-  supersedes_id?: Prisma.SortOrderInput | Prisma.SortOrder
-  status?: Prisma.SortOrder
-  valid_until?: Prisma.SortOrderInput | Prisma.SortOrder
-  quoted_discount?: Prisma.SortOrder
-  quoted_total?: Prisma.SortOrder
   notes?: Prisma.SortOrderInput | Prisma.SortOrder
   created_by?: Prisma.SortOrderInput | Prisma.SortOrder
-  sent_at?: Prisma.SortOrderInput | Prisma.SortOrder
   accepted_at?: Prisma.SortOrderInput | Prisma.SortOrder
-  declined_at?: Prisma.SortOrderInput | Prisma.SortOrder
+  accepted_digest?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
   organization?: Prisma.organizationsOrderByWithRelationInput
   branch?: Prisma.branchesOrderByWithRelationInput
   patient?: Prisma.patient_profilesOrderByWithRelationInput
-  supersedes?: Prisma.quotesOrderByWithRelationInput
-  revisions?: Prisma.quotesOrderByRelationAggregateInput
   creator?: Prisma.usersOrderByWithRelationInput
-  items?: Prisma.quote_itemsOrderByRelationAggregateInput
-  invoices?: Prisma.treatment_invoicesOrderByRelationAggregateInput
+  sends?: Prisma.quote_sendsOrderByRelationAggregateInput
 }
 
 export type quotesWhereUniqueInput = Prisma.AtLeast<{
   id?: bigint | number
+  patient_id?: bigint | number
   organization_id_quote_number?: Prisma.quotesOrganization_idQuote_numberCompoundUniqueInput
   AND?: Prisma.quotesWhereInput | Prisma.quotesWhereInput[]
   OR?: Prisma.quotesWhereInput[]
   NOT?: Prisma.quotesWhereInput | Prisma.quotesWhereInput[]
   organization_id?: Prisma.BigIntFilter<"quotes"> | bigint | number
   branch_id?: Prisma.BigIntNullableFilter<"quotes"> | bigint | number | null
-  patient_id?: Prisma.BigIntFilter<"quotes"> | bigint | number
   quote_number?: Prisma.StringFilter<"quotes"> | string
-  version?: Prisma.IntFilter<"quotes"> | number
-  supersedes_id?: Prisma.BigIntNullableFilter<"quotes"> | bigint | number | null
-  status?: Prisma.StringFilter<"quotes"> | string
-  valid_until?: Prisma.DateTimeNullableFilter<"quotes"> | Date | string | null
-  quoted_discount?: Prisma.DecimalFilter<"quotes"> | runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: Prisma.DecimalFilter<"quotes"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   notes?: Prisma.StringNullableFilter<"quotes"> | string | null
   created_by?: Prisma.BigIntNullableFilter<"quotes"> | bigint | number | null
-  sent_at?: Prisma.DateTimeNullableFilter<"quotes"> | Date | string | null
   accepted_at?: Prisma.DateTimeNullableFilter<"quotes"> | Date | string | null
-  declined_at?: Prisma.DateTimeNullableFilter<"quotes"> | Date | string | null
+  accepted_digest?: Prisma.StringNullableFilter<"quotes"> | string | null
   created_at?: Prisma.DateTimeFilter<"quotes"> | Date | string
   updated_at?: Prisma.DateTimeFilter<"quotes"> | Date | string
   organization?: Prisma.XOR<Prisma.OrganizationsScalarRelationFilter, Prisma.organizationsWhereInput>
   branch?: Prisma.XOR<Prisma.BranchesNullableScalarRelationFilter, Prisma.branchesWhereInput> | null
   patient?: Prisma.XOR<Prisma.Patient_profilesScalarRelationFilter, Prisma.patient_profilesWhereInput>
-  supersedes?: Prisma.XOR<Prisma.QuotesNullableScalarRelationFilter, Prisma.quotesWhereInput> | null
-  revisions?: Prisma.QuotesListRelationFilter
   creator?: Prisma.XOR<Prisma.UsersNullableScalarRelationFilter, Prisma.usersWhereInput> | null
-  items?: Prisma.Quote_itemsListRelationFilter
-  invoices?: Prisma.Treatment_invoicesListRelationFilter
-}, "id" | "organization_id_quote_number">
+  sends?: Prisma.Quote_sendsListRelationFilter
+}, "id" | "organization_id_quote_number" | "patient_id">
 
 export type quotesOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -431,17 +338,10 @@ export type quotesOrderByWithAggregationInput = {
   branch_id?: Prisma.SortOrderInput | Prisma.SortOrder
   patient_id?: Prisma.SortOrder
   quote_number?: Prisma.SortOrder
-  version?: Prisma.SortOrder
-  supersedes_id?: Prisma.SortOrderInput | Prisma.SortOrder
-  status?: Prisma.SortOrder
-  valid_until?: Prisma.SortOrderInput | Prisma.SortOrder
-  quoted_discount?: Prisma.SortOrder
-  quoted_total?: Prisma.SortOrder
   notes?: Prisma.SortOrderInput | Prisma.SortOrder
   created_by?: Prisma.SortOrderInput | Prisma.SortOrder
-  sent_at?: Prisma.SortOrderInput | Prisma.SortOrder
   accepted_at?: Prisma.SortOrderInput | Prisma.SortOrder
-  declined_at?: Prisma.SortOrderInput | Prisma.SortOrder
+  accepted_digest?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
   _count?: Prisma.quotesCountOrderByAggregateInput
@@ -460,17 +360,10 @@ export type quotesScalarWhereWithAggregatesInput = {
   branch_id?: Prisma.BigIntNullableWithAggregatesFilter<"quotes"> | bigint | number | null
   patient_id?: Prisma.BigIntWithAggregatesFilter<"quotes"> | bigint | number
   quote_number?: Prisma.StringWithAggregatesFilter<"quotes"> | string
-  version?: Prisma.IntWithAggregatesFilter<"quotes"> | number
-  supersedes_id?: Prisma.BigIntNullableWithAggregatesFilter<"quotes"> | bigint | number | null
-  status?: Prisma.StringWithAggregatesFilter<"quotes"> | string
-  valid_until?: Prisma.DateTimeNullableWithAggregatesFilter<"quotes"> | Date | string | null
-  quoted_discount?: Prisma.DecimalWithAggregatesFilter<"quotes"> | runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: Prisma.DecimalWithAggregatesFilter<"quotes"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   notes?: Prisma.StringNullableWithAggregatesFilter<"quotes"> | string | null
   created_by?: Prisma.BigIntNullableWithAggregatesFilter<"quotes"> | bigint | number | null
-  sent_at?: Prisma.DateTimeNullableWithAggregatesFilter<"quotes"> | Date | string | null
   accepted_at?: Prisma.DateTimeNullableWithAggregatesFilter<"quotes"> | Date | string | null
-  declined_at?: Prisma.DateTimeNullableWithAggregatesFilter<"quotes"> | Date | string | null
+  accepted_digest?: Prisma.StringNullableWithAggregatesFilter<"quotes"> | string | null
   created_at?: Prisma.DateTimeWithAggregatesFilter<"quotes"> | Date | string
   updated_at?: Prisma.DateTimeWithAggregatesFilter<"quotes"> | Date | string
 }
@@ -478,25 +371,16 @@ export type quotesScalarWhereWithAggregatesInput = {
 export type quotesCreateInput = {
   id?: bigint | number
   quote_number?: string
-  version?: number
-  status?: string
-  valid_until?: Date | string | null
-  quoted_discount?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: runtime.Decimal | runtime.DecimalJsLike | number | string
   notes?: string | null
-  sent_at?: Date | string | null
   accepted_at?: Date | string | null
-  declined_at?: Date | string | null
+  accepted_digest?: string | null
   created_at?: Date | string
   updated_at?: Date | string
   organization?: Prisma.organizationsCreateNestedOneWithoutQuotesInput
   branch?: Prisma.branchesCreateNestedOneWithoutQuotesInput
   patient: Prisma.patient_profilesCreateNestedOneWithoutQuotesInput
-  supersedes?: Prisma.quotesCreateNestedOneWithoutRevisionsInput
-  revisions?: Prisma.quotesCreateNestedManyWithoutSupersedesInput
   creator?: Prisma.usersCreateNestedOneWithoutQuotes_createdInput
-  items?: Prisma.quote_itemsCreateNestedManyWithoutQuoteInput
-  invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutQuoteInput
+  sends?: Prisma.quote_sendsCreateNestedManyWithoutQuoteInput
 }
 
 export type quotesUncheckedCreateInput = {
@@ -505,46 +389,28 @@ export type quotesUncheckedCreateInput = {
   branch_id?: bigint | number | null
   patient_id: bigint | number
   quote_number?: string
-  version?: number
-  supersedes_id?: bigint | number | null
-  status?: string
-  valid_until?: Date | string | null
-  quoted_discount?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: runtime.Decimal | runtime.DecimalJsLike | number | string
   notes?: string | null
   created_by?: bigint | number | null
-  sent_at?: Date | string | null
   accepted_at?: Date | string | null
-  declined_at?: Date | string | null
+  accepted_digest?: string | null
   created_at?: Date | string
   updated_at?: Date | string
-  revisions?: Prisma.quotesUncheckedCreateNestedManyWithoutSupersedesInput
-  items?: Prisma.quote_itemsUncheckedCreateNestedManyWithoutQuoteInput
-  invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutQuoteInput
+  sends?: Prisma.quote_sendsUncheckedCreateNestedManyWithoutQuoteInput
 }
 
 export type quotesUpdateInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   quote_number?: Prisma.StringFieldUpdateOperationsInput | string
-  version?: Prisma.IntFieldUpdateOperationsInput | number
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  valid_until?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  quoted_discount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   accepted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  declined_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accepted_digest?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   organization?: Prisma.organizationsUpdateOneRequiredWithoutQuotesNestedInput
   branch?: Prisma.branchesUpdateOneWithoutQuotesNestedInput
   patient?: Prisma.patient_profilesUpdateOneRequiredWithoutQuotesNestedInput
-  supersedes?: Prisma.quotesUpdateOneWithoutRevisionsNestedInput
-  revisions?: Prisma.quotesUpdateManyWithoutSupersedesNestedInput
   creator?: Prisma.usersUpdateOneWithoutQuotes_createdNestedInput
-  items?: Prisma.quote_itemsUpdateManyWithoutQuoteNestedInput
-  invoices?: Prisma.treatment_invoicesUpdateManyWithoutQuoteNestedInput
+  sends?: Prisma.quote_sendsUpdateManyWithoutQuoteNestedInput
 }
 
 export type quotesUncheckedUpdateInput = {
@@ -553,22 +419,13 @@ export type quotesUncheckedUpdateInput = {
   branch_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   quote_number?: Prisma.StringFieldUpdateOperationsInput | string
-  version?: Prisma.IntFieldUpdateOperationsInput | number
-  supersedes_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  valid_until?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  quoted_discount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   accepted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  declined_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accepted_digest?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  revisions?: Prisma.quotesUncheckedUpdateManyWithoutSupersedesNestedInput
-  items?: Prisma.quote_itemsUncheckedUpdateManyWithoutQuoteNestedInput
-  invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutQuoteNestedInput
+  sends?: Prisma.quote_sendsUncheckedUpdateManyWithoutQuoteNestedInput
 }
 
 export type quotesCreateManyInput = {
@@ -577,17 +434,10 @@ export type quotesCreateManyInput = {
   branch_id?: bigint | number | null
   patient_id: bigint | number
   quote_number?: string
-  version?: number
-  supersedes_id?: bigint | number | null
-  status?: string
-  valid_until?: Date | string | null
-  quoted_discount?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: runtime.Decimal | runtime.DecimalJsLike | number | string
   notes?: string | null
   created_by?: bigint | number | null
-  sent_at?: Date | string | null
   accepted_at?: Date | string | null
-  declined_at?: Date | string | null
+  accepted_digest?: string | null
   created_at?: Date | string
   updated_at?: Date | string
 }
@@ -595,15 +445,9 @@ export type quotesCreateManyInput = {
 export type quotesUpdateManyMutationInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   quote_number?: Prisma.StringFieldUpdateOperationsInput | string
-  version?: Prisma.IntFieldUpdateOperationsInput | number
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  valid_until?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  quoted_discount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   accepted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  declined_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accepted_digest?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -614,17 +458,10 @@ export type quotesUncheckedUpdateManyInput = {
   branch_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   quote_number?: Prisma.StringFieldUpdateOperationsInput | string
-  version?: Prisma.IntFieldUpdateOperationsInput | number
-  supersedes_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  valid_until?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  quoted_discount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   accepted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  declined_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accepted_digest?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -639,11 +476,6 @@ export type quotesOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
 }
 
-export type QuotesNullableScalarRelationFilter = {
-  is?: Prisma.quotesWhereInput | null
-  isNot?: Prisma.quotesWhereInput | null
-}
-
 export type quotesOrganization_idQuote_numberCompoundUniqueInput = {
   organization_id: bigint | number
   quote_number: string
@@ -655,17 +487,10 @@ export type quotesCountOrderByAggregateInput = {
   branch_id?: Prisma.SortOrder
   patient_id?: Prisma.SortOrder
   quote_number?: Prisma.SortOrder
-  version?: Prisma.SortOrder
-  supersedes_id?: Prisma.SortOrder
-  status?: Prisma.SortOrder
-  valid_until?: Prisma.SortOrder
-  quoted_discount?: Prisma.SortOrder
-  quoted_total?: Prisma.SortOrder
   notes?: Prisma.SortOrder
   created_by?: Prisma.SortOrder
-  sent_at?: Prisma.SortOrder
   accepted_at?: Prisma.SortOrder
-  declined_at?: Prisma.SortOrder
+  accepted_digest?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
 }
@@ -675,10 +500,6 @@ export type quotesAvgOrderByAggregateInput = {
   organization_id?: Prisma.SortOrder
   branch_id?: Prisma.SortOrder
   patient_id?: Prisma.SortOrder
-  version?: Prisma.SortOrder
-  supersedes_id?: Prisma.SortOrder
-  quoted_discount?: Prisma.SortOrder
-  quoted_total?: Prisma.SortOrder
   created_by?: Prisma.SortOrder
 }
 
@@ -688,17 +509,10 @@ export type quotesMaxOrderByAggregateInput = {
   branch_id?: Prisma.SortOrder
   patient_id?: Prisma.SortOrder
   quote_number?: Prisma.SortOrder
-  version?: Prisma.SortOrder
-  supersedes_id?: Prisma.SortOrder
-  status?: Prisma.SortOrder
-  valid_until?: Prisma.SortOrder
-  quoted_discount?: Prisma.SortOrder
-  quoted_total?: Prisma.SortOrder
   notes?: Prisma.SortOrder
   created_by?: Prisma.SortOrder
-  sent_at?: Prisma.SortOrder
   accepted_at?: Prisma.SortOrder
-  declined_at?: Prisma.SortOrder
+  accepted_digest?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
 }
@@ -709,17 +523,10 @@ export type quotesMinOrderByAggregateInput = {
   branch_id?: Prisma.SortOrder
   patient_id?: Prisma.SortOrder
   quote_number?: Prisma.SortOrder
-  version?: Prisma.SortOrder
-  supersedes_id?: Prisma.SortOrder
-  status?: Prisma.SortOrder
-  valid_until?: Prisma.SortOrder
-  quoted_discount?: Prisma.SortOrder
-  quoted_total?: Prisma.SortOrder
   notes?: Prisma.SortOrder
   created_by?: Prisma.SortOrder
-  sent_at?: Prisma.SortOrder
   accepted_at?: Prisma.SortOrder
-  declined_at?: Prisma.SortOrder
+  accepted_digest?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
 }
@@ -729,10 +536,6 @@ export type quotesSumOrderByAggregateInput = {
   organization_id?: Prisma.SortOrder
   branch_id?: Prisma.SortOrder
   patient_id?: Prisma.SortOrder
-  version?: Prisma.SortOrder
-  supersedes_id?: Prisma.SortOrder
-  quoted_discount?: Prisma.SortOrder
-  quoted_total?: Prisma.SortOrder
   created_by?: Prisma.SortOrder
 }
 
@@ -909,115 +712,32 @@ export type quotesUncheckedUpdateManyWithoutCreatorNestedInput = {
   deleteMany?: Prisma.quotesScalarWhereInput | Prisma.quotesScalarWhereInput[]
 }
 
-export type quotesCreateNestedOneWithoutInvoicesInput = {
-  create?: Prisma.XOR<Prisma.quotesCreateWithoutInvoicesInput, Prisma.quotesUncheckedCreateWithoutInvoicesInput>
-  connectOrCreate?: Prisma.quotesCreateOrConnectWithoutInvoicesInput
+export type quotesCreateNestedOneWithoutSendsInput = {
+  create?: Prisma.XOR<Prisma.quotesCreateWithoutSendsInput, Prisma.quotesUncheckedCreateWithoutSendsInput>
+  connectOrCreate?: Prisma.quotesCreateOrConnectWithoutSendsInput
   connect?: Prisma.quotesWhereUniqueInput
 }
 
-export type quotesUpdateOneWithoutInvoicesNestedInput = {
-  create?: Prisma.XOR<Prisma.quotesCreateWithoutInvoicesInput, Prisma.quotesUncheckedCreateWithoutInvoicesInput>
-  connectOrCreate?: Prisma.quotesCreateOrConnectWithoutInvoicesInput
-  upsert?: Prisma.quotesUpsertWithoutInvoicesInput
-  disconnect?: Prisma.quotesWhereInput | boolean
-  delete?: Prisma.quotesWhereInput | boolean
+export type quotesUpdateOneRequiredWithoutSendsNestedInput = {
+  create?: Prisma.XOR<Prisma.quotesCreateWithoutSendsInput, Prisma.quotesUncheckedCreateWithoutSendsInput>
+  connectOrCreate?: Prisma.quotesCreateOrConnectWithoutSendsInput
+  upsert?: Prisma.quotesUpsertWithoutSendsInput
   connect?: Prisma.quotesWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.quotesUpdateToOneWithWhereWithoutInvoicesInput, Prisma.quotesUpdateWithoutInvoicesInput>, Prisma.quotesUncheckedUpdateWithoutInvoicesInput>
-}
-
-export type quotesCreateNestedOneWithoutRevisionsInput = {
-  create?: Prisma.XOR<Prisma.quotesCreateWithoutRevisionsInput, Prisma.quotesUncheckedCreateWithoutRevisionsInput>
-  connectOrCreate?: Prisma.quotesCreateOrConnectWithoutRevisionsInput
-  connect?: Prisma.quotesWhereUniqueInput
-}
-
-export type quotesCreateNestedManyWithoutSupersedesInput = {
-  create?: Prisma.XOR<Prisma.quotesCreateWithoutSupersedesInput, Prisma.quotesUncheckedCreateWithoutSupersedesInput> | Prisma.quotesCreateWithoutSupersedesInput[] | Prisma.quotesUncheckedCreateWithoutSupersedesInput[]
-  connectOrCreate?: Prisma.quotesCreateOrConnectWithoutSupersedesInput | Prisma.quotesCreateOrConnectWithoutSupersedesInput[]
-  createMany?: Prisma.quotesCreateManySupersedesInputEnvelope
-  connect?: Prisma.quotesWhereUniqueInput | Prisma.quotesWhereUniqueInput[]
-}
-
-export type quotesUncheckedCreateNestedManyWithoutSupersedesInput = {
-  create?: Prisma.XOR<Prisma.quotesCreateWithoutSupersedesInput, Prisma.quotesUncheckedCreateWithoutSupersedesInput> | Prisma.quotesCreateWithoutSupersedesInput[] | Prisma.quotesUncheckedCreateWithoutSupersedesInput[]
-  connectOrCreate?: Prisma.quotesCreateOrConnectWithoutSupersedesInput | Prisma.quotesCreateOrConnectWithoutSupersedesInput[]
-  createMany?: Prisma.quotesCreateManySupersedesInputEnvelope
-  connect?: Prisma.quotesWhereUniqueInput | Prisma.quotesWhereUniqueInput[]
-}
-
-export type quotesUpdateOneWithoutRevisionsNestedInput = {
-  create?: Prisma.XOR<Prisma.quotesCreateWithoutRevisionsInput, Prisma.quotesUncheckedCreateWithoutRevisionsInput>
-  connectOrCreate?: Prisma.quotesCreateOrConnectWithoutRevisionsInput
-  upsert?: Prisma.quotesUpsertWithoutRevisionsInput
-  disconnect?: Prisma.quotesWhereInput | boolean
-  delete?: Prisma.quotesWhereInput | boolean
-  connect?: Prisma.quotesWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.quotesUpdateToOneWithWhereWithoutRevisionsInput, Prisma.quotesUpdateWithoutRevisionsInput>, Prisma.quotesUncheckedUpdateWithoutRevisionsInput>
-}
-
-export type quotesUpdateManyWithoutSupersedesNestedInput = {
-  create?: Prisma.XOR<Prisma.quotesCreateWithoutSupersedesInput, Prisma.quotesUncheckedCreateWithoutSupersedesInput> | Prisma.quotesCreateWithoutSupersedesInput[] | Prisma.quotesUncheckedCreateWithoutSupersedesInput[]
-  connectOrCreate?: Prisma.quotesCreateOrConnectWithoutSupersedesInput | Prisma.quotesCreateOrConnectWithoutSupersedesInput[]
-  upsert?: Prisma.quotesUpsertWithWhereUniqueWithoutSupersedesInput | Prisma.quotesUpsertWithWhereUniqueWithoutSupersedesInput[]
-  createMany?: Prisma.quotesCreateManySupersedesInputEnvelope
-  set?: Prisma.quotesWhereUniqueInput | Prisma.quotesWhereUniqueInput[]
-  disconnect?: Prisma.quotesWhereUniqueInput | Prisma.quotesWhereUniqueInput[]
-  delete?: Prisma.quotesWhereUniqueInput | Prisma.quotesWhereUniqueInput[]
-  connect?: Prisma.quotesWhereUniqueInput | Prisma.quotesWhereUniqueInput[]
-  update?: Prisma.quotesUpdateWithWhereUniqueWithoutSupersedesInput | Prisma.quotesUpdateWithWhereUniqueWithoutSupersedesInput[]
-  updateMany?: Prisma.quotesUpdateManyWithWhereWithoutSupersedesInput | Prisma.quotesUpdateManyWithWhereWithoutSupersedesInput[]
-  deleteMany?: Prisma.quotesScalarWhereInput | Prisma.quotesScalarWhereInput[]
-}
-
-export type quotesUncheckedUpdateManyWithoutSupersedesNestedInput = {
-  create?: Prisma.XOR<Prisma.quotesCreateWithoutSupersedesInput, Prisma.quotesUncheckedCreateWithoutSupersedesInput> | Prisma.quotesCreateWithoutSupersedesInput[] | Prisma.quotesUncheckedCreateWithoutSupersedesInput[]
-  connectOrCreate?: Prisma.quotesCreateOrConnectWithoutSupersedesInput | Prisma.quotesCreateOrConnectWithoutSupersedesInput[]
-  upsert?: Prisma.quotesUpsertWithWhereUniqueWithoutSupersedesInput | Prisma.quotesUpsertWithWhereUniqueWithoutSupersedesInput[]
-  createMany?: Prisma.quotesCreateManySupersedesInputEnvelope
-  set?: Prisma.quotesWhereUniqueInput | Prisma.quotesWhereUniqueInput[]
-  disconnect?: Prisma.quotesWhereUniqueInput | Prisma.quotesWhereUniqueInput[]
-  delete?: Prisma.quotesWhereUniqueInput | Prisma.quotesWhereUniqueInput[]
-  connect?: Prisma.quotesWhereUniqueInput | Prisma.quotesWhereUniqueInput[]
-  update?: Prisma.quotesUpdateWithWhereUniqueWithoutSupersedesInput | Prisma.quotesUpdateWithWhereUniqueWithoutSupersedesInput[]
-  updateMany?: Prisma.quotesUpdateManyWithWhereWithoutSupersedesInput | Prisma.quotesUpdateManyWithWhereWithoutSupersedesInput[]
-  deleteMany?: Prisma.quotesScalarWhereInput | Prisma.quotesScalarWhereInput[]
-}
-
-export type quotesCreateNestedOneWithoutItemsInput = {
-  create?: Prisma.XOR<Prisma.quotesCreateWithoutItemsInput, Prisma.quotesUncheckedCreateWithoutItemsInput>
-  connectOrCreate?: Prisma.quotesCreateOrConnectWithoutItemsInput
-  connect?: Prisma.quotesWhereUniqueInput
-}
-
-export type quotesUpdateOneRequiredWithoutItemsNestedInput = {
-  create?: Prisma.XOR<Prisma.quotesCreateWithoutItemsInput, Prisma.quotesUncheckedCreateWithoutItemsInput>
-  connectOrCreate?: Prisma.quotesCreateOrConnectWithoutItemsInput
-  upsert?: Prisma.quotesUpsertWithoutItemsInput
-  connect?: Prisma.quotesWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.quotesUpdateToOneWithWhereWithoutItemsInput, Prisma.quotesUpdateWithoutItemsInput>, Prisma.quotesUncheckedUpdateWithoutItemsInput>
+  update?: Prisma.XOR<Prisma.XOR<Prisma.quotesUpdateToOneWithWhereWithoutSendsInput, Prisma.quotesUpdateWithoutSendsInput>, Prisma.quotesUncheckedUpdateWithoutSendsInput>
 }
 
 export type quotesCreateWithoutOrganizationInput = {
   id?: bigint | number
   quote_number?: string
-  version?: number
-  status?: string
-  valid_until?: Date | string | null
-  quoted_discount?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: runtime.Decimal | runtime.DecimalJsLike | number | string
   notes?: string | null
-  sent_at?: Date | string | null
   accepted_at?: Date | string | null
-  declined_at?: Date | string | null
+  accepted_digest?: string | null
   created_at?: Date | string
   updated_at?: Date | string
   branch?: Prisma.branchesCreateNestedOneWithoutQuotesInput
   patient: Prisma.patient_profilesCreateNestedOneWithoutQuotesInput
-  supersedes?: Prisma.quotesCreateNestedOneWithoutRevisionsInput
-  revisions?: Prisma.quotesCreateNestedManyWithoutSupersedesInput
   creator?: Prisma.usersCreateNestedOneWithoutQuotes_createdInput
-  items?: Prisma.quote_itemsCreateNestedManyWithoutQuoteInput
-  invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutQuoteInput
+  sends?: Prisma.quote_sendsCreateNestedManyWithoutQuoteInput
 }
 
 export type quotesUncheckedCreateWithoutOrganizationInput = {
@@ -1025,22 +745,13 @@ export type quotesUncheckedCreateWithoutOrganizationInput = {
   branch_id?: bigint | number | null
   patient_id: bigint | number
   quote_number?: string
-  version?: number
-  supersedes_id?: bigint | number | null
-  status?: string
-  valid_until?: Date | string | null
-  quoted_discount?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: runtime.Decimal | runtime.DecimalJsLike | number | string
   notes?: string | null
   created_by?: bigint | number | null
-  sent_at?: Date | string | null
   accepted_at?: Date | string | null
-  declined_at?: Date | string | null
+  accepted_digest?: string | null
   created_at?: Date | string
   updated_at?: Date | string
-  revisions?: Prisma.quotesUncheckedCreateNestedManyWithoutSupersedesInput
-  items?: Prisma.quote_itemsUncheckedCreateNestedManyWithoutQuoteInput
-  invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutQuoteInput
+  sends?: Prisma.quote_sendsUncheckedCreateNestedManyWithoutQuoteInput
 }
 
 export type quotesCreateOrConnectWithoutOrganizationInput = {
@@ -1078,17 +789,10 @@ export type quotesScalarWhereInput = {
   branch_id?: Prisma.BigIntNullableFilter<"quotes"> | bigint | number | null
   patient_id?: Prisma.BigIntFilter<"quotes"> | bigint | number
   quote_number?: Prisma.StringFilter<"quotes"> | string
-  version?: Prisma.IntFilter<"quotes"> | number
-  supersedes_id?: Prisma.BigIntNullableFilter<"quotes"> | bigint | number | null
-  status?: Prisma.StringFilter<"quotes"> | string
-  valid_until?: Prisma.DateTimeNullableFilter<"quotes"> | Date | string | null
-  quoted_discount?: Prisma.DecimalFilter<"quotes"> | runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: Prisma.DecimalFilter<"quotes"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   notes?: Prisma.StringNullableFilter<"quotes"> | string | null
   created_by?: Prisma.BigIntNullableFilter<"quotes"> | bigint | number | null
-  sent_at?: Prisma.DateTimeNullableFilter<"quotes"> | Date | string | null
   accepted_at?: Prisma.DateTimeNullableFilter<"quotes"> | Date | string | null
-  declined_at?: Prisma.DateTimeNullableFilter<"quotes"> | Date | string | null
+  accepted_digest?: Prisma.StringNullableFilter<"quotes"> | string | null
   created_at?: Prisma.DateTimeFilter<"quotes"> | Date | string
   updated_at?: Prisma.DateTimeFilter<"quotes"> | Date | string
 }
@@ -1096,24 +800,15 @@ export type quotesScalarWhereInput = {
 export type quotesCreateWithoutBranchInput = {
   id?: bigint | number
   quote_number?: string
-  version?: number
-  status?: string
-  valid_until?: Date | string | null
-  quoted_discount?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: runtime.Decimal | runtime.DecimalJsLike | number | string
   notes?: string | null
-  sent_at?: Date | string | null
   accepted_at?: Date | string | null
-  declined_at?: Date | string | null
+  accepted_digest?: string | null
   created_at?: Date | string
   updated_at?: Date | string
   organization?: Prisma.organizationsCreateNestedOneWithoutQuotesInput
   patient: Prisma.patient_profilesCreateNestedOneWithoutQuotesInput
-  supersedes?: Prisma.quotesCreateNestedOneWithoutRevisionsInput
-  revisions?: Prisma.quotesCreateNestedManyWithoutSupersedesInput
   creator?: Prisma.usersCreateNestedOneWithoutQuotes_createdInput
-  items?: Prisma.quote_itemsCreateNestedManyWithoutQuoteInput
-  invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutQuoteInput
+  sends?: Prisma.quote_sendsCreateNestedManyWithoutQuoteInput
 }
 
 export type quotesUncheckedCreateWithoutBranchInput = {
@@ -1121,22 +816,13 @@ export type quotesUncheckedCreateWithoutBranchInput = {
   organization_id?: bigint | number
   patient_id: bigint | number
   quote_number?: string
-  version?: number
-  supersedes_id?: bigint | number | null
-  status?: string
-  valid_until?: Date | string | null
-  quoted_discount?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: runtime.Decimal | runtime.DecimalJsLike | number | string
   notes?: string | null
   created_by?: bigint | number | null
-  sent_at?: Date | string | null
   accepted_at?: Date | string | null
-  declined_at?: Date | string | null
+  accepted_digest?: string | null
   created_at?: Date | string
   updated_at?: Date | string
-  revisions?: Prisma.quotesUncheckedCreateNestedManyWithoutSupersedesInput
-  items?: Prisma.quote_itemsUncheckedCreateNestedManyWithoutQuoteInput
-  invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutQuoteInput
+  sends?: Prisma.quote_sendsUncheckedCreateNestedManyWithoutQuoteInput
 }
 
 export type quotesCreateOrConnectWithoutBranchInput = {
@@ -1168,24 +854,15 @@ export type quotesUpdateManyWithWhereWithoutBranchInput = {
 export type quotesCreateWithoutPatientInput = {
   id?: bigint | number
   quote_number?: string
-  version?: number
-  status?: string
-  valid_until?: Date | string | null
-  quoted_discount?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: runtime.Decimal | runtime.DecimalJsLike | number | string
   notes?: string | null
-  sent_at?: Date | string | null
   accepted_at?: Date | string | null
-  declined_at?: Date | string | null
+  accepted_digest?: string | null
   created_at?: Date | string
   updated_at?: Date | string
   organization?: Prisma.organizationsCreateNestedOneWithoutQuotesInput
   branch?: Prisma.branchesCreateNestedOneWithoutQuotesInput
-  supersedes?: Prisma.quotesCreateNestedOneWithoutRevisionsInput
-  revisions?: Prisma.quotesCreateNestedManyWithoutSupersedesInput
   creator?: Prisma.usersCreateNestedOneWithoutQuotes_createdInput
-  items?: Prisma.quote_itemsCreateNestedManyWithoutQuoteInput
-  invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutQuoteInput
+  sends?: Prisma.quote_sendsCreateNestedManyWithoutQuoteInput
 }
 
 export type quotesUncheckedCreateWithoutPatientInput = {
@@ -1193,22 +870,13 @@ export type quotesUncheckedCreateWithoutPatientInput = {
   organization_id?: bigint | number
   branch_id?: bigint | number | null
   quote_number?: string
-  version?: number
-  supersedes_id?: bigint | number | null
-  status?: string
-  valid_until?: Date | string | null
-  quoted_discount?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: runtime.Decimal | runtime.DecimalJsLike | number | string
   notes?: string | null
   created_by?: bigint | number | null
-  sent_at?: Date | string | null
   accepted_at?: Date | string | null
-  declined_at?: Date | string | null
+  accepted_digest?: string | null
   created_at?: Date | string
   updated_at?: Date | string
-  revisions?: Prisma.quotesUncheckedCreateNestedManyWithoutSupersedesInput
-  items?: Prisma.quote_itemsUncheckedCreateNestedManyWithoutQuoteInput
-  invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutQuoteInput
+  sends?: Prisma.quote_sendsUncheckedCreateNestedManyWithoutQuoteInput
 }
 
 export type quotesCreateOrConnectWithoutPatientInput = {
@@ -1240,24 +908,15 @@ export type quotesUpdateManyWithWhereWithoutPatientInput = {
 export type quotesCreateWithoutCreatorInput = {
   id?: bigint | number
   quote_number?: string
-  version?: number
-  status?: string
-  valid_until?: Date | string | null
-  quoted_discount?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: runtime.Decimal | runtime.DecimalJsLike | number | string
   notes?: string | null
-  sent_at?: Date | string | null
   accepted_at?: Date | string | null
-  declined_at?: Date | string | null
+  accepted_digest?: string | null
   created_at?: Date | string
   updated_at?: Date | string
   organization?: Prisma.organizationsCreateNestedOneWithoutQuotesInput
   branch?: Prisma.branchesCreateNestedOneWithoutQuotesInput
   patient: Prisma.patient_profilesCreateNestedOneWithoutQuotesInput
-  supersedes?: Prisma.quotesCreateNestedOneWithoutRevisionsInput
-  revisions?: Prisma.quotesCreateNestedManyWithoutSupersedesInput
-  items?: Prisma.quote_itemsCreateNestedManyWithoutQuoteInput
-  invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutQuoteInput
+  sends?: Prisma.quote_sendsCreateNestedManyWithoutQuoteInput
 }
 
 export type quotesUncheckedCreateWithoutCreatorInput = {
@@ -1266,21 +925,12 @@ export type quotesUncheckedCreateWithoutCreatorInput = {
   branch_id?: bigint | number | null
   patient_id: bigint | number
   quote_number?: string
-  version?: number
-  supersedes_id?: bigint | number | null
-  status?: string
-  valid_until?: Date | string | null
-  quoted_discount?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: runtime.Decimal | runtime.DecimalJsLike | number | string
   notes?: string | null
-  sent_at?: Date | string | null
   accepted_at?: Date | string | null
-  declined_at?: Date | string | null
+  accepted_digest?: string | null
   created_at?: Date | string
   updated_at?: Date | string
-  revisions?: Prisma.quotesUncheckedCreateNestedManyWithoutSupersedesInput
-  items?: Prisma.quote_itemsUncheckedCreateNestedManyWithoutQuoteInput
-  invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutQuoteInput
+  sends?: Prisma.quote_sendsUncheckedCreateNestedManyWithoutQuoteInput
 }
 
 export type quotesCreateOrConnectWithoutCreatorInput = {
@@ -1309,400 +959,76 @@ export type quotesUpdateManyWithWhereWithoutCreatorInput = {
   data: Prisma.XOR<Prisma.quotesUpdateManyMutationInput, Prisma.quotesUncheckedUpdateManyWithoutCreatorInput>
 }
 
-export type quotesCreateWithoutInvoicesInput = {
+export type quotesCreateWithoutSendsInput = {
   id?: bigint | number
   quote_number?: string
-  version?: number
-  status?: string
-  valid_until?: Date | string | null
-  quoted_discount?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: runtime.Decimal | runtime.DecimalJsLike | number | string
   notes?: string | null
-  sent_at?: Date | string | null
   accepted_at?: Date | string | null
-  declined_at?: Date | string | null
+  accepted_digest?: string | null
   created_at?: Date | string
   updated_at?: Date | string
   organization?: Prisma.organizationsCreateNestedOneWithoutQuotesInput
   branch?: Prisma.branchesCreateNestedOneWithoutQuotesInput
   patient: Prisma.patient_profilesCreateNestedOneWithoutQuotesInput
-  supersedes?: Prisma.quotesCreateNestedOneWithoutRevisionsInput
-  revisions?: Prisma.quotesCreateNestedManyWithoutSupersedesInput
   creator?: Prisma.usersCreateNestedOneWithoutQuotes_createdInput
-  items?: Prisma.quote_itemsCreateNestedManyWithoutQuoteInput
 }
 
-export type quotesUncheckedCreateWithoutInvoicesInput = {
+export type quotesUncheckedCreateWithoutSendsInput = {
   id?: bigint | number
   organization_id?: bigint | number
   branch_id?: bigint | number | null
   patient_id: bigint | number
   quote_number?: string
-  version?: number
-  supersedes_id?: bigint | number | null
-  status?: string
-  valid_until?: Date | string | null
-  quoted_discount?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: runtime.Decimal | runtime.DecimalJsLike | number | string
   notes?: string | null
   created_by?: bigint | number | null
-  sent_at?: Date | string | null
   accepted_at?: Date | string | null
-  declined_at?: Date | string | null
+  accepted_digest?: string | null
   created_at?: Date | string
   updated_at?: Date | string
-  revisions?: Prisma.quotesUncheckedCreateNestedManyWithoutSupersedesInput
-  items?: Prisma.quote_itemsUncheckedCreateNestedManyWithoutQuoteInput
 }
 
-export type quotesCreateOrConnectWithoutInvoicesInput = {
+export type quotesCreateOrConnectWithoutSendsInput = {
   where: Prisma.quotesWhereUniqueInput
-  create: Prisma.XOR<Prisma.quotesCreateWithoutInvoicesInput, Prisma.quotesUncheckedCreateWithoutInvoicesInput>
+  create: Prisma.XOR<Prisma.quotesCreateWithoutSendsInput, Prisma.quotesUncheckedCreateWithoutSendsInput>
 }
 
-export type quotesUpsertWithoutInvoicesInput = {
-  update: Prisma.XOR<Prisma.quotesUpdateWithoutInvoicesInput, Prisma.quotesUncheckedUpdateWithoutInvoicesInput>
-  create: Prisma.XOR<Prisma.quotesCreateWithoutInvoicesInput, Prisma.quotesUncheckedCreateWithoutInvoicesInput>
+export type quotesUpsertWithoutSendsInput = {
+  update: Prisma.XOR<Prisma.quotesUpdateWithoutSendsInput, Prisma.quotesUncheckedUpdateWithoutSendsInput>
+  create: Prisma.XOR<Prisma.quotesCreateWithoutSendsInput, Prisma.quotesUncheckedCreateWithoutSendsInput>
   where?: Prisma.quotesWhereInput
 }
 
-export type quotesUpdateToOneWithWhereWithoutInvoicesInput = {
+export type quotesUpdateToOneWithWhereWithoutSendsInput = {
   where?: Prisma.quotesWhereInput
-  data: Prisma.XOR<Prisma.quotesUpdateWithoutInvoicesInput, Prisma.quotesUncheckedUpdateWithoutInvoicesInput>
+  data: Prisma.XOR<Prisma.quotesUpdateWithoutSendsInput, Prisma.quotesUncheckedUpdateWithoutSendsInput>
 }
 
-export type quotesUpdateWithoutInvoicesInput = {
+export type quotesUpdateWithoutSendsInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   quote_number?: Prisma.StringFieldUpdateOperationsInput | string
-  version?: Prisma.IntFieldUpdateOperationsInput | number
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  valid_until?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  quoted_discount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   accepted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  declined_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accepted_digest?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   organization?: Prisma.organizationsUpdateOneRequiredWithoutQuotesNestedInput
   branch?: Prisma.branchesUpdateOneWithoutQuotesNestedInput
   patient?: Prisma.patient_profilesUpdateOneRequiredWithoutQuotesNestedInput
-  supersedes?: Prisma.quotesUpdateOneWithoutRevisionsNestedInput
-  revisions?: Prisma.quotesUpdateManyWithoutSupersedesNestedInput
   creator?: Prisma.usersUpdateOneWithoutQuotes_createdNestedInput
-  items?: Prisma.quote_itemsUpdateManyWithoutQuoteNestedInput
 }
 
-export type quotesUncheckedUpdateWithoutInvoicesInput = {
+export type quotesUncheckedUpdateWithoutSendsInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   branch_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   quote_number?: Prisma.StringFieldUpdateOperationsInput | string
-  version?: Prisma.IntFieldUpdateOperationsInput | number
-  supersedes_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  valid_until?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  quoted_discount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   accepted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  declined_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accepted_digest?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  revisions?: Prisma.quotesUncheckedUpdateManyWithoutSupersedesNestedInput
-  items?: Prisma.quote_itemsUncheckedUpdateManyWithoutQuoteNestedInput
-}
-
-export type quotesCreateWithoutRevisionsInput = {
-  id?: bigint | number
-  quote_number?: string
-  version?: number
-  status?: string
-  valid_until?: Date | string | null
-  quoted_discount?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  notes?: string | null
-  sent_at?: Date | string | null
-  accepted_at?: Date | string | null
-  declined_at?: Date | string | null
-  created_at?: Date | string
-  updated_at?: Date | string
-  organization?: Prisma.organizationsCreateNestedOneWithoutQuotesInput
-  branch?: Prisma.branchesCreateNestedOneWithoutQuotesInput
-  patient: Prisma.patient_profilesCreateNestedOneWithoutQuotesInput
-  supersedes?: Prisma.quotesCreateNestedOneWithoutRevisionsInput
-  creator?: Prisma.usersCreateNestedOneWithoutQuotes_createdInput
-  items?: Prisma.quote_itemsCreateNestedManyWithoutQuoteInput
-  invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutQuoteInput
-}
-
-export type quotesUncheckedCreateWithoutRevisionsInput = {
-  id?: bigint | number
-  organization_id?: bigint | number
-  branch_id?: bigint | number | null
-  patient_id: bigint | number
-  quote_number?: string
-  version?: number
-  supersedes_id?: bigint | number | null
-  status?: string
-  valid_until?: Date | string | null
-  quoted_discount?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  notes?: string | null
-  created_by?: bigint | number | null
-  sent_at?: Date | string | null
-  accepted_at?: Date | string | null
-  declined_at?: Date | string | null
-  created_at?: Date | string
-  updated_at?: Date | string
-  items?: Prisma.quote_itemsUncheckedCreateNestedManyWithoutQuoteInput
-  invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutQuoteInput
-}
-
-export type quotesCreateOrConnectWithoutRevisionsInput = {
-  where: Prisma.quotesWhereUniqueInput
-  create: Prisma.XOR<Prisma.quotesCreateWithoutRevisionsInput, Prisma.quotesUncheckedCreateWithoutRevisionsInput>
-}
-
-export type quotesCreateWithoutSupersedesInput = {
-  id?: bigint | number
-  quote_number?: string
-  version?: number
-  status?: string
-  valid_until?: Date | string | null
-  quoted_discount?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  notes?: string | null
-  sent_at?: Date | string | null
-  accepted_at?: Date | string | null
-  declined_at?: Date | string | null
-  created_at?: Date | string
-  updated_at?: Date | string
-  organization?: Prisma.organizationsCreateNestedOneWithoutQuotesInput
-  branch?: Prisma.branchesCreateNestedOneWithoutQuotesInput
-  patient: Prisma.patient_profilesCreateNestedOneWithoutQuotesInput
-  revisions?: Prisma.quotesCreateNestedManyWithoutSupersedesInput
-  creator?: Prisma.usersCreateNestedOneWithoutQuotes_createdInput
-  items?: Prisma.quote_itemsCreateNestedManyWithoutQuoteInput
-  invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutQuoteInput
-}
-
-export type quotesUncheckedCreateWithoutSupersedesInput = {
-  id?: bigint | number
-  organization_id?: bigint | number
-  branch_id?: bigint | number | null
-  patient_id: bigint | number
-  quote_number?: string
-  version?: number
-  status?: string
-  valid_until?: Date | string | null
-  quoted_discount?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  notes?: string | null
-  created_by?: bigint | number | null
-  sent_at?: Date | string | null
-  accepted_at?: Date | string | null
-  declined_at?: Date | string | null
-  created_at?: Date | string
-  updated_at?: Date | string
-  revisions?: Prisma.quotesUncheckedCreateNestedManyWithoutSupersedesInput
-  items?: Prisma.quote_itemsUncheckedCreateNestedManyWithoutQuoteInput
-  invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutQuoteInput
-}
-
-export type quotesCreateOrConnectWithoutSupersedesInput = {
-  where: Prisma.quotesWhereUniqueInput
-  create: Prisma.XOR<Prisma.quotesCreateWithoutSupersedesInput, Prisma.quotesUncheckedCreateWithoutSupersedesInput>
-}
-
-export type quotesCreateManySupersedesInputEnvelope = {
-  data: Prisma.quotesCreateManySupersedesInput | Prisma.quotesCreateManySupersedesInput[]
-  skipDuplicates?: boolean
-}
-
-export type quotesUpsertWithoutRevisionsInput = {
-  update: Prisma.XOR<Prisma.quotesUpdateWithoutRevisionsInput, Prisma.quotesUncheckedUpdateWithoutRevisionsInput>
-  create: Prisma.XOR<Prisma.quotesCreateWithoutRevisionsInput, Prisma.quotesUncheckedCreateWithoutRevisionsInput>
-  where?: Prisma.quotesWhereInput
-}
-
-export type quotesUpdateToOneWithWhereWithoutRevisionsInput = {
-  where?: Prisma.quotesWhereInput
-  data: Prisma.XOR<Prisma.quotesUpdateWithoutRevisionsInput, Prisma.quotesUncheckedUpdateWithoutRevisionsInput>
-}
-
-export type quotesUpdateWithoutRevisionsInput = {
-  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  quote_number?: Prisma.StringFieldUpdateOperationsInput | string
-  version?: Prisma.IntFieldUpdateOperationsInput | number
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  valid_until?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  quoted_discount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  accepted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  declined_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  organization?: Prisma.organizationsUpdateOneRequiredWithoutQuotesNestedInput
-  branch?: Prisma.branchesUpdateOneWithoutQuotesNestedInput
-  patient?: Prisma.patient_profilesUpdateOneRequiredWithoutQuotesNestedInput
-  supersedes?: Prisma.quotesUpdateOneWithoutRevisionsNestedInput
-  creator?: Prisma.usersUpdateOneWithoutQuotes_createdNestedInput
-  items?: Prisma.quote_itemsUpdateManyWithoutQuoteNestedInput
-  invoices?: Prisma.treatment_invoicesUpdateManyWithoutQuoteNestedInput
-}
-
-export type quotesUncheckedUpdateWithoutRevisionsInput = {
-  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  branch_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  quote_number?: Prisma.StringFieldUpdateOperationsInput | string
-  version?: Prisma.IntFieldUpdateOperationsInput | number
-  supersedes_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  valid_until?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  quoted_discount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  accepted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  declined_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  items?: Prisma.quote_itemsUncheckedUpdateManyWithoutQuoteNestedInput
-  invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutQuoteNestedInput
-}
-
-export type quotesUpsertWithWhereUniqueWithoutSupersedesInput = {
-  where: Prisma.quotesWhereUniqueInput
-  update: Prisma.XOR<Prisma.quotesUpdateWithoutSupersedesInput, Prisma.quotesUncheckedUpdateWithoutSupersedesInput>
-  create: Prisma.XOR<Prisma.quotesCreateWithoutSupersedesInput, Prisma.quotesUncheckedCreateWithoutSupersedesInput>
-}
-
-export type quotesUpdateWithWhereUniqueWithoutSupersedesInput = {
-  where: Prisma.quotesWhereUniqueInput
-  data: Prisma.XOR<Prisma.quotesUpdateWithoutSupersedesInput, Prisma.quotesUncheckedUpdateWithoutSupersedesInput>
-}
-
-export type quotesUpdateManyWithWhereWithoutSupersedesInput = {
-  where: Prisma.quotesScalarWhereInput
-  data: Prisma.XOR<Prisma.quotesUpdateManyMutationInput, Prisma.quotesUncheckedUpdateManyWithoutSupersedesInput>
-}
-
-export type quotesCreateWithoutItemsInput = {
-  id?: bigint | number
-  quote_number?: string
-  version?: number
-  status?: string
-  valid_until?: Date | string | null
-  quoted_discount?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  notes?: string | null
-  sent_at?: Date | string | null
-  accepted_at?: Date | string | null
-  declined_at?: Date | string | null
-  created_at?: Date | string
-  updated_at?: Date | string
-  organization?: Prisma.organizationsCreateNestedOneWithoutQuotesInput
-  branch?: Prisma.branchesCreateNestedOneWithoutQuotesInput
-  patient: Prisma.patient_profilesCreateNestedOneWithoutQuotesInput
-  supersedes?: Prisma.quotesCreateNestedOneWithoutRevisionsInput
-  revisions?: Prisma.quotesCreateNestedManyWithoutSupersedesInput
-  creator?: Prisma.usersCreateNestedOneWithoutQuotes_createdInput
-  invoices?: Prisma.treatment_invoicesCreateNestedManyWithoutQuoteInput
-}
-
-export type quotesUncheckedCreateWithoutItemsInput = {
-  id?: bigint | number
-  organization_id?: bigint | number
-  branch_id?: bigint | number | null
-  patient_id: bigint | number
-  quote_number?: string
-  version?: number
-  supersedes_id?: bigint | number | null
-  status?: string
-  valid_until?: Date | string | null
-  quoted_discount?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  notes?: string | null
-  created_by?: bigint | number | null
-  sent_at?: Date | string | null
-  accepted_at?: Date | string | null
-  declined_at?: Date | string | null
-  created_at?: Date | string
-  updated_at?: Date | string
-  revisions?: Prisma.quotesUncheckedCreateNestedManyWithoutSupersedesInput
-  invoices?: Prisma.treatment_invoicesUncheckedCreateNestedManyWithoutQuoteInput
-}
-
-export type quotesCreateOrConnectWithoutItemsInput = {
-  where: Prisma.quotesWhereUniqueInput
-  create: Prisma.XOR<Prisma.quotesCreateWithoutItemsInput, Prisma.quotesUncheckedCreateWithoutItemsInput>
-}
-
-export type quotesUpsertWithoutItemsInput = {
-  update: Prisma.XOR<Prisma.quotesUpdateWithoutItemsInput, Prisma.quotesUncheckedUpdateWithoutItemsInput>
-  create: Prisma.XOR<Prisma.quotesCreateWithoutItemsInput, Prisma.quotesUncheckedCreateWithoutItemsInput>
-  where?: Prisma.quotesWhereInput
-}
-
-export type quotesUpdateToOneWithWhereWithoutItemsInput = {
-  where?: Prisma.quotesWhereInput
-  data: Prisma.XOR<Prisma.quotesUpdateWithoutItemsInput, Prisma.quotesUncheckedUpdateWithoutItemsInput>
-}
-
-export type quotesUpdateWithoutItemsInput = {
-  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  quote_number?: Prisma.StringFieldUpdateOperationsInput | string
-  version?: Prisma.IntFieldUpdateOperationsInput | number
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  valid_until?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  quoted_discount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  accepted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  declined_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  organization?: Prisma.organizationsUpdateOneRequiredWithoutQuotesNestedInput
-  branch?: Prisma.branchesUpdateOneWithoutQuotesNestedInput
-  patient?: Prisma.patient_profilesUpdateOneRequiredWithoutQuotesNestedInput
-  supersedes?: Prisma.quotesUpdateOneWithoutRevisionsNestedInput
-  revisions?: Prisma.quotesUpdateManyWithoutSupersedesNestedInput
-  creator?: Prisma.usersUpdateOneWithoutQuotes_createdNestedInput
-  invoices?: Prisma.treatment_invoicesUpdateManyWithoutQuoteNestedInput
-}
-
-export type quotesUncheckedUpdateWithoutItemsInput = {
-  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  branch_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  quote_number?: Prisma.StringFieldUpdateOperationsInput | string
-  version?: Prisma.IntFieldUpdateOperationsInput | number
-  supersedes_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  valid_until?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  quoted_discount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  accepted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  declined_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  revisions?: Prisma.quotesUncheckedUpdateManyWithoutSupersedesNestedInput
-  invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutQuoteNestedInput
 }
 
 export type quotesCreateManyOrganizationInput = {
@@ -1710,17 +1036,10 @@ export type quotesCreateManyOrganizationInput = {
   branch_id?: bigint | number | null
   patient_id: bigint | number
   quote_number?: string
-  version?: number
-  supersedes_id?: bigint | number | null
-  status?: string
-  valid_until?: Date | string | null
-  quoted_discount?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: runtime.Decimal | runtime.DecimalJsLike | number | string
   notes?: string | null
   created_by?: bigint | number | null
-  sent_at?: Date | string | null
   accepted_at?: Date | string | null
-  declined_at?: Date | string | null
+  accepted_digest?: string | null
   created_at?: Date | string
   updated_at?: Date | string
 }
@@ -1728,24 +1047,15 @@ export type quotesCreateManyOrganizationInput = {
 export type quotesUpdateWithoutOrganizationInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   quote_number?: Prisma.StringFieldUpdateOperationsInput | string
-  version?: Prisma.IntFieldUpdateOperationsInput | number
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  valid_until?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  quoted_discount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   accepted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  declined_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accepted_digest?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   branch?: Prisma.branchesUpdateOneWithoutQuotesNestedInput
   patient?: Prisma.patient_profilesUpdateOneRequiredWithoutQuotesNestedInput
-  supersedes?: Prisma.quotesUpdateOneWithoutRevisionsNestedInput
-  revisions?: Prisma.quotesUpdateManyWithoutSupersedesNestedInput
   creator?: Prisma.usersUpdateOneWithoutQuotes_createdNestedInput
-  items?: Prisma.quote_itemsUpdateManyWithoutQuoteNestedInput
-  invoices?: Prisma.treatment_invoicesUpdateManyWithoutQuoteNestedInput
+  sends?: Prisma.quote_sendsUpdateManyWithoutQuoteNestedInput
 }
 
 export type quotesUncheckedUpdateWithoutOrganizationInput = {
@@ -1753,22 +1063,13 @@ export type quotesUncheckedUpdateWithoutOrganizationInput = {
   branch_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   quote_number?: Prisma.StringFieldUpdateOperationsInput | string
-  version?: Prisma.IntFieldUpdateOperationsInput | number
-  supersedes_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  valid_until?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  quoted_discount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   accepted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  declined_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accepted_digest?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  revisions?: Prisma.quotesUncheckedUpdateManyWithoutSupersedesNestedInput
-  items?: Prisma.quote_itemsUncheckedUpdateManyWithoutQuoteNestedInput
-  invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutQuoteNestedInput
+  sends?: Prisma.quote_sendsUncheckedUpdateManyWithoutQuoteNestedInput
 }
 
 export type quotesUncheckedUpdateManyWithoutOrganizationInput = {
@@ -1776,17 +1077,10 @@ export type quotesUncheckedUpdateManyWithoutOrganizationInput = {
   branch_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   quote_number?: Prisma.StringFieldUpdateOperationsInput | string
-  version?: Prisma.IntFieldUpdateOperationsInput | number
-  supersedes_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  valid_until?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  quoted_discount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   accepted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  declined_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accepted_digest?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1796,17 +1090,10 @@ export type quotesCreateManyBranchInput = {
   organization_id?: bigint | number
   patient_id: bigint | number
   quote_number?: string
-  version?: number
-  supersedes_id?: bigint | number | null
-  status?: string
-  valid_until?: Date | string | null
-  quoted_discount?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: runtime.Decimal | runtime.DecimalJsLike | number | string
   notes?: string | null
   created_by?: bigint | number | null
-  sent_at?: Date | string | null
   accepted_at?: Date | string | null
-  declined_at?: Date | string | null
+  accepted_digest?: string | null
   created_at?: Date | string
   updated_at?: Date | string
 }
@@ -1814,24 +1101,15 @@ export type quotesCreateManyBranchInput = {
 export type quotesUpdateWithoutBranchInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   quote_number?: Prisma.StringFieldUpdateOperationsInput | string
-  version?: Prisma.IntFieldUpdateOperationsInput | number
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  valid_until?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  quoted_discount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   accepted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  declined_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accepted_digest?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   organization?: Prisma.organizationsUpdateOneRequiredWithoutQuotesNestedInput
   patient?: Prisma.patient_profilesUpdateOneRequiredWithoutQuotesNestedInput
-  supersedes?: Prisma.quotesUpdateOneWithoutRevisionsNestedInput
-  revisions?: Prisma.quotesUpdateManyWithoutSupersedesNestedInput
   creator?: Prisma.usersUpdateOneWithoutQuotes_createdNestedInput
-  items?: Prisma.quote_itemsUpdateManyWithoutQuoteNestedInput
-  invoices?: Prisma.treatment_invoicesUpdateManyWithoutQuoteNestedInput
+  sends?: Prisma.quote_sendsUpdateManyWithoutQuoteNestedInput
 }
 
 export type quotesUncheckedUpdateWithoutBranchInput = {
@@ -1839,22 +1117,13 @@ export type quotesUncheckedUpdateWithoutBranchInput = {
   organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   quote_number?: Prisma.StringFieldUpdateOperationsInput | string
-  version?: Prisma.IntFieldUpdateOperationsInput | number
-  supersedes_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  valid_until?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  quoted_discount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   accepted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  declined_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accepted_digest?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  revisions?: Prisma.quotesUncheckedUpdateManyWithoutSupersedesNestedInput
-  items?: Prisma.quote_itemsUncheckedUpdateManyWithoutQuoteNestedInput
-  invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutQuoteNestedInput
+  sends?: Prisma.quote_sendsUncheckedUpdateManyWithoutQuoteNestedInput
 }
 
 export type quotesUncheckedUpdateManyWithoutBranchInput = {
@@ -1862,17 +1131,10 @@ export type quotesUncheckedUpdateManyWithoutBranchInput = {
   organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   quote_number?: Prisma.StringFieldUpdateOperationsInput | string
-  version?: Prisma.IntFieldUpdateOperationsInput | number
-  supersedes_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  valid_until?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  quoted_discount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   accepted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  declined_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accepted_digest?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1882,17 +1144,10 @@ export type quotesCreateManyPatientInput = {
   organization_id?: bigint | number
   branch_id?: bigint | number | null
   quote_number?: string
-  version?: number
-  supersedes_id?: bigint | number | null
-  status?: string
-  valid_until?: Date | string | null
-  quoted_discount?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: runtime.Decimal | runtime.DecimalJsLike | number | string
   notes?: string | null
   created_by?: bigint | number | null
-  sent_at?: Date | string | null
   accepted_at?: Date | string | null
-  declined_at?: Date | string | null
+  accepted_digest?: string | null
   created_at?: Date | string
   updated_at?: Date | string
 }
@@ -1900,24 +1155,15 @@ export type quotesCreateManyPatientInput = {
 export type quotesUpdateWithoutPatientInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   quote_number?: Prisma.StringFieldUpdateOperationsInput | string
-  version?: Prisma.IntFieldUpdateOperationsInput | number
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  valid_until?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  quoted_discount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   accepted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  declined_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accepted_digest?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   organization?: Prisma.organizationsUpdateOneRequiredWithoutQuotesNestedInput
   branch?: Prisma.branchesUpdateOneWithoutQuotesNestedInput
-  supersedes?: Prisma.quotesUpdateOneWithoutRevisionsNestedInput
-  revisions?: Prisma.quotesUpdateManyWithoutSupersedesNestedInput
   creator?: Prisma.usersUpdateOneWithoutQuotes_createdNestedInput
-  items?: Prisma.quote_itemsUpdateManyWithoutQuoteNestedInput
-  invoices?: Prisma.treatment_invoicesUpdateManyWithoutQuoteNestedInput
+  sends?: Prisma.quote_sendsUpdateManyWithoutQuoteNestedInput
 }
 
 export type quotesUncheckedUpdateWithoutPatientInput = {
@@ -1925,22 +1171,13 @@ export type quotesUncheckedUpdateWithoutPatientInput = {
   organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   branch_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   quote_number?: Prisma.StringFieldUpdateOperationsInput | string
-  version?: Prisma.IntFieldUpdateOperationsInput | number
-  supersedes_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  valid_until?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  quoted_discount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   accepted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  declined_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accepted_digest?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  revisions?: Prisma.quotesUncheckedUpdateManyWithoutSupersedesNestedInput
-  items?: Prisma.quote_itemsUncheckedUpdateManyWithoutQuoteNestedInput
-  invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutQuoteNestedInput
+  sends?: Prisma.quote_sendsUncheckedUpdateManyWithoutQuoteNestedInput
 }
 
 export type quotesUncheckedUpdateManyWithoutPatientInput = {
@@ -1948,17 +1185,10 @@ export type quotesUncheckedUpdateManyWithoutPatientInput = {
   organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   branch_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   quote_number?: Prisma.StringFieldUpdateOperationsInput | string
-  version?: Prisma.IntFieldUpdateOperationsInput | number
-  supersedes_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  valid_until?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  quoted_discount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   accepted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  declined_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accepted_digest?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1969,16 +1199,9 @@ export type quotesCreateManyCreatorInput = {
   branch_id?: bigint | number | null
   patient_id: bigint | number
   quote_number?: string
-  version?: number
-  supersedes_id?: bigint | number | null
-  status?: string
-  valid_until?: Date | string | null
-  quoted_discount?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: runtime.Decimal | runtime.DecimalJsLike | number | string
   notes?: string | null
-  sent_at?: Date | string | null
   accepted_at?: Date | string | null
-  declined_at?: Date | string | null
+  accepted_digest?: string | null
   created_at?: Date | string
   updated_at?: Date | string
 }
@@ -1986,24 +1209,15 @@ export type quotesCreateManyCreatorInput = {
 export type quotesUpdateWithoutCreatorInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   quote_number?: Prisma.StringFieldUpdateOperationsInput | string
-  version?: Prisma.IntFieldUpdateOperationsInput | number
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  valid_until?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  quoted_discount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   accepted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  declined_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accepted_digest?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   organization?: Prisma.organizationsUpdateOneRequiredWithoutQuotesNestedInput
   branch?: Prisma.branchesUpdateOneWithoutQuotesNestedInput
   patient?: Prisma.patient_profilesUpdateOneRequiredWithoutQuotesNestedInput
-  supersedes?: Prisma.quotesUpdateOneWithoutRevisionsNestedInput
-  revisions?: Prisma.quotesUpdateManyWithoutSupersedesNestedInput
-  items?: Prisma.quote_itemsUpdateManyWithoutQuoteNestedInput
-  invoices?: Prisma.treatment_invoicesUpdateManyWithoutQuoteNestedInput
+  sends?: Prisma.quote_sendsUpdateManyWithoutQuoteNestedInput
 }
 
 export type quotesUncheckedUpdateWithoutCreatorInput = {
@@ -2012,21 +1226,12 @@ export type quotesUncheckedUpdateWithoutCreatorInput = {
   branch_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   quote_number?: Prisma.StringFieldUpdateOperationsInput | string
-  version?: Prisma.IntFieldUpdateOperationsInput | number
-  supersedes_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  valid_until?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  quoted_discount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   accepted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  declined_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accepted_digest?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  revisions?: Prisma.quotesUncheckedUpdateManyWithoutSupersedesNestedInput
-  items?: Prisma.quote_itemsUncheckedUpdateManyWithoutQuoteNestedInput
-  invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutQuoteNestedInput
+  sends?: Prisma.quote_sendsUncheckedUpdateManyWithoutQuoteNestedInput
 }
 
 export type quotesUncheckedUpdateManyWithoutCreatorInput = {
@@ -2035,102 +1240,9 @@ export type quotesUncheckedUpdateManyWithoutCreatorInput = {
   branch_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   quote_number?: Prisma.StringFieldUpdateOperationsInput | string
-  version?: Prisma.IntFieldUpdateOperationsInput | number
-  supersedes_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  valid_until?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  quoted_discount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   accepted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  declined_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-}
-
-export type quotesCreateManySupersedesInput = {
-  id?: bigint | number
-  organization_id?: bigint | number
-  branch_id?: bigint | number | null
-  patient_id: bigint | number
-  quote_number?: string
-  version?: number
-  status?: string
-  valid_until?: Date | string | null
-  quoted_discount?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: runtime.Decimal | runtime.DecimalJsLike | number | string
-  notes?: string | null
-  created_by?: bigint | number | null
-  sent_at?: Date | string | null
-  accepted_at?: Date | string | null
-  declined_at?: Date | string | null
-  created_at?: Date | string
-  updated_at?: Date | string
-}
-
-export type quotesUpdateWithoutSupersedesInput = {
-  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  quote_number?: Prisma.StringFieldUpdateOperationsInput | string
-  version?: Prisma.IntFieldUpdateOperationsInput | number
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  valid_until?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  quoted_discount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  accepted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  declined_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  organization?: Prisma.organizationsUpdateOneRequiredWithoutQuotesNestedInput
-  branch?: Prisma.branchesUpdateOneWithoutQuotesNestedInput
-  patient?: Prisma.patient_profilesUpdateOneRequiredWithoutQuotesNestedInput
-  revisions?: Prisma.quotesUpdateManyWithoutSupersedesNestedInput
-  creator?: Prisma.usersUpdateOneWithoutQuotes_createdNestedInput
-  items?: Prisma.quote_itemsUpdateManyWithoutQuoteNestedInput
-  invoices?: Prisma.treatment_invoicesUpdateManyWithoutQuoteNestedInput
-}
-
-export type quotesUncheckedUpdateWithoutSupersedesInput = {
-  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  branch_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  quote_number?: Prisma.StringFieldUpdateOperationsInput | string
-  version?: Prisma.IntFieldUpdateOperationsInput | number
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  valid_until?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  quoted_discount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  accepted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  declined_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  revisions?: Prisma.quotesUncheckedUpdateManyWithoutSupersedesNestedInput
-  items?: Prisma.quote_itemsUncheckedUpdateManyWithoutQuoteNestedInput
-  invoices?: Prisma.treatment_invoicesUncheckedUpdateManyWithoutQuoteNestedInput
-}
-
-export type quotesUncheckedUpdateManyWithoutSupersedesInput = {
-  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  organization_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  branch_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  patient_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  quote_number?: Prisma.StringFieldUpdateOperationsInput | string
-  version?: Prisma.IntFieldUpdateOperationsInput | number
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  valid_until?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  quoted_discount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  quoted_total?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  created_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  sent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  accepted_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  declined_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  accepted_digest?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -2141,15 +1253,11 @@ export type quotesUncheckedUpdateManyWithoutSupersedesInput = {
  */
 
 export type QuotesCountOutputType = {
-  revisions: number
-  items: number
-  invoices: number
+  sends: number
 }
 
 export type QuotesCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  revisions?: boolean | QuotesCountOutputTypeCountRevisionsArgs
-  items?: boolean | QuotesCountOutputTypeCountItemsArgs
-  invoices?: boolean | QuotesCountOutputTypeCountInvoicesArgs
+  sends?: boolean | QuotesCountOutputTypeCountSendsArgs
 }
 
 /**
@@ -2165,22 +1273,8 @@ export type QuotesCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Exten
 /**
  * QuotesCountOutputType without action
  */
-export type QuotesCountOutputTypeCountRevisionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.quotesWhereInput
-}
-
-/**
- * QuotesCountOutputType without action
- */
-export type QuotesCountOutputTypeCountItemsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.quote_itemsWhereInput
-}
-
-/**
- * QuotesCountOutputType without action
- */
-export type QuotesCountOutputTypeCountInvoicesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.treatment_invoicesWhereInput
+export type QuotesCountOutputTypeCountSendsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.quote_sendsWhereInput
 }
 
 
@@ -2190,27 +1284,17 @@ export type quotesSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   branch_id?: boolean
   patient_id?: boolean
   quote_number?: boolean
-  version?: boolean
-  supersedes_id?: boolean
-  status?: boolean
-  valid_until?: boolean
-  quoted_discount?: boolean
-  quoted_total?: boolean
   notes?: boolean
   created_by?: boolean
-  sent_at?: boolean
   accepted_at?: boolean
-  declined_at?: boolean
+  accepted_digest?: boolean
   created_at?: boolean
   updated_at?: boolean
   organization?: boolean | Prisma.organizationsDefaultArgs<ExtArgs>
   branch?: boolean | Prisma.quotes$branchArgs<ExtArgs>
   patient?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
-  supersedes?: boolean | Prisma.quotes$supersedesArgs<ExtArgs>
-  revisions?: boolean | Prisma.quotes$revisionsArgs<ExtArgs>
   creator?: boolean | Prisma.quotes$creatorArgs<ExtArgs>
-  items?: boolean | Prisma.quotes$itemsArgs<ExtArgs>
-  invoices?: boolean | Prisma.quotes$invoicesArgs<ExtArgs>
+  sends?: boolean | Prisma.quotes$sendsArgs<ExtArgs>
   _count?: boolean | Prisma.QuotesCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["quotes"]>
 
@@ -2220,23 +1304,15 @@ export type quotesSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extens
   branch_id?: boolean
   patient_id?: boolean
   quote_number?: boolean
-  version?: boolean
-  supersedes_id?: boolean
-  status?: boolean
-  valid_until?: boolean
-  quoted_discount?: boolean
-  quoted_total?: boolean
   notes?: boolean
   created_by?: boolean
-  sent_at?: boolean
   accepted_at?: boolean
-  declined_at?: boolean
+  accepted_digest?: boolean
   created_at?: boolean
   updated_at?: boolean
   organization?: boolean | Prisma.organizationsDefaultArgs<ExtArgs>
   branch?: boolean | Prisma.quotes$branchArgs<ExtArgs>
   patient?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
-  supersedes?: boolean | Prisma.quotes$supersedesArgs<ExtArgs>
   creator?: boolean | Prisma.quotes$creatorArgs<ExtArgs>
 }, ExtArgs["result"]["quotes"]>
 
@@ -2246,23 +1322,15 @@ export type quotesSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extens
   branch_id?: boolean
   patient_id?: boolean
   quote_number?: boolean
-  version?: boolean
-  supersedes_id?: boolean
-  status?: boolean
-  valid_until?: boolean
-  quoted_discount?: boolean
-  quoted_total?: boolean
   notes?: boolean
   created_by?: boolean
-  sent_at?: boolean
   accepted_at?: boolean
-  declined_at?: boolean
+  accepted_digest?: boolean
   created_at?: boolean
   updated_at?: boolean
   organization?: boolean | Prisma.organizationsDefaultArgs<ExtArgs>
   branch?: boolean | Prisma.quotes$branchArgs<ExtArgs>
   patient?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
-  supersedes?: boolean | Prisma.quotes$supersedesArgs<ExtArgs>
   creator?: boolean | Prisma.quotes$creatorArgs<ExtArgs>
 }, ExtArgs["result"]["quotes"]>
 
@@ -2272,45 +1340,33 @@ export type quotesSelectScalar = {
   branch_id?: boolean
   patient_id?: boolean
   quote_number?: boolean
-  version?: boolean
-  supersedes_id?: boolean
-  status?: boolean
-  valid_until?: boolean
-  quoted_discount?: boolean
-  quoted_total?: boolean
   notes?: boolean
   created_by?: boolean
-  sent_at?: boolean
   accepted_at?: boolean
-  declined_at?: boolean
+  accepted_digest?: boolean
   created_at?: boolean
   updated_at?: boolean
 }
 
-export type quotesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "organization_id" | "branch_id" | "patient_id" | "quote_number" | "version" | "supersedes_id" | "status" | "valid_until" | "quoted_discount" | "quoted_total" | "notes" | "created_by" | "sent_at" | "accepted_at" | "declined_at" | "created_at" | "updated_at", ExtArgs["result"]["quotes"]>
+export type quotesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "organization_id" | "branch_id" | "patient_id" | "quote_number" | "notes" | "created_by" | "accepted_at" | "accepted_digest" | "created_at" | "updated_at", ExtArgs["result"]["quotes"]>
 export type quotesInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   organization?: boolean | Prisma.organizationsDefaultArgs<ExtArgs>
   branch?: boolean | Prisma.quotes$branchArgs<ExtArgs>
   patient?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
-  supersedes?: boolean | Prisma.quotes$supersedesArgs<ExtArgs>
-  revisions?: boolean | Prisma.quotes$revisionsArgs<ExtArgs>
   creator?: boolean | Prisma.quotes$creatorArgs<ExtArgs>
-  items?: boolean | Prisma.quotes$itemsArgs<ExtArgs>
-  invoices?: boolean | Prisma.quotes$invoicesArgs<ExtArgs>
+  sends?: boolean | Prisma.quotes$sendsArgs<ExtArgs>
   _count?: boolean | Prisma.QuotesCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type quotesIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   organization?: boolean | Prisma.organizationsDefaultArgs<ExtArgs>
   branch?: boolean | Prisma.quotes$branchArgs<ExtArgs>
   patient?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
-  supersedes?: boolean | Prisma.quotes$supersedesArgs<ExtArgs>
   creator?: boolean | Prisma.quotes$creatorArgs<ExtArgs>
 }
 export type quotesIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   organization?: boolean | Prisma.organizationsDefaultArgs<ExtArgs>
   branch?: boolean | Prisma.quotes$branchArgs<ExtArgs>
   patient?: boolean | Prisma.patient_profilesDefaultArgs<ExtArgs>
-  supersedes?: boolean | Prisma.quotes$supersedesArgs<ExtArgs>
   creator?: boolean | Prisma.quotes$creatorArgs<ExtArgs>
 }
 
@@ -2320,17 +1376,14 @@ export type $quotesPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
     organization: Prisma.$organizationsPayload<ExtArgs>
     branch: Prisma.$branchesPayload<ExtArgs> | null
     patient: Prisma.$patient_profilesPayload<ExtArgs>
-    supersedes: Prisma.$quotesPayload<ExtArgs> | null
-    revisions: Prisma.$quotesPayload<ExtArgs>[]
     creator: Prisma.$usersPayload<ExtArgs> | null
-    items: Prisma.$quote_itemsPayload<ExtArgs>[]
-    invoices: Prisma.$treatment_invoicesPayload<ExtArgs>[]
+    sends: Prisma.$quote_sendsPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: bigint
     organization_id: bigint
     /**
-     * Branch the quote was prepared at; NULL for organization-wide.
+     * Branch the plan was prepared at; NULL for organization-wide.
      */
     branch_id: bigint | null
     patient_id: bigint
@@ -2338,32 +1391,16 @@ export type $quotesPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
      * Sequential per clinic and year (QUO-2026-00004); assigned by a database trigger on insert.
      */
     quote_number: string
-    /**
-     * Version within this patient's sequence; a revision is a new row with version + 1.
-     */
-    version: number
-    /**
-     * The previous version this quote replaces.
-     */
-    supersedes_id: bigint | null
-    status: string
-    /**
-     * Last day the quoted prices hold.
-     */
-    valid_until: Date | null
-    /**
-     * Taken off the quoted lines (0 when none).
-     */
-    quoted_discount: runtime.Decimal
-    /**
-     * Sum of the items minus quoted_discount (maintained by trigger).
-     */
-    quoted_total: runtime.Decimal
     notes: string | null
     created_by: bigint | null
-    sent_at: Date | null
+    /**
+     * The day the patient agreed. A fact, not a gate: the plan stays editable.
+     */
     accepted_at: Date | null
-    declined_at: Date | null
+    /**
+     * Fingerprint of the plan they agreed to; when it stops matching, the agreement is stale. NULL predates the column.
+     */
+    accepted_digest: string | null
     created_at: Date
     updated_at: Date
   }, ExtArgs["result"]["quotes"]>
@@ -2763,11 +1800,8 @@ export interface Prisma__quotesClient<T, Null = never, ExtArgs extends runtime.T
   organization<T extends Prisma.organizationsDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.organizationsDefaultArgs<ExtArgs>>): Prisma.Prisma__organizationsClient<runtime.Types.Result.GetResult<Prisma.$organizationsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   branch<T extends Prisma.quotes$branchArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.quotes$branchArgs<ExtArgs>>): Prisma.Prisma__branchesClient<runtime.Types.Result.GetResult<Prisma.$branchesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   patient<T extends Prisma.patient_profilesDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.patient_profilesDefaultArgs<ExtArgs>>): Prisma.Prisma__patient_profilesClient<runtime.Types.Result.GetResult<Prisma.$patient_profilesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-  supersedes<T extends Prisma.quotes$supersedesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.quotes$supersedesArgs<ExtArgs>>): Prisma.Prisma__quotesClient<runtime.Types.Result.GetResult<Prisma.$quotesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-  revisions<T extends Prisma.quotes$revisionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.quotes$revisionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$quotesPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   creator<T extends Prisma.quotes$creatorArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.quotes$creatorArgs<ExtArgs>>): Prisma.Prisma__usersClient<runtime.Types.Result.GetResult<Prisma.$usersPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-  items<T extends Prisma.quotes$itemsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.quotes$itemsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$quote_itemsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  invoices<T extends Prisma.quotes$invoicesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.quotes$invoicesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$treatment_invoicesPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  sends<T extends Prisma.quotes$sendsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.quotes$sendsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$quote_sendsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2802,17 +1836,10 @@ export interface quotesFieldRefs {
   readonly branch_id: Prisma.FieldRef<"quotes", 'BigInt'>
   readonly patient_id: Prisma.FieldRef<"quotes", 'BigInt'>
   readonly quote_number: Prisma.FieldRef<"quotes", 'String'>
-  readonly version: Prisma.FieldRef<"quotes", 'Int'>
-  readonly supersedes_id: Prisma.FieldRef<"quotes", 'BigInt'>
-  readonly status: Prisma.FieldRef<"quotes", 'String'>
-  readonly valid_until: Prisma.FieldRef<"quotes", 'DateTime'>
-  readonly quoted_discount: Prisma.FieldRef<"quotes", 'Decimal'>
-  readonly quoted_total: Prisma.FieldRef<"quotes", 'Decimal'>
   readonly notes: Prisma.FieldRef<"quotes", 'String'>
   readonly created_by: Prisma.FieldRef<"quotes", 'BigInt'>
-  readonly sent_at: Prisma.FieldRef<"quotes", 'DateTime'>
   readonly accepted_at: Prisma.FieldRef<"quotes", 'DateTime'>
-  readonly declined_at: Prisma.FieldRef<"quotes", 'DateTime'>
+  readonly accepted_digest: Prisma.FieldRef<"quotes", 'String'>
   readonly created_at: Prisma.FieldRef<"quotes", 'DateTime'>
   readonly updated_at: Prisma.FieldRef<"quotes", 'DateTime'>
 }
@@ -3235,49 +2262,6 @@ export type quotes$branchArgs<ExtArgs extends runtime.Types.Extensions.InternalA
 }
 
 /**
- * quotes.supersedes
- */
-export type quotes$supersedesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the quotes
-   */
-  select?: Prisma.quotesSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the quotes
-   */
-  omit?: Prisma.quotesOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.quotesInclude<ExtArgs> | null
-  where?: Prisma.quotesWhereInput
-}
-
-/**
- * quotes.revisions
- */
-export type quotes$revisionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the quotes
-   */
-  select?: Prisma.quotesSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the quotes
-   */
-  omit?: Prisma.quotesOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.quotesInclude<ExtArgs> | null
-  where?: Prisma.quotesWhereInput
-  orderBy?: Prisma.quotesOrderByWithRelationInput | Prisma.quotesOrderByWithRelationInput[]
-  cursor?: Prisma.quotesWhereUniqueInput
-  take?: number
-  skip?: number
-  distinct?: Prisma.QuotesScalarFieldEnum | Prisma.QuotesScalarFieldEnum[]
-}
-
-/**
  * quotes.creator
  */
 export type quotes$creatorArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -3297,51 +2281,27 @@ export type quotes$creatorArgs<ExtArgs extends runtime.Types.Extensions.Internal
 }
 
 /**
- * quotes.items
+ * quotes.sends
  */
-export type quotes$itemsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+export type quotes$sendsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
-   * Select specific fields to fetch from the quote_items
+   * Select specific fields to fetch from the quote_sends
    */
-  select?: Prisma.quote_itemsSelect<ExtArgs> | null
+  select?: Prisma.quote_sendsSelect<ExtArgs> | null
   /**
-   * Omit specific fields from the quote_items
+   * Omit specific fields from the quote_sends
    */
-  omit?: Prisma.quote_itemsOmit<ExtArgs> | null
+  omit?: Prisma.quote_sendsOmit<ExtArgs> | null
   /**
    * Choose, which related nodes to fetch as well
    */
-  include?: Prisma.quote_itemsInclude<ExtArgs> | null
-  where?: Prisma.quote_itemsWhereInput
-  orderBy?: Prisma.quote_itemsOrderByWithRelationInput | Prisma.quote_itemsOrderByWithRelationInput[]
-  cursor?: Prisma.quote_itemsWhereUniqueInput
+  include?: Prisma.quote_sendsInclude<ExtArgs> | null
+  where?: Prisma.quote_sendsWhereInput
+  orderBy?: Prisma.quote_sendsOrderByWithRelationInput | Prisma.quote_sendsOrderByWithRelationInput[]
+  cursor?: Prisma.quote_sendsWhereUniqueInput
   take?: number
   skip?: number
-  distinct?: Prisma.Quote_itemsScalarFieldEnum | Prisma.Quote_itemsScalarFieldEnum[]
-}
-
-/**
- * quotes.invoices
- */
-export type quotes$invoicesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the treatment_invoices
-   */
-  select?: Prisma.treatment_invoicesSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the treatment_invoices
-   */
-  omit?: Prisma.treatment_invoicesOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.treatment_invoicesInclude<ExtArgs> | null
-  where?: Prisma.treatment_invoicesWhereInput
-  orderBy?: Prisma.treatment_invoicesOrderByWithRelationInput | Prisma.treatment_invoicesOrderByWithRelationInput[]
-  cursor?: Prisma.treatment_invoicesWhereUniqueInput
-  take?: number
-  skip?: number
-  distinct?: Prisma.Treatment_invoicesScalarFieldEnum | Prisma.Treatment_invoicesScalarFieldEnum[]
+  distinct?: Prisma.Quote_sendsScalarFieldEnum | Prisma.Quote_sendsScalarFieldEnum[]
 }
 
 /**

@@ -179,9 +179,7 @@ describe('AgentService.chat', () => {
     await service.chat([], secretary);
 
     expect(roles.list).not.toHaveBeenCalled();
-    expect(lastToolResult(1).error).toMatch(
-      /lacks the permission: roles:manage/,
-    );
+    expect(lastToolResult(1).error).toMatch(/lacks the permission: roles:edit/);
   });
 
   it('refuses SQL over tables outside the user’s permissions', async () => {
@@ -230,7 +228,7 @@ describe('AgentService.chat', () => {
     };
     expect(result.role).toBe('secretary');
     expect(result.granted.map((p) => p.key)).toContain('billing:read');
-    expect(result.denied.map((p) => p.key)).toContain('billing:write');
+    expect(result.denied.map((p) => p.key)).toContain('billing:create');
   });
 
   it('survives malformed tool arguments', async () => {

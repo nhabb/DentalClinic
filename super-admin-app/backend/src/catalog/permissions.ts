@@ -11,6 +11,11 @@
  * `<area>:<action>`. Controllers declare which one they need; a clinic's roles
  * are sets of these. The catalog is code because endpoints are code; which role
  * holds which permission is data (roles / role_permissions), editable per clinic.
+ *
+ * Actions follow CRUD: `read` to view, `create` to add, `edit` to change,
+ * `delete` to remove. An area only lists the actions it has routes for (patient
+ * documents are uploaded and deleted, never edited), and a few capabilities are
+ * not CRUD at all (`clinic:settings`, `pricing:read`, `agent:use`).
  */
 export interface PermissionDefinition {
   key: string;
@@ -29,11 +34,17 @@ export const PERMISSION_GROUPS: readonly PermissionGroup[] = [
     label: 'Appointments',
     permissions: [
       { key: 'appointments:read', label: 'View appointments and slots' },
+      { key: 'appointments:create', label: 'Book appointments' },
       {
-        key: 'appointments:write',
-        label: 'Book, confirm, complete, cancel and annotate appointments',
+        key: 'appointments:edit',
+        label: 'Confirm, complete, mark no-show and annotate appointments',
       },
-      { key: 'slots:manage', label: 'Create and delete appointment slots' },
+      {
+        key: 'appointments:delete',
+        label: 'Cancel appointments and free the slot',
+      },
+      { key: 'slots:create', label: 'Open appointment slots' },
+      { key: 'slots:delete', label: 'Remove appointment slots' },
     ],
   },
   {
@@ -42,9 +53,10 @@ export const PERMISSION_GROUPS: readonly PermissionGroup[] = [
     permissions: [
       { key: 'patients:read', label: 'View patient profiles' },
       {
-        key: 'patients:write',
-        label: 'Create and edit patients, send setup links, change status',
+        key: 'patients:create',
+        label: 'Add patients and send portal setup links',
       },
+      { key: 'patients:edit', label: 'Edit patient details, photo and status' },
       { key: 'patients:delete', label: 'Delete patients and all their data' },
     ],
   },
@@ -57,14 +69,20 @@ export const PERMISSION_GROUPS: readonly PermissionGroup[] = [
         label: 'View clinical records and the dental chart',
       },
       {
-        key: 'records:write',
-        label: 'Add, edit and delete clinical records and chart work',
+        key: 'records:create',
+        label: 'Add clinical records and plan chart work',
+      },
+      { key: 'records:edit', label: 'Edit records and complete chart work' },
+      {
+        key: 'records:delete',
+        label: 'Delete clinical records and chart work',
       },
       {
         key: 'documents:read',
         label: 'View patient documents (x-rays, scans, reports)',
       },
-      { key: 'documents:write', label: 'Upload and delete patient documents' },
+      { key: 'documents:create', label: 'Upload patient documents' },
+      { key: 'documents:delete', label: 'Delete patient documents' },
     ],
   },
   {
@@ -73,11 +91,25 @@ export const PERMISSION_GROUPS: readonly PermissionGroup[] = [
     permissions: [
       {
         key: 'billing:read',
-        label: 'View invoices, payments and financial reports',
+        label: 'View invoices, quotes, payments and financial reports',
       },
-      { key: 'pricing:read', label: 'View treatment prices, lab costs, specialist fees and stock costs' },
-      { key: 'billing:write', label: 'Create invoices and record payments' },
-      { key: 'billing:delete', label: 'Delete invoices' },
+      {
+        key: 'pricing:read',
+        label:
+          'View treatment prices, lab costs, specialist fees and stock costs',
+      },
+      {
+        key: 'billing:create',
+        label: 'Create invoices and quotes, and record payments',
+      },
+      {
+        key: 'billing:edit',
+        label: 'Edit and decide quotes, refund and void invoices',
+      },
+      {
+        key: 'billing:delete',
+        label: 'Delete invoices, payments and draft quotes',
+      },
     ],
   },
   {
@@ -85,10 +117,9 @@ export const PERMISSION_GROUPS: readonly PermissionGroup[] = [
     label: 'Expenses',
     permissions: [
       { key: 'expenses:read', label: 'View expenses' },
-      {
-        key: 'expenses:write',
-        label: 'Record, edit and delete expenses and their payments',
-      },
+      { key: 'expenses:create', label: 'Record expenses and their payments' },
+      { key: 'expenses:edit', label: 'Edit expenses' },
+      { key: 'expenses:delete', label: 'Delete expenses and their payments' },
     ],
   },
   {
@@ -96,23 +127,31 @@ export const PERMISSION_GROUPS: readonly PermissionGroup[] = [
     label: 'Inventory',
     permissions: [
       { key: 'inventory:read', label: 'View stock and movements' },
-      {
-        key: 'inventory:write',
-        label: 'Add items, record movements, edit and delete stock',
-      },
+      { key: 'inventory:create', label: 'Add items and record movements' },
+      { key: 'inventory:edit', label: 'Edit items and their photo' },
+      { key: 'inventory:delete', label: 'Delete stock items' },
     ],
   },
   {
     key: 'team',
     label: 'Team and clinic',
     permissions: [
-      { key: 'staff:read', label: 'View staff accounts' },
+      { key: 'staff:read', label: 'View staff accounts and roles' },
       {
-        key: 'staff:manage',
-        label: 'Create staff, change their role or branch, delete accounts',
+        key: 'staff:create',
+        label: 'Create staff accounts and issue set-password links',
       },
-      { key: 'roles:manage', label: 'Edit roles and permissions' },
-      { key: 'branches:manage', label: 'Open, edit and close branches' },
+      {
+        key: 'staff:edit',
+        label: 'Change a staff role, branch or active state',
+      },
+      { key: 'staff:delete', label: 'Delete staff accounts' },
+      { key: 'roles:create', label: 'Add roles' },
+      { key: 'roles:edit', label: 'Edit roles and their permissions' },
+      { key: 'roles:delete', label: 'Delete roles' },
+      { key: 'branches:create', label: 'Open branches' },
+      { key: 'branches:edit', label: 'Edit branches and set the default' },
+      { key: 'branches:delete', label: 'Close branches' },
       { key: 'clinic:settings', label: 'Edit the clinic profile and logo' },
     ],
   },
@@ -125,11 +164,21 @@ export const PERMISSION_GROUPS: readonly PermissionGroup[] = [
         label: 'View outside specialists and consultations',
       },
       {
-        key: 'specialists:write',
-        label: 'Add specialists, request and update consultations',
+        key: 'specialists:create',
+        label: 'Add specialists and request consultations',
+      },
+      {
+        key: 'specialists:edit',
+        label: 'Edit specialists and update consultations',
+      },
+      {
+        key: 'specialists:delete',
+        label: 'Delete specialists and consultations',
       },
       { key: 'lab:read', label: 'View dental labs and lab orders' },
-      { key: 'lab:write', label: 'Add labs, place and update lab orders' },
+      { key: 'lab:create', label: 'Add labs and place lab orders' },
+      { key: 'lab:edit', label: 'Edit labs and update lab orders' },
+      { key: 'lab:delete', label: 'Delete labs and lab orders' },
     ],
   },
   {
@@ -139,11 +188,12 @@ export const PERMISSION_GROUPS: readonly PermissionGroup[] = [
   },
 ];
 
-export const ALL_PERMISSIONS: readonly string[] = PERMISSION_GROUPS.flatMap((g) =>
-  g.permissions.map((p) => p.key),
+export const ALL_PERMISSIONS: readonly string[] = PERMISSION_GROUPS.flatMap(
+  (g) => g.permissions.map((p) => p.key),
 );
 
-export const isKnownPermission = (key: string): boolean => ALL_PERMISSIONS.includes(key);
+export const isKnownPermission = (key: string): boolean =>
+  ALL_PERMISSIONS.includes(key);
 
 /**
  * Roles every clinic starts with. `admin` is locked: it always holds every
@@ -159,6 +209,8 @@ export interface DefaultRole {
 
 export const ADMIN_ROLE_KEY = 'admin';
 export const PATIENT_ROLE_KEY = 'patient';
+/** The role offered for booking: the only staff who take appointments. */
+export const DOCTOR_ROLE_KEY = 'doctor';
 
 export const DEFAULT_ROLES: readonly DefaultRole[] = [
   {
@@ -168,57 +220,85 @@ export const DEFAULT_ROLES: readonly DefaultRole[] = [
     permissions: ALL_PERMISSIONS,
   },
   {
-    key: 'doctor',
+    key: DOCTOR_ROLE_KEY,
     name: 'Doctor',
     description: 'Treats patients: appointments, records, charts, billing.',
     permissions: [
       'appointments:read',
-      'appointments:write',
-      'slots:manage',
+      'appointments:create',
+      'appointments:edit',
+      'appointments:delete',
+      'slots:create',
+      'slots:delete',
       'patients:read',
-      'patients:write',
+      'patients:create',
+      'patients:edit',
       'records:read',
-      'records:write',
+      'records:create',
+      'records:edit',
+      'records:delete',
       'documents:read',
-      'documents:write',
+      'documents:create',
+      'documents:delete',
       'billing:read',
       'pricing:read',
-      'billing:write',
+      'billing:create',
+      'billing:edit',
       'inventory:read',
-      'inventory:write',
+      'inventory:create',
+      'inventory:edit',
+      'inventory:delete',
       'expenses:read',
       'staff:read',
       'specialists:read',
-      'specialists:write',
+      'specialists:create',
+      'specialists:edit',
+      'specialists:delete',
       'lab:read',
-      'lab:write',
+      'lab:create',
+      'lab:edit',
+      'lab:delete',
       'agent:use',
     ],
   },
   {
     key: 'secretary',
     name: 'Secretary',
-    description: 'Front desk: scheduling, patients, payments, stock and expenses.',
+    description:
+      'Front desk: scheduling, patients, payments, stock and expenses.',
     permissions: [
       'appointments:read',
-      'appointments:write',
-      'slots:manage',
+      'appointments:create',
+      'appointments:edit',
+      'appointments:delete',
+      'slots:create',
+      'slots:delete',
       'patients:read',
-      'patients:write',
+      'patients:create',
+      'patients:edit',
       'records:read',
       'documents:read',
       'billing:read',
       'pricing:read',
-      'billing:write',
+      'billing:create',
+      'billing:edit',
       'expenses:read',
-      'expenses:write',
+      'expenses:create',
+      'expenses:edit',
+      'expenses:delete',
       'inventory:read',
-      'inventory:write',
+      'inventory:create',
+      'inventory:edit',
+      'inventory:delete',
       'staff:read',
       'specialists:read',
-      'specialists:write',
+      'specialists:create',
+      'specialists:edit',
+      'specialists:delete',
       'lab:read',
-      'lab:write',
+      'lab:create',
+      'lab:edit',
+      'lab:delete',
       'agent:use',
     ],
   },

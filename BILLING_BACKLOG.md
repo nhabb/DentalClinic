@@ -6,6 +6,33 @@ dates, quote-to-invoice, double-billing guards). The document model below is the
 vocabulary; item 0 is the structure the rest sit inside and should come first;
 items 1 to 10 are independent of each other. Status marks: `[ ]` open, `[x]` done.
 
+> **Status, 2026-10-17.** Item 2 shipped, and with it a single money writer
+> (`MoneyService`): one lock order, the database trigger as the only author of
+> an invoice's totals, and `refund_scope` to tell an invoice refund from credit
+> handed back. Item 0 went further than described — **the plan and the quote are
+> now the same object**, so a plan can be changed part-way through treatment;
+> `quote_items` and the quote status machine are gone. Item 8 is half done: one
+> drawer now takes a deposit or pays a bill, but billing and collecting are
+> still two acts. Full account: `BILLING_REVAMP.md`.
+
+> **Status, 2026-10-18.** Planning, billing and payments stopped contradicting
+> each other. Every money figure now has **one definition**
+> (`src/doctor/billing/money-figures.ts`): "outstanding" had five
+> implementations with two different predicates and "received" had three
+> meanings per patient. The statement answers in two blocks that cannot be
+> confused — `figures` (money: sums of invoice and payment rows) and
+> `plan_figures` (chart: what the work is worth) — and `figures.billed` is now
+> the invoice figure, so `billed - paid = unpaid` holds. A **plan line says how
+> far its bill was settled**: planned → done → billed → part paid → paid, with
+> no invented per-line amount. The UI followed: one word per concept
+> (`components/billing/money-words.ts`), the plans register folded into the
+> billing page as a tab, and the two overlapping patient dialogs merged into
+> one money file (`PatientDrawer`) that opens the chain Plan → Bill → Collect.
+> Three bugs fixed on the way: the aging report read two different "todays",
+> `figures.billed` could never balance, and `getPatientFinancials.total_paid`
+> counted only allocated money (now `total_applied`, beside `total_received`
+> and `credit_held`). No database change was needed for any of it.
+
 ## Document model (QuickBooks mapping)
 
 The clinic's billing follows the QuickBooks document model, which splits every
@@ -115,7 +142,7 @@ by clinic; products cannot be billed at all.
   forms, product lines on the invoice page.
 - Validation: drop the `@IsIn(PROCEDURES)` enum once every clinic has a schedule.
 
-## 2. [ ] Payments belong to the patient, applied to invoices
+## 2. [x] Payments belong to the patient, applied to invoices (done 2026-10-17)
 
 QuickBooks "Receive payment": the money is the customer's, and applying it to
 invoices is a separate act.
@@ -220,7 +247,7 @@ revenue, if the clinic has any, gets its own category, separate from patient bil
   outstanding and collection rate.
 - Product sales to a patient stay on an invoice (item 1 makes that possible).
 
-## 8. [ ] Sales receipt: bill and collect in one act
+## 8. [~] Sales receipt: bill and collect in one act (half done 2026-10-17)
 
 **Gap:** a patient paying in full at the chair needs an invoice created and then a
 payment recorded against it, two acts seconds apart. QuickBooks calls the single act

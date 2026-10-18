@@ -74,6 +74,7 @@ model organizations {
   treatment_invoices  treatment_invoices[]
   invoice_line_items  invoice_line_items[]
   invoice_payments    invoice_payments[]
+  payment_allocations payment_allocations[]
   roles               roles[]
   role_permissions    role_permissions[]
 
@@ -82,7 +83,7 @@ model organizations {
   dental_labs              dental_labs[]
   lab_orders               lab_orders[]
   quotes                   quotes[]
-  quote_items              quote_items[]
+  quote_sends              quote_sends[]
   document_sequences       document_sequences[]
 
   @@index([is_active], map: "idx_organizations_is_active")
@@ -336,6 +337,23 @@ model patient_profiles {
   user_id                 BigInt               @unique
   emergency_contact_name  String?              @db.VarChar
   emergency_contact_phone String?              @db.VarChar
+  /// How the emergency contact is related to the patient.
+  emergency_contact_relationship   String?     @db.VarChar
+  /// A second person to call in an emergency.
+  emergency_contact_2_name         String?     @db.VarChar
+  emergency_contact_2_phone        String?     @db.VarChar
+  emergency_contact_2_relationship String?     @db.VarChar
+  /// What the patient does for a living, and where.
+  occupation              String?              @db.VarChar
+  employer                String?              @db.VarChar
+  work_phone              String?              @db.VarChar
+  /// National ID or civil record number, as written on the document.
+  national_id             String?              @db.VarChar
+  /// single | married | divorced | widowed | other
+  marital_status          String?              @db.VarChar
+  nationality             String?              @db.VarChar
+  /// Language to speak and write to this patient in: en, ar or fr.
+  preferred_language      String?              @db.VarChar
   blood_type              String?              @db.VarChar
   allergies               String?
   medical_notes           String?
@@ -354,6 +372,7 @@ model patient_profiles {
   users                   users                @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "patient_profiles_user_fkey")
   patient_records         patient_records[]
   treatment_invoices      treatment_invoices[]
+  invoice_payments        invoice_payments[]
 
   specialist_consultations specialist_consultations[]
   lab_orders               lab_orders[]
@@ -390,7 +409,6 @@ model patient_records {
 
   specialist_consultations specialist_consultations[]
   lab_orders               lab_orders[]
-  quote_items              quote_items[]
 
   @@index([appointment_id], map: "idx_patient_records_appointment_id")
   @@index([patient_id], map: "idx_patient_records_patient_id")
@@ -445,11 +463,13 @@ model users {
   expense_payments_created                    expense_payments[]    @relation("expense_payments_creator")
   treatment_invoices_created                  treatment_invoices[]  @relation("treatment_invoices_creator")
   invoice_payments_created                    invoice_payments[]    @relation("invoice_payments_creator")
+  payment_allocations_created                 payment_allocations[] @relation("payment_allocations_creator")
 
   specialist_consultations_requested specialist_consultations[] @relation("specialist_consultations_requester")
   lab_orders_ordered                 lab_orders[]               @relation("lab_orders_orderer")
   treatment_invoices_cancelled       treatment_invoices[]       @relation("treatment_invoices_canceller")
   quotes_created                     quotes[]                   @relation("quotes_creator")
+  quote_sends_sent                   quote_sends[]              @relation("quote_sends_sender")
 
   @@index([role], map: "idx_users_role")
   @@index([organization_id], map: "idx_users_org")
@@ -529,23 +549,19 @@ model treatment_invoices {
   cancelled_at     DateTime? @db.Timestamptz(6)
   cancelled_by     BigInt?
   cancel_reason    String?
-  /// The accepted quote this invoice was born from, if any.
-  quote_id         BigInt?
   created_at       DateTime  @default(now()) @db.Timestamptz(6)
   updated_at       DateTime  @default(now()) @db.Timestamptz(6)
 
   organization     organizations        @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
   canceller        users?               @relation("treatment_invoices_canceller", fields: [cancelled_by], references: [id], onDelete: SetNull, onUpdate: NoAction)
-  quote            quotes?              @relation(fields: [quote_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
   branch           branches?            @relation(fields: [branch_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
   patient          patient_profiles     @relation(fields: [patient_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   creator          users?               @relation("treatment_invoices_creator", fields: [created_by], references: [id], onUpdate: NoAction)
   line_items       invoice_line_items[]
-  invoice_payments invoice_payments[]
+  allocations      payment_allocations[]
   patient_records  patient_records[]
 
   @@unique([organization_id, invoice_number], map: "treatment_invoices_number_unique")
-  @@index([quote_id], map: "idx_treatment_invoices_quote")
   @@index([patient_id], map: "idx_treatment_invoices_patient_id")
   @@index([status], map: "idx_treatment_invoices_status")
   @@index([created_at], map: "idx_treatment_invoices_created_at")
@@ -572,11 +588,14 @@ model invoice_line_items {
 model invoice_payments {
   id              BigInt   @id @default(autoincrement())
   organization_id BigInt   @default(dbgenerated("app.current_org_id()"))
-  invoice_id      BigInt
+  /// The patient whose money this is. Credit and invoices never cross patients.
+  patient_id      BigInt
   amount          Decimal  @db.Decimal(10, 2)
   payment_method  String   @default("cash")
   /// payment (money received) | refund (money returned); a refund is a positive amount that reduces amount_paid.
   kind            String   @default("payment")
+  /// For kind = refund only: invoice (taken back off a named bill; carries an allocation) | credit (unapplied credit handed back; touches no invoice). NULL for payments.
+  refund_scope    String?
   /// Required for refunds.
   reason          String?
   notes           String?
@@ -585,11 +604,12 @@ model invoice_payments {
   created_by      BigInt?
   created_at      DateTime @default(now()) @db.Timestamptz(6)
 
-  organization organizations      @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
-  invoice      treatment_invoices @relation(fields: [invoice_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  creator      users?             @relation("invoice_payments_creator", fields: [created_by], references: [id], onUpdate: NoAction)
+  organization organizations        @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  patient      patient_profiles     @relation(fields: [patient_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  creator      users?               @relation("invoice_payments_creator", fields: [created_by], references: [id], onUpdate: NoAction)
+  allocations  payment_allocations[]
 
-  @@index([invoice_id], map: "idx_invoice_payments_invoice_id")
+  @@index([patient_id], map: "idx_invoice_payments_patient")
   @@index([organization_id], map: "idx_invoice_payments_org")
   @@index([payment_date], map: "idx_invoice_payments_payment_date")
 }
@@ -600,6 +620,30 @@ model invoice_payments {
 // user's organization. The permission catalog itself lives in code
 // (src/shared/authorization/permissions.ts); role_permissions stores which keys
 // a role holds. `admin` always has every permission (enforced in code).
+
+/// How much of one payment pays down one invoice. An invoice's amount_paid is
+/// the sum of its allocations, signed by each payment's kind (a refund
+/// allocation subtracts); a payment that is not fully allocated is credit on
+/// the patient's account.
+model payment_allocations {
+  id              BigInt   @id @default(autoincrement())
+  organization_id BigInt   @default(dbgenerated("app.current_org_id()"))
+  payment_id      BigInt
+  invoice_id      BigInt
+  /// Part of the payment applied here (positive, never more than the payment).
+  amount          Decimal  @db.Decimal(10, 2)
+  created_by      BigInt?
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+
+  organization organizations      @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  payment      invoice_payments   @relation(fields: [payment_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  invoice      treatment_invoices @relation(fields: [invoice_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  creator      users?             @relation("payment_allocations_creator", fields: [created_by], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@index([organization_id], map: "idx_payment_allocations_org")
+  @@index([payment_id], map: "idx_payment_allocations_payment")
+  @@index([invoice_id], map: "idx_payment_allocations_invoice")
+}
 
 model roles {
   id               BigInt             @id @default(autoincrement())
@@ -621,7 +665,7 @@ model roles {
 model role_permissions {
   role_id         BigInt
   organization_id BigInt        @default(dbgenerated("app.current_org_id()"))
-  /// A key from the permission catalog, e.g. "appointments:write".
+  /// A key from the permission catalog, e.g. "appointments:create".
   permission      String        @db.VarChar
   role            roles         @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   organization    organizations @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
@@ -670,6 +714,10 @@ model specialist_consultations {
   record_id         BigInt?
   /// Staff member who asked for the consultation.
   requested_by      BigInt?
+  /// Which way the patient moved: referred_out (we sent them to the outside
+  /// doctor), referred_in (the outside doctor sent them to us) or visiting
+  /// (the outside doctor treated the patient at our clinic).
+  direction         String    @default("referred_out") @db.VarChar
   status            String    @default("requested") @db.VarChar
   consultation_date DateTime? @db.Date
   reason            String
@@ -703,6 +751,13 @@ model dental_labs {
   phone           String?  @db.VarChar
   email           String?  @db.VarChar
   address         String?
+  /// Named person to deal with at the lab.
+  contact_person  String?  @db.VarChar
+  /// Working days the lab usually takes; a new order's due date defaults from this.
+  turnaround_days Int?
+  /// How this lab is paid (30 days, on delivery, ...).
+  payment_terms   String?  @db.VarChar
+  tax_number      String?  @db.VarChar
   notes           String?
   is_active       Boolean  @default(true)
   created_at      DateTime @default(now()) @db.Timestamptz(6)
@@ -733,11 +788,24 @@ model lab_orders {
   /// Teeth concerned, e.g. "14,15" (same notation as patient_records.tooth_number).
   tooth_numbers   String?   @db.VarChar
   shade           String?   @db.VarChar
+  /// What the piece is made of (zirconia, e.max, PFM, acrylic, ...).
+  material        String?   @db.VarChar
+  /// How many pieces this case covers (1-32).
+  units           Int?
+  /// Courier or lab reference for the case in transit.
+  tracking_ref    String?   @db.VarChar
+  /// How the impression was taken: digital (intraoral scan) or physical.
+  impression_method String? @db.VarChar
   status          String    @default("ordered") @db.VarChar
   sent_at         DateTime? @db.Date
   due_at          DateTime? @db.Date
+  /// Day of the try-in or bisque fitting, between sending and fitting.
+  try_in_at       DateTime? @db.Date
   received_at     DateTime? @db.Date
   fitted_at       DateTime? @db.Date
+  /// The earlier order this one remakes; NULL for a first attempt.
+  remake_of_id    BigInt?
+  remake_reason   String?
   /// Lab's charge, for reporting; billed to the patient as usual.
   cost            Decimal?  @db.Decimal(10, 2)
   notes           String?
@@ -751,7 +819,10 @@ model lab_orders {
   appointment  appointments?    @relation(fields: [appointment_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
   record       patient_records? @relation(fields: [record_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
   orderer      users?           @relation("lab_orders_orderer", fields: [ordered_by], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  remake_of    lab_orders?      @relation("lab_orders_remake", fields: [remake_of_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  remakes      lab_orders[]     @relation("lab_orders_remake")
 
+  @@index([remake_of_id], map: "idx_lab_orders_remake_of")
   @@index([organization_id], map: "idx_lab_orders_org")
   @@index([organization_id, branch_id], map: "idx_lab_orders_org_branch")
   @@index([patient_id], map: "idx_lab_orders_patient")
@@ -793,67 +864,58 @@ model agent_usage {
   @@index([user_id, created_at], map: "idx_agent_usage_user_created")
 }
 
-/// A priced treatment plan given to a patient: a numbered, versioned estimate of planned work.
-/// Not money: never counted as income or outstanding. draft -> sent -> accepted | declined | expired.
+/// The header of one patient's living treatment plan: its number, notes and the
+/// day they agreed. The plan itself is their patient_records, and the totals are
+/// summed from those — nothing is duplicated here, so nothing can drift. What a
+/// patient was actually handed is in quote_sends.
 model quotes {
   id              BigInt               @id @default(autoincrement())
   organization_id BigInt               @default(dbgenerated("app.current_org_id()"))
-  /// Branch the quote was prepared at; NULL for organization-wide.
+  /// Branch the plan was prepared at; NULL for organization-wide.
   branch_id       BigInt?              @default(dbgenerated("app.default_branch_id()"))
   patient_id      BigInt
   /// Sequential per clinic and year (QUO-2026-00004); assigned by a database trigger on insert.
   quote_number    String               @default("")
-  /// Version within this patient's sequence; a revision is a new row with version + 1.
-  version         Int                  @default(1)
-  /// The previous version this quote replaces.
-  supersedes_id   BigInt?
-  status          String               @default("draft")
-  /// Last day the quoted prices hold.
-  valid_until     DateTime?            @db.Date
-  /// Taken off the quoted lines (0 when none).
-  quoted_discount Decimal              @default(0) @db.Decimal(10, 2)
-  /// Sum of the items minus quoted_discount (maintained by trigger).
-  quoted_total    Decimal              @default(0) @db.Decimal(10, 2)
   notes           String?
   created_by      BigInt?
-  sent_at         DateTime?            @db.Timestamptz(6)
+  /// The day the patient agreed. A fact, not a gate: the plan stays editable.
   accepted_at     DateTime?            @db.Timestamptz(6)
-  declined_at     DateTime?            @db.Timestamptz(6)
+  /// Fingerprint of the plan they agreed to; when it stops matching, the agreement is stale. NULL predates the column.
+  accepted_digest String?
   created_at      DateTime             @default(now()) @db.Timestamptz(6)
   updated_at      DateTime             @default(now()) @db.Timestamptz(6)
   organization    organizations        @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
   branch          branches?            @relation(fields: [branch_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
   patient         patient_profiles     @relation(fields: [patient_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  supersedes      quotes?              @relation("quote_versions", fields: [supersedes_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
-  revisions       quotes[]             @relation("quote_versions")
   creator         users?               @relation("quotes_creator", fields: [created_by], references: [id], onDelete: SetNull, onUpdate: NoAction)
-  items           quote_items[]
-  invoices        treatment_invoices[]
+  sends           quote_sends[]
 
   @@unique([organization_id, quote_number], map: "quotes_number_unique")
+  /// One living plan per patient; the database refuses a second.
+  @@unique([patient_id], map: "quotes_one_per_patient")
   @@index([organization_id], map: "idx_quotes_org")
   @@index([organization_id, branch_id], map: "idx_quotes_org_branch")
-  @@index([patient_id], map: "idx_quotes_patient")
-  @@index([status], map: "idx_quotes_status")
 }
 
-/// One priced line of a quote, usually one planned procedure on one tooth.
-model quote_items {
-  id              BigInt           @id @default(autoincrement())
-  organization_id BigInt           @default(dbgenerated("app.current_org_id()"))
+/// One row each time a treatment plan was given to a patient: the total and the
+/// lines as they stood that day. Append-only (no UPDATE/DELETE grant): it is what
+/// answers "what was I told in March" once the living plan has moved on.
+model quote_sends {
+  id              BigInt   @id @default(autoincrement())
+  organization_id BigInt   @default(dbgenerated("app.current_org_id()"))
   quote_id        BigInt
-  /// The planned chart record this line prices, if it came from the chart.
-  record_id       BigInt?
-  procedure_name  String           @db.VarChar
-  tooth_number    String?
-  description     String?
-  quoted_amount   Decimal          @db.Decimal(10, 2)
-  created_at      DateTime         @default(now()) @db.Timestamptz(6)
-  organization    organizations    @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
-  quote           quotes           @relation(fields: [quote_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  record          patient_records? @relation(fields: [record_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  /// Who handed it over.
+  sent_by         BigInt?
+  /// Plan total at that moment.
+  quoted_total    Decimal  @db.Decimal(10, 2)
+  /// The plan lines as sent: [{tooth, procedure, amount, state}].
+  quoted_lines    Json
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
 
-  @@index([organization_id], map: "idx_quote_items_org")
-  @@index([quote_id], map: "idx_quote_items_quote")
-  @@index([record_id], map: "idx_quote_items_record")
+  organization organizations @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  quote        quotes        @relation(fields: [quote_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  sender       users?        @relation("quote_sends_sender", fields: [sent_by], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@index([quote_id], map: "idx_quote_sends_quote")
+  @@index([organization_id], map: "idx_quote_sends_org")
 }

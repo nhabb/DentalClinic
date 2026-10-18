@@ -37,7 +37,8 @@ import { CreateStaffDto, RegisterPatientDto } from './dto/create-staff.dto';
 type AuthedRequest = { user: RequestUser };
 
 /**
- * User accounts. Managing accounts needs `staff:manage`, listing them
+ * User accounts. Managing accounts needs `staff:create` / `staff:edit` /
+ * `staff:delete`, listing them
  * `staff:read`; a user may always read and edit their own profile. Two
  * lookups stay public because the admin UI needs them before it has a token.
  */
@@ -51,7 +52,7 @@ export class UsersController {
   ) {}
 
   @Post('register')
-  @RequirePermissions('patients:write')
+  @RequirePermissions('patients:create')
   @ApiBearerAuth()
   @ApiOperation({
     summary:
@@ -75,15 +76,14 @@ export class UsersController {
   @Public()
   @Get('doctors')
   @ApiOperation({
-    summary:
-      "List the clinic's active doctors (public, for booking)",
+    summary: "List the clinic's active doctors (public, for booking)",
   })
   findDoctors() {
     return this.usersService.findDoctors();
   }
 
   @Post('staff')
-  @RequirePermissions('staff:manage')
+  @RequirePermissions('staff:create')
   @ApiBearerAuth()
   @ApiOperation({
     summary:
@@ -99,7 +99,7 @@ export class UsersController {
   }
 
   @Post(':id/password-setup')
-  @RequirePermissions('staff:manage')
+  @RequirePermissions('staff:create')
   @ApiBearerAuth()
   @ApiOperation({
     summary:
@@ -113,7 +113,7 @@ export class UsersController {
   }
 
   @Patch(':id/assignment')
-  @RequirePermissions('staff:manage')
+  @RequirePermissions('staff:edit')
   @ApiBearerAuth()
   @ApiOperation({
     summary:
@@ -127,7 +127,7 @@ export class UsersController {
   }
 
   @Delete(':id')
-  @RequirePermissions('staff:manage')
+  @RequirePermissions('staff:delete')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a user' })
   remove(@Param('id', ParseIntPipe) id: number) {
@@ -156,21 +156,21 @@ export class UsersController {
   @Patch(':id')
   @ApiBearerAuth()
   @ApiOperation({
-    summary: 'Update profile fields (others need staff:manage)',
+    summary: 'Update profile fields (others need staff:edit)',
   })
   update(
     @Req() req: AuthedRequest,
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateUserDto,
   ) {
-    this.access.assertSelfOrPermission(req.user, id, 'staff:manage');
+    this.access.assertSelfOrPermission(req.user, id, 'staff:edit');
     return this.usersService.update(BigInt(id), dto);
   }
 
   @Patch(':id/avatar')
   @ApiBearerAuth()
   @ApiOperation({
-    summary: 'Upload or replace an avatar photo (others need staff:manage)',
+    summary: 'Upload or replace an avatar photo (others need staff:edit)',
   })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -185,7 +185,7 @@ export class UsersController {
     @Param('id', ParseIntPipe) id: number,
     @UploadedFile(new ParseFilePipe()) file: Express.Multer.File,
   ) {
-    this.access.assertSelfOrPermission(req.user, id, 'staff:manage');
+    this.access.assertSelfOrPermission(req.user, id, 'staff:edit');
     return this.usersService.updateAvatar(BigInt(id), file);
   }
 

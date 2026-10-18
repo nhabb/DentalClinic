@@ -35,8 +35,8 @@ import { CreatePatientDto } from './dto/create-patient.dto';
 type AuthedRequest = { user: RequestUser };
 
 /**
- * Patient profiles. Staff need `patients:read` / `patients:write` /
- * `patients:delete`; a patient can read and edit their own profile only.
+ * Patient profiles. Staff need `patients:read` / `patients:create` /
+ * `patients:edit` / `patients:delete`; a patient can read and edit their own profile only.
  */
 @ApiBearerAuth()
 @ApiTags('Patients')
@@ -48,7 +48,7 @@ export class PatientsController {
   ) {}
 
   @Post()
-  @RequirePermissions('patients:write')
+  @RequirePermissions('patients:create')
   @ApiOperation({
     summary: 'Create a patient (user account + profile) from the admin panel',
     description:
@@ -59,7 +59,7 @@ export class PatientsController {
   }
 
   @Post(':id/invite')
-  @RequirePermissions('patients:write')
+  @RequirePermissions('patients:create')
   @ApiOperation({
     summary: 'Send (or resend) the password setup link to a patient by email',
   })
@@ -102,7 +102,7 @@ export class PatientsController {
     @Param('userId', ParseIntPipe) userId: number,
     @Body() dto: UpdatePatientProfileDto,
   ) {
-    this.access.assertSelfOrPermission(req.user, userId, 'patients:write');
+    this.access.assertSelfOrPermission(req.user, userId, 'patients:edit');
     return this.patientsService.updateByUserId(BigInt(userId), dto);
   }
 
@@ -127,11 +127,7 @@ export class PatientsController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdatePatientProfileDto,
   ) {
-    await this.access.assertPatientProfileAccess(
-      req.user,
-      id,
-      'patients:write',
-    );
+    await this.access.assertPatientProfileAccess(req.user, id, 'patients:edit');
     return this.patientsService.update(BigInt(id), dto);
   }
 
@@ -153,16 +149,12 @@ export class PatientsController {
     @Param('id', ParseIntPipe) id: number,
     @UploadedFile(new ParseFilePipe()) file: Express.Multer.File,
   ) {
-    await this.access.assertPatientProfileAccess(
-      req.user,
-      id,
-      'patients:write',
-    );
+    await this.access.assertPatientProfileAccess(req.user, id, 'patients:edit');
     return this.patientsService.updatePhoto(BigInt(id), file);
   }
 
   @Patch(':id/status')
-  @RequirePermissions('patients:write')
+  @RequirePermissions('patients:edit')
   @ApiOperation({ summary: 'Set patient active/inactive status' })
   setStatus(
     @Param('id', ParseIntPipe) id: number,

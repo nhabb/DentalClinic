@@ -157,6 +157,8 @@ export class PatientsService {
     });
   }
 
+  // Every column the patient file shows. A new profile column belongs here
+  // too, or it saves but never comes back to the screen that wrote it.
   private patientSelect = {
     id: true,
     user_id: true,
@@ -165,6 +167,17 @@ export class PatientsService {
     governate: true,
     emergency_contact_name: true,
     emergency_contact_phone: true,
+    emergency_contact_relationship: true,
+    emergency_contact_2_name: true,
+    emergency_contact_2_phone: true,
+    emergency_contact_2_relationship: true,
+    occupation: true,
+    employer: true,
+    work_phone: true,
+    national_id: true,
+    marital_status: true,
+    nationality: true,
+    preferred_language: true,
     blood_type: true,
     allergies: true,
     medical_notes: true,

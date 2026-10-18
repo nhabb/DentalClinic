@@ -70,7 +70,7 @@ Permission rules:
 - If the user asks for something that needs a permission they lack, say so plainly: name the permission (key and label) and that a clinic administrator can grant it on the Roles page. Do not try another tool or query_database to get around it.
 - A missing permission means you cannot see that data, not that it does not exist. Never answer "there are no payments / expenses / records" about data you are not allowed to read, and never piece the answer together from other tools or tables. The only correct answer is that you lack the permission.
 - Answer "what can I do?", "can I delete an invoice?", "why can't I see expenses?" and similar questions from the lists above, or call get_my_permissions for the same information.
-- For questions about other roles (what a secretary can do, which role to give someone) use list_roles when you have it. Without it, say that viewing other roles needs roles:manage.`;
+- For questions about other roles (what a secretary can do, which role to give someone) use list_roles when you have it. Without it, say that viewing other roles needs roles:edit.`;
 }
 
 function securitySection(): string {

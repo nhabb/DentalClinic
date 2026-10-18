@@ -14,6 +14,7 @@ import {
   FaCalendarAlt,
   FaBoxes,
   FaUsers,
+  FaCashRegister,
   FaMoneyBillWave,
   FaFileInvoiceDollar,
   FaUserShield,
@@ -31,6 +32,7 @@ type ActivePage =
   | "notifications"
   | "expenses"
   | "billing"
+  | "payments"
   | "roles";
 
 type Props = {
@@ -53,6 +55,7 @@ const navItems = [
   { id: "patients",     href: "/admin/patients",     icon: FaUsers,             labelKey: "nav.patients"     },
   { id: "expenses",     href: "/admin/expenses",     icon: FaMoneyBillWave,     labelKey: "nav.expenses"     },
   { id: "billing",      href: "/admin/billing",      icon: FaFileInvoiceDollar, labelKey: "nav.billing"      },
+  { id: "payments",     href: "/admin/payments",     icon: FaCashRegister,      labelKey: "nav.payments"     },
   { id: "roles",        href: "/admin/roles",        icon: FaUserShield,        labelKey: "nav.roles"        },
 ] as const;
 
@@ -66,7 +69,7 @@ const DASHBOARD_SUB_ITEMS = [
   { id: "billing-analytics",      href: "/admin/billing/analytics",      label: "Billing"      },
 ] as const;
 
-const BAR_IDS: readonly ActivePage[] = ["dashboard", "appointments", "patients", "billing"];
+const BAR_IDS: readonly ActivePage[] = ["dashboard", "appointments", "billing", "payments"];
 
 /* Every admin page mounts its own <AdminSidebar>, so navigating between
  * pages remounts it too — without this, the nav items would re-stagger on

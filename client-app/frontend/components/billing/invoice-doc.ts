@@ -1,11 +1,55 @@
 import { formatDateBeirut } from "@/lib/utils";
 import { clinicToday, esc, money } from "./quote-doc";
+import { MONEY_WORD } from "./money-words";
 
 /*
- * One definition of what an invoice is on the client, shared by the dental
- * chart (where invoices are created and paid) and the billing page (where they
- * are listed and corrected), so the two screens cannot drift apart.
+ * One definition of what an invoice is on the client. Invoices are created,
+ * paid and corrected on the billing page; the dental chart only shows which
+ * work is already billed. Keeping the shape here means no screen can drift.
  */
+
+/**
+ * The procedures an invoice line may name. Kept in step with the backend's
+ * PROCEDURES (create-invoice.dto.ts), which validates every line.
+ */
+export const PROCEDURES = [
+  "Checkup",
+  "X-Ray",
+  "Teeth Cleaning",
+  "Whitening",
+  "Tooth Extraction",
+  "Root Canal",
+  "Filling",
+  "Crown",
+  "Bridge",
+  "Implant",
+  "Orthodontic",
+  "Veneers",
+  "Gum Treatment",
+  "Fluoride Treatment",
+] as const;
+
+/**
+ * Suggested prices (USD) the billing and quotes builders pre-fill when the
+ * work carries no agreed price yet. Always editable; an accepted quote's
+ * price always wins over these.
+ */
+export const DEFAULT_PRICES: Record<string, number> = {
+  Checkup: 30,
+  "X-Ray": 20,
+  "Teeth Cleaning": 50,
+  Whitening: 150,
+  "Tooth Extraction": 60,
+  "Root Canal": 200,
+  Filling: 50,
+  Crown: 250,
+  Bridge: 500,
+  Implant: 800,
+  Orthodontic: 1500,
+  Veneers: 300,
+  "Gum Treatment": 100,
+  "Fluoride Treatment": 25,
+};
 
 export type InvoiceStatus = "open" | "partial" | "paid" | "cancelled";
 
@@ -51,23 +95,9 @@ export type Invoice = {
   status: InvoiceStatus;
   cancel_reason?: string | null;
   cancelled_at?: string | null;
-  /** The accepted quote this invoice was billed from, if any. */
-  quote?: {
-    id: number;
-    quote_number: string;
-    version: number;
-    quoted_total: number;
-  } | null;
   created_at: string;
   line_items: InvoiceLineItem[];
   invoice_payments: InvoicePayment[];
-};
-
-export const INVOICE_STATUS_STYLE: Record<string, string> = {
-  open: "bg-blue-100 text-blue-800",
-  partial: "bg-yellow-100 text-yellow-800",
-  paid: "bg-green-100 text-green-800",
-  cancelled: "bg-gray-200 text-gray-600 line-through",
 };
 
 /** An invoice that was never really billed does not count anywhere. */
@@ -110,31 +140,9 @@ export function normalizeInvoice(inv: any): Invoice {
       kind: p.kind ?? "payment",
       payment_date: p.payment_date ?? p.created_at,
     })),
-    quote: inv.quote
-      ? {
-          ...inv.quote,
-          id: Number(inv.quote.id),
-          quoted_total: Number(inv.quote.quoted_total),
-        }
-      : null,
   };
 }
 
-/** The money figures for one patient: what the chart's money band shows. */
-export function patientTotals(invoices: Invoice[]) {
-  const live = invoices.filter(isLive);
-  const billed = live.reduce((s, i) => s + i.total_amount, 0);
-  const received = live.reduce((s, i) => s + i.amount_paid, 0);
-  const owed = live
-    .filter((i) => i.status !== "paid")
-    .reduce((s, i) => s + i.remaining_amount, 0);
-  const overdue = live
-    .filter((i) => daysOverdue(i) > 0)
-    .reduce((s, i) => s + i.remaining_amount, 0);
-  return { billed, received, owed, overdue, count: live.length };
-}
-
-/** A printable invoice, or a receipt once it is paid. */
 export function printInvoice(inv: Invoice) {
   const w = window.open("", "_blank", "width=800,height=900");
   if (!w) return;
@@ -172,12 +180,12 @@ export function printInvoice(inv: Invoice) {
     <h1>${inv.status === "paid" ? "Receipt" : "Invoice"} ${esc(inv.invoice_number)}${stamp}</h1>
     <div class="meta">Work done ${formatDateBeirut(inv.procedure_date)} · due ${formatDateBeirut(inv.due_date)}${
       overdue > 0 ? ` (${overdue} days overdue)` : ""
-    }${inv.quote ? ` · from quote ${esc(inv.quote.quote_number)}` : ""}</div>
+    }</div>
     <p><strong>${esc(inv.patient.users.first_name)} ${esc(inv.patient.users.last_name)}</strong></p>
     <table><thead><tr><th>Procedure</th><th class="r">Amount</th></tr></thead><tbody>${lines}</tbody>
     <tfoot>${discountRows}<tr><td>Total</td><td class="r">${money(inv.total_amount)}</td></tr></tfoot></table>
     ${received ? `<table><thead><tr><th>Money received</th><th class="r"></th></tr></thead><tbody>${received}</tbody></table>` : ""}
-    <p class="owed">Balance due: ${inv.status === "cancelled" ? "0.00 (cancelled)" : money(inv.remaining_amount)}</p>
+    <p class="owed">${MONEY_WORD.unpaid}: ${inv.status === "cancelled" ? "0.00 (cancelled)" : money(inv.remaining_amount)}</p>
     ${inv.notes ? `<p>${esc(inv.notes)}</p>` : ""}
     <script>window.print()</script></body></html>`);
   w.document.close();

@@ -115,3 +115,18 @@ export function daysOverdue(dueDate: Date, now = new Date()): number {
   const dueStart = toDateOnly(dueDate.toISOString()).getTime();
   return Math.max(0, Math.round((todayStart - dueStart) / 86_400_000));
 }
+
+/**
+ * Is this balance still current — due later than today at the clinic?
+ *
+ * It exists so that no caller computes "today" for itself. The aging report
+ * used to derive its own `todayStart` from the server's UTC date while calling
+ * `daysOverdue` for the same invoice, which reads the clinic's calendar: two
+ * answers to one question, a few hours apart each night. Both now come from
+ * here, so they cannot disagree.
+ */
+export function isNotYetDue(dueDate: Date, now = new Date()): boolean {
+  const todayStart = toDateOnly(clinicTodayIso(now)).getTime();
+  const dueStart = toDateOnly(dueDate.toISOString()).getTime();
+  return dueStart > todayStart;
+}

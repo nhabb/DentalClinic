@@ -116,6 +116,14 @@ export type invoice_line_items = Prisma.invoice_line_itemsModel
  */
 export type invoice_payments = Prisma.invoice_paymentsModel
 /**
+ * Model payment_allocations
+ * How much of one payment pays down one invoice. An invoice's amount_paid is
+ * the sum of its allocations, signed by each payment's kind (a refund
+ * allocation subtracts); a payment that is not fully allocated is credit on
+ * the patient's account.
+ */
+export type payment_allocations = Prisma.payment_allocationsModel
+/**
  * Model roles
  * 
  */
@@ -160,12 +168,16 @@ export type agent_conversations = Prisma.agent_conversationsModel
 export type agent_usage = Prisma.agent_usageModel
 /**
  * Model quotes
- * A priced treatment plan given to a patient: a numbered, versioned estimate of planned work.
- * Not money: never counted as income or outstanding. draft -> sent -> accepted | declined | expired.
+ * The header of one patient's living treatment plan: its number, notes and the
+ * day they agreed. The plan itself is their patient_records, and the totals are
+ * summed from those — nothing is duplicated here, so nothing can drift. What a
+ * patient was actually handed is in quote_sends.
  */
 export type quotes = Prisma.quotesModel
 /**
- * Model quote_items
- * One priced line of a quote, usually one planned procedure on one tooth.
+ * Model quote_sends
+ * One row each time a treatment plan was given to a patient: the total and the
+ * lines as they stood that day. Append-only (no UPDATE/DELETE grant): it is what
+ * answers "what was I told in March" once the living plan has moved on.
  */
-export type quote_items = Prisma.quote_itemsModel
+export type quote_sends = Prisma.quote_sendsModel

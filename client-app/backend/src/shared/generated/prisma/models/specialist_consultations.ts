@@ -60,6 +60,7 @@ export type Specialist_consultationsMinAggregateOutputType = {
   appointment_id: bigint | null
   record_id: bigint | null
   requested_by: bigint | null
+  direction: string | null
   status: string | null
   consultation_date: Date | null
   reason: string | null
@@ -79,6 +80,7 @@ export type Specialist_consultationsMaxAggregateOutputType = {
   appointment_id: bigint | null
   record_id: bigint | null
   requested_by: bigint | null
+  direction: string | null
   status: string | null
   consultation_date: Date | null
   reason: string | null
@@ -98,6 +100,7 @@ export type Specialist_consultationsCountAggregateOutputType = {
   appointment_id: number
   record_id: number
   requested_by: number
+  direction: number
   status: number
   consultation_date: number
   reason: number
@@ -143,6 +146,7 @@ export type Specialist_consultationsMinAggregateInputType = {
   appointment_id?: true
   record_id?: true
   requested_by?: true
+  direction?: true
   status?: true
   consultation_date?: true
   reason?: true
@@ -162,6 +166,7 @@ export type Specialist_consultationsMaxAggregateInputType = {
   appointment_id?: true
   record_id?: true
   requested_by?: true
+  direction?: true
   status?: true
   consultation_date?: true
   reason?: true
@@ -181,6 +186,7 @@ export type Specialist_consultationsCountAggregateInputType = {
   appointment_id?: true
   record_id?: true
   requested_by?: true
+  direction?: true
   status?: true
   consultation_date?: true
   reason?: true
@@ -287,6 +293,7 @@ export type Specialist_consultationsGroupByOutputType = {
   appointment_id: bigint | null
   record_id: bigint | null
   requested_by: bigint | null
+  direction: string
   status: string
   consultation_date: Date | null
   reason: string
@@ -329,6 +336,7 @@ export type specialist_consultationsWhereInput = {
   appointment_id?: Prisma.BigIntNullableFilter<"specialist_consultations"> | bigint | number | null
   record_id?: Prisma.BigIntNullableFilter<"specialist_consultations"> | bigint | number | null
   requested_by?: Prisma.BigIntNullableFilter<"specialist_consultations"> | bigint | number | null
+  direction?: Prisma.StringFilter<"specialist_consultations"> | string
   status?: Prisma.StringFilter<"specialist_consultations"> | string
   consultation_date?: Prisma.DateTimeNullableFilter<"specialist_consultations"> | Date | string | null
   reason?: Prisma.StringFilter<"specialist_consultations"> | string
@@ -355,6 +363,7 @@ export type specialist_consultationsOrderByWithRelationInput = {
   appointment_id?: Prisma.SortOrderInput | Prisma.SortOrder
   record_id?: Prisma.SortOrderInput | Prisma.SortOrder
   requested_by?: Prisma.SortOrderInput | Prisma.SortOrder
+  direction?: Prisma.SortOrder
   status?: Prisma.SortOrder
   consultation_date?: Prisma.SortOrderInput | Prisma.SortOrder
   reason?: Prisma.SortOrder
@@ -384,6 +393,7 @@ export type specialist_consultationsWhereUniqueInput = Prisma.AtLeast<{
   appointment_id?: Prisma.BigIntNullableFilter<"specialist_consultations"> | bigint | number | null
   record_id?: Prisma.BigIntNullableFilter<"specialist_consultations"> | bigint | number | null
   requested_by?: Prisma.BigIntNullableFilter<"specialist_consultations"> | bigint | number | null
+  direction?: Prisma.StringFilter<"specialist_consultations"> | string
   status?: Prisma.StringFilter<"specialist_consultations"> | string
   consultation_date?: Prisma.DateTimeNullableFilter<"specialist_consultations"> | Date | string | null
   reason?: Prisma.StringFilter<"specialist_consultations"> | string
@@ -410,6 +420,7 @@ export type specialist_consultationsOrderByWithAggregationInput = {
   appointment_id?: Prisma.SortOrderInput | Prisma.SortOrder
   record_id?: Prisma.SortOrderInput | Prisma.SortOrder
   requested_by?: Prisma.SortOrderInput | Prisma.SortOrder
+  direction?: Prisma.SortOrder
   status?: Prisma.SortOrder
   consultation_date?: Prisma.SortOrderInput | Prisma.SortOrder
   reason?: Prisma.SortOrder
@@ -437,6 +448,7 @@ export type specialist_consultationsScalarWhereWithAggregatesInput = {
   appointment_id?: Prisma.BigIntNullableWithAggregatesFilter<"specialist_consultations"> | bigint | number | null
   record_id?: Prisma.BigIntNullableWithAggregatesFilter<"specialist_consultations"> | bigint | number | null
   requested_by?: Prisma.BigIntNullableWithAggregatesFilter<"specialist_consultations"> | bigint | number | null
+  direction?: Prisma.StringWithAggregatesFilter<"specialist_consultations"> | string
   status?: Prisma.StringWithAggregatesFilter<"specialist_consultations"> | string
   consultation_date?: Prisma.DateTimeNullableWithAggregatesFilter<"specialist_consultations"> | Date | string | null
   reason?: Prisma.StringWithAggregatesFilter<"specialist_consultations"> | string
@@ -449,6 +461,7 @@ export type specialist_consultationsScalarWhereWithAggregatesInput = {
 
 export type specialist_consultationsCreateInput = {
   id?: bigint | number
+  direction?: string
   status?: string
   consultation_date?: Date | string | null
   reason: string
@@ -475,6 +488,7 @@ export type specialist_consultationsUncheckedCreateInput = {
   appointment_id?: bigint | number | null
   record_id?: bigint | number | null
   requested_by?: bigint | number | null
+  direction?: string
   status?: string
   consultation_date?: Date | string | null
   reason: string
@@ -487,6 +501,7 @@ export type specialist_consultationsUncheckedCreateInput = {
 
 export type specialist_consultationsUpdateInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  direction?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   consultation_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reason?: Prisma.StringFieldUpdateOperationsInput | string
@@ -513,6 +528,7 @@ export type specialist_consultationsUncheckedUpdateInput = {
   appointment_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   record_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   requested_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  direction?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   consultation_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reason?: Prisma.StringFieldUpdateOperationsInput | string
@@ -532,6 +548,7 @@ export type specialist_consultationsCreateManyInput = {
   appointment_id?: bigint | number | null
   record_id?: bigint | number | null
   requested_by?: bigint | number | null
+  direction?: string
   status?: string
   consultation_date?: Date | string | null
   reason: string
@@ -544,6 +561,7 @@ export type specialist_consultationsCreateManyInput = {
 
 export type specialist_consultationsUpdateManyMutationInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  direction?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   consultation_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reason?: Prisma.StringFieldUpdateOperationsInput | string
@@ -563,6 +581,7 @@ export type specialist_consultationsUncheckedUpdateManyInput = {
   appointment_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   record_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   requested_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  direction?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   consultation_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reason?: Prisma.StringFieldUpdateOperationsInput | string
@@ -592,6 +611,7 @@ export type specialist_consultationsCountOrderByAggregateInput = {
   appointment_id?: Prisma.SortOrder
   record_id?: Prisma.SortOrder
   requested_by?: Prisma.SortOrder
+  direction?: Prisma.SortOrder
   status?: Prisma.SortOrder
   consultation_date?: Prisma.SortOrder
   reason?: Prisma.SortOrder
@@ -623,6 +643,7 @@ export type specialist_consultationsMaxOrderByAggregateInput = {
   appointment_id?: Prisma.SortOrder
   record_id?: Prisma.SortOrder
   requested_by?: Prisma.SortOrder
+  direction?: Prisma.SortOrder
   status?: Prisma.SortOrder
   consultation_date?: Prisma.SortOrder
   reason?: Prisma.SortOrder
@@ -642,6 +663,7 @@ export type specialist_consultationsMinOrderByAggregateInput = {
   appointment_id?: Prisma.SortOrder
   record_id?: Prisma.SortOrder
   requested_by?: Prisma.SortOrder
+  direction?: Prisma.SortOrder
   status?: Prisma.SortOrder
   consultation_date?: Prisma.SortOrder
   reason?: Prisma.SortOrder
@@ -960,6 +982,7 @@ export type specialist_consultationsUncheckedUpdateManyWithoutSpecialistNestedIn
 
 export type specialist_consultationsCreateWithoutOrganizationInput = {
   id?: bigint | number
+  direction?: string
   status?: string
   consultation_date?: Date | string | null
   reason: string
@@ -984,6 +1007,7 @@ export type specialist_consultationsUncheckedCreateWithoutOrganizationInput = {
   appointment_id?: bigint | number | null
   record_id?: bigint | number | null
   requested_by?: bigint | number | null
+  direction?: string
   status?: string
   consultation_date?: Date | string | null
   reason: string
@@ -1032,6 +1056,7 @@ export type specialist_consultationsScalarWhereInput = {
   appointment_id?: Prisma.BigIntNullableFilter<"specialist_consultations"> | bigint | number | null
   record_id?: Prisma.BigIntNullableFilter<"specialist_consultations"> | bigint | number | null
   requested_by?: Prisma.BigIntNullableFilter<"specialist_consultations"> | bigint | number | null
+  direction?: Prisma.StringFilter<"specialist_consultations"> | string
   status?: Prisma.StringFilter<"specialist_consultations"> | string
   consultation_date?: Prisma.DateTimeNullableFilter<"specialist_consultations"> | Date | string | null
   reason?: Prisma.StringFilter<"specialist_consultations"> | string
@@ -1044,6 +1069,7 @@ export type specialist_consultationsScalarWhereInput = {
 
 export type specialist_consultationsCreateWithoutBranchInput = {
   id?: bigint | number
+  direction?: string
   status?: string
   consultation_date?: Date | string | null
   reason: string
@@ -1068,6 +1094,7 @@ export type specialist_consultationsUncheckedCreateWithoutBranchInput = {
   appointment_id?: bigint | number | null
   record_id?: bigint | number | null
   requested_by?: bigint | number | null
+  direction?: string
   status?: string
   consultation_date?: Date | string | null
   reason: string
@@ -1106,6 +1133,7 @@ export type specialist_consultationsUpdateManyWithWhereWithoutBranchInput = {
 
 export type specialist_consultationsCreateWithoutAppointmentInput = {
   id?: bigint | number
+  direction?: string
   status?: string
   consultation_date?: Date | string | null
   reason: string
@@ -1130,6 +1158,7 @@ export type specialist_consultationsUncheckedCreateWithoutAppointmentInput = {
   specialist_id: bigint | number
   record_id?: bigint | number | null
   requested_by?: bigint | number | null
+  direction?: string
   status?: string
   consultation_date?: Date | string | null
   reason: string
@@ -1168,6 +1197,7 @@ export type specialist_consultationsUpdateManyWithWhereWithoutAppointmentInput =
 
 export type specialist_consultationsCreateWithoutPatientInput = {
   id?: bigint | number
+  direction?: string
   status?: string
   consultation_date?: Date | string | null
   reason: string
@@ -1192,6 +1222,7 @@ export type specialist_consultationsUncheckedCreateWithoutPatientInput = {
   appointment_id?: bigint | number | null
   record_id?: bigint | number | null
   requested_by?: bigint | number | null
+  direction?: string
   status?: string
   consultation_date?: Date | string | null
   reason: string
@@ -1230,6 +1261,7 @@ export type specialist_consultationsUpdateManyWithWhereWithoutPatientInput = {
 
 export type specialist_consultationsCreateWithoutRecordInput = {
   id?: bigint | number
+  direction?: string
   status?: string
   consultation_date?: Date | string | null
   reason: string
@@ -1254,6 +1286,7 @@ export type specialist_consultationsUncheckedCreateWithoutRecordInput = {
   specialist_id: bigint | number
   appointment_id?: bigint | number | null
   requested_by?: bigint | number | null
+  direction?: string
   status?: string
   consultation_date?: Date | string | null
   reason: string
@@ -1292,6 +1325,7 @@ export type specialist_consultationsUpdateManyWithWhereWithoutRecordInput = {
 
 export type specialist_consultationsCreateWithoutRequesterInput = {
   id?: bigint | number
+  direction?: string
   status?: string
   consultation_date?: Date | string | null
   reason: string
@@ -1316,6 +1350,7 @@ export type specialist_consultationsUncheckedCreateWithoutRequesterInput = {
   specialist_id: bigint | number
   appointment_id?: bigint | number | null
   record_id?: bigint | number | null
+  direction?: string
   status?: string
   consultation_date?: Date | string | null
   reason: string
@@ -1354,6 +1389,7 @@ export type specialist_consultationsUpdateManyWithWhereWithoutRequesterInput = {
 
 export type specialist_consultationsCreateWithoutSpecialistInput = {
   id?: bigint | number
+  direction?: string
   status?: string
   consultation_date?: Date | string | null
   reason: string
@@ -1378,6 +1414,7 @@ export type specialist_consultationsUncheckedCreateWithoutSpecialistInput = {
   appointment_id?: bigint | number | null
   record_id?: bigint | number | null
   requested_by?: bigint | number | null
+  direction?: string
   status?: string
   consultation_date?: Date | string | null
   reason: string
@@ -1422,6 +1459,7 @@ export type specialist_consultationsCreateManyOrganizationInput = {
   appointment_id?: bigint | number | null
   record_id?: bigint | number | null
   requested_by?: bigint | number | null
+  direction?: string
   status?: string
   consultation_date?: Date | string | null
   reason: string
@@ -1434,6 +1472,7 @@ export type specialist_consultationsCreateManyOrganizationInput = {
 
 export type specialist_consultationsUpdateWithoutOrganizationInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  direction?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   consultation_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reason?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1458,6 +1497,7 @@ export type specialist_consultationsUncheckedUpdateWithoutOrganizationInput = {
   appointment_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   record_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   requested_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  direction?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   consultation_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reason?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1476,6 +1516,7 @@ export type specialist_consultationsUncheckedUpdateManyWithoutOrganizationInput 
   appointment_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   record_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   requested_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  direction?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   consultation_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reason?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1494,6 +1535,7 @@ export type specialist_consultationsCreateManyBranchInput = {
   appointment_id?: bigint | number | null
   record_id?: bigint | number | null
   requested_by?: bigint | number | null
+  direction?: string
   status?: string
   consultation_date?: Date | string | null
   reason: string
@@ -1506,6 +1548,7 @@ export type specialist_consultationsCreateManyBranchInput = {
 
 export type specialist_consultationsUpdateWithoutBranchInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  direction?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   consultation_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reason?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1530,6 +1573,7 @@ export type specialist_consultationsUncheckedUpdateWithoutBranchInput = {
   appointment_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   record_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   requested_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  direction?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   consultation_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reason?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1548,6 +1592,7 @@ export type specialist_consultationsUncheckedUpdateManyWithoutBranchInput = {
   appointment_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   record_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   requested_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  direction?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   consultation_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reason?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1566,6 +1611,7 @@ export type specialist_consultationsCreateManyAppointmentInput = {
   specialist_id: bigint | number
   record_id?: bigint | number | null
   requested_by?: bigint | number | null
+  direction?: string
   status?: string
   consultation_date?: Date | string | null
   reason: string
@@ -1578,6 +1624,7 @@ export type specialist_consultationsCreateManyAppointmentInput = {
 
 export type specialist_consultationsUpdateWithoutAppointmentInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  direction?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   consultation_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reason?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1602,6 +1649,7 @@ export type specialist_consultationsUncheckedUpdateWithoutAppointmentInput = {
   specialist_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   record_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   requested_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  direction?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   consultation_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reason?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1620,6 +1668,7 @@ export type specialist_consultationsUncheckedUpdateManyWithoutAppointmentInput =
   specialist_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   record_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   requested_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  direction?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   consultation_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reason?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1638,6 +1687,7 @@ export type specialist_consultationsCreateManyPatientInput = {
   appointment_id?: bigint | number | null
   record_id?: bigint | number | null
   requested_by?: bigint | number | null
+  direction?: string
   status?: string
   consultation_date?: Date | string | null
   reason: string
@@ -1650,6 +1700,7 @@ export type specialist_consultationsCreateManyPatientInput = {
 
 export type specialist_consultationsUpdateWithoutPatientInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  direction?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   consultation_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reason?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1674,6 +1725,7 @@ export type specialist_consultationsUncheckedUpdateWithoutPatientInput = {
   appointment_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   record_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   requested_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  direction?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   consultation_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reason?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1692,6 +1744,7 @@ export type specialist_consultationsUncheckedUpdateManyWithoutPatientInput = {
   appointment_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   record_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   requested_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  direction?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   consultation_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reason?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1710,6 +1763,7 @@ export type specialist_consultationsCreateManyRecordInput = {
   specialist_id: bigint | number
   appointment_id?: bigint | number | null
   requested_by?: bigint | number | null
+  direction?: string
   status?: string
   consultation_date?: Date | string | null
   reason: string
@@ -1722,6 +1776,7 @@ export type specialist_consultationsCreateManyRecordInput = {
 
 export type specialist_consultationsUpdateWithoutRecordInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  direction?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   consultation_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reason?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1746,6 +1801,7 @@ export type specialist_consultationsUncheckedUpdateWithoutRecordInput = {
   specialist_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   appointment_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   requested_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  direction?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   consultation_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reason?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1764,6 +1820,7 @@ export type specialist_consultationsUncheckedUpdateManyWithoutRecordInput = {
   specialist_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   appointment_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   requested_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  direction?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   consultation_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reason?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1782,6 +1839,7 @@ export type specialist_consultationsCreateManyRequesterInput = {
   specialist_id: bigint | number
   appointment_id?: bigint | number | null
   record_id?: bigint | number | null
+  direction?: string
   status?: string
   consultation_date?: Date | string | null
   reason: string
@@ -1794,6 +1852,7 @@ export type specialist_consultationsCreateManyRequesterInput = {
 
 export type specialist_consultationsUpdateWithoutRequesterInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  direction?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   consultation_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reason?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1818,6 +1877,7 @@ export type specialist_consultationsUncheckedUpdateWithoutRequesterInput = {
   specialist_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   appointment_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   record_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  direction?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   consultation_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reason?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1836,6 +1896,7 @@ export type specialist_consultationsUncheckedUpdateManyWithoutRequesterInput = {
   specialist_id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   appointment_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   record_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  direction?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   consultation_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reason?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1854,6 +1915,7 @@ export type specialist_consultationsCreateManySpecialistInput = {
   appointment_id?: bigint | number | null
   record_id?: bigint | number | null
   requested_by?: bigint | number | null
+  direction?: string
   status?: string
   consultation_date?: Date | string | null
   reason: string
@@ -1866,6 +1928,7 @@ export type specialist_consultationsCreateManySpecialistInput = {
 
 export type specialist_consultationsUpdateWithoutSpecialistInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  direction?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   consultation_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reason?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1890,6 +1953,7 @@ export type specialist_consultationsUncheckedUpdateWithoutSpecialistInput = {
   appointment_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   record_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   requested_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  direction?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   consultation_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reason?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1908,6 +1972,7 @@ export type specialist_consultationsUncheckedUpdateManyWithoutSpecialistInput = 
   appointment_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   record_id?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   requested_by?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  direction?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   consultation_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reason?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1929,6 +1994,7 @@ export type specialist_consultationsSelect<ExtArgs extends runtime.Types.Extensi
   appointment_id?: boolean
   record_id?: boolean
   requested_by?: boolean
+  direction?: boolean
   status?: boolean
   consultation_date?: boolean
   reason?: boolean
@@ -1955,6 +2021,7 @@ export type specialist_consultationsSelectCreateManyAndReturn<ExtArgs extends ru
   appointment_id?: boolean
   record_id?: boolean
   requested_by?: boolean
+  direction?: boolean
   status?: boolean
   consultation_date?: boolean
   reason?: boolean
@@ -1981,6 +2048,7 @@ export type specialist_consultationsSelectUpdateManyAndReturn<ExtArgs extends ru
   appointment_id?: boolean
   record_id?: boolean
   requested_by?: boolean
+  direction?: boolean
   status?: boolean
   consultation_date?: boolean
   reason?: boolean
@@ -2007,6 +2075,7 @@ export type specialist_consultationsSelectScalar = {
   appointment_id?: boolean
   record_id?: boolean
   requested_by?: boolean
+  direction?: boolean
   status?: boolean
   consultation_date?: boolean
   reason?: boolean
@@ -2017,7 +2086,7 @@ export type specialist_consultationsSelectScalar = {
   updated_at?: boolean
 }
 
-export type specialist_consultationsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "organization_id" | "branch_id" | "patient_id" | "specialist_id" | "appointment_id" | "record_id" | "requested_by" | "status" | "consultation_date" | "reason" | "outcome" | "fee" | "notes" | "created_at" | "updated_at", ExtArgs["result"]["specialist_consultations"]>
+export type specialist_consultationsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "organization_id" | "branch_id" | "patient_id" | "specialist_id" | "appointment_id" | "record_id" | "requested_by" | "direction" | "status" | "consultation_date" | "reason" | "outcome" | "fee" | "notes" | "created_at" | "updated_at", ExtArgs["result"]["specialist_consultations"]>
 export type specialist_consultationsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   organization?: boolean | Prisma.organizationsDefaultArgs<ExtArgs>
   branch?: boolean | Prisma.specialist_consultations$branchArgs<ExtArgs>
@@ -2072,6 +2141,12 @@ export type $specialist_consultationsPayload<ExtArgs extends runtime.Types.Exten
      * Staff member who asked for the consultation.
      */
     requested_by: bigint | null
+    /**
+     * Which way the patient moved: referred_out (we sent them to the outside
+     * doctor), referred_in (the outside doctor sent them to us) or visiting
+     * (the outside doctor treated the patient at our clinic).
+     */
+    direction: string
     status: string
     consultation_date: Date | null
     reason: string
@@ -2521,6 +2596,7 @@ export interface specialist_consultationsFieldRefs {
   readonly appointment_id: Prisma.FieldRef<"specialist_consultations", 'BigInt'>
   readonly record_id: Prisma.FieldRef<"specialist_consultations", 'BigInt'>
   readonly requested_by: Prisma.FieldRef<"specialist_consultations", 'BigInt'>
+  readonly direction: Prisma.FieldRef<"specialist_consultations", 'String'>
   readonly status: Prisma.FieldRef<"specialist_consultations", 'String'>
   readonly consultation_date: Prisma.FieldRef<"specialist_consultations", 'DateTime'>
   readonly reason: Prisma.FieldRef<"specialist_consultations", 'String'>

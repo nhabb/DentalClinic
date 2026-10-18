@@ -9,6 +9,9 @@ import { Button } from "@/components/ui/button";
 import { safeStorage } from "@/lib/browser-compat";
 import { useTranslation } from "@/lib/i18n";
 import { usePermissions } from "@/lib/permissions";
+import { DEFAULT_PRICES } from "@/components/billing/invoice-doc";
+import { PlanQuoteBand } from "@/components/chart/PlanQuoteBand";
+import type { Plan } from "@/components/billing/quote-doc";
 import AdminSidebar from "@/components/ui/AdminSidebar";
 import { StatsCard } from "@/components/ui/StatsCard";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
@@ -19,9 +22,8 @@ import { ListToolbar, toolbarSelectClass, toolbarIconButtonClass, toolbarSegment
 import { AdminPageHeader } from "@/components/ui/AdminPageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Drawer } from "@/components/ui/Drawer";
+import { Modal } from "@/components/ui/Modal";
 import { BulkActionBar } from "@/components/ui/BulkActionBar";
-import { PatientMoneyBand } from "@/components/chart/PatientMoneyBand";
-import { PatientQuotesBand } from "@/components/chart/PatientQuotesBand";
 import { useImportExport } from "@/components/ui/useImportExport";
 import ToothChart, { type ToothState } from "@/components/dental/ToothChart";
 import dynamic from "next/dynamic";
@@ -47,6 +49,7 @@ import {
   FaAllergies,
   FaNotesMedical,
   FaCheckCircle,
+  FaLock,
   FaEdit,
   FaIdCard,
   FaFileAlt,
@@ -54,7 +57,6 @@ import {
   FaDownload,
   FaTrash,
   FaClock,
-  FaMoneyBillWave,
   FaThLarge,
   FaList,
   FaChevronRight,
@@ -79,6 +81,20 @@ interface Patient {
   totalVisits: number;
   status: string;
   notes: string;
+  /** The administrative half of the file: work, emergency contacts, identity. */
+  occupation: string;
+  employer: string;
+  workPhone: string;
+  emergencyName: string;
+  emergencyPhone: string;
+  emergencyRelationship: string;
+  emergency2Name: string;
+  emergency2Phone: string;
+  emergency2Relationship: string;
+  nationalId: string;
+  maritalStatus: string;
+  nationality: string;
+  preferredLanguage: string;
   photoUrl?: string;
   /** Account was created by staff and the patient has not chosen a password yet. */
   mustSetPassword: boolean;
@@ -116,23 +132,81 @@ const PROCEDURES = [
   "Filling", "Crown", "Bridge", "Implant", "Orthodontic", "Veneers", "Gum Treatment", "Fluoride Treatment",
 ] as const;
 
-/** Suggested prices (USD) pre-filled in the work form; always editable per item. */
-const DEFAULT_PRICES: Record<string, number> = {
-  "Checkup": 30, "X-Ray": 20, "Teeth Cleaning": 50, "Whitening": 150, "Tooth Extraction": 60,
-  "Root Canal": 200, "Filling": 50, "Crown": 250, "Bridge": 500, "Implant": 800,
-  "Orthodontic": 1500, "Veneers": 300, "Gum Treatment": 100, "Fluoride Treatment": 25,
-};
+/** Marital status and language, matching the API's accepted values. */
+const MARITAL_STATUSES = [
+  { value: "single", label: "Single" },
+  { value: "married", label: "Married" },
+  { value: "divorced", label: "Divorced" },
+  { value: "widowed", label: "Widowed" },
+  { value: "other", label: "Other" },
+] as const;
+
+const PATIENT_LANGUAGES = [
+  { value: "en", label: "English" },
+  { value: "ar", label: "العربية" },
+  { value: "fr", label: "Français" },
+] as const;
+
+/** A titled block of related fields in the patient file. */
+function FieldGroup({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-3 border-t border-gray-100 pt-4">
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+        {title}
+      </h3>
+      {children}
+    </div>
+  );
+}
+
+/** A labelled text input, the shape the patient file uses throughout. */
+function TextField({
+  label,
+  value,
+  onChange,
+  placeholder,
+  type = "text",
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  type?: string;
+}) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
+      />
+    </div>
+  );
+}
 
 type WorkStatus = "completed" | "planned" | "missing";
 
+/*
+ * The chart plans and records clinical work: teeth, procedures and notes.
+ * No money appears on this screen. Planned work is priced on the quotes page
+ * and completed work is billed on the billing page.
+ */
 interface WorkItem {
   tooth: string;
   procedure: string;
   status: WorkStatus;
+  /** Planned work carries this price into the patient's quote. */
   amount: number;
   notes: string;
-  /** Put this item on the invoice created when saving (completed, priced items only). */
-  bill: boolean;
 }
 
 interface ChartHistoryEntry {
@@ -143,25 +217,22 @@ interface ChartHistoryEntry {
   date: string;
   doctor: string;
   notes: string;
-  invoiceId: number | null;
-  invoiceStatus: "open" | "partial" | "paid" | null;
-  invoiceTotal: number;
-  invoiceRemaining: number;
-  /** Price agreed when the work was planned/recorded; null when none was given. */
-  quotedAmount: number | null;
+  /**
+   * Whether this work is already on an invoice. That — not any document's
+   * status — is what locks a line: its price belongs to the invoice now.
+   */
+  billed: boolean;
+  /** The invoice that froze it, so the row can say which one. */
+  invoiceNumber: string | null;
+  /** Price planned for this work; null when nobody has priced it yet. */
+  price: number | null;
 }
-
-interface PayInvoice {
-  id: number;
-  total: number;
-  remaining: number;
-}
-
-const PAYMENT_METHODS = ["cash", "card", "insurance", "bank_transfer"] as const;
 
 interface ChartData {
   teeth: Record<string, ToothState>;
   history: ChartHistoryEntry[];
+  /** The estimate, computed from these same rows by the API. */
+  plan: Plan | null;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -185,12 +256,11 @@ function mapChart(raw: any): ChartData {
     date: r.treatment_date ? String(r.treatment_date).split("T")[0] : "",
     doctor: r.users ? `Dr. ${r.users.first_name} ${r.users.last_name}` : "",
     notes: r.description ?? "",
-    invoiceId: r.invoice?.id != null ? Number(r.invoice.id) : null,
-    invoiceStatus: r.invoice?.status ?? null,
-    invoiceTotal: Number(r.invoice?.total_amount) || 0,
-    invoiceRemaining: Number(r.invoice?.remaining_amount) || 0,
-    quotedAmount: r.quoted_amount != null && r.quoted_amount !== "" ? Number(r.quoted_amount) : null,
+    billed: r.invoice?.id != null,
+    invoiceNumber: r.invoice?.invoice_number ?? null,
+    price: r.quoted_amount != null && r.quoted_amount !== "" ? Number(r.quoted_amount) : null,
   }));
+  const plan: Plan | null = raw?.plan ?? null;
   // Every treatment per tooth (history is newest first) so hovering a tooth
   // can list all of them, not just the latest.
   for (const h of history) {
@@ -202,7 +272,7 @@ function mapChart(raw: any): ChartData {
       status: h.status,
     });
   }
-  return { teeth, history };
+  return { teeth, history, plan };
 }
 
 const emptyNewPatient = {
@@ -218,6 +288,56 @@ const emptyNewPatient = {
   insurance: "",
   notes: "",
 };
+
+/** One patient row, as every screen in this page expects it. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapPatientRow(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  p: any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  users: any[] = [],
+  visitsByPatient: Record<number, number> = {},
+  lastVisitByPatient: Record<number, string> = {},
+): Patient {
+  // date_of_birth lives on users, returned as p.users.date_of_birth
+  const userEmbed = p.users;
+  const user = users.find((u) => u.id === p.user_id || u.id === String(p.user_id));
+  const dob = userEmbed?.date_of_birth || user?.date_of_birth || "";
+  const dobStr = dob ? (typeof dob === "string" ? dob.split("T")[0] : new Date(dob).toISOString().split("T")[0]) : "";
+  const isActive = userEmbed ? userEmbed.is_active !== false : (user?.is_active !== false);
+  return {
+    id: Number(p.id),
+    userId: userEmbed ? Number(userEmbed.id) : (user ? Number(user.id) : 0),
+    name: userEmbed ? `${userEmbed.first_name} ${userEmbed.last_name}` : (user ? `${user.first_name} ${user.last_name}` : `Patient #${p.id}`),
+    email: userEmbed?.email || user?.email || "",
+    phone: userEmbed?.phone || user?.phone || "",
+    dateOfBirth: dobStr,
+    address: `${p.city || ""}, ${p.governate || ""}`.trim().replace(/^,\s*|,\s*$/, ""),
+    bloodType: p.blood_type || "",
+    allergies: p.allergies ? p.allergies.split(",").map((a: string) => a.trim()).filter(Boolean) : [],
+    insurance: p.insurance_provider || "",
+    registeredDate: (userEmbed?.created_at || user?.created_at || "").split("T")[0],
+    lastVisit: lastVisitByPatient[Number(p.id)] || "",
+    totalVisits: visitsByPatient[Number(p.id)] || 0,
+    status: isActive ? "active" : "inactive",
+    notes: p.medical_notes || "",
+    occupation: p.occupation || "",
+    employer: p.employer || "",
+    workPhone: p.work_phone || "",
+    emergencyName: p.emergency_contact_name || "",
+    emergencyPhone: p.emergency_contact_phone || "",
+    emergencyRelationship: p.emergency_contact_relationship || "",
+    emergency2Name: p.emergency_contact_2_name || "",
+    emergency2Phone: p.emergency_contact_2_phone || "",
+    emergency2Relationship: p.emergency_contact_2_relationship || "",
+    nationalId: p.national_id || "",
+    maritalStatus: p.marital_status || "",
+    nationality: p.nationality || "",
+    preferredLanguage: p.preferred_language || "",
+    photoUrl: userEmbed?.avatar_url || user?.avatar_url || getStoredPhoto(userEmbed?.email || user?.email || ""),
+    mustSetPassword: userEmbed?.must_set_password === true || user?.must_set_password === true,
+  };
+}
 
 export default function PatientsPage() {
   const router = useRouter();
@@ -282,6 +402,19 @@ export default function PatientsPage() {
     allergies: "",
     insurance: "",
     notes: "",
+    occupation: "",
+    employer: "",
+    workPhone: "",
+    emergencyName: "",
+    emergencyPhone: "",
+    emergencyRelationship: "",
+    emergency2Name: "",
+    emergency2Phone: "",
+    emergency2Relationship: "",
+    nationalId: "",
+    maritalStatus: "",
+    nationality: "",
+    preferredLanguage: "",
   });
   const [editPatientSaving, setEditPatientSaving] = useState(false);
 
@@ -308,36 +441,32 @@ export default function PatientsPage() {
   const [workForm, setWorkForm] = useState<{ procedure: string; status: WorkStatus; amount: string; notes: string }>({
     procedure: "Filling",
     status: "completed",
-    amount: String(DEFAULT_PRICES["Filling"]),
+    amount: String(DEFAULT_PRICES["Filling"] ?? ""),
     notes: "",
   });
   const [workDate, setWorkDate] = useState(new Date().toISOString().split("T")[0]);
   const [workNotes, setWorkNotes] = useState("");
   const [savingWork, setSavingWork] = useState(false);
 
-  // Completing planned work from the history, and paying its invoice
+  // Completing planned work from the history. The chart is clinical only:
+  // quotes live on the quotes page and money on the billing page.
   const [completeSelection, setCompleteSelection] = useState<number[]>([]);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
-  const [completeItems, setCompleteItems] = useState<{ id: number; tooth: string; procedure: string; amount: string; status: WorkStatus; bill: boolean; editPrice: boolean }[]>([]);
+  const [completeItems, setCompleteItems] = useState<{ id: number; tooth: string; procedure: string }[]>([]);
   const [completeDate, setCompleteDate] = useState(new Date().toISOString().split("T")[0]);
-  const [completeNotes, setCompleteNotes] = useState("");
   const [completing, setCompleting] = useState(false);
   const [removingRecordId, setRemovingRecordId] = useState<number | null>(null);
-  const [payInvoice, setPayInvoice] = useState<PayInvoice | null>(null);
-  // Billing from the chart is billing: without billing:write, work is recorded unbilled and payments are hidden.
+  const [repricingId, setRepricingId] = useState<number | null>(null);
+  /** The billed line whose frozen price somebody just tried to change. */
+  const [frozenPrice, setFrozenPrice] = useState<ChartHistoryEntry | null>(null);
   const { can } = usePermissions();
-  const canBill = can("billing:write");
 
-  // The chart is the one door: the plan, its quotes and the money live on this
-  // screen too. Bumping this token reloads both bands after anything changes.
-  const [moneyToken, setMoneyToken] = useState(0);
-  const bumpMoney = () => setMoneyToken((n) => n + 1);
-  const [payForm, setPayForm] = useState<{ amount: string; method: (typeof PAYMENT_METHODS)[number]; notes: string }>({
-    amount: "",
-    method: "cash",
-    notes: "",
-  });
-  const [paying, setPaying] = useState(false);
+  // Bumped whenever the plan changed, so the estimate band rebuilds itself.
+  const [planToken, setPlanToken] = useState(0);
+  const refreshChart = () => {
+    if (selectedPatient) fetchChart(selectedPatient.id);
+    setPlanToken((n) => n + 1);
+  };
 
   // Check auth and load user data (auth disabled)
   useEffect(() => {
@@ -384,33 +513,9 @@ export default function PatientsPage() {
         }
       }
 
-      const mapped = (patientsData.data || []).map((p: any) => {
-        // date_of_birth lives on users, returned as p.users.date_of_birth
-        const userEmbed = p.users;
-        const user = users.find((u) => u.id === p.user_id || u.id === String(p.user_id));
-        const dob = userEmbed?.date_of_birth || user?.date_of_birth || "";
-        const dobStr = dob ? (typeof dob === "string" ? dob.split("T")[0] : new Date(dob).toISOString().split("T")[0]) : "";
-        const isActive = userEmbed ? userEmbed.is_active !== false : (user?.is_active !== false);
-        return {
-          id: Number(p.id),
-          userId: userEmbed ? Number(userEmbed.id) : (user ? Number(user.id) : 0),
-          name: userEmbed ? `${userEmbed.first_name} ${userEmbed.last_name}` : (user ? `${user.first_name} ${user.last_name}` : `Patient #${p.id}`),
-          email: userEmbed?.email || user?.email || "",
-          phone: userEmbed?.phone || user?.phone || "",
-          dateOfBirth: dobStr,
-          address: `${p.city || ""}, ${p.governate || ""}`.trim().replace(/^,\s*|,\s*$/, ""),
-          bloodType: p.blood_type || "",
-          allergies: p.allergies ? p.allergies.split(",").map((a: string) => a.trim()).filter(Boolean) : [],
-          insurance: p.insurance_provider || "",
-          registeredDate: (userEmbed?.created_at || user?.created_at || "").split("T")[0],
-          lastVisit: lastVisitByPatient[Number(p.id)] || "",
-          totalVisits: visitsByPatient[Number(p.id)] || 0,
-          status: isActive ? "active" : "inactive",
-          notes: p.medical_notes || "",
-          photoUrl: userEmbed?.avatar_url || user?.avatar_url || getStoredPhoto(userEmbed?.email || user?.email || ""),
-          mustSetPassword: userEmbed?.must_set_password === true || user?.must_set_password === true,
-        };
-      });
+      const mapped = (patientsData.data || []).map((p: any) =>
+        mapPatientRow(p, users, visitsByPatient, lastVisitByPatient),
+      );
       setPatients(mapped);
     } catch (e) {
       console.error("Failed to fetch patients", e);
@@ -634,6 +739,19 @@ export default function PatientsPage() {
       allergies: patient.allergies.join(", "),
       insurance: patient.insurance,
       notes: patient.notes,
+      occupation: patient.occupation,
+      employer: patient.employer,
+      workPhone: patient.workPhone,
+      emergencyName: patient.emergencyName,
+      emergencyPhone: patient.emergencyPhone,
+      emergencyRelationship: patient.emergencyRelationship,
+      emergency2Name: patient.emergency2Name,
+      emergency2Phone: patient.emergency2Phone,
+      emergency2Relationship: patient.emergency2Relationship,
+      nationalId: patient.nationalId,
+      maritalStatus: patient.maritalStatus,
+      nationality: patient.nationality,
+      preferredLanguage: patient.preferredLanguage,
     });
     setShowEditPatientModal(true);
   };
@@ -642,39 +760,74 @@ export default function PatientsPage() {
     if (!selectedPatient) return;
     setEditPatientSaving(true);
     try {
-      // NOTE FOR BACKEND TEAM:
-      // PATCH /api/patients/:id should accept:
-      //   blood_type, allergies (string), insurance_provider, medical_notes, date_of_birth
-      // PATCH /api/users/:userId should accept: phone
-      await apiFetch(`/api/patients/${selectedPatient.id}`, {
+      // The profile holds the file; the account holds name, phone and birth
+      // date. Sending a field to the wrong one is refused (400), so each goes
+      // to its own endpoint and both answers are checked: a silent failure
+      // here used to show "Patient updated" while nothing was saved.
+      const f = editPatientForm;
+      const blank = (v: string) => v.trim() || null;
+      const profile = await apiFetch(`/api/patients/${selectedPatient.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          blood_type: editPatientForm.bloodType || undefined,
-          allergies: editPatientForm.allergies || undefined,
-          insurance_provider: editPatientForm.insurance || undefined,
-          medical_notes: editPatientForm.notes || undefined,
-          date_of_birth: editPatientForm.dateOfBirth || undefined,
+          blood_type: blank(f.bloodType),
+          allergies: blank(f.allergies),
+          insurance_provider: blank(f.insurance),
+          medical_notes: blank(f.notes),
+          occupation: blank(f.occupation),
+          employer: blank(f.employer),
+          work_phone: blank(f.workPhone),
+          emergency_contact_name: blank(f.emergencyName),
+          emergency_contact_phone: blank(f.emergencyPhone),
+          emergency_contact_relationship: blank(f.emergencyRelationship),
+          emergency_contact_2_name: blank(f.emergency2Name),
+          emergency_contact_2_phone: blank(f.emergency2Phone),
+          emergency_contact_2_relationship: blank(f.emergency2Relationship),
+          national_id: blank(f.nationalId),
+          marital_status: blank(f.maritalStatus),
+          nationality: blank(f.nationality),
+          preferred_language: blank(f.preferredLanguage),
         }),
       });
+      if (!profile.ok) {
+        toast.error(await readApiError(profile, "Could not save the patient file."));
+        return;
+      }
       if (selectedPatient.userId) {
-        await apiFetch(`/api/users/${selectedPatient.userId}`, {
+        const account = await apiFetch(`/api/users/${selectedPatient.userId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            phone: editPatientForm.phone || undefined,
-            date_of_birth: editPatientForm.dateOfBirth || undefined,
+            phone: f.phone.trim() || undefined,
+            date_of_birth: f.dateOfBirth || undefined,
           }),
         });
+        if (!account.ok) {
+          toast.error(await readApiError(account, "Could not save the contact details."));
+          return;
+        }
       }
       const updatedPatient: Patient = {
         ...selectedPatient,
-        phone: editPatientForm.phone,
-        dateOfBirth: editPatientForm.dateOfBirth,
-        bloodType: editPatientForm.bloodType,
-        allergies: editPatientForm.allergies.split(",").map((a) => a.trim()).filter(Boolean),
-        insurance: editPatientForm.insurance,
-        notes: editPatientForm.notes,
+        phone: f.phone,
+        dateOfBirth: f.dateOfBirth,
+        bloodType: f.bloodType,
+        allergies: f.allergies.split(",").map((a) => a.trim()).filter(Boolean),
+        insurance: f.insurance,
+        notes: f.notes,
+        occupation: f.occupation,
+        employer: f.employer,
+        workPhone: f.workPhone,
+        emergencyName: f.emergencyName,
+        emergencyPhone: f.emergencyPhone,
+        emergencyRelationship: f.emergencyRelationship,
+        emergency2Name: f.emergency2Name,
+        emergency2Phone: f.emergency2Phone,
+        emergency2Relationship: f.emergency2Relationship,
+        nationalId: f.nationalId,
+        maritalStatus: f.maritalStatus,
+        nationality: f.nationality,
+        preferredLanguage: f.preferredLanguage,
       };
       setSelectedPatient(updatedPatient);
       setPatients((prev) => prev.map((p) => p.id === selectedPatient.id ? updatedPatient : p));
@@ -819,36 +972,33 @@ export default function PatientsPage() {
     const params = new URLSearchParams(window.location.search);
     const wanted = Number(params.get("patient"));
     if (!wanted) return;
-    const patient = patients.find((p) => p.id === wanted);
+    const wantChart = params.get("tab") === "chart";
     window.history.replaceState(null, "", "/admin/patients");
-    if (!patient) {
-      toast.error("That patient is not in your clinic.");
+
+    const open = (patient: Patient) =>
+      wantChart ? openPatientChart(patient) : openPatientDetails(patient);
+
+    const listed = patients.find((p) => p.id === wanted);
+    if (listed) {
+      open(listed);
       return;
     }
-    if (params.get("tab") === "chart") openPatientChart(patient);
-    else openPatientDetails(patient);
+
+    // The list is one page of many, so not finding them here means
+    // nothing about whether they exist. Ask for that one patient
+    // rather than telling the user they are not in the clinic.
+    void (async () => {
+      try {
+        const res = await apiFetch(`/api/patients/${wanted}`);
+        if (!res.ok) throw new Error();
+        open(mapPatientRow(await res.json()));
+      } catch {
+        toast.error("That patient could not be opened.");
+      }
+    })();
     // openPatient* are stable for this purpose; the link is read once per load.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patients]);
-
-  /** Planned work on the chart, the raw material of a quote. */
-  const plannedWork = (chart?.history ?? [])
-    .filter((h) => h.status === "planned")
-    .map((h) => ({
-      id: h.id,
-      tooth: h.tooth,
-      procedure: h.procedure,
-      quotedAmount: h.quotedAmount,
-    }));
-
-  /** Accepting a quote or billing one changes the chart and the money alike. */
-  const refreshChartAndMoney = () => {
-    if (selectedPatient) {
-      fetchChart(selectedPatient.id);
-      fetchPatientHistory(selectedPatient.id);
-    }
-    bumpMoney();
-  };
 
   const fetchChart = async (patientId: number) => {
     setChartLoading(true);
@@ -858,7 +1008,7 @@ export default function PatientsPage() {
       setChart(mapChart(await res.json()));
       setChartPatientId(patientId);
     } catch {
-      setChart({ teeth: {}, history: [] });
+      setChart({ teeth: {}, history: [], plan: null });
       setChartPatientId(patientId);
     } finally {
       setChartLoading(false);
@@ -883,9 +1033,6 @@ export default function PatientsPage() {
       toast.error(t("dentalChart.selectTeethFirst"));
       return;
     }
-    const amount = parseFloat(workForm.amount);
-    const isMissing = workForm.status === "missing";
-    const safeAmount = !isMissing && Number.isFinite(amount) && amount >= 0 ? amount : 0;
     const teeth = wholeMouth ? [""] : [...selectedTeeth].sort();
     // Append, never merge: the same tooth can receive several treatments,
     // including the same procedure more than once (e.g. two fillings).
@@ -895,9 +1042,8 @@ export default function PatientsPage() {
         tooth,
         procedure: workForm.procedure,
         status: workForm.status,
-        amount: safeAmount,
+        amount: workForm.status === "missing" ? 0 : parseFloat(workForm.amount) || 0,
         notes: workForm.notes.trim(),
-        bill: workForm.status === "completed" && safeAmount > 0,
       })),
     ]);
     setSelectedTeeth([]);
@@ -915,29 +1061,12 @@ export default function PatientsPage() {
     status === "missing" ? t("dentalChart.missingTooth") : procedure;
 
   const handleWorkStatusChange = (status: WorkStatus) => {
-    setWorkForm((f) => ({
-      ...f,
-      status,
-      amount: status === "missing" ? "0" : f.amount === "0" ? String(DEFAULT_PRICES[f.procedure] ?? "") : f.amount,
-    }));
+    setWorkForm((f) => ({ ...f, status }));
   };
 
   const handleRemoveWorkItem = (index: number) => {
     setWorkItems((prev) => prev.filter((_, i) => i !== index));
   };
-
-  // Only completed items with a price can be billed; each one can be left off
-  // the invoice and billed later from the history (so one visit can end up
-  // on several invoices, like on the billing page).
-  const isBillableWorkItem = (i: WorkItem) => canBill && i.status === "completed" && i.amount > 0;
-  const workBillableCount = workItems.filter(isBillableWorkItem).length;
-  const workBilledItems = workItems.filter((i) => isBillableWorkItem(i) && i.bill);
-  const workBilledCount = workBilledItems.length;
-  const workInvoiceTotal = workBilledItems.reduce((s, i) => s + i.amount, 0);
-
-  const handleToggleWorkItemBill = (index: number) =>
-    setWorkItems((prev) => prev.map((it, i) => (i === index ? { ...it, bill: !it.bill } : it)));
-  const setAllWorkItemsBill = (bill: boolean) => setWorkItems((prev) => prev.map((it) => ({ ...it, bill })));
 
   const readApiError = async (res: Response, fallback: string) => {
     const data = await res.json().catch(() => null);
@@ -956,14 +1085,12 @@ export default function PatientsPage() {
           patient_id: selectedPatient.id,
           treatment_date: workDate,
           ...(workNotes.trim() ? { notes: workNotes.trim() } : {}),
-          create_invoice: workBilledCount > 0,
           items: workItems.map((i) => ({
             ...(i.tooth ? { tooth_number: i.tooth } : {}),
-            // An unticked completed item is saved with no price, so it stays
-            // unbilled and can be put on its own invoice later from the history.
+            // The price is noted on the record; the billing page bills it.
             ...(i.status === "missing"
               ? {}
-              : { procedure_name: i.procedure, amount: i.status === "completed" && !i.bill ? 0 : i.amount }),
+              : { procedure_name: i.procedure, amount: i.amount }),
             status: i.status,
             ...(i.notes ? { notes: i.notes } : {}),
           })),
@@ -976,12 +1103,12 @@ export default function PatientsPage() {
         return;
       }
       if (data?.chart) setChart(mapChart(data.chart));
-      bumpMoney();
+      setPlanToken((n) => n + 1);
       setWorkItems([]);
       setSelectedTeeth([]);
       setWorkNotes("");
       fetchPatientHistory(selectedPatient.id);
-      toast.success(data?.invoice ? t("dentalChart.savedWithInvoice") : t("dentalChart.saved"));
+      toast.success(t("dentalChart.saved"));
     } catch {
       toast.error(t("dentalChart.saveFailed"));
     } finally {
@@ -989,12 +1116,12 @@ export default function PatientsPage() {
     }
   };
 
-  // ── Complete planned work / remove / pay ───────────────────────────────────
+  // ── Complete planned work / remove ─────────────────────────────────────────
 
-  /** Rows that can be completed and/or billed: planned work, or completed work not yet on an invoice. */
-  const isBillable = (h: ChartHistoryEntry) => h.status === "planned" || (h.status === "completed" && !h.invoiceId);
-  const selectionHasPlanned = chart?.history.some((h) => completeSelection.includes(h.id) && h.status === "planned") ?? false;
-  const completeAllDone = completeItems.length > 0 && completeItems.every((i) => i.status === "completed");
+  /** Planned work is what the chart can mark as done. */
+  // Work already on a bill is not "to do": billing it up front is a real
+  // flow, so a billed row can be planned, but it must not be selectable.
+  const isCompletable = (h: ChartHistoryEntry) => h.status === "planned" && !h.billed;
 
   const toggleCompleteSelection = (id: number) =>
     setCompleteSelection((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -1002,27 +1129,12 @@ export default function PatientsPage() {
   const openCompleteModal = (ids: number[]) => {
     if (!chart) return;
     const items = chart.history
-      .filter((h) => ids.includes(h.id) && isBillable(h))
-      .map((h) => ({ id: h.id, tooth: h.tooth, procedure: h.procedure, amount: String(h.quotedAmount ?? DEFAULT_PRICES[h.procedure] ?? ""), status: h.status, bill: true, editPrice: false }));
+      .filter((h) => ids.includes(h.id) && isCompletable(h))
+      .map((h) => ({ id: h.id, tooth: h.tooth, procedure: h.procedure }));
     if (items.length === 0) return;
     setCompleteItems(items);
     setCompleteDate(new Date().toISOString().split("T")[0]);
-    setCompleteNotes("");
     setShowCompleteModal(true);
-  };
-
-  const completeAmount = (i: { amount: string; bill: boolean }) => {
-    if (!canBill) return 0;
-    const n = parseFloat(i.amount);
-    return i.bill && Number.isFinite(n) && n > 0 ? n : 0;
-  };
-  const completeBilledCount = completeItems.filter((i) => completeAmount(i) > 0).length;
-  const completeTotal = completeItems.reduce((s, i) => s + completeAmount(i), 0);
-  const setAllCompleteItemsBill = (bill: boolean) => setCompleteItems((prev) => prev.map((it) => ({ ...it, bill })));
-
-  const openPayModal = (inv: PayInvoice) => {
-    setPayInvoice(inv);
-    setPayForm({ amount: inv.remaining > 0 ? inv.remaining.toFixed(2) : "", method: "cash", notes: "" });
   };
 
   const handleCompleteConfirm = async () => {
@@ -1035,9 +1147,7 @@ export default function PatientsPage() {
         body: JSON.stringify({
           patient_id: selectedPatient.id,
           treatment_date: completeDate,
-          ...(completeNotes.trim() ? { notes: completeNotes.trim() } : {}),
-          create_invoice: completeBilledCount > 0,
-          items: completeItems.map((i) => ({ record_id: i.id, amount: completeAmount(i) })),
+          items: completeItems.map((i) => ({ record_id: i.id })),
         }),
       });
       if (!res.ok) {
@@ -1046,24 +1156,44 @@ export default function PatientsPage() {
       }
       const data = await res.json();
       if (data?.chart) setChart(mapChart(data.chart));
-      bumpMoney();
+      setPlanToken((n) => n + 1);
       setCompleteSelection([]);
       setShowCompleteModal(false);
       fetchPatientHistory(selectedPatient.id);
-      if (data?.invoice) {
-        toast.success(t("dentalChart.completedWithInvoiceToast"));
-        openPayModal({
-          id: Number(data.invoice.id),
-          total: Number(data.invoice.total_amount) || 0,
-          remaining: Number(data.invoice.remaining_amount) || 0,
-        });
-      } else {
-        toast.success(t("dentalChart.completedToast"));
-      }
+      toast.success(t("dentalChart.completedToast"));
     } catch {
       toast.error(t("dentalChart.completeFailed"));
     } finally {
       setCompleting(false);
+    }
+  };
+
+  /** Reprice one planned item; the patient's estimate follows it. */
+  const handleReprice = async (h: ChartHistoryEntry, raw: string) => {
+    const amount = parseFloat(raw);
+    if (!Number.isFinite(amount) || amount < 0) {
+      toast.error("Enter a price of 0 or more.");
+      return;
+    }
+    if (h.price != null && Math.abs(h.price - amount) < 0.005) return;
+    setRepricingId(h.id);
+    try {
+      const res = await apiFetch(`/api/patient-work/records/${h.id}/price`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount }),
+      });
+      if (!res.ok) {
+        toast.error(await readApiError(res, "Could not change the price."));
+        return;
+      }
+      const data = await res.json();
+      if (data?.chart) setChart(mapChart(data.chart));
+      setPlanToken((n) => n + 1);
+    } catch {
+      toast.error("Could not change the price.");
+    } finally {
+      setRepricingId(null);
     }
   };
 
@@ -1078,7 +1208,7 @@ export default function PatientsPage() {
       }
       const data = await res.json();
       if (data?.chart) setChart(mapChart(data.chart));
-      bumpMoney();
+      setPlanToken((n) => n + 1);
       setCompleteSelection((prev) => prev.filter((x) => x !== id));
       if (selectedPatient) fetchPatientHistory(selectedPatient.id);
       toast.success(t("dentalChart.removed"));
@@ -1086,50 +1216,6 @@ export default function PatientsPage() {
       toast.error(t("dentalChart.removeFailed"));
     } finally {
       setRemovingRecordId(null);
-    }
-  };
-
-  const handlePayConfirm = async () => {
-    if (!payInvoice) return;
-    const amount = parseFloat(payForm.amount);
-    if (!Number.isFinite(amount) || amount <= 0) {
-      toast.error(t("expenses.invalidAmount"));
-      return;
-    }
-    if (amount > payInvoice.remaining + 0.005) {
-      toast.error(t("dentalChart.exceedsRemaining"));
-      return;
-    }
-    setPaying(true);
-    try {
-      const res = await apiFetch(`/api/billing/invoices/${payInvoice.id}/payments`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount,
-          payment_method: payForm.method,
-          ...(payForm.notes.trim() ? { notes: payForm.notes.trim() } : {}),
-        }),
-      });
-      if (!res.ok) {
-        toast.error(await readApiError(res, t("dentalChart.paymentFailed")));
-        return;
-      }
-      const inv = await res.json();
-      const remaining = Number(inv?.remaining_amount) || 0;
-      toast.success(t("dentalChart.paymentRecorded"));
-      if (selectedPatient) await fetchChart(selectedPatient.id);
-      bumpMoney();
-      if (remaining <= 0) {
-        setPayInvoice(null);
-      } else {
-        setPayInvoice({ id: payInvoice.id, total: Number(inv?.total_amount) || payInvoice.total, remaining });
-        setPayForm((f) => ({ ...f, amount: remaining.toFixed(2), notes: "" }));
-      }
-    } catch {
-      toast.error(t("dentalChart.paymentFailed"));
-    } finally {
-      setPaying(false);
     }
   };
 
@@ -1282,7 +1368,7 @@ export default function PatientsPage() {
             if (ok > 0) toast.success(`${ok} patient${ok > 1 ? "s" : ""} imported.`);
             if (fail > 0) toast.error(`${fail} row${fail > 1 ? "s" : ""} failed (missing email or duplicate).`);
           }}
-          onAdd={can("patients:write") ? handleOpenAddPatient : undefined}
+          onAdd={can("patients:create") ? handleOpenAddPatient : undefined}
           addLabel={t("patients.addPatient")}
           actions={[{ key: "analytics", label: "View analytics", icon: <FaUsers />, href: "/admin/patients/analytics" }]}
         />
@@ -1583,7 +1669,7 @@ export default function PatientsPage() {
               </div>
 
               <div className="px-6 pb-4 flex flex-wrap items-center gap-2">
-                {can("appointments:write") && (
+                {can("appointments:create") && (
                 <Button
                   size="sm"
                   className="bg-brand hover:bg-brand/90 whitespace-nowrap"
@@ -1592,7 +1678,7 @@ export default function PatientsPage() {
                   <FaCalendarPlus className="mr-2 rtl:mr-0 rtl:ml-2" /> {t("patients.bookAppointment")}
                 </Button>
                 )}
-                {can("patients:write") && (
+                {can("patients:edit") && (
                 <Button variant="outline" size="sm" className="whitespace-nowrap" onClick={() => handleOpenEditPatient(selectedPatient)}>
                   <FaEdit className="mr-2 rtl:mr-0 rtl:ml-2" /> {t("common.edit")}
                 </Button>
@@ -1614,7 +1700,7 @@ export default function PatientsPage() {
                     {t("patients.sendSetupLink")}
                   </Button>
                 )}
-                {can("patients:write") && (
+                {can("patients:edit") && (
                 <Button
                   variant="outline"
                   size="sm"
@@ -1691,8 +1777,48 @@ export default function PatientsPage() {
                             {selectedPatient.address}
                           </span>
                         </div>
+                        {selectedPatient.workPhone && (
+                          <div className="flex items-center gap-3">
+                            <FaPhone className="text-gray-400" />
+                            <span className="text-gray-700">
+                              {selectedPatient.workPhone}
+                              <span className="ml-2 text-xs text-gray-400">work</span>
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
+
+                    {/* Who to call if something happens in the chair. */}
+                    {(selectedPatient.emergencyName || selectedPatient.emergency2Name) && (
+                      <div className="rounded-xl border border-red-100 bg-red-50/60 p-4">
+                        <h3 className="mb-3 font-semibold text-gray-900">
+                          In an emergency, call
+                        </h3>
+                        <div className="space-y-2 text-sm">
+                          {[
+                            {
+                              name: selectedPatient.emergencyName,
+                              phone: selectedPatient.emergencyPhone,
+                              rel: selectedPatient.emergencyRelationship,
+                            },
+                            {
+                              name: selectedPatient.emergency2Name,
+                              phone: selectedPatient.emergency2Phone,
+                              rel: selectedPatient.emergency2Relationship,
+                            },
+                          ]
+                            .filter((c) => c.name || c.phone)
+                            .map((c, i) => (
+                              <div key={i} className="flex flex-wrap items-baseline gap-2">
+                                <span className="font-medium text-gray-900">{c.name || "—"}</span>
+                                {c.rel && <span className="text-xs text-gray-500">({c.rel})</span>}
+                                <span className="ml-auto font-mono text-gray-700">{c.phone || "—"}</span>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+                    )}
 
                     <div className="bg-gray-50 rounded-xl p-4">
                       <h3 className="font-semibold text-gray-900 mb-4">
@@ -1718,6 +1844,30 @@ export default function PatientsPage() {
                             {selectedPatient.insurance}
                           </span>
                         </div>
+                        {/* Only what the clinic actually recorded. */}
+                        {(
+                          [
+                            ["Occupation", selectedPatient.occupation],
+                            ["Employer", selectedPatient.employer],
+                            [
+                              "Marital status",
+                              MARITAL_STATUSES.find((m) => m.value === selectedPatient.maritalStatus)?.label,
+                            ],
+                            ["Nationality", selectedPatient.nationality],
+                            ["National ID", selectedPatient.nationalId],
+                            [
+                              "Speaks",
+                              PATIENT_LANGUAGES.find((l) => l.value === selectedPatient.preferredLanguage)?.label,
+                            ],
+                          ] as [string, string | undefined][]
+                        )
+                          .filter(([, value]) => !!value)
+                          .map(([label, value]) => (
+                            <div key={label} className="flex justify-between">
+                              <span className="text-gray-500">{label}</span>
+                              <span className="font-medium text-gray-900">{value}</span>
+                            </div>
+                          ))}
                       </div>
                     </div>
                   </div>
@@ -1971,7 +2121,7 @@ export default function PatientsPage() {
                                 </select>
                               </div>
                               <div>
-                                <label className="block text-xs font-medium text-gray-700 mb-1">{t("dentalChart.pricePerTooth")}</label>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">Price per tooth</label>
                                 <input
                                   type="number"
                                   min="0"
@@ -2034,21 +2184,6 @@ export default function PatientsPage() {
                                       </p>
                                     </div>
                                     <div className="flex items-center gap-2 shrink-0">
-                                      {isBillableWorkItem(item) && (
-                                        <label className="flex items-center gap-1 text-xs text-gray-600 cursor-pointer whitespace-nowrap">
-                                          <input type="checkbox" checked={item.bill} onChange={() => handleToggleWorkItemBill(index)} />
-                                          {t("dentalChart.addToInvoice")}
-                                        </label>
-                                      )}
-                                      {item.status !== "missing" && (
-                                        <span
-                                          className={`text-sm font-semibold ${
-                                            isBillableWorkItem(item) && !item.bill ? "text-gray-400 line-through" : "text-gray-700"
-                                          }`}
-                                        >
-                                          ${item.amount.toFixed(2)}
-                                        </span>
-                                      )}
                                       <button
                                         type="button"
                                         onClick={() => handleRemoveWorkItem(index)}
@@ -2080,39 +2215,7 @@ export default function PatientsPage() {
                                   />
                                 </div>
                               </div>
-                              {workBillableCount > 0 && (
-                                <div className="rounded-lg bg-white border border-gray-100 px-3 py-2 text-sm text-gray-700">
-                                  <div className="flex items-start justify-between gap-3">
-                                    <div>
-                                      {workBilledCount > 0 ? (
-                                        <>
-                                          <p>
-                                            {t("dentalChart.newInvoice")}: <span className="font-semibold text-gray-900">${workInvoiceTotal.toFixed(2)}</span>
-                                            <span className="text-gray-500"> · {workBilledCount}/{workBillableCount} {t("dentalChart.items")}</span>
-                                          </p>
-                                          <p className="text-xs text-gray-500">
-                                            {t("dentalChart.payAfterHint")}
-                                            {workBilledCount < workBillableCount ? ` ${t("dentalChart.unbilledLaterHint")}` : ""}
-                                          </p>
-                                        </>
-                                      ) : (
-                                        <p className="text-xs text-gray-500">{t("dentalChart.noInvoiceHint")}</p>
-                                      )}
-                                    </div>
-                                    {workBillableCount > 1 && (
-                                      <div className="flex gap-3 text-xs whitespace-nowrap shrink-0">
-                                        <button type="button" onClick={() => setAllWorkItemsBill(true)} className="font-medium text-brand hover:underline">
-                                          {t("dentalChart.billAll")}
-                                        </button>
-                                        <button type="button" onClick={() => setAllWorkItemsBill(false)} className="font-medium text-gray-500 hover:underline">
-                                          {t("dentalChart.billNone")}
-                                        </button>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-                              {can("records:write") && (
+                              {can("records:create") && (
                               <Button
                                 className="w-full bg-brand hover:bg-brand/90"
                                 disabled={savingWork}
@@ -2128,24 +2231,15 @@ export default function PatientsPage() {
                         </div>
                       </div>
 
-                      {/* Plan band: planned work becomes a priced estimate and is decided here */}
+                      {/* The plan IS the chart rows above; this only adds them up. */}
                       {can("billing:read") && (
-                        <PatientQuotesBand
+                        <PlanQuoteBand
                           patientId={selectedPatient.id}
-                          planned={plannedWork}
-                          canWrite={canBill}
-                          reloadToken={moneyToken}
-                          onChanged={refreshChartAndMoney}
-                        />
-                      )}
-
-                      {/* Money band: what is billed, received and owed, and the way to take money */}
-                      {can("billing:read") && (
-                        <PatientMoneyBand
-                          patientId={selectedPatient.id}
-                          reloadToken={moneyToken}
-                          canBill={canBill}
-                          onPay={openPayModal}
+                          plan={chart?.plan ?? null}
+                          canConfirm={can("billing:create")}
+                          canSeeMoney={can("billing:read")}
+                          onChanged={refreshChart}
+                          patientName={selectedPatient.name}
                         />
                       )}
 
@@ -2153,17 +2247,17 @@ export default function PatientsPage() {
                       <div>
                         <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
                           <h3 className="font-semibold text-gray-900">{t("dentalChart.history")}</h3>
-                          {chart.history.some(isBillable) && (
+                          {chart.history.some(isCompletable) && (
                             <div className="flex items-center gap-3 text-xs text-gray-500">
                               {completeSelection.length > 0 ? (
                                 <>
                                   <button type="button" onClick={() => setCompleteSelection([])} className="hover:text-gray-800">
                                     {t("dentalChart.clearSelection")}
                                   </button>
-                                  {can("records:write") && (
+                                  {can("records:edit") && (
                                   <Button size="sm" className="bg-green-600 hover:bg-green-700 whitespace-nowrap" onClick={() => openCompleteModal(completeSelection)}>
                                     <FaCheckCircle className="mr-2 rtl:mr-0 rtl:ml-2" />
-                                    {selectionHasPlanned ? t("dentalChart.markCompleted") : t("dentalChart.createInvoiceAction")} ({completeSelection.length})
+                                    {t("dentalChart.markCompleted")} ({completeSelection.length})
                                   </Button>
                                   )}
                                 </>
@@ -2181,16 +2275,16 @@ export default function PatientsPage() {
                               <thead className="bg-gray-50 text-left rtl:text-right text-xs font-semibold text-gray-600">
                                 <tr>
                                   <th className="py-2.5 pl-4 pr-1 w-8">
-                                    {chart.history.some(isBillable) && (
+                                    {chart.history.some(isCompletable) && (
                                       <input
                                         type="checkbox"
                                         aria-label={t("dentalChart.selectAllPlanned")}
                                         checked={
                                           completeSelection.length > 0 &&
-                                          chart.history.filter(isBillable).every((h) => completeSelection.includes(h.id))
+                                          chart.history.filter(isCompletable).every((h) => completeSelection.includes(h.id))
                                         }
                                         onChange={(e) =>
-                                          setCompleteSelection(e.target.checked ? chart.history.filter(isBillable).map((h) => h.id) : [])
+                                          setCompleteSelection(e.target.checked ? chart.history.filter(isCompletable).map((h) => h.id) : [])
                                         }
                                       />
                                     )}
@@ -2200,7 +2294,7 @@ export default function PatientsPage() {
                                   <th className="py-2.5 px-3">{t("dentalChart.procedure")}</th>
                                   <th className="py-2.5 px-3">{t("common.status")}</th>
                                   <th className="py-2.5 px-3">{t("dentalChart.doctor")}</th>
-                                  <th className="py-2.5 px-3">{t("dentalChart.invoice")}</th>
+                                  <th className="py-2.5 px-3">Price</th>
                                   <th className="py-2.5 px-3 text-right rtl:text-left">{t("common.actions")}</th>
                                 </tr>
                               </thead>
@@ -2212,7 +2306,7 @@ export default function PatientsPage() {
                                     className={`transition-colors hover:bg-gray-50 ${completeSelection.includes(h.id) ? "bg-green-50/60" : ""} ${focusHistoryId === h.id ? "bg-amber-50 ring-2 ring-inset ring-amber-300" : ""}`}
                                   >
                                     <td className="py-2.5 pl-4 pr-1">
-                                      {isBillable(h) && (
+                                      {isCompletable(h) && (
                                         <input
                                           type="checkbox"
                                           checked={completeSelection.includes(h.id)}
@@ -2239,22 +2333,54 @@ export default function PatientsPage() {
                                       )}
                                     </td>
                                     <td className="py-2.5 px-3 text-gray-600 whitespace-nowrap">{h.doctor || "—"}</td>
+                                    {/*
+                                      Work is priced right here, and stays
+                                      repriceable until it is billed — a plan
+                                      is allowed to change part-way through
+                                      treatment. A billed row shows the price
+                                      the invoice froze, with a lock: this
+                                      column is money, so it must never read
+                                      "Billed" instead of an amount, and the
+                                      figure you agreed must never disappear.
+                                    */}
                                     <td className="py-2.5 px-3 text-gray-600 whitespace-nowrap">
-                                      {h.invoiceId ? (
-                                        <span className="inline-flex items-center gap-1.5">
-                                          <span className="font-medium text-gray-800">#{h.invoiceId}</span>
-                                          {h.invoiceStatus === "paid" ? (
-                                            <span className="px-1.5 py-0.5 rounded bg-green-100 text-green-700 text-[11px] font-medium">{t("dentalChart.invoicePaid")}</span>
-                                          ) : (
-                                            <span className="px-1.5 py-0.5 rounded bg-red-50 text-red-700 text-[11px] font-medium">
-                                              ${h.invoiceRemaining.toFixed(2)} {t("dentalChart.invoiceRemaining")}
-                                            </span>
-                                          )}
+                                      {h.billed ? (
+                                        <button
+                                          type="button"
+                                          onClick={() => setFrozenPrice(h)}
+                                          aria-label={`Why the price of ${h.procedure} cannot be changed`}
+                                          title={
+                                            h.invoiceNumber
+                                              ? `Billed on ${h.invoiceNumber} — click to see why this price cannot be changed`
+                                              : "Billed — click to see why this price cannot be changed"
+                                          }
+                                          className="press inline-flex items-center gap-1.5 rounded-lg px-1.5 py-0.5 hover:bg-honey-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400"
+                                        >
+                                          <span className="font-medium text-gray-800">
+                                            {h.price != null ? `${h.price.toFixed(2)}` : "—"}
+                                          </span>
+                                          <FaLock className="text-[10px] text-gray-400" aria-hidden />
+                                        </button>
+                                      ) : h.status !== "missing" && can("records:edit") ? (
+                                        <span className="inline-flex items-center gap-1">
+                                          <span className="text-gray-400">$</span>
+                                          <input
+                                            type="number"
+                                            min="0"
+                                            step="0.01"
+                                            defaultValue={h.price ?? ""}
+                                            disabled={repricingId === h.id}
+                                            onBlur={(e) => handleReprice(h, e.target.value)}
+                                            onKeyDown={(e) => {
+                                              if (e.key === "Enter") e.currentTarget.blur();
+                                            }}
+                                            aria-label={`Price for ${h.procedure}`}
+                                            className="w-24 rounded-lg border border-gray-200 px-2 py-1 text-right text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 disabled:bg-gray-100"
+                                          />
                                         </span>
-                                      ) : h.quotedAmount != null && h.status !== "missing" ? (
-                                        <span className="inline-flex items-center gap-1 text-xs text-gray-600" title={t("dentalChart.quotedHint")}>
-                                          <span className="text-gray-400">{t("dentalChart.quoted")}</span>
-                                          <span className="font-medium text-gray-800">${h.quotedAmount.toFixed(2)}</span>
+                                      ) : h.price != null && h.status !== "missing" ? (
+                                        <span className="font-medium text-gray-800">
+                                          ${h.price.toFixed(2)}
                                         </span>
                                       ) : (
                                         "—"
@@ -2262,7 +2388,7 @@ export default function PatientsPage() {
                                     </td>
                                     <td className="py-2.5 px-3">
                                       <div className="flex items-center justify-end gap-1.5">
-                                        {can("records:write") && h.status === "planned" && (
+                                        {can("records:edit") && isCompletable(h) && (
                                           <Button
                                             size="sm"
                                             variant="outline"
@@ -2272,27 +2398,7 @@ export default function PatientsPage() {
                                             <FaCheckCircle className="mr-1" /> {t("dentalChart.complete")}
                                           </Button>
                                         )}
-                                        {can("records:write") && canBill && h.status === "completed" && !h.invoiceId && (
-                                          <Button
-                                            size="sm"
-                                            variant="outline"
-                                            className="h-7 px-2 text-xs whitespace-nowrap"
-                                            onClick={() => openCompleteModal([h.id])}
-                                            title={t("dentalChart.unbilled")}
-                                          >
-                                            <FaMoneyBillWave className="mr-1" /> {t("dentalChart.bill")}
-                                          </Button>
-                                        )}
-                                        {canBill && h.invoiceId && h.invoiceStatus !== "paid" && h.invoiceRemaining > 0 && (
-                                          <Button
-                                            size="sm"
-                                            className="h-7 px-2 text-xs bg-brand hover:bg-brand/90 whitespace-nowrap"
-                                            onClick={() => openPayModal({ id: h.invoiceId as number, total: h.invoiceTotal, remaining: h.invoiceRemaining })}
-                                          >
-                                            <FaMoneyBillWave className="mr-1" /> {t("dentalChart.pay")}
-                                          </Button>
-                                        )}
-                                        {can("records:write") && (h.status === "planned" || h.status === "missing") && !h.invoiceId && (
+                                        {can("records:delete") && (h.status === "planned" || h.status === "missing") && !h.billed && (
                                           <button
                                             type="button"
                                             onClick={() => handleRemoveRecord(h.id)}
@@ -2337,7 +2443,7 @@ export default function PatientsPage() {
                           e.target.value = "";
                         }}
                       />
-                      {can("documents:write") && (
+                      {can("documents:create") && (
                       <Button
                         size="sm"
                         className="bg-brand hover:bg-brand/90"
@@ -2390,7 +2496,7 @@ export default function PatientsPage() {
                                 <FaDownload />
                               </a>
                             )}
-                            {can("documents:write") && (
+                            {can("documents:delete") && (
                             <button
                               onClick={() => handleDeleteDocument(doc.id)}
                               disabled={deletingDocId === doc.id}
@@ -2512,134 +2618,34 @@ export default function PatientsPage() {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg animate-scale-in">
             <div className="p-6 border-b border-gray-100 flex items-center justify-between">
               <h2 className="text-xl font-bold text-gray-900">
-                {completeAllDone ? t("dentalChart.billTitle") : t("dentalChart.completeTitle")}
+                {t("dentalChart.completeTitle")}
               </h2>
               <button onClick={() => setShowCompleteModal(false)} className="p-2 hover:bg-gray-100 rounded-lg" disabled={completing}>
                 <FaTimes className="text-gray-500" />
               </button>
             </div>
             <div className="p-6 space-y-4">
-              <p className="text-sm text-gray-600">{completeAllDone ? t("dentalChart.billHint") : t("dentalChart.completeHint")}</p>
+              <p className="text-sm text-gray-600">{t("dentalChart.completeHint")}</p>
               <ul className="divide-y divide-gray-100 rounded-xl border border-gray-100 max-h-60 overflow-y-auto">
                 {completeItems.map((item) => (
-                  <li key={item.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-900">
-                        <span className="inline-block w-8 text-brand font-bold">{item.tooth}</span>
-                        {item.procedure}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {item.status === "planned" ? `${t("dentalChart.plannedStatus")} → ${t("dentalChart.completed")}` : t("dentalChart.unbilled")}
-                      </p>
-                    </div>
-                    <div className="shrink-0 text-right rtl:text-left">
-                      {canBill && (
-                      <label className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-700 cursor-pointer whitespace-nowrap mb-1.5">
-                        <input
-                          type="checkbox"
-                          checked={item.bill}
-                          onChange={(e) =>
-                            setCompleteItems((prev) => prev.map((p) => (p.id === item.id ? { ...p, bill: e.target.checked } : p)))
-                          }
-                        />
-                        {t("dentalChart.addToInvoice")}
-                      </label>
-                      )}
-                      {canBill && item.bill ? (
-                        <div>
-                          <label htmlFor={`complete-price-${item.id}`} className="block text-[11px] text-gray-500 mb-0.5">
-                            {t("dentalChart.priceToBill")}
-                          </label>
-                          <div className="flex items-center justify-end gap-1">
-                            <span className="text-sm text-gray-500">$</span>
-                            <input
-                              id={`complete-price-${item.id}`}
-                              type="number"
-                              min="0"
-                              step="0.01"
-                              value={item.amount}
-                              readOnly={!item.editPrice}
-                              aria-readonly={!item.editPrice}
-                              onChange={(e) =>
-                                setCompleteItems((prev) => prev.map((p) => (p.id === item.id ? { ...p, amount: e.target.value } : p)))
-                              }
-                              className={`w-24 border rounded-lg px-2 py-1.5 text-sm text-right focus:outline-none ${
-                                item.editPrice
-                                  ? "border-gray-200 bg-white focus:ring-2 focus:ring-brand/30"
-                                  : "border-gray-100 bg-gray-50 text-gray-600 cursor-default"
-                              }`}
-                            />
-                          </div>
-                          {!item.editPrice && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setCompleteItems((prev) => prev.map((p) => (p.id === item.id ? { ...p, editPrice: true } : p)));
-                                setTimeout(() => document.getElementById(`complete-price-${item.id}`)?.focus(), 0);
-                              }}
-                              className="mt-1 text-[11px] font-medium text-brand hover:underline"
-                            >
-                              {t("dentalChart.editBillCost")}
-                            </button>
-                          )}
-                        </div>
-                      ) : (
-                        <p className="text-[11px] text-gray-400">{t("dentalChart.notBilledNow")}</p>
-                      )}
-                    </div>
+                  <li key={item.id} className="flex items-center gap-3 px-4 py-2.5">
+                    <span className="inline-block w-8 shrink-0 text-brand font-bold">{item.tooth || "—"}</span>
+                    <p className="min-w-0 flex-1 truncate text-sm font-medium text-gray-900">{item.procedure}</p>
+                    <span className="shrink-0 text-xs text-gray-500">
+                      {t("dentalChart.plannedStatus")} → {t("dentalChart.completed")}
+                    </span>
                   </li>
                 ))}
               </ul>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">{t("common.date")}</label>
-                  <input
-                    type="date"
-                    value={completeDate}
-                    max={new Date().toISOString().split("T")[0]}
-                    onChange={(e) => setCompleteDate(e.target.value)}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">{t("dentalChart.visitNotes")}</label>
-                  <input
-                    type="text"
-                    value={completeNotes}
-                    onChange={(e) => setCompleteNotes(e.target.value)}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
-                  />
-                </div>
-              </div>
-              <div className="rounded-xl bg-gray-50 border border-gray-100 px-4 py-3 text-sm text-gray-700">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    {completeBilledCount > 0 ? (
-                      <>
-                        <p>
-                          {t("dentalChart.newInvoice")}: <span className="font-semibold text-gray-900">${completeTotal.toFixed(2)}</span>
-                          <span className="text-gray-500"> · {completeBilledCount}/{completeItems.length} {t("dentalChart.items")}</span>
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {t("dentalChart.payAfterHint")}
-                          {completeBilledCount < completeItems.length ? ` ${t("dentalChart.unbilledLaterHint")}` : ""}
-                        </p>
-                      </>
-                    ) : (
-                      <p className="text-xs text-gray-500">{t("dentalChart.noInvoiceHint")}</p>
-                    )}
-                  </div>
-                  {completeItems.length > 1 && (
-                    <div className="flex gap-3 text-xs whitespace-nowrap shrink-0">
-                      <button type="button" onClick={() => setAllCompleteItemsBill(true)} className="font-medium text-brand hover:underline">
-                        {t("dentalChart.billAll")}
-                      </button>
-                      <button type="button" onClick={() => setAllCompleteItemsBill(false)} className="font-medium text-gray-500 hover:underline">
-                        {t("dentalChart.billNone")}
-                      </button>
-                    </div>
-                  )}
-                </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">{t("common.date")}</label>
+                <input
+                  type="date"
+                  value={completeDate}
+                  max={new Date().toISOString().split("T")[0]}
+                  onChange={(e) => setCompleteDate(e.target.value)}
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
+                />
               </div>
             </div>
             <div className="p-6 border-t border-gray-100 flex justify-end gap-3">
@@ -2652,100 +2658,8 @@ export default function PatientsPage() {
                 ) : (
                   <>
                     <FaCheckCircle className="mr-2 rtl:mr-0 rtl:ml-2" />
-                    {completeAllDone ? t("dentalChart.createInvoiceAction") : t("dentalChart.markCompleted")} ({completeItems.length})
+                    {t("dentalChart.markCompleted")} ({completeItems.length})
                   </>
-                )}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Invoice Payment Modal */}
-      {payInvoice && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[70] p-4 animate-fade-in"
-          onClick={(e) => { if (e.target === e.currentTarget && !paying) setPayInvoice(null); }}
-        >
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-scale-in">
-            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-900">
-                {t("dentalChart.payInvoice")} <span className="text-gray-400 font-semibold">#{payInvoice.id}</span>
-              </h2>
-              <button onClick={() => setPayInvoice(null)} className="p-2 hover:bg-gray-100 rounded-lg" disabled={paying}>
-                <FaTimes className="text-gray-500" />
-              </button>
-            </div>
-            <div className="p-6 space-y-4">
-              <div className="grid grid-cols-3 gap-3 rounded-xl bg-gray-50 border border-gray-100 p-4">
-                <div>
-                  <p className="text-xs uppercase tracking-wide text-gray-500">{t("expenses.totalAmount")}</p>
-                  <p className="mt-1 font-semibold text-gray-900">${payInvoice.total.toFixed(2)}</p>
-                </div>
-                <div>
-                  <p className="text-xs uppercase tracking-wide text-gray-500">{t("expenses.amountPaid")}</p>
-                  <p className="mt-1 font-semibold text-green-700">${(payInvoice.total - payInvoice.remaining).toFixed(2)}</p>
-                </div>
-                <div>
-                  <p className="text-xs uppercase tracking-wide text-gray-500">{t("expenses.remaining")}</p>
-                  <p className="mt-1 font-semibold text-red-600">${payInvoice.remaining.toFixed(2)}</p>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">{t("dentalChart.paymentAmount")}</label>
-                  <input
-                    type="number"
-                    min="0.01"
-                    step="0.01"
-                    max={payInvoice.remaining}
-                    value={payForm.amount}
-                    onChange={(e) => setPayForm((f) => ({ ...f, amount: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
-                    autoFocus
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setPayForm((f) => ({ ...f, amount: payInvoice.remaining.toFixed(2) }))}
-                    className="mt-1 text-xs font-medium text-brand hover:underline"
-                  >
-                    {t("expenses.payRemaining")}
-                  </button>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">{t("dentalChart.paymentMethod")}</label>
-                  <select
-                    value={payForm.method}
-                    onChange={(e) => setPayForm((f) => ({ ...f, method: e.target.value as (typeof PAYMENT_METHODS)[number] }))}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
-                  >
-                    <option value="cash">{t("expenses.cash")}</option>
-                    <option value="card">{t("expenses.card")}</option>
-                    <option value="insurance">{t("dentalChart.insurance")}</option>
-                    <option value="bank_transfer">{t("expenses.bankTransfer")}</option>
-                  </select>
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">{t("expenses.notes")}</label>
-                <input
-                  type="text"
-                  value={payForm.notes}
-                  onChange={(e) => setPayForm((f) => ({ ...f, notes: e.target.value }))}
-                  placeholder={t("expenses.notesPlaceholder")}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
-                />
-              </div>
-            </div>
-            <div className="p-6 border-t border-gray-100 flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setPayInvoice(null)} disabled={paying}>
-                {t("common.close")}
-              </Button>
-              <Button className="bg-brand hover:bg-brand/90" disabled={paying} onClick={handlePayConfirm}>
-                {paying ? (
-                  <><span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />Saving...</>
-                ) : (
-                  <><FaMoneyBillWave className="mr-2 rtl:mr-0 rtl:ml-2" />{t("dentalChart.recordPayment")}</>
                 )}
               </Button>
             </div>
@@ -3041,6 +2955,117 @@ export default function PatientsPage() {
                   className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 resize-none"
                 />
               </div>
+
+              {/* ── Work ─────────────────────────────────────────────────── */}
+              <FieldGroup title="Work">
+                <div className="grid grid-cols-2 gap-4">
+                  <TextField
+                    label="Occupation"
+                    value={editPatientForm.occupation}
+                    onChange={(v) => setEditPatientForm((f) => ({ ...f, occupation: v }))}
+                    placeholder="e.g. Teacher"
+                  />
+                  <TextField
+                    label="Employer"
+                    value={editPatientForm.employer}
+                    onChange={(v) => setEditPatientForm((f) => ({ ...f, employer: v }))}
+                  />
+                </div>
+                <TextField
+                  label="Work phone"
+                  type="tel"
+                  value={editPatientForm.workPhone}
+                  onChange={(v) => setEditPatientForm((f) => ({ ...f, workPhone: v }))}
+                  placeholder="+961 1 000 000"
+                />
+              </FieldGroup>
+
+              {/* ── Emergency contacts ───────────────────────────────────── */}
+              <FieldGroup title="In an emergency, call">
+                <div className="grid grid-cols-3 gap-3">
+                  <TextField
+                    label="Name"
+                    value={editPatientForm.emergencyName}
+                    onChange={(v) => setEditPatientForm((f) => ({ ...f, emergencyName: v }))}
+                  />
+                  <TextField
+                    label="Phone"
+                    type="tel"
+                    value={editPatientForm.emergencyPhone}
+                    onChange={(v) => setEditPatientForm((f) => ({ ...f, emergencyPhone: v }))}
+                  />
+                  <TextField
+                    label="Relationship"
+                    value={editPatientForm.emergencyRelationship}
+                    onChange={(v) => setEditPatientForm((f) => ({ ...f, emergencyRelationship: v }))}
+                    placeholder="e.g. Spouse"
+                  />
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <TextField
+                    label="Second name"
+                    value={editPatientForm.emergency2Name}
+                    onChange={(v) => setEditPatientForm((f) => ({ ...f, emergency2Name: v }))}
+                  />
+                  <TextField
+                    label="Phone"
+                    type="tel"
+                    value={editPatientForm.emergency2Phone}
+                    onChange={(v) => setEditPatientForm((f) => ({ ...f, emergency2Phone: v }))}
+                  />
+                  <TextField
+                    label="Relationship"
+                    value={editPatientForm.emergency2Relationship}
+                    onChange={(v) => setEditPatientForm((f) => ({ ...f, emergency2Relationship: v }))}
+                    placeholder="e.g. Son"
+                  />
+                </div>
+              </FieldGroup>
+
+              {/* ── Identity ─────────────────────────────────────────────── */}
+              <FieldGroup title="Identity">
+                <div className="grid grid-cols-2 gap-4">
+                  <TextField
+                    label="National ID / civil record"
+                    value={editPatientForm.nationalId}
+                    onChange={(v) => setEditPatientForm((f) => ({ ...f, nationalId: v }))}
+                  />
+                  <TextField
+                    label="Nationality"
+                    value={editPatientForm.nationality}
+                    onChange={(v) => setEditPatientForm((f) => ({ ...f, nationality: v }))}
+                    placeholder="e.g. Lebanese"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Marital status</label>
+                    <select
+                      value={editPatientForm.maritalStatus}
+                      onChange={(e) => setEditPatientForm((f) => ({ ...f, maritalStatus: e.target.value }))}
+                      className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
+                    >
+                      <option value="">Not recorded</option>
+                      {MARITAL_STATUSES.map((m) => (
+                        <option key={m.value} value={m.value}>{m.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Speaks</label>
+                    <select
+                      value={editPatientForm.preferredLanguage}
+                      onChange={(e) => setEditPatientForm((f) => ({ ...f, preferredLanguage: e.target.value }))}
+                      className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
+                    >
+                      <option value="">Not recorded</option>
+                      {PATIENT_LANGUAGES.map((l) => (
+                        <option key={l.value} value={l.value}>{l.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </FieldGroup>
             </div>
             <div className="p-6 border-t border-gray-100 flex justify-end gap-3">
               <Button variant="outline" onClick={() => setShowEditPatientModal(false)}>
@@ -3196,6 +3221,64 @@ export default function PatientsPage() {
           </div>
         )}
       </Drawer>
+
+      {/* Why a billed price will not budge.
+
+          The row renders no input for billed work, so clicking the price
+          used to do nothing and the only explanation lived in a hover
+          title — invisible on a touch screen, invisible to a keyboard, and
+          only findable by someone who already suspected it was there. */}
+      {frozenPrice && (
+        <Modal
+          isOpen={!!frozenPrice}
+          onClose={() => setFrozenPrice(null)}
+          title="This price is on a bill"
+          description={
+            frozenPrice.invoiceNumber
+              ? `${frozenPrice.procedure} was billed on ${frozenPrice.invoiceNumber}`
+              : `${frozenPrice.procedure} has been billed`
+          }
+          maxWidth="max-w-md"
+        >
+          <div className="space-y-3 text-sm text-ink-700">
+            <p>
+              A bill’s lines cannot be changed after it is issued — that is what
+              keeps the invoice, the receipt and the books saying the same thing.
+              {frozenPrice.price != null && (
+                <>
+                  {" "}This work was billed at{" "}
+                  <strong className="tabular-nums">
+                    ${frozenPrice.price.toFixed(2)}
+                  </strong>
+                  .
+                </>
+              )}
+            </p>
+            <p>
+              To charge a different amount, cancel that bill and issue a new
+              one. If money has already been received on it, refund that first.
+            </p>
+            <p className="text-xs text-ink-500">
+              Everything on this plan that is not on a bill can still be
+              repriced here.
+            </p>
+            <div className="flex flex-wrap justify-end gap-2 border-t border-ink-200/70 pt-3">
+              <Button variant="outline" onClick={() => setFrozenPrice(null)}>
+                Close
+              </Button>
+              {can("billing:read") && selectedPatient && (
+                <Button
+                  onClick={() =>
+                    router.push(`/admin/billing?patient=${selectedPatient.id}`)
+                  }
+                >
+                  Open the money file
+                </Button>
+              )}
+            </div>
+          </div>
+        </Modal>
+      )}
 
       <BulkActionBar
         count={selectedIds.size}

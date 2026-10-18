@@ -73,7 +73,7 @@ export class ConsultationsController {
   }
 
   @Post()
-  @RequirePermissions('specialists:write')
+  @RequirePermissions('specialists:create')
   @ApiOperation({ summary: 'Ask a specialist to help on a case' })
   create(
     @Body() dto: CreateConsultationDto,
@@ -83,7 +83,7 @@ export class ConsultationsController {
   }
 
   @Patch(':id')
-  @RequirePermissions('specialists:write')
+  @RequirePermissions('specialists:edit')
   @ApiOperation({ summary: 'Update a consultation (status, outcome, fee, …)' })
   update(
     @Param('id', ParseIntPipe) id: number,
@@ -93,7 +93,7 @@ export class ConsultationsController {
   }
 
   @Delete(':id')
-  @RequirePermissions('specialists:write')
+  @RequirePermissions('specialists:delete')
   @ApiOperation({ summary: 'Delete a consultation' })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.consultations.remove(BigInt(id));

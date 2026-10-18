@@ -38,6 +38,18 @@ export const PROCEDURES = [
 export const FDI_TOOTH = /^(?:[1-4][1-8]|[5-8][1-5])$/;
 
 export class CreateLineItemDto {
+  @ApiPropertyOptional({
+    example: 42,
+    description:
+      'Completed, unbilled chart record this line bills. The record is attached to the invoice (patient_records.invoice_id) so the same work can never be billed twice. The link lives on the record, not on this line: the line keeps only the figures.',
+  })
+  @IsOptional()
+  // Ids leave the API as strings (BigInt.prototype.toJSON in main.ts), so one
+  // sent straight back is accepted here rather than refused as "not an integer".
+  @Type(() => Number)
+  @IsInt()
+  record_id?: number;
+
   @ApiProperty({ example: 'Checkup', enum: PROCEDURES })
   @IsString()
   @IsIn(PROCEDURES as unknown as string[])

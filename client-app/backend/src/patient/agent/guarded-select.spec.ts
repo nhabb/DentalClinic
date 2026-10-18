@@ -135,9 +135,9 @@ describe('permissionList', () => {
       permissionList([
         'billing:read',
         "x'); DROP TABLE users; --",
-        'roles:manage',
+        'roles:edit',
       ]),
-    ).toBe('billing:read,roles:manage');
+    ).toBe('billing:read,roles:edit');
     expect(permissionList([])).toBe('');
     expect(permissionList('*')).toBe('*');
   });
@@ -147,7 +147,7 @@ describe('isDatabasePermissionRefusal', () => {
   it('recognises the errors raised by app.agent_may', () => {
     expect(
       isDatabasePermissionRefusal(
-        new Error('permission staff:manage is required to read this table'),
+        new Error('permission staff:edit is required to read this table'),
       ),
     ).toBe(true);
     expect(

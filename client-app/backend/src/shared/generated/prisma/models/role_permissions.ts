@@ -592,7 +592,7 @@ export type $role_permissionsPayload<ExtArgs extends runtime.Types.Extensions.In
     role_id: bigint
     organization_id: bigint
     /**
-     * A key from the permission catalog, e.g. "appointments:write".
+     * A key from the permission catalog, e.g. "appointments:create".
      */
     permission: string
   }, ExtArgs["result"]["role_permissions"]>

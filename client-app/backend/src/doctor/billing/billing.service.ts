@@ -17,65 +17,40 @@ import { RefundDto } from './dto/refund.dto';
 import { VoidInvoiceDto } from './dto/void-invoice.dto';
 import {
   daysOverdue,
-  deriveInvoiceStatus,
   dueDateFor,
   EPSILON,
   invoiceFigures,
+  isNotYetDue,
   LIVE_STATUSES,
   paymentDateFor,
   round2,
 } from './invoice-math';
+import {
+  BILLED_INVOICES,
+  figuresFromRows,
+  moneyMoved,
+  moneyMovedByMethod,
+  moneyMovedFromRows,
+  OWED_INVOICES,
+  type MoneyMoved,
+} from './money-figures';
+import { invoiceInclude, withAppliedPayments } from './invoice-shape';
+import { MoneyService } from './money.service';
+import { PLAN_RECORD_TYPES } from '../quotes/plan-record-types';
 
 export { deriveInvoiceStatus, LIVE_STATUSES } from './invoice-math';
 export type { InvoiceStatus } from './invoice-math';
 
-/** The shape every invoice is returned in, from any route that creates or changes one. */
-export const invoiceInclude = {
-  patient: {
-    select: {
-      id: true,
-      users: {
-        select: { id: true, first_name: true, last_name: true, email: true },
-      },
-    },
-  },
-  creator: {
-    select: { id: true, first_name: true, last_name: true },
-  },
-  canceller: {
-    select: { id: true, first_name: true, last_name: true },
-  },
-  quote: {
-    select: {
-      id: true,
-      quote_number: true,
-      version: true,
-      status: true,
-      quoted_total: true,
-    },
-  },
-  line_items: {
-    orderBy: { created_at: 'asc' as const },
-  },
-  invoice_payments: {
-    include: {
-      creator: { select: { id: true, first_name: true, last_name: true } },
-    },
-    orderBy: [{ payment_date: 'asc' as const }, { created_at: 'asc' as const }],
-  },
-};
+// The invoice shape lives in invoice-shape.ts so the money writer can return
+// an invoice without importing this service. Re-exported here because the
+// quotes module has always imported it from billing.service.
+export { invoiceInclude, withAppliedPayments } from './invoice-shape';
+export type { AppliedPayment } from './invoice-shape';
 
-/** Payments and refunds of a set of invoice_payments rows, as the reports need them. */
-export interface MoneyMoved {
-  /** Money received. */
-  payments: number;
-  /** Money returned. */
-  refunds: number;
-  /** payments - refunds: what the clinic actually kept. */
-  net: number;
-  payment_count: number;
-  refund_count: number;
-}
+// `MoneyMoved` and the payments-minus-refunds rule moved to money-figures.ts,
+// which is now the one place any money figure is defined. Re-exported because
+// the type was public from here.
+export type { MoneyFigures, MoneyMoved } from './money-figures';
 
 /**
  * Outstanding balances by how far past due they are. "Not yet due" is current
@@ -114,19 +89,51 @@ export class BillingService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
+    private readonly money: MoneyService,
   ) {}
 
   /**
-   * An invoice from the billing page. The number comes from the database
-   * (sequential per clinic), the figures from invoice-math, the creator from
-   * the signed-in user, never from the request body.
+   * An invoice from the billing page, the one place a bill is created. The
+   * number comes from the database (sequential per clinic), the figures from
+   * invoice-math, the creator from the signed-in user, never from the request
+   * body. A line may name a completed, unbilled chart record (record_id);
+   * those records are attached to the invoice in the same transaction so the
+   * work can never be billed twice.
    */
   async create(dto: CreateInvoiceDto, actorId: bigint) {
+    const patientId = BigInt(dto.patient_id);
     const profile = await this.prisma.patient_profiles.findUnique({
-      where: { id: BigInt(dto.patient_id) },
+      where: { id: patientId },
       select: { id: true },
     });
     if (!profile) throw new NotFoundException('Patient profile not found');
+
+    const recordIds = dto.line_items
+      .filter((i) => i.record_id != null)
+      .map((i) => BigInt(i.record_id as number));
+    if (new Set(recordIds.map(String)).size !== recordIds.length) {
+      throw new BadRequestException(
+        'The same chart record cannot be billed on two lines',
+      );
+    }
+    if (recordIds.length > 0) {
+      // Planned work bills as readily as completed work: a patient paying for
+      // a crown up front is the ordinary case, and the plan is the only place
+      // either kind lives. What may not be billed is work already on a bill.
+      const billable = await this.prisma.patient_records.count({
+        where: {
+          id: { in: recordIds },
+          patient_id: patientId,
+          record_type: { in: [...PLAN_RECORD_TYPES] },
+          invoice_id: null,
+        },
+      });
+      if (billable !== recordIds.length) {
+        throw new BadRequestException(
+          "Every record_id must be this patient's treatment work that is not on an invoice yet",
+        );
+      }
+    }
 
     const procedureDate = toDateOnly(dto.procedure_date);
     const figures = invoiceFigures(
@@ -135,26 +142,112 @@ export class BillingService {
       dto.discount_reason,
     );
 
-    return this.prisma.treatment_invoices.create({
-      data: {
-        // Omitted = database default (home branch, then the organization's default branch).
-        ...(dto.branch_id ? { branch_id: BigInt(dto.branch_id) } : {}),
-        patient_id: profile.id,
-        procedure_date: procedureDate,
-        due_date: dueDateFor(procedureDate, dto.due_date),
-        notes: dto.notes?.trim() || null,
-        ...figures,
-        created_by: actorId,
-        line_items: {
-          create: dto.line_items.map((item) => ({
-            procedure_name: item.procedure_name,
-            amount: round2(item.amount),
-            tooth_number: item.tooth_number ?? null,
-          })),
-        },
+    const data = {
+      // Omitted = database default (home branch, then the organization's default branch).
+      ...(dto.branch_id ? { branch_id: BigInt(dto.branch_id) } : {}),
+      patient_id: profile.id,
+      procedure_date: procedureDate,
+      due_date: dueDateFor(procedureDate, dto.due_date),
+      notes: dto.notes?.trim() || null,
+      ...figures,
+      created_by: actorId,
+      line_items: {
+        create: dto.line_items.map((item) => ({
+          procedure_name: item.procedure_name,
+          amount: round2(item.amount),
+          tooth_number: item.tooth_number ?? null,
+        })),
       },
-      include: invoiceInclude,
+    };
+
+    if (recordIds.length === 0) {
+      return withAppliedPayments(
+        await this.prisma.treatment_invoices.create({
+          data,
+          include: invoiceInclude,
+        }),
+      );
+    }
+
+    // Interactive transaction on purpose: the array form is started from a
+    // shared tick and can run under another request's tenant (see tenant-pool.ts).
+    return this.prisma.$transaction(async (tx) => {
+      const invoice = await tx.treatment_invoices.create({
+        data,
+        include: invoiceInclude,
+      });
+      // Attach only records that are still this patient's unbilled work:
+      // work billed at the same moment from another desk wins the row, and
+      // this transaction rolls back instead of billing it twice (the
+      // database refuses to move a billed record too). This claim and the
+      // check above must stay in step on both filters — patient and record
+      // type — or the count would pass on rows the check never approved.
+      const attached = await tx.patient_records.updateMany({
+        where: {
+          id: { in: recordIds },
+          invoice_id: null,
+          patient_id: patientId,
+          record_type: { in: [...PLAN_RECORD_TYPES] },
+        },
+        data: { invoice_id: invoice.id, updated_at: new Date() },
+      });
+      if (attached.count !== recordIds.length) {
+        throw new ConflictException(
+          'Some of this work was billed a moment ago from another desk; refresh and try again',
+        );
+      }
+      return withAppliedPayments(invoice);
+    }, REMOTE_TX_OPTIONS);
+  }
+
+  /**
+   * What the billing page can bill for one patient: their plan work that is
+   * not on an invoice yet, planned and completed alike.
+   *
+   * There is one list and one price. The chart is where work is planned and
+   * priced, so its figure is the figure; there is no second store to reconcile
+   * and no grouping by document, because a patient has one plan. Each row says
+   * where it stands so the desk can see what it is charging for.
+   */
+  async listBillable(patientId: bigint) {
+    const profile = await this.prisma.patient_profiles.findUnique({
+      where: { id: patientId },
+      select: { id: true },
     });
+    if (!profile) throw new NotFoundException('Patient profile not found');
+
+    const rows = await this.prisma.patient_records.findMany({
+      where: {
+        patient_id: patientId,
+        record_type: { in: [...PLAN_RECORD_TYPES] },
+        invoice_id: null,
+      },
+      select: {
+        id: true,
+        title: true,
+        tooth_number: true,
+        treatment_date: true,
+        quoted_amount: true,
+        record_type: true,
+      },
+      orderBy: [{ treatment_date: 'asc' }, { id: 'asc' }],
+    });
+
+    const plan_unbilled = rows.map((r) => ({
+      id: r.id,
+      title: r.title,
+      tooth_number: r.tooth_number,
+      treatment_date: r.treatment_date,
+      quoted_amount: r.quoted_amount,
+      state: r.record_type === 'treatment' ? 'done' : 'planned',
+    }));
+
+    return {
+      plan_unbilled,
+      /** Kept so the builder can still show done work first if it wants to. */
+      completed_unbilled: plan_unbilled.filter((r) => r.state === 'done'),
+      planned: plan_unbilled.filter((r) => r.state === 'planned'),
+    };
   }
 
   async findAll(filters: {
@@ -185,13 +278,15 @@ export class BillingService {
     if (issued) where.created_at = issued;
 
     const [data, total] = await Promise.all([
-      this.prisma.treatment_invoices.findMany({
-        where,
-        include: invoiceInclude,
-        skip,
-        take: limit,
-        orderBy: { created_at: 'desc' },
-      }),
+      this.prisma.treatment_invoices
+        .findMany({
+          where,
+          include: invoiceInclude,
+          skip,
+          take: limit,
+          orderBy: { created_at: 'desc' },
+        })
+        .then((rows) => rows.map(withAppliedPayments)),
       this.prisma.treatment_invoices.count({ where }),
     ]);
 
@@ -207,18 +302,21 @@ export class BillingService {
       include: invoiceInclude,
     });
     if (!invoice) throw new NotFoundException('Treatment invoice not found');
-    return invoice;
+    return withAppliedPayments(invoice);
   }
 
   // ── Money in, money back, corrections ─────────────────────────────────────
 
   /**
-   * Money received is recorded in exactly one place, invoice_payments. The
-   * invoice's totals are re-derived from that table inside one transaction
-   * with the invoice row locked, so two payments posted at the same moment (a
-   * double click, two desks) cannot both pass the balance check or leave the
-   * totals out of step with the payments. The database enforces the same rule
-   * with constraints and a trigger (migration 20261009010000_payment_integrity).
+   * Money received against one named invoice. The desk named the bill, so the
+   * payment and its allocation are written in one step — but by the same
+   * writer every other money route uses, so the rules cannot drift apart.
+   *
+   * The invoice row is locked first and its `remaining_amount` is what the
+   * balance checks read: the allocation trigger keeps that column, and the
+   * lock is what makes it true for the length of the transaction. Two desks
+   * posting at the same moment therefore queue on the row instead of both
+   * passing their checks.
    */
   async recordPayment(
     invoiceId: bigint,
@@ -232,15 +330,13 @@ export class BillingService {
     const paymentDate = paymentDateFor(dto.payment_date);
 
     return this.prisma.$transaction(async (tx) => {
-      const locked = await this.lockInvoice(tx, invoiceId);
+      const locked = await this.money.lockInvoice(tx, invoiceId);
       if (locked.status === 'cancelled') {
         throw new ConflictException(
           'This invoice is cancelled and takes no payments',
         );
       }
-      const total = Number(locked.total_amount);
-      const alreadyPaid = await this.netPaid(tx, invoiceId);
-      const remaining = round2(total - alreadyPaid);
+      const remaining = round2(locked.remaining_amount);
       if (remaining <= EPSILON) {
         throw new BadRequestException('This invoice is already fully paid');
       }
@@ -250,18 +346,22 @@ export class BillingService {
         );
       }
 
-      await tx.invoice_payments.create({
-        data: {
-          invoice_id: invoiceId,
-          kind: 'payment',
-          amount,
-          payment_method: dto.payment_method,
-          payment_date: paymentDate,
-          notes: dto.notes?.trim() || null,
-          created_by: actorId,
-        },
+      const payment = await this.money.createPaymentRow(tx, {
+        patientId: locked.patient_id,
+        kind: 'payment',
+        amount,
+        paymentMethod: dto.payment_method,
+        paymentDate,
+        notes: dto.notes?.trim() || null,
+        actorId,
       });
-      return this.writeTotals(tx, invoiceId, total, alreadyPaid + amount);
+      await this.money.allocate(tx, {
+        paymentId: payment.id,
+        invoiceId,
+        amount,
+        actorId,
+      });
+      return this.money.reloadInvoice(tx, invoiceId);
     }, REMOTE_TX_OPTIONS);
   }
 
@@ -274,14 +374,13 @@ export class BillingService {
     const amount = round2(dto.amount);
     const paymentDate = paymentDateFor(dto.payment_date);
     const updated = await this.prisma.$transaction(async (tx) => {
-      const locked = await this.lockInvoice(tx, invoiceId);
+      const locked = await this.money.lockInvoice(tx, invoiceId);
       if (locked.status === 'cancelled') {
         throw new ConflictException(
           'This invoice is cancelled; nothing to refund',
         );
       }
-      const total = Number(locked.total_amount);
-      const received = await this.netPaid(tx, invoiceId);
+      const received = locked.amount_paid;
       if (received <= EPSILON) {
         throw new BadRequestException('Nothing has been paid on this invoice');
       }
@@ -290,18 +389,25 @@ export class BillingService {
           `Refund (${amount}) exceeds what was received on this invoice (${round2(received)})`,
         );
       }
-      await tx.invoice_payments.create({
-        data: {
-          invoice_id: invoiceId,
-          kind: 'refund',
-          amount,
-          payment_method: dto.payment_method,
-          payment_date: paymentDate,
-          reason: dto.reason.trim(),
-          created_by: actorId,
-        },
+      const refundRow = await this.money.createPaymentRow(tx, {
+        patientId: locked.patient_id,
+        kind: 'refund',
+        // Money off a named bill: the allocation below is what lowers it.
+        refundScope: 'invoice',
+        amount,
+        paymentMethod: dto.payment_method,
+        paymentDate,
+        reason: dto.reason.trim(),
+        actorId,
       });
-      return this.writeTotals(tx, invoiceId, total, received - amount);
+      // A refund allocation subtracts from the invoice it is applied to.
+      await this.money.allocate(tx, {
+        paymentId: refundRow.id,
+        invoiceId,
+        amount,
+        actorId,
+      });
+      return this.money.reloadInvoice(tx, invoiceId);
     }, REMOTE_TX_OPTIONS);
     await this.audit.record({
       actorId,
@@ -322,33 +428,35 @@ export class BillingService {
    */
   async voidInvoice(invoiceId: bigint, dto: VoidInvoiceDto, actorId: bigint) {
     const before = await this.findOne(invoiceId);
-    const updated = await this.prisma.$transaction(async (tx) => {
-      const locked = await this.lockInvoice(tx, invoiceId);
-      if (locked.status === 'cancelled') {
-        throw new ConflictException('This invoice is already cancelled');
-      }
-      const received = await this.netPaid(tx, invoiceId);
-      if (received > EPSILON) {
-        throw new ConflictException(
-          `Refund the ${round2(received)} received on this invoice before cancelling it`,
-        );
-      }
-      await tx.patient_records.updateMany({
-        where: { invoice_id: invoiceId },
-        data: { invoice_id: null, updated_at: new Date() },
-      });
-      return tx.treatment_invoices.update({
-        where: { id: invoiceId },
-        data: {
-          status: 'cancelled',
-          cancelled_at: new Date(),
-          cancelled_by: actorId,
-          cancel_reason: dto.reason.trim(),
-          updated_at: new Date(),
-        },
-        include: invoiceInclude,
-      });
-    }, REMOTE_TX_OPTIONS);
+    const updated = await this.prisma
+      .$transaction(async (tx) => {
+        const locked = await this.money.lockInvoice(tx, invoiceId);
+        if (locked.status === 'cancelled') {
+          throw new ConflictException('This invoice is already cancelled');
+        }
+        const received = locked.amount_paid;
+        if (received > EPSILON) {
+          throw new ConflictException(
+            `Refund the ${round2(received)} received on this invoice before cancelling it`,
+          );
+        }
+        await tx.patient_records.updateMany({
+          where: { invoice_id: invoiceId },
+          data: { invoice_id: null, updated_at: new Date() },
+        });
+        return tx.treatment_invoices.update({
+          where: { id: invoiceId },
+          data: {
+            status: 'cancelled',
+            cancelled_at: new Date(),
+            cancelled_by: actorId,
+            cancel_reason: dto.reason.trim(),
+            updated_at: new Date(),
+          },
+          include: invoiceInclude,
+        });
+      }, REMOTE_TX_OPTIONS)
+      .then(withAppliedPayments);
     await this.audit.record({
       actorId,
       action: 'billing.invoice.void',
@@ -377,8 +485,8 @@ export class BillingService {
     await this.prisma.$transaction(async (tx) => {
       // Locked, and the payments re-counted under the lock: a payment posted
       // between the read and the delete must not be cascaded away.
-      await this.lockInvoice(tx, id);
-      const rows = await tx.invoice_payments.count({
+      await this.money.lockInvoice(tx, id);
+      const rows = await tx.payment_allocations.count({
         where: { invoice_id: id },
       });
       if (rows > 0) {
@@ -414,26 +522,30 @@ export class BillingService {
   async deletePayment(paymentId: bigint, actorId: bigint) {
     const payment = await this.prisma.invoice_payments.findUnique({
       where: { id: paymentId },
+      include: { allocations: { select: { invoice_id: true } } },
     });
     if (!payment) throw new NotFoundException('Payment not found');
+    // One payment can be spread over several invoices. Lock each one it
+    // touches, in id order, so two deletions cannot deadlock against each other.
+    const touched = [
+      ...new Set(payment.allocations.map((a) => a.invoice_id)),
+    ].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
     await this.prisma.$transaction(async (tx) => {
-      const locked = await this.lockInvoice(tx, payment.invoice_id);
-      if (locked.status === 'cancelled') {
-        throw new ConflictException(
-          'This invoice is cancelled; its payment history stays as it is',
-        );
-      }
-      try {
-        await tx.invoice_payments.delete({ where: { id: paymentId } });
-      } catch (err) {
-        // The totals check refuses a delete that would leave the invoice over-refunded.
-        if (/paid_within_total/.test((err as Error).message)) {
+      for (const invoiceId of touched) {
+        const locked = await this.money.lockInvoice(tx, invoiceId);
+        if (locked.status === 'cancelled') {
           throw new ConflictException(
-            'This payment cannot be removed while refunds depend on it: remove the refund rows first',
+            'This invoice is cancelled; its payment history stays as it is',
           );
         }
-        throw err;
       }
+      // The allocations cascade with the payment; the totals follow by trigger.
+      // The totals check refuses a delete that would leave the invoice
+      // over-refunded, which here means a refund still depends on this money.
+      await this.money.removePayment(tx, paymentId, {
+        paid_within_total:
+          'This payment cannot be removed while refunds depend on it: remove the refund rows first',
+      });
     }, REMOTE_TX_OPTIONS);
     await this.audit.record({
       actorId,
@@ -442,61 +554,8 @@ export class BillingService {
       recordId: paymentId,
       before: payment,
     });
-    return this.findOne(payment.invoice_id);
-  }
-
-  /** The invoice row, locked for the rest of the transaction. */
-  private async lockInvoice(tx: Tx, invoiceId: bigint) {
-    const [locked] = await tx.$queryRaw<
-      { id: bigint; total_amount: unknown; status: string }[]
-    >`SELECT id, total_amount, status FROM treatment_invoices WHERE id = ${invoiceId} FOR UPDATE`;
-    if (!locked) throw new NotFoundException('Treatment invoice not found');
-    return locked;
-  }
-
-  /** payments - refunds recorded on the invoice, from the payments table. */
-  private async netPaid(tx: Tx, invoiceId: bigint): Promise<number> {
-    const [row] = await tx.$queryRaw<{ net: unknown }[]>`
-      SELECT COALESCE(SUM(CASE WHEN kind = 'refund' THEN -amount ELSE amount END), 0) AS net
-        FROM invoice_payments WHERE invoice_id = ${invoiceId}`;
-    return Number(row?.net ?? 0);
-  }
-
-  /** Store the totals the payments imply (the trigger does the same; this keeps the response exact). */
-  private writeTotals(tx: Tx, invoiceId: bigint, total: number, paid: number) {
-    const net = round2(paid);
-    return tx.treatment_invoices.update({
-      where: { id: invoiceId },
-      data: {
-        amount_paid: net,
-        remaining_amount: round2(total - net),
-        status: deriveInvoiceStatus(total, net),
-        updated_at: new Date(),
-      },
-      include: invoiceInclude,
-    });
-  }
-
-  /** Payments and refunds matching `where`, split by kind. */
-  private async moneyMoved(
-    where: Record<string, unknown>,
-  ): Promise<MoneyMoved> {
-    const rows = await this.prisma.invoice_payments.groupBy({
-      by: ['kind'],
-      where,
-      _sum: { amount: true },
-      _count: { id: true },
-    });
-    const of = (kind: string) => rows.find((r) => r.kind === kind);
-    const payments = Number(of('payment')?._sum.amount ?? 0);
-    const refunds = Number(of('refund')?._sum.amount ?? 0);
-    return {
-      payments,
-      refunds,
-      net: round2(payments - refunds),
-      payment_count: Number(of('payment')?._count.id ?? 0),
-      refund_count: Number(of('refund')?._count.id ?? 0),
-    };
+    // Unapplied credit sat on no invoice; then there is nothing to show back.
+    return touched.length ? this.findOne(touched[0]) : { success: true };
   }
 
   // ── Financial summary ────────────────────────────────────────────────────
@@ -508,28 +567,36 @@ export class BillingService {
     const paymentWhere = range ? { payment_date: range } : {};
     const expenseWhere = range ? { expense_date: range } : {};
 
-    const [money, expenseAgg, outstandingAgg] = await Promise.all([
+    const [money, byMethod, expenseAgg, outstandingAgg] = await Promise.all([
       // Actual money kept = payments - refunds in the period
-      this.moneyMoved(paymentWhere),
+      moneyMoved(this.prisma, paymentWhere),
+      moneyMovedByMethod(this.prisma, paymentWhere),
       this.prisma.expenses.aggregate({
         where: expenseWhere,
         _sum: { amount: true },
         _count: { id: true },
       }),
-      // Outstanding = remaining on all open/partial invoices (always all-time; cancelled never counts)
+      // Outstanding is always all-time, whatever window the money is read in:
+      // what is owed today is not a property of a date range.
       this.prisma.treatment_invoices.aggregate({
-        where: { status: { in: ['open', 'partial'] } },
+        where: OWED_INVOICES,
         _sum: { remaining_amount: true },
       }),
     ]);
 
     const totalIncome = money.net;
     const totalExpenses = Number(expenseAgg._sum.amount ?? 0);
-    const totalOutstanding = Number(outstandingAgg._sum.remaining_amount ?? 0);
+    const totalOutstanding = round2(
+      Number(outstandingAgg._sum.remaining_amount ?? 0),
+    );
 
     return {
       total_income: totalIncome,
+      /** The same money split by how it arrived, for counting the drawer. */
+      by_method: byMethod,
       total_refunded: money.refunds,
+      refunds_on_invoices: money.refunds_on_invoices,
+      refunds_of_credit: money.refunds_of_credit,
       total_expenses: totalExpenses,
       net: totalIncome - totalExpenses,
       total_outstanding: totalOutstanding,
@@ -565,10 +632,10 @@ export class BillingService {
           due_date: true,
         },
       }),
-      this.moneyMoved({}),
+      moneyMoved(this.prisma, {}),
       this.prisma.expenses.findMany({ select: { amount: true } }),
-      this.moneyMoved({ payment_date: { gte: startOfMonth } }),
-      this.moneyMoved({
+      moneyMoved(this.prisma, { payment_date: { gte: startOfMonth } }),
+      moneyMoved(this.prisma, {
         payment_date: { gte: startOfLastMonth, lte: endOfLastMonth },
       }),
       this.prisma.expenses.findMany({
@@ -584,25 +651,17 @@ export class BillingService {
     const sumAmt = (rows: { amount: unknown }[]) =>
       rows.reduce((s, r) => s + Number(r.amount), 0);
 
-    const totalBilled = liveInvoices.reduce(
-      (s, i) => s + Number(i.total_amount),
-      0,
-    );
+    // The rows are already loaded, so the figures come from the shared
+    // definitions rather than being summed again here.
+    const figures = figuresFromRows(liveInvoices, allTime);
+    const totalBilled = figures.billed;
+    const totalCollected = figures.received;
+    const totalOutstanding = figures.due_now;
+    const totalOverdue = figures.overdue;
     const totalDiscounts = liveInvoices.reduce(
       (s, i) => s + Number(i.discount_amount),
       0,
     );
-    const totalCollected = allTime.net;
-    const owed = liveInvoices.filter(
-      (i) => i.status === 'open' || i.status === 'partial',
-    );
-    const totalOutstanding = owed.reduce(
-      (s, i) => s + Number(i.remaining_amount),
-      0,
-    );
-    const totalOverdue = owed
-      .filter((i) => daysOverdue(i.due_date) > 0)
-      .reduce((s, i) => s + Number(i.remaining_amount), 0);
     const totalExpenses = sumAmt(allExpenses);
     const collectionRate =
       totalBilled > 0 ? (totalCollected / totalBilled) * 100 : 0;
@@ -622,9 +681,17 @@ export class BillingService {
         total_billed: totalBilled,
         total_discounts: round2(totalDiscounts),
         total_collected: totalCollected,
+        /**
+         * Of what came in, how much reached a bill — and how much has not.
+         * Reported because `billed - collected` is NOT `outstanding` whenever
+         * a patient is holding credit, and a screen showing those three
+         * figures side by side owes the reader the fourth.
+         */
+        total_applied: figures.applied,
+        total_credit_held: figures.credit_held,
         total_refunded: allTime.refunds,
         total_outstanding: totalOutstanding,
-        total_overdue: round2(totalOverdue),
+        total_overdue: totalOverdue,
         total_expenses: totalExpenses,
         net_profit: totalCollected - totalExpenses,
         collection_rate_pct: Math.round(collectionRate * 10) / 10,
@@ -660,7 +727,7 @@ export class BillingService {
   /** Every balance still owed, the longest overdue first. */
   async getOutstandingPayments() {
     const invoices = await this.prisma.treatment_invoices.findMany({
-      where: { status: { in: ['open', 'partial'] } },
+      where: OWED_INVOICES,
       include: {
         patient: {
           select: {
@@ -693,20 +760,18 @@ export class BillingService {
   /** Outstanding balances by days past their due date (not days since issue). */
   async getAgingReport() {
     const invoices = await this.prisma.treatment_invoices.findMany({
-      where: { status: { in: ['open', 'partial'] } },
+      where: OWED_INVOICES,
       select: { id: true, remaining_amount: true, due_date: true },
     });
 
     const now = new Date();
     const buckets = Object.fromEntries(AGING_BUCKETS.map((b) => [b, 0]));
     const counts = Object.fromEntries(AGING_BUCKETS.map((b) => [b, 0]));
-    const todayStart = toDateOnly(now.toISOString()).getTime();
 
     for (const inv of invoices) {
+      // Both questions are asked of the clinic's calendar, from one module.
       const overdue = daysOverdue(inv.due_date, now);
-      const notYetDue =
-        toDateOnly(inv.due_date.toISOString()).getTime() > todayStart;
-      const key = agingBucketFor(overdue, notYetDue);
+      const key = agingBucketFor(overdue, isNotYetDue(inv.due_date, now));
       buckets[key] += Number(inv.remaining_amount);
       counts[key]++;
     }
@@ -722,24 +787,55 @@ export class BillingService {
   }
 
   // ── Per-patient financial summary ───────────────────────────────────────
+  /**
+   * What each patient was billed, what came in and what is left.
+   *
+   * It used to report one figure called `total_paid` that was the sum of the
+   * invoices' `amount_paid` — money that had reached a bill. A patient who had
+   * just handed over a deposit therefore read as having paid nothing, because
+   * their money was sitting as credit. The three are now reported apart under
+   * the names they deserve: `total_applied` is what reached bills,
+   * `total_received` is what came in, and `credit_held` is the difference.
+   */
   async getPatientFinancials(patient_id?: number) {
-    const where: Record<string, unknown> = {
-      status: { in: [...LIVE_STATUSES] },
-    };
+    const where: Record<string, unknown> = { ...BILLED_INVOICES };
     if (patient_id) where.patient_id = BigInt(patient_id);
+    const paymentWhere = patient_id
+      ? { patient_id: BigInt(patient_id) }
+      : undefined;
 
-    const invoices = await this.prisma.treatment_invoices.findMany({
-      where,
-      select: {
-        patient_id: true,
-        total_amount: true,
-        amount_paid: true,
-        remaining_amount: true,
-        patient: {
-          select: { users: { select: { first_name: true, last_name: true } } },
+    const [invoices, paymentRows] = await Promise.all([
+      this.prisma.treatment_invoices.findMany({
+        where,
+        select: {
+          patient_id: true,
+          total_amount: true,
+          amount_paid: true,
+          remaining_amount: true,
+          patient: {
+            select: { users: { select: { first_name: true, last_name: true } } },
+          },
         },
-      },
-    });
+      }),
+      this.prisma.invoice_payments.groupBy({
+        by: ['patient_id', 'kind', 'refund_scope'],
+        where: paymentWhere,
+        _sum: { amount: true },
+        _count: { id: true },
+        orderBy: undefined,
+      }),
+    ]);
+
+    /** Money in, net of refunds, per patient — the same rule as everywhere. */
+    const receivedBy = new Map<string, number>();
+    for (const pid of new Set(paymentRows.map((r) => String(r.patient_id)))) {
+      receivedBy.set(
+        pid,
+        moneyMovedFromRows(
+          paymentRows.filter((r) => String(r.patient_id) === pid),
+        ).net,
+      );
+    }
 
     const byPatient: Record<
       string,
@@ -747,7 +843,8 @@ export class BillingService {
         patient_id: string;
         patient_name: string;
         total_billed: number;
-        total_paid: number;
+        /** Of the money received, what reached a bill. */
+        total_applied: number;
         outstanding: number;
         invoice_count: number;
       }
@@ -762,24 +859,47 @@ export class BillingService {
             ? `${inv.patient.users.first_name} ${inv.patient.users.last_name}`
             : `Patient #${pid}`,
           total_billed: 0,
-          total_paid: 0,
+          total_applied: 0,
           outstanding: 0,
           invoice_count: 0,
         };
       }
       byPatient[pid].total_billed += Number(inv.total_amount);
-      byPatient[pid].total_paid += Number(inv.amount_paid);
-      byPatient[pid].outstanding += Number(inv.remaining_amount);
+      byPatient[pid].total_applied += Number(inv.amount_paid);
+      byPatient[pid].outstanding += Math.max(0, Number(inv.remaining_amount));
       byPatient[pid].invoice_count++;
     }
 
-    return Object.values(byPatient).map((p) => ({
-      ...p,
-      collection_rate_pct:
-        p.total_billed > 0
-          ? Math.round((p.total_paid / p.total_billed) * 1000) / 10
-          : 0,
-    }));
+    // A patient may have money and no bill yet (a deposit on an agreed plan),
+    // so they belong in this list even though no invoice named them.
+    for (const pid of receivedBy.keys()) {
+      byPatient[pid] ??= {
+        patient_id: pid,
+        patient_name: `Patient #${pid}`,
+        total_billed: 0,
+        total_applied: 0,
+        outstanding: 0,
+        invoice_count: 0,
+      };
+    }
+
+    return Object.values(byPatient).map((p) => {
+      const received = round2(receivedBy.get(p.patient_id) ?? 0);
+      const applied = round2(p.total_applied);
+      return {
+        ...p,
+        total_billed: round2(p.total_billed),
+        total_applied: applied,
+        total_received: received,
+        credit_held: round2(received - applied),
+        outstanding: round2(p.outstanding),
+        /** Of what was billed, how much has reached the bills. */
+        collection_rate_pct:
+          p.total_billed > 0
+            ? Math.round((applied / p.total_billed) * 1000) / 10
+            : 0,
+      };
+    });
   }
 
   // ── Monthly trends + payment method breakdown ────────────────────────────
@@ -845,21 +965,70 @@ export class BillingService {
     };
   }
 
-  // ── Raw invoice payments list for charts ─────────────────────────────────
-  async listInvoicePayments(limit = 500) {
-    return this.prisma.invoice_payments.findMany({
+  // ── Every payment and refund, as the desk reads them ─────────────────────
+  /**
+   * The clinic’s money as it moved, which is a different question from what
+   * its bills say.
+   *
+   * It used to return bare ids for the analytics charts. A desk counting the
+   * till has to read it: who paid, how, which bills it reached, and who took
+   * it. Filtered on `payment_date`, the day the money actually moved, which
+   * is the day every other report counts it on.
+   */
+  async listInvoicePayments(
+    limit = 500,
+    filters: { from?: string; to?: string; method?: string } = {},
+  ) {
+    const range = dateRange(filters.from, filters.to);
+    const rows = await this.prisma.invoice_payments.findMany({
+      where: {
+        ...(range ? { payment_date: range } : {}),
+        ...(filters.method ? { payment_method: filters.method } : {}),
+      },
       take: limit,
       orderBy: [{ payment_date: 'desc' }, { created_at: 'desc' }],
       select: {
         id: true,
         kind: true,
+        refund_scope: true,
         amount: true,
         payment_method: true,
         payment_date: true,
+        notes: true,
         reason: true,
         created_at: true,
-        invoice_id: true,
+        patient_id: true,
+        patient: {
+          select: {
+            id: true,
+            users: { select: { first_name: true, last_name: true } },
+          },
+        },
+        creator: { select: { first_name: true, last_name: true } },
+        allocations: {
+          select: {
+            id: true,
+            amount: true,
+            invoice: { select: { id: true, invoice_number: true } },
+          },
+        },
       },
+    });
+
+    return rows.map((r) => {
+      const applied = r.allocations.reduce((sum, a) => sum + Number(a.amount), 0);
+      return {
+        ...r,
+        patient_name: r.patient?.users
+          ? `${r.patient.users.first_name} ${r.patient.users.last_name}`
+          : `Patient #${r.patient_id}`,
+        taken_by: r.creator
+          ? `${r.creator.first_name} ${r.creator.last_name}`
+          : null,
+        applied: round2(applied),
+        /** Reached no bill: this much of it is credit on the account. */
+        unapplied: round2(Number(r.amount) - applied),
+      };
     });
   }
 }

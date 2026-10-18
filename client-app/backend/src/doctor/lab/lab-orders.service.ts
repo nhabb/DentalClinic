@@ -96,10 +96,69 @@ export class LabOrdersService {
     return order;
   }
 
+  /**
+   * A remake must say what it remakes and why, and may only remake this
+   * patient's earlier case: a remake rate is only worth counting if the link
+   * is real.
+   */
+  private async assertRemake(dto: {
+    remake_of_id?: number;
+    remake_reason?: string;
+    patient_id?: number;
+  }) {
+    if (dto.remake_of_id === undefined) return;
+    if (!dto.remake_reason?.trim()) {
+      throw new BadRequestException(
+        'A remake needs remake_reason: say why the earlier piece is being remade',
+      );
+    }
+    const earlier = await this.prisma.lab_orders.findFirst({
+      where: { id: BigInt(dto.remake_of_id) },
+      select: { id: true, patient_id: true },
+    });
+    if (!earlier)
+      throw new NotFoundException('The order being remade was not found');
+    if (
+      dto.patient_id !== undefined &&
+      earlier.patient_id !== BigInt(dto.patient_id)
+    ) {
+      throw new BadRequestException(
+        "The order being remade belongs to another patient's case",
+      );
+    }
+  }
+
+  /** The lab's usual turnaround, as a due date counted from the send date. */
+  private async defaultDueAt(
+    labId: bigint,
+    from: string,
+  ): Promise<Date | null> {
+    const lab = await this.prisma.dental_labs.findFirst({
+      where: { id: labId },
+      select: { turnaround_days: true },
+    });
+    if (!lab?.turnaround_days) return null;
+    const due = new Date(`${from.split('T')[0]}T12:00:00.000Z`);
+    due.setUTCDate(due.getUTCDate() + lab.turnaround_days);
+    return due;
+  }
+
   async create(dto: CreateLabOrderDto, orderedBy: bigint) {
     await this.caseLinks.assertValid(dto);
     await this.labs.assertActive(BigInt(dto.lab_id));
+    await this.assertRemake(dto);
     const status = dto.status ?? 'ordered';
+    const dates = stampedDates(status, dto);
+
+    // No due date given: fall back to this lab's usual turnaround.
+    const sentAt = dto.sent_at ?? (dates as { sent_at?: Date }).sent_at;
+    const due =
+      dto.due_at === undefined && sentAt
+        ? await this.defaultDueAt(
+            BigInt(dto.lab_id),
+            typeof sentAt === 'string' ? sentAt : sentAt.toISOString(),
+          )
+        : null;
 
     return this.prisma.lab_orders.create({
       data: {
@@ -114,8 +173,16 @@ export class LabOrdersService {
         description: dto.description,
         tooth_numbers: dto.tooth_numbers,
         shade: dto.shade,
+        material: dto.material,
+        units: dto.units,
+        tracking_ref: dto.tracking_ref,
+        impression_method: dto.impression_method,
+        try_in_at: toDateOnlyOrNull(dto.try_in_at),
+        remake_of_id: dto.remake_of_id ? BigInt(dto.remake_of_id) : null,
+        remake_reason: dto.remake_reason?.trim() || null,
         status,
-        ...stampedDates(status, dto),
+        ...dates,
+        ...(due ? { due_at: due } : {}),
         cost: dto.cost,
         notes: dto.notes,
       },
@@ -151,6 +218,16 @@ export class LabOrdersService {
     if (dto.lab_id !== undefined) {
       await this.labs.assertActive(BigInt(dto.lab_id));
     }
+    if (dto.remake_of_id !== undefined) {
+      if (dto.remake_of_id === Number(id)) {
+        throw new BadRequestException('An order cannot be a remake of itself');
+      }
+      await this.assertRemake({
+        ...dto,
+        remake_reason: dto.remake_reason ?? current.remake_reason ?? undefined,
+        patient_id: dto.patient_id ?? Number(current.patient_id),
+      });
+    }
 
     return this.prisma.lab_orders.update({
       where: { id },
@@ -180,6 +257,23 @@ export class LabOrdersService {
           ? { tooth_numbers: dto.tooth_numbers }
           : {}),
         ...(dto.shade !== undefined ? { shade: dto.shade } : {}),
+        ...(dto.material !== undefined ? { material: dto.material } : {}),
+        ...(dto.units !== undefined ? { units: dto.units } : {}),
+        ...(dto.tracking_ref !== undefined
+          ? { tracking_ref: dto.tracking_ref }
+          : {}),
+        ...(dto.impression_method !== undefined
+          ? { impression_method: dto.impression_method }
+          : {}),
+        ...(dto.try_in_at !== undefined
+          ? { try_in_at: toDateOnlyOrNull(dto.try_in_at) }
+          : {}),
+        ...(dto.remake_of_id !== undefined
+          ? { remake_of_id: dto.remake_of_id ? BigInt(dto.remake_of_id) : null }
+          : {}),
+        ...(dto.remake_reason !== undefined
+          ? { remake_reason: dto.remake_reason?.trim() || null }
+          : {}),
         ...(dto.status !== undefined ? { status: dto.status } : {}),
         ...(statusChanges
           ? stampedDates(dto.status as LabOrderStatus, dto)

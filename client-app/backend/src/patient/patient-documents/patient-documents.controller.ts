@@ -53,7 +53,8 @@ const uploadBodySchema = (filesField: 'file' | 'files') => ({
 
 /**
  * X-rays, scans and reports attached to a patient. Uploading and deleting
- * needs `documents:write`; reading needs `documents:read`, except that a
+ * needs `documents:create` / `documents:delete`; reading needs
+ * `documents:read`, except that a
  * patient can always read their own. The uploader is always the caller.
  */
 @ApiBearerAuth()
@@ -66,7 +67,7 @@ export class PatientDocumentsController {
   ) {}
 
   @Post()
-  @RequirePermissions('documents:write')
+  @RequirePermissions('documents:create')
   @ApiOperation({ summary: 'Upload a patient document to Supabase Storage' })
   @ApiConsumes('multipart/form-data')
   @ApiBody(uploadBodySchema('file'))
@@ -89,7 +90,7 @@ export class PatientDocumentsController {
   }
 
   @Post('bulk')
-  @RequirePermissions('documents:write')
+  @RequirePermissions('documents:create')
   @ApiOperation({
     summary: 'Upload multiple patient documents in one request (max 10 files)',
   })
@@ -172,7 +173,7 @@ export class PatientDocumentsController {
   }
 
   @Delete('bulk')
-  @RequirePermissions('documents:write')
+  @RequirePermissions('documents:delete')
   @ApiOperation({ summary: 'Delete multiple documents by their IDs' })
   @ApiBody({
     schema: {
@@ -194,7 +195,7 @@ export class PatientDocumentsController {
   }
 
   @Delete(':id')
-  @RequirePermissions('documents:write')
+  @RequirePermissions('documents:delete')
   @ApiOperation({
     summary: 'Delete a single document from storage and database',
   })

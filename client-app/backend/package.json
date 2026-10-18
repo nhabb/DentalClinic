@@ -22,7 +22,8 @@
     "smoke:permissions": "node scripts/smoke-permissions.js",
     "smoke:billing": "node scripts/smoke-billing.js",
     "smoke:agent": "ts-node scripts/smoke-agent.ts",
-    "smoke:concurrency": "node scripts/smoke-tenant-concurrency.js"
+    "smoke:concurrency": "node scripts/smoke-tenant-concurrency.js",
+    "smoke:plan-quote": "node scripts/smoke-plan-quote.js"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

@@ -167,7 +167,7 @@ describe('RolesService', () => {
       );
       await inOrg(() =>
         service.update('secretary', {
-          permissions: ['billing:read', 'billing:write'],
+          permissions: ['billing:read', 'billing:create'],
         }),
       );
       expect(prisma.tx.role_permissions.deleteMany).toHaveBeenCalledWith({
@@ -176,7 +176,7 @@ describe('RolesService', () => {
       expect(prisma.tx.role_permissions.createMany).toHaveBeenCalledWith({
         data: [
           { role_id: 10n, organization_id: 1n, permission: 'billing:read' },
-          { role_id: 10n, organization_id: 1n, permission: 'billing:write' },
+          { role_id: 10n, organization_id: 1n, permission: 'billing:create' },
         ],
       });
     });

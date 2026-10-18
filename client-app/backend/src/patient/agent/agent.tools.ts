@@ -302,7 +302,7 @@ export const AGENT_TOOLS: OpenAI.ChatCompletionFunctionTool[] = [
     function: {
       name: 'get_patient_financials',
       description:
-        'Get per-patient financial summary showing total billed, total paid, outstanding balance, and collection rate. Optionally filter to one patient.',
+        'Get a per-patient money summary. Reports total_billed (what their invoices came to, after discounts), total_received (money in from them, net of refunds), total_applied (how much of that reached a bill), credit_held (money in that is on no bill yet, such as a deposit), outstanding (billed and still unpaid) and collection_rate_pct (applied over billed). A patient can have credit_held with no invoice at all. Optionally filter to one patient.',
       parameters: {
         type: 'object',
         properties: {

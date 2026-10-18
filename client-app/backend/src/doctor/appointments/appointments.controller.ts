@@ -29,7 +29,8 @@ import {
 type AuthedRequest = { user: RequestUser };
 
 /**
- * Appointments. Staff need `appointments:read` / `appointments:write`;
+ * Appointments. Staff need `appointments:read` to look, `:create` to book,
+ * `:edit` to confirm, complete or annotate and `:delete` to cancel;
  * patients may book for themselves, and read and cancel their own.
  */
 @ApiBearerAuth()
@@ -49,7 +50,7 @@ export class AppointmentsController {
     await this.access.assertPatientProfileAccess(
       req.user,
       dto.patient_id,
-      'appointments:write',
+      'appointments:create',
     );
     return this.appointmentsService.create(dto);
   }
@@ -110,21 +111,21 @@ export class AppointmentsController {
   }
 
   @Patch(':id/confirm')
-  @RequirePermissions('appointments:write')
+  @RequirePermissions('appointments:edit')
   @ApiOperation({ summary: 'Confirm a pending appointment' })
   confirm(@Param('id', ParseIntPipe) id: number) {
     return this.appointmentsService.confirm(BigInt(id));
   }
 
   @Patch(':id/complete')
-  @RequirePermissions('appointments:write')
+  @RequirePermissions('appointments:edit')
   @ApiOperation({ summary: 'Mark an appointment as completed' })
   complete(@Param('id', ParseIntPipe) id: number) {
     return this.appointmentsService.complete(BigInt(id));
   }
 
   @Patch(':id/no-show')
-  @RequirePermissions('appointments:write')
+  @RequirePermissions('appointments:edit')
   @ApiOperation({ summary: 'Mark an appointment as no-show (patient missed)' })
   noShow(@Param('id', ParseIntPipe) id: number) {
     return this.appointmentsService.noShow(BigInt(id));
@@ -140,12 +141,12 @@ export class AppointmentsController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: CancelAppointmentDto,
   ) {
-    await this.ownAppointment(req.user, id, 'appointments:write');
+    await this.ownAppointment(req.user, id, 'appointments:delete');
     return this.appointmentsService.cancel(BigInt(id), dto);
   }
 
   @Patch(':id/notes')
-  @RequirePermissions('appointments:write')
+  @RequirePermissions('appointments:edit')
   @ApiOperation({ summary: 'Update appointment notes' })
   updateNotes(
     @Param('id', ParseIntPipe) id: number,

@@ -634,20 +634,29 @@ async function main() {
           },
         ],
       },
-      invoice_payments: {
-        create: [
-          {
-            organization_id: org.id,
-            amount: 75,
-            payment_method: 'cash',
-            created_by: doctor.id,
-          },
-        ],
-      },
     },
   });
 
-  await prisma.treatment_invoices.create({
+  const payment1 = await prisma.invoice_payments.create({
+    data: {
+      organization_id: org.id,
+      patient_id: patientProfile.id,
+      amount: 75,
+      payment_method: 'cash',
+      created_by: doctor.id,
+    },
+  });
+  await prisma.payment_allocations.create({
+    data: {
+      organization_id: org.id,
+      payment_id: payment1.id,
+      invoice_id: invoice1.id,
+      amount: 75,
+      created_by: doctor.id,
+    },
+  });
+
+  const invoice2 = await prisma.treatment_invoices.create({
     data: {
       organization_id: org.id,
       branch_id: beirut.id,
@@ -671,18 +680,28 @@ async function main() {
           },
         ],
       },
-      invoice_payments: {
-        create: [
-          {
-            organization_id: org.id,
-            amount: 100,
-            payment_method: 'card',
-            created_by: doctor.id,
-          },
-        ],
-      },
     },
   });
+
+  const payment2 = await prisma.invoice_payments.create({
+    data: {
+      organization_id: org.id,
+      patient_id: patientProfile.id,
+      amount: 100,
+      payment_method: 'card',
+      created_by: doctor.id,
+    },
+  });
+  await prisma.payment_allocations.create({
+    data: {
+      organization_id: org.id,
+      payment_id: payment2.id,
+      invoice_id: invoice2.id,
+      amount: 100,
+      created_by: doctor.id,
+    },
+  });
+
   console.log(`✅ Treatment invoices created (first ID ${invoice1.id})`);
 
   // ─── Expenses (per branch) ────────────────────────────────────────────────────

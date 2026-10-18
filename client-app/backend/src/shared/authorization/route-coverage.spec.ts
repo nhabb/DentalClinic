@@ -17,13 +17,13 @@ const SELF_SERVICE_ROUTES: Record<string, string> = {
   'GET /clinic-profile': 'public-facing clinic information',
   'GET /patient/available-slots': 'free slots, needed to book',
   'GET /users/:id': 'assertSelfOrPermission(staff:read)',
-  'PATCH /users/:id': 'assertSelfOrPermission(staff:manage)',
-  'PATCH /users/:id/avatar': 'assertSelfOrPermission(staff:manage)',
+  'PATCH /users/:id': 'assertSelfOrPermission(staff:edit)',
+  'PATCH /users/:id/avatar': 'assertSelfOrPermission(staff:edit)',
   'PATCH /users/:id/password': 'assertSelf',
-  'POST /appointments': 'assertPatientProfileAccess(appointments:write)',
+  'POST /appointments': 'assertPatientProfileAccess(appointments:create)',
   'GET /appointments/:id': 'assertPatientProfileAccess(appointments:read)',
   'PATCH /appointments/:id/cancel':
-    'assertPatientProfileAccess(appointments:write)',
+    'assertPatientProfileAccess(appointments:delete)',
   'GET /patient/appointments/upcoming':
     'assertSelfOrPermission(appointments:read)',
   'GET /patient/appointments/history':
@@ -42,14 +42,14 @@ const SELF_SERVICE_ROUTES: Record<string, string> = {
     'own profile, or documents:read when patient_id is given',
   'GET /patient-documents/:id': 'assertPatientProfileAccess(documents:read)',
   'GET /patients/:id': 'assertPatientProfileAccess(patients:read)',
-  'PATCH /patients/:id': 'assertPatientProfileAccess(patients:write)',
-  'PATCH /patients/:id/photo': 'assertPatientProfileAccess(patients:write)',
+  'PATCH /patients/:id': 'assertPatientProfileAccess(patients:edit)',
+  'PATCH /patients/:id/photo': 'assertPatientProfileAccess(patients:edit)',
   'GET /patients/by-user/:userId': 'assertSelfOrPermission(patients:read)',
-  'PATCH /patients/by-user/:userId': 'assertSelfOrPermission(patients:write)',
-  'GET /notifications': 'assertSelfOrPermission(staff:manage)',
-  'GET /notifications/unread-count': 'assertSelfOrPermission(staff:manage)',
-  'PATCH /notifications/read-all': 'assertSelfOrPermission(staff:manage)',
-  'PATCH /notifications/:id/read': 'assertSelfOrPermission(staff:manage)',
+  'PATCH /patients/by-user/:userId': 'assertSelfOrPermission(patients:edit)',
+  'GET /notifications': 'assertSelfOrPermission(staff:edit)',
+  'GET /notifications/unread-count': 'assertSelfOrPermission(staff:edit)',
+  'PATCH /notifications/read-all': 'assertSelfOrPermission(staff:edit)',
+  'PATCH /notifications/:id/read': 'assertSelfOrPermission(staff:edit)',
 };
 
 const key = (r: RouteInfo) => `${r.method} ${r.path}`;

@@ -85,14 +85,14 @@ export class LabOrdersController {
   }
 
   @Post()
-  @RequirePermissions('lab:write')
+  @RequirePermissions('lab:create')
   @ApiOperation({ summary: 'Order lab work for a case' })
   create(@Body() dto: CreateLabOrderDto, @Req() req: { user: RequestUser }) {
     return this.labOrders.create(dto, BigInt(req.user.id));
   }
 
   @Patch(':id')
-  @RequirePermissions('lab:write')
+  @RequirePermissions('lab:edit')
   @ApiOperation({
     summary: 'Update a lab order',
     description:
@@ -106,7 +106,7 @@ export class LabOrdersController {
   }
 
   @Delete(':id')
-  @RequirePermissions('lab:write')
+  @RequirePermissions('lab:delete')
   @ApiOperation({ summary: 'Delete a lab order' })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.labOrders.remove(BigInt(id));

@@ -57,21 +57,21 @@ export class LabsController {
   }
 
   @Post()
-  @RequirePermissions('lab:write')
+  @RequirePermissions('lab:create')
   @ApiOperation({ summary: 'Add a lab to the directory' })
   create(@Body() dto: CreateLabDto) {
     return this.labs.create(dto);
   }
 
   @Patch(':id')
-  @RequirePermissions('lab:write')
+  @RequirePermissions('lab:edit')
   @ApiOperation({ summary: 'Edit a lab (set is_active false to retire)' })
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateLabDto) {
     return this.labs.update(BigInt(id), dto);
   }
 
   @Delete(':id')
-  @RequirePermissions('lab:write')
+  @RequirePermissions('lab:delete')
   @ApiOperation({ summary: 'Delete a lab that has no orders' })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.labs.remove(BigInt(id));

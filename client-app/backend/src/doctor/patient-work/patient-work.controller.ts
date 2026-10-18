@@ -2,9 +2,9 @@ import {
   Body,
   Controller,
   Delete,
-  ForbiddenException,
   Get,
   Param,
+  Patch,
   ParseIntPipe,
   Post,
   Req,
@@ -12,40 +12,16 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { RequirePermissions } from '../../shared/authorization/permissions.decorator';
 import type { RequestUser } from '../../shared/common/guards/jwt-auth.guard';
-import { AccessControlService } from '../../shared/access/access-control.service';
 import { PatientWorkService } from './patient-work.service';
 import { RecordWorkDto } from './dto/record-work.dto';
-import { CompleteWorkDto } from './dto/complete-work.dto';
-
-/** Billing from the chart is billing, whatever screen it happens on. */
-export const CHART_BILLING_PERMISSION = 'billing:write';
-
-/**
- * Recording work needs records:write; billing that work on an invoice also
- * needs billing:write, exactly like POST /billing/invoices. A caller without
- * it can still record the work unbilled by sending create_invoice: false.
- */
-export function assertMayBill(
-  access: Pick<AccessControlService, 'hasPermission'>,
-  actor: RequestUser,
-  dto: { create_invoice?: boolean },
-): void {
-  if (dto.create_invoice === false) return;
-  if (access.hasPermission(actor, CHART_BILLING_PERMISSION)) return;
-  throw new ForbiddenException(
-    `Billing this work needs the permission ${CHART_BILLING_PERMISSION}; send create_invoice: false to record it without an invoice`,
-  );
-}
+import { CompleteWorkDto, RepriceWorkDto } from './dto/complete-work.dto';
 
 @ApiBearerAuth()
-@RequirePermissions('records:write')
+@RequirePermissions('records:read')
 @ApiTags('Patient Work (dental chart)')
 @Controller('patient-work')
 export class PatientWorkController {
-  constructor(
-    private readonly patientWorkService: PatientWorkService,
-    private readonly access: AccessControlService,
-  ) {}
+  constructor(private readonly patientWorkService: PatientWorkService) {}
 
   @Get('chart/:patientId')
   @RequirePermissions('records:read')
@@ -57,31 +33,48 @@ export class PatientWorkController {
   }
 
   @Post()
+  @RequirePermissions('records:create')
   @ApiOperation({
-    summary: 'Record work on one or more teeth',
+    summary: 'Record work on one or more teeth (clinical only, never billed)',
     description:
-      'Creates one treatment record per tooth × procedure. Completed items with a price are billed on a single new invoice, which needs billing:write (send create_invoice: false to record unbilled work).',
+      'Creates one record per tooth × procedure. A price is noted on the record (quoted_amount); invoices are created only on the billing page (POST /billing/invoices).',
   })
   recordWork(@Body() dto: RecordWorkDto, @Req() req: { user: RequestUser }) {
-    assertMayBill(this.access, req.user, dto);
     return this.patientWorkService.recordWork(dto, BigInt(req.user.id));
   }
 
   @Post('complete')
+  @RequirePermissions('records:edit')
   @ApiOperation({
-    summary: 'Mark planned work as completed and/or bill unbilled work',
+    summary: 'Mark planned work as completed (clinical only, never billed)',
     description:
-      'Accepts planned records and completed records without an invoice. Items with a price are billed together on one new invoice, which needs billing:write (send create_invoice: false to complete without billing).',
+      'Accepts planned records and completed records without an invoice. A price is noted on the record (quoted_amount); invoices are created only on the billing page.',
   })
-  completePlanned(
-    @Body() dto: CompleteWorkDto,
+  completePlanned(@Body() dto: CompleteWorkDto) {
+    return this.patientWorkService.completePlanned(dto);
+  }
+
+  @Patch('records/:id/price')
+  @RequirePermissions('records:edit')
+  @ApiOperation({
+    summary: "Reprice one planned item; the patient's quote follows",
+    description:
+      'Planned, unbilled work only. The quote that follows the plan is rebuilt from it, so the estimate the patient is given always matches the chart.',
+  })
+  repriceRecord(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: RepriceWorkDto,
     @Req() req: { user: RequestUser },
   ) {
-    assertMayBill(this.access, req.user, dto);
-    return this.patientWorkService.completePlanned(dto, BigInt(req.user.id));
+    return this.patientWorkService.repriceRecord(
+      BigInt(id),
+      dto.amount,
+      BigInt(req.user.id),
+    );
   }
 
   @Delete('records/:id')
+  @RequirePermissions('records:delete')
   @ApiOperation({
     summary: 'Remove a planned or missing-tooth record (not billed work)',
   })

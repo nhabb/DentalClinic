@@ -41,21 +41,21 @@ export class BranchesController {
   }
 
   @Post()
-  @RequirePermissions('branches:manage')
+  @RequirePermissions('branches:create')
   @ApiOperation({ summary: 'Open a new branch in the current organization' })
   create(@Body() dto: CreateBranchDto) {
     return this.tenancy.createBranch(dto);
   }
 
   @Patch(':id')
-  @RequirePermissions('branches:manage')
+  @RequirePermissions('branches:edit')
   @ApiOperation({ summary: 'Update a branch' })
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateBranchDto) {
     return this.tenancy.updateBranch(BigInt(id), dto);
   }
 
   @Patch(':id/default')
-  @RequirePermissions('branches:manage')
+  @RequirePermissions('branches:edit')
   @ApiOperation({
     summary:
       'Make a branch the default one for new slots, appointments and stock',
@@ -65,7 +65,7 @@ export class BranchesController {
   }
 
   @Delete(':id')
-  @RequirePermissions('branches:manage')
+  @RequirePermissions('branches:delete')
   @ApiOperation({
     summary: 'Delete a branch that has no data yet (otherwise deactivate it)',
   })

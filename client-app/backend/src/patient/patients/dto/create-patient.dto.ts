@@ -9,6 +9,7 @@ import {
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
+import { IsPhone } from '../../../shared/common/phone';
 
 export const BLOOD_TYPES = [
   'A+',
@@ -53,9 +54,7 @@ export class CreatePatientDto {
   last_name: string;
 
   @ApiPropertyOptional({ example: '+961 70 000 000' })
-  @IsOptional()
-  @IsString()
-  @MaxLength(30)
+  @IsPhone()
   phone?: string;
 
   @ApiPropertyOptional({ description: 'YYYY-MM-DD', example: '1990-05-14' })

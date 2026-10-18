@@ -20,6 +20,24 @@ export const CONSULTATION_STATUSES = [
 ] as const;
 export type ConsultationStatus = (typeof CONSULTATION_STATUSES)[number];
 
+/**
+ * Which way the patient moved between this clinic and the outside doctor.
+ * `referred_out`: we sent our patient to their clinic.
+ * `referred_in`: they sent the patient to us (the patient is here because of them).
+ * `visiting`: they came here and treated the patient in our clinic.
+ *
+ * It decides who bills: on `referred_out` the other clinic charges the patient
+ * and `fee` is what we owe or agreed; on `referred_in` and `visiting` the work
+ * happens here, so it is invoiced from the billing page as usual and `fee` is
+ * the specialist's cut.
+ */
+export const CONSULTATION_DIRECTIONS = [
+  'referred_out',
+  'referred_in',
+  'visiting',
+] as const;
+export type ConsultationDirection = (typeof CONSULTATION_DIRECTIONS)[number];
+
 export class CreateConsultationDto {
   @ApiProperty({ description: 'patient_profiles.id' })
   @Type(() => Number)
@@ -42,6 +60,16 @@ export class CreateConsultationDto {
   @Type(() => Number)
   @IsInt()
   record_id?: number;
+
+  @ApiPropertyOptional({
+    enum: CONSULTATION_DIRECTIONS,
+    default: 'referred_out',
+    description:
+      'referred_out: we sent the patient to them. referred_in: they sent the patient to us. visiting: they treated the patient at our clinic.',
+  })
+  @IsOptional()
+  @IsIn(CONSULTATION_DIRECTIONS)
+  direction?: ConsultationDirection;
 
   @ApiPropertyOptional({ enum: CONSULTATION_STATUSES, default: 'requested' })
   @IsOptional()

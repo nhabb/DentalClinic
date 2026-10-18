@@ -2,13 +2,10 @@ import {
   ArrayMaxSize,
   ArrayMinSize,
   IsArray,
-  IsBoolean,
   IsDateString,
   IsNumber,
   IsOptional,
-  IsString,
   Max,
-  MaxLength,
   Min,
   ValidateNested,
 } from 'class-validator';
@@ -21,19 +18,13 @@ export class CompleteWorkItemDto {
   })
   @IsNumber()
   record_id: number;
-
-  @ApiPropertyOptional({
-    example: 250,
-    description: 'Price to bill; 0 or omitted = not billed',
-  })
-  @IsOptional()
-  @IsNumber({ maxDecimalPlaces: 2 })
-  @Min(0)
-  @Max(100000)
-  amount?: number;
 }
 
-/** Mark planned work as done, optionally billing all of it on one new invoice. */
+/**
+ * Mark planned work as done. The chart is clinical: no price is given here.
+ * A price reaches a record from an accepted quote (the quotes page), and the
+ * billing page is where completed work is priced and billed.
+ */
 export class CompleteWorkDto {
   @ApiProperty({ description: 'Patient profile ID' })
   @IsNumber()
@@ -47,17 +38,6 @@ export class CompleteWorkDto {
   @IsDateString()
   treatment_date?: string;
 
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  @MaxLength(2000)
-  notes?: string;
-
-  @ApiPropertyOptional({ default: true })
-  @IsOptional()
-  @IsBoolean()
-  create_invoice?: boolean;
-
   @ApiProperty({ type: [CompleteWorkItemDto] })
   @IsArray()
   @ArrayMinSize(1)
@@ -65,4 +45,13 @@ export class CompleteWorkDto {
   @ValidateNested({ each: true })
   @Type(() => CompleteWorkItemDto)
   items: CompleteWorkItemDto[];
+}
+
+/** A new price for one planned item on the chart. */
+export class RepriceWorkDto {
+  @ApiProperty({ example: 250, description: 'The agreed price for this work' })
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  @Max(100000)
+  amount: number;
 }

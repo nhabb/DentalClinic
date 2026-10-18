@@ -31,7 +31,7 @@ const record = (check: string, ok: boolean, detail = '') =>
     detail: detail.replace(/\s+/g, ' ').slice(0, 95),
   });
 
-/** Attacks a secretary (no staff:manage, no roles:manage, no records:read) might try. Every one must be refused. */
+/** Attacks a secretary (no staff:edit, no roles:edit, no records:read) might try. Every one must be refused. */
 const HOSTILE: [string, RegExp][] = [
   ["SELECT set_config('app.bypass_rls','on',false)", /set_config/],
   ["SELECT \"set_config\"('app.bypass_rls','on',false)", /set_config/],
@@ -47,14 +47,14 @@ const HOSTILE: [string, RegExp][] = [
   ],
   ['SELECT 1; DELETE FROM expenses', /Exactly one/],
   ['SELECT * FROM (TABLE audit_logs) x', /Could not parse/],
-  ['SELECT * FROM audit_logs', /staff:manage/],
+  ['SELECT * FROM audit_logs', /staff:edit/],
   [
     'SELECT * FROM appointments WHERE id IN (SELECT record_id FROM audit_logs)',
-    /staff:manage/,
+    /staff:edit/,
   ],
   ['WITH a AS (SELECT * FROM audit_logs) SELECT * FROM a', /Only SELECT/],
-  ['SELECT * FROM roles', /roles:manage/],
-  ['SELECT * FROM notifications', /staff:manage/],
+  ['SELECT * FROM roles', /roles:edit/],
+  ['SELECT * FROM notifications', /staff:edit/],
   ['SELECT * FROM auth.users', /restricted/],
   ['SELECT * FROM storage.objects', /schema "storage"/],
   ['SELECT * FROM pg_catalog.pg_roles', /schema "pg_catalog"/],
@@ -201,7 +201,7 @@ async function main() {
     }
     record(
       'db backstop: roles (4 rows) refused by Postgres for the secretary (policy bypassed on purpose)',
-      /roles:manage is required/.test(dbRefusal),
+      /roles:edit is required/.test(dbRefusal),
       dbRefusal,
     );
     let unset = '';
