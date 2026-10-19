@@ -50,6 +50,7 @@ import {
   FaPrint,
   FaClipboardList,
 } from "react-icons/fa";
+import { signOut } from "@/lib/auth/session";
 
 /** The invoice shape, its printing and its aging live in one shared module. */
 type TreatmentInvoice = Invoice;
@@ -398,7 +399,7 @@ export default function BillingPage() {
     toast.success("Logged out.");
     safeStorage.removeItem("adminAuth");
     safeStorage.removeItem("adminUser");
-    safeStorage.removeItem("authToken");
+    void signOut(); // clears the session cookie (server-side) and every hint
     safeStorage.removeItem("userRole");
     router.push("/login");
   };

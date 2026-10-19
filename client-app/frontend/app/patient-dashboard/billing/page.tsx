@@ -21,6 +21,7 @@ import {
   FaChevronDown,
   FaChevronUp,
 } from "react-icons/fa";
+import { signOut } from "@/lib/auth/session";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -141,7 +142,7 @@ export default function PatientBillingPage() {
 
   const handleLogout = () => {
     safeStorage.removeItem("patientAuth");
-    safeStorage.removeItem("authToken");
+    void signOut(); // clears the session cookie (server-side) and every hint
     safeStorage.removeItem("userRole");
     router.push("/login");
   };

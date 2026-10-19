@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/i18n";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
+import { apiFetch } from "@/lib/api/client";
 
 const inputClass =
   "appearance-none block w-full px-4 py-3 border border-gray-300 placeholder-gray-400 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-transparent transition-all";
@@ -38,7 +38,7 @@ function SetPasswordForm() {
       return;
     }
     let cancelled = false;
-    fetch(`${API_URL}/api/auth/set-password/validate?token=${encodeURIComponent(token)}`)
+    apiFetch(`/api/auth/set-password/validate?token=${encodeURIComponent(token)}`)
       .then((r) => r.json())
       .then((d) => {
         if (cancelled) return;
@@ -71,9 +71,8 @@ function SetPasswordForm() {
     }
     setSubmitting(true);
     try {
-      const res = await fetch(`${API_URL}/api/auth/set-password`, {
+      const res = await apiFetch("/api/auth/set-password", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token, password }),
       });
       const data = await res.json().catch(() => ({}));

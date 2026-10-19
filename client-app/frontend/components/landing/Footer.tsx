@@ -4,6 +4,7 @@ import { MapPin, Phone, Mail } from "lucide-react";
 import Link from "next/link";
 import { FaTooth } from "react-icons/fa";
 import { useTranslation } from "@/lib/i18n";
+import { openCookieSettings } from "@/lib/consent";
 
 // Client Component - Footer
 export default function Footer() {
@@ -27,6 +28,7 @@ export default function Footer() {
   const legalLinks = [
     { href: "/privacy-policy", label: t("landing.privacyPolicy") },
     { href: "/terms-of-service", label: t("landing.termsOfService") },
+    { href: "/cookie-policy", label: t("landing.cookiePolicy") },
     { href: "#", label: t("landing.hipaaCompliance") },
   ];
 
@@ -59,6 +61,7 @@ export default function Footer() {
           currentYear={currentYear}
           allRightsReserved={t("landing.allRightsReserved")}
           legalLinks={legalLinks}
+          cookieSettingsLabel={t("landing.cookieSettings")}
         />
       </div>
     </footer>
@@ -213,10 +216,12 @@ function BottomBar({
   currentYear,
   allRightsReserved,
   legalLinks,
+  cookieSettingsLabel,
 }: {
   currentYear: number;
   allRightsReserved: string;
   legalLinks: Array<{ href: string; label: string }>;
+  cookieSettingsLabel: string;
 }) {
   return (
     <div className="border-t border-gray-800 pt-8 mt-8">
@@ -224,7 +229,7 @@ function BottomBar({
         <p className="text-sm text-gray-400 mb-4 md:mb-0">
           © {currentYear} BrightSmile Dental Clinic. {allRightsReserved}
         </p>
-        <div className="flex space-x-6 text-sm">
+        <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm">
           {legalLinks.map((link, index) => (
             <Link
               key={index}
@@ -234,6 +239,13 @@ function BottomBar({
               {link.label}
             </Link>
           ))}
+          <button
+            type="button"
+            onClick={openCookieSettings}
+            className="text-gray-400 hover:text-white transition-colors"
+          >
+            {cookieSettingsLabel}
+          </button>
         </div>
       </div>
     </div>

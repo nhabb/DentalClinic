@@ -34,6 +34,7 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Card, Kpi, Donut, ChartTooltip, money, SERIES, INK, STOCK_COLOR } from "@/components/dashboard/chart-kit";
 import { pct } from "@/components/dashboard/date-range";
 import { FilterSelect } from "@/components/dashboard/FilterSelect";
+import { signOut } from "@/lib/auth/session";
 
 interface Item {
   id: number;
@@ -268,7 +269,7 @@ export default function InventoryAnalyticsPage() {
   const handleLogout = () => {
     toast.success("Logged out.");
     safeStorage.removeItem("adminAuth");
-    safeStorage.removeItem("authToken");
+    void signOut(); // clears the session cookie (server-side) and every hint
     safeStorage.removeItem("adminUser");
     safeStorage.removeItem("userRole");
     safeStorage.removeItem("doctorId");

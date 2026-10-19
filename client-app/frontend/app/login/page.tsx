@@ -5,12 +5,13 @@ import { Button } from "@/components/ui/button";
 import { FaTooth, FaUser, FaUserMd } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { toast } from 'sonner';
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/lib/i18n";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { supabase } from "@/lib/supabase/client";
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
+import { apiFetch } from "@/lib/api/client";
+import { rememberUser } from "@/lib/auth/session";
 
 const ROLE_REDIRECTS: Record<string, string> = {
   patient: "/patient-dashboard",
@@ -32,6 +33,15 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError]       = useState("");
+
+  // Sent here by apiFetch (another tab signed in as someone else) or by the
+  // Google callback (the API could not sign the account in).
+  useEffect(() => {
+    const reason = new URLSearchParams(window.location.search).get("reason");
+    if (reason === "switched") setError(t("session.switchedAccount"));
+    if (reason === "google") setError(t("session.googleFailed"));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const fillDemo = (acc: typeof DEMO_ACCOUNTS[0]) => {
     setEmail(acc.email);
@@ -63,9 +73,8 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const res = await fetch(`${API_URL}/api/auth/login`, {
+      const res = await apiFetch("/api/auth/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
 
@@ -76,26 +85,9 @@ export default function LoginPage() {
         return;
       }
 
-      const { user, token } = data;
-
-      // Persist auth (sessionStorage keeps each tab's session independent)
-      sessionStorage.setItem("authToken", token);
-      sessionStorage.setItem("userRole", user.role);
-      sessionStorage.setItem("userId", user.id.toString());
-      sessionStorage.setItem(
-        "adminUser",
-        JSON.stringify({
-          email: user.email,
-          firstName: user.first_name,
-          lastName: user.last_name,
-          role: user.role,
-        })
-      );
-      // Mark admin-role users as authenticated for the admin layout guard
-      const adminRoles = ["doctor", "admin", "secretary", "superadmin"];
-      if (adminRoles.includes(user.role)) {
-        sessionStorage.setItem("adminAuth", "true");
-      }
+      // The API set the session cookie; keep only display hints here.
+      const { user } = data;
+      rememberUser(user);
 
       toast.success("Logged in successfully.");
       const redirect = ROLE_REDIRECTS[user.role] ?? "/patient-dashboard";
