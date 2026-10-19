@@ -55,8 +55,9 @@ A full-stack web application for managing a dental clinic: appointments, patient
 ### Environment Setup
 
 ```bash
-# 1. Clone the repository
-git clone <repo-url>
+# 1. Clone both repositories side by side (frontends here, backends in BrightsmileClinicBack)
+git clone https://github.com/nhabb/DentalClinic.git
+git clone https://github.com/nhabb/BrightsmileClinicBack.git
 cd DentalClinic
 
 # 2. Configure frontend environment
@@ -64,7 +65,7 @@ cp client-app/frontend/.env.example client-app/frontend/.env.local
 # Fill in: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, NEXT_PUBLIC_API_URL
 
 # 3. Configure backend environment
-cp client-app/backend/.env.example client-app/backend/.env
+cp ../BrightsmileClinicBack/client-app/backend/.env.example ../BrightsmileClinicBack/client-app/backend/.env
 # Fill in: DATABASE_URL, DIRECT_URL, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, OPENAI_API_KEY
 
 # 4. (Optional) Copy Docker env template
@@ -90,11 +91,12 @@ docker compose up --build
 
 ```bash
 # Frontend (port 3000)
+cd client-app/frontend
 npm install
 npm run dev
 
-# Backend (port 5000)
-cd backend
+# Backend (port 5000), from the BrightsmileClinicBack clone
+cd ../BrightsmileClinicBack/client-app/backend
 npm install
 npx prisma generate
 npm run start:dev
@@ -325,7 +327,7 @@ clinic_profile                 (clinic metadata, singleton)
 
 #### Module 3 — ORM (Minor, 1pt) ✅
 
-- Prisma v7.6.0 with a fully typed schema (`client-app/backend/prisma/schema.prisma`).
+- Prisma v7.6.0 with a fully typed schema (`client-app/backend/prisma/schema.prisma` in BrightsmileClinicBack).
 - 15 models with all relations expressed via Prisma relation fields.
 - Migrations via `npx prisma migrate dev`.
 - PostgreSQL adapter (`@prisma/adapter-pg`) for Supabase compatibility.

@@ -4,23 +4,38 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**BrightSmile Dental Clinic** — a dental practice management SaaS. Full-stack monorepo with a Next.js 16 frontend and NestJS backend, using Supabase for auth and PostgreSQL via Prisma.
+**BrightSmile Dental Clinic** — a dental practice management SaaS: Next.js 16 frontends and NestJS backends, using Supabase for auth and PostgreSQL via Prisma. **This repository holds the frontends only;** the backends live in `nhabb/BrightsmileClinicBack`.
+
+## Repositories & deployment
+
+The project is split across two GitHub repos that mirror the same folder layout:
+
+| Repo | Holds | Vercel project (team `dream-team-1a73`) |
+|------|-------|------------------------------------------|
+| `nhabb/DentalClinic` (this repo) | `client-app/frontend`, `super-admin-app/frontend` | `dentalclinic` → root `client-app/frontend` → https://brightsmileclinic.vercel.app |
+| `nhabb/BrightsmileClinicBack` | `client-app/backend`, `super-admin-app/backend` | `brightsmile-api` → root `client-app/backend` → https://brightsmile-api.vercel.app |
+
+- **Branches:** `main` = production; `PRE` = preview. A push to any branch other than `main` builds a Vercel preview URL; a push to `main` deploys to production.
+- **Clone both side by side** to run the full stack locally; the folder names are the same in both repos, so paths in docs match.
+- **Keep the `<app>/backend` nesting.** The shared Prisma schema writes the platform client to `../../../super-admin-app/backend/src/generated/prisma`, relative to `client-app/backend/prisma/`; flattening the folders breaks `prisma generate`.
+- **Backend changes** go in `BrightsmileClinicBack` — see its `CLAUDE.md`, which carries the backend commands, Prisma/migration rules and tests. When an endpoint changes there, update `lib/api/endpoints.ts` here, and gate new `@RequirePermissions` routes in the UI with `can(...)`.
+- **Backend paths in this file** (`src/...`, `client-app/backend/...`, `super-admin-app/backend/...`, migrations, specs, smoke scripts) refer to the backend repo; the architecture notes below are kept here because the screens depend on those contracts.
+- **Super-admin backend** (`super-admin-app/backend`) is not deployed to Vercel yet.
+- **Deploy order:** a frontend change that needs a new endpoint ships after the backend change is live on `main` of `BrightsmileClinicBack`.
+- **Env vars** live in the Vercel project (`vercel env pull` to sync).
+- **Vercel CLI deploys:** the CLI does **not** read `.gitignore`; `client-app/frontend/.vercelignore` keeps `.env*` files and keys out of uploads. Keep it when adding secret files. Prefer Git-triggered deploys (push a branch).
 
 ## Repository layout
 ```
-client-app/     the product clinics use (their staff and patients)
-  backend/    NestJS API, port 5000, multi-tenant with RLS
-  frontend/   Next.js app, port 3000
-super-admin-app/   the operator console (you): onboard and monitor every clinic
-  backend/    NestJS API, port 5100, platform-only login
-  frontend/   Next.js app, port 3100, same design system
-docker/     nginx reverse proxy config; docker-compose.yml at the root
+client-app/frontend/        Next.js app clinics use (staff and patients), port 3000
+super-admin-app/frontend/   Next.js operator console, port 3100, same design system
+docker/                     nginx reverse proxy config; docker-compose.yml at the root
 ```
-Both backends share one database and one Prisma schema (`client-app/backend/prisma`).
+The matching backends (`client-app/backend`, `super-admin-app/backend`) are in `nhabb/BrightsmileClinicBack`; clone it next to this repo (`../BrightsmileClinicBack`) and the root scripts and `docker-compose.yml` find it there.
 
 ## Development Commands
 
-From the repo root: `npm run dev:clinic` (clinic API + app) or `npm run dev:platform` (platform API + console).
+From the repo root: `npm run dev:clinic` (clinic API + app) or `npm run dev:platform` (platform API + console); both start the API from `../BrightsmileClinicBack`.
 
 
 ### Frontend (`client-app/frontend/` directory)
@@ -30,42 +45,7 @@ npm run build     # Production build
 npm run lint      # ESLint
 ```
 
-### Backend (`client-app/backend/` directory)
-```bash
-npm run start:dev   # Start NestJS with file watch (port 5000)
-npm run start:debug # Debug mode with watch
-npm run build       # Compile TypeScript to dist/
-npm run lint        # ESLint with auto-fix
-npm run format      # Prettier formatting
-npm test            # Jest unit tests
-npm run test:e2e    # E2E tests
-npm run test:cov    # Coverage report
-```
-
-### Prisma (run from `client-app/backend/`)
-```bash
-node scripts/apply-sql.js prisma/migrations/<folder>/migration.sql   # Apply a migration (see note)
-npx prisma generate       # Regenerate client after schema changes (generated client is committed; both generators are pinned to moduleFormat cjs + no import extension because tsconfig uses nodenext)
-npx prisma studio         # Open Prisma Studio GUI
-```
-Do **not** run `prisma migrate dev`: the database has no `_prisma_migrations` history
-(it was evolved with `db push`/manual SQL), so it would try to replay every old
-migration. Write the SQL into a new `prisma/migrations/<timestamp>_<name>/migration.sql`,
-apply it with `scripts/apply-sql.js` (whole file in one round trip, so `BEGIN`/`COMMIT`
-in the file makes it atomic), update `schema.prisma`, then `npx prisma generate`.
-Every table and column carries a Postgres comment describing what it means and its allowed
-values (migration `20261009120000_table_and_column_comments`, re-runnable). The AI assistant
-reads them at startup (`src/patient/agent/schema-summary.ts`), so when you add a table or
-column, add its `COMMENT ON` to that file and re-apply it.
-
-The AI assistant's SQL tool reads as the database role `dental_agent` (migration
-`20261008210000_agent_permissions_rls`): a new table the assistant may read needs a
-`GRANT SELECT`, an `agent_permission` policy and an entry in `TABLE_PERMISSIONS`
-(`src/patient/agent/agent-access.ts`). Credential columns are kept out with column-level
-grants (`20261013190000_agent_users_column_grants`). A price or cost column needs the
-`pricing:read` permission: list it in `PRICING_COLUMNS` and give the table a view in schema
-`agent` that gates the column (`20261013200000_pricing_permission_and_agent_views`). The
-specs next to `agent-access.ts` fail when any of these drift.
+Backend and Prisma commands: see `CLAUDE.md` in `BrightsmileClinicBack`.
 
 ## Environment Setup
 
@@ -76,7 +56,7 @@ NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 ```
 
-**Backend** (`.env`, see `client-app/backend/.env.example`):
+**Backend** (`.env` in `BrightsmileClinicBack`, see its `client-app/backend/.env.example`):
 ```
 DATABASE_URL=postgresql://...
 DIRECT_URL=postgresql://...

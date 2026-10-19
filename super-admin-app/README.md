@@ -4,6 +4,10 @@ The operator's own application, separate from the clinic product but on the
 same database: onboard new clinics (organizations), watch all of them, manage
 platform admins.
 
+The API lives in the `nhabb/BrightsmileClinicBack` repo (same path,
+`super-admin-app/backend`); clone it next to this repo. Paths to `backend/` below
+are in that repo.
+
 ```
 super-admin-app/
   backend/    NestJS API on :5100  — platform-only login, clinics, dashboard, admins
