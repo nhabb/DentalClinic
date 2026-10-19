@@ -61,10 +61,14 @@ export function resetMe(): void {
   meToken = null;
 }
 
-/** True when the user holds the permission. Platform superadmins hold everything. */
+/**
+ * True when the user holds the permission. Platform superadmins and clinic
+ * admins hold everything: the API grants an admin the whole catalog in code
+ * (RolesService.permissionsFor), so the screens must not depend on the list.
+ */
 export function can(user: Me | null, permission: string): boolean {
   if (!user) return false;
-  if (user.role === "superadmin") return true;
+  if (user.role === "superadmin" || user.role === "admin") return true;
   return user.permissions.includes(permission);
 }
 
