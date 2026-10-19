@@ -577,3 +577,7 @@ AI tools (Claude, ChatGPT) were used in this project for the following tasks:
 | Debugging | Claude | Used to diagnose Prisma BigInt serialization and RTL layout issues |
 
 > All AI-generated content was reviewed, tested, and understood by the team member who integrated it. No code was merged without full comprehension by the responsible developer.
+
+## Contributing
+
+All changes reach `develop` through a pull request. Claude reviews every pull request into `develop`, and each of its comments must be resolved before merging.
