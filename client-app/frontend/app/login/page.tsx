@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { useTranslation } from "@/lib/i18n";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { supabase } from "@/lib/supabase/client";
+import { resetMe } from "@/lib/permissions";
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
 
 const ROLE_REDIRECTS: Record<string, string> = {
@@ -80,6 +81,7 @@ export default function LoginPage() {
 
       // Persist auth (sessionStorage keeps each tab's session independent)
       sessionStorage.setItem("authToken", token);
+      resetMe();
       sessionStorage.setItem("userRole", user.role);
       sessionStorage.setItem("userId", user.id.toString());
       sessionStorage.setItem(
