@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { ClinicName } from "@/components/ui/ClinicName";
 import { usePathname } from "next/navigation";
-import { FaTooth, FaChartLine, FaHospital, FaUsers, FaUserShield, FaBars, FaSignOutAlt, FaPlus } from "react-icons/fa";
+import { FaTooth, FaChartLine, FaHospital, FaUsers, FaUserShield, FaBars, FaSignOutAlt, FaPlus, FaRobot } from "react-icons/fa";
 import { cn } from "@/lib/utils";
 import type { PlatformUser } from "@/lib/auth";
 
@@ -10,6 +11,7 @@ const NAV = [
   { href: "/", label: "Dashboard", icon: FaChartLine, exact: true },
   { href: "/organizations", label: "Clinics", icon: FaHospital, exact: false },
   { href: "/accounts", label: "Accounts", icon: FaUsers, exact: false },
+  { href: "/ai-usage", label: "AI usage", icon: FaRobot, exact: false },
   { href: "/admins", label: "Platform admins", icon: FaUserShield, exact: false },
 ] as const;
 
@@ -40,13 +42,12 @@ export function Sidebar({ open, onToggle, user, onLogout }: Props) {
       >
         <div className={cn("flex items-center border-b border-ink-200", open ? "gap-2 p-4" : "justify-between px-2 py-4")}>
           <Link href="/" className={cn("group flex min-w-0 items-center gap-3 rounded-xl outline-none", open && "flex-1")}>
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 shadow-lg shadow-brand-700/20 transition-transform duration-200 group-hover:scale-105">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 shadow-lg shadow-brand-700/20 transition-transform duration-200 group-hover:scale-105">
               <FaTooth className="text-lg text-white" />
             </span>
             {open && (
               <span className="min-w-0 animate-fade-in">
-                <span className="block truncate font-display text-lg font-bold leading-tight text-ink-900">Dental Platform</span>
-                <span className="block truncate text-[11px] text-ink-400">Operator console</span>
+                <ClinicName size="sm" name="Dental Platform" detail="Operator console" />
               </span>
             )}
           </Link>

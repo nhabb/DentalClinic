@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ClinicName } from "@/components/ui/ClinicName";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "@/lib/i18n";
 import { usePermissions } from "@/lib/permissions";
+import { useClinicIdentity } from "@/lib/clinic";
 import { screenPermission } from "@/lib/adminAccess";
 import {
   FaTooth,
@@ -12,6 +14,7 @@ import {
   FaCalendarAlt,
   FaBoxes,
   FaUsers,
+  FaCashRegister,
   FaMoneyBillWave,
   FaFileInvoiceDollar,
   FaUserShield,
@@ -29,6 +32,7 @@ type ActivePage =
   | "notifications"
   | "expenses"
   | "billing"
+  | "payments"
   | "roles";
 
 type Props = {
@@ -51,6 +55,7 @@ const navItems = [
   { id: "patients",     href: "/admin/patients",     icon: FaUsers,             labelKey: "nav.patients"     },
   { id: "expenses",     href: "/admin/expenses",     icon: FaMoneyBillWave,     labelKey: "nav.expenses"     },
   { id: "billing",      href: "/admin/billing",      icon: FaFileInvoiceDollar, labelKey: "nav.billing"      },
+  { id: "payments",     href: "/admin/payments",     icon: FaCashRegister,      labelKey: "nav.payments"     },
   { id: "roles",        href: "/admin/roles",        icon: FaUserShield,        labelKey: "nav.roles"        },
 ] as const;
 
@@ -64,7 +69,7 @@ const DASHBOARD_SUB_ITEMS = [
   { id: "billing-analytics",      href: "/admin/billing/analytics",      label: "Billing"      },
 ] as const;
 
-const BAR_IDS: readonly ActivePage[] = ["dashboard", "appointments", "patients", "billing"];
+const BAR_IDS: readonly ActivePage[] = ["dashboard", "appointments", "billing", "payments"];
 
 /* Every admin page mounts its own <AdminSidebar>, so navigating between
  * pages remounts it too — without this, the nav items would re-stagger on
@@ -82,6 +87,7 @@ export default function AdminSidebar({
 }: Props) {
   const { t } = useTranslation();
   const pathname = usePathname();
+  const clinic = useClinicIdentity();
   const [moreOpen, setMoreOpen] = useState(false);
   const [playEntrance] = useState(() => !sidebarHasAnimated);
 
@@ -143,18 +149,16 @@ export default function AdminSidebar({
               sidebarOpen && "flex-1",
             )}
           >
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-accent-blue-400 to-accent-blue-600 shadow-lg shadow-accent-blue-700/20 transition-transform duration-200 group-hover:scale-105">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 shadow-lg shadow-brand-700/20 transition-transform duration-200 group-hover:scale-105">
               <FaTooth className="text-lg text-white" />
             </span>
             {sidebarOpen && (
-              <span className="min-w-0 animate-fade-in">
-                <span className="block truncate font-display text-lg font-bold leading-tight text-ink-900">
-                  BrightSmile
-                </span>
-                <span className="block truncate text-[11px] text-ink-400">
-                  {subtitle ?? t("nav.adminPanel")}
-                </span>
-              </span>
+              <ClinicName
+                className="animate-fade-in"
+                size="sm"
+                name={clinic?.name}
+                detail={clinic?.branch ?? subtitle ?? t("nav.adminPanel")}
+              />
             )}
           </Link>
           <button

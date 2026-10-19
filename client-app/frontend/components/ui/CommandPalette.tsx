@@ -29,14 +29,28 @@ const NAV_COMMANDS: NavCommand[] = [
   { key: "appointments", label: "Appointments", icon: FaCalendarAlt, href: "/admin/appointments" },
   { key: "patients", label: "Patients", icon: FaUsers, href: "/admin/patients" },
   { key: "inventory", label: "Inventory", icon: FaBoxes, href: "/admin/inventory" },
-  { key: "billing", label: "Billing", icon: FaFileInvoiceDollar, href: "/admin/billing" },
+  { key: "billing", label: "Billing", icon: FaFileInvoiceDollar, href: "/admin/billing", keywords: ["bills", "invoices", "payments", "money"] },
+  {
+    key: "payments",
+    label: "Payments",
+    icon: FaMoneyBillWave,
+    href: "/admin/payments",
+    keywords: ["take payment", "till", "takings", "receipts", "cash"],
+  },
+  {
+    key: "plans",
+    label: "Treatment plans",
+    icon: FaFileInvoiceDollar,
+    href: "/admin/billing?view=plans",
+    keywords: ["quotes", "estimates", "plan"],
+  },
   { key: "expenses", label: "Expenses", icon: FaMoneyBillWave, href: "/admin/expenses" },
 ];
 
 /** What each quick action needs; the screen it opens is checked too. */
 const ACTION_PERMISSION: Record<string, string> = {
-  "new-appointment": "appointments:write",
-  "new-patient": "patients:write",
+  "new-appointment": "appointments:create",
+  "new-patient": "patients:create",
 };
 
 const ACTION_COMMANDS: NavCommand[] = [

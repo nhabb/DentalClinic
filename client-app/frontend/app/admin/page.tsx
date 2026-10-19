@@ -37,7 +37,6 @@ import {
   FaTimes,
 } from "react-icons/fa";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
 
 interface AdminUser {
   id: number;
@@ -114,14 +113,14 @@ export default function AdminDashboard() {
         // Fire all requests simultaneously — one round-trip wave
         const [userRes, patientsRes, appointmentsRes, inventoryRes, paymentsRes, expensesRes, invoicesRes, doctorsRes, recordsRes] =
           await Promise.all([
-            email ? fetch(`${API_URL}/api/users/by-email?email=${encodeURIComponent(email)}`) : Promise.resolve(null),
+            email ? apiFetch(`/api/users/by-email?email=${encodeURIComponent(email)}`) : Promise.resolve(null),
             apiFetch(`/api/patients`),
             apiFetch(`/api/appointments?limit=1000`),
             apiFetch(`/api/inventory`),
             apiFetch(`/api/billing/invoice-payments?limit=500`),
             apiFetch(`/api/expenses?limit=500`),
             apiFetch(`/api/billing/invoices?limit=200`),
-            fetch(`${API_URL}/api/users/doctors`),
+            apiFetch(`/api/users/doctors`),
             apiFetch(`/api/patient-records?limit=1000`),
           ]);
 
@@ -416,6 +415,7 @@ export default function AdminDashboard() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-44">
+                                {can("appointments:edit") && can("slots:create") && (
                                 <DropdownMenuItem
                                   onClick={() => {
                                     setPostponeApptId(apt.id);
@@ -425,7 +425,8 @@ export default function AdminDashboard() {
                                 >
                                   <FaCalendarPlus className="text-brand" /> {t("adminDashboard.postpone")}
                                 </DropdownMenuItem>
-                                {can("appointments:write") && (
+                                )}
+                                {can("appointments:delete") && (
                                 <DropdownMenuItem
                                   onClick={() => handleCancelAppointment(apt.id)}
                                   className="text-red-600 focus:text-red-600"
@@ -487,7 +488,7 @@ export default function AdminDashboard() {
               >
                 {t("common.cancel")}
               </button>
-              {(can("appointments:write") && can("slots:manage")) && (
+              {(can("appointments:edit") && can("slots:create")) && (
               <button
                 onClick={handlePostponeSubmit}
                 disabled={!postponeDate || !postponeTime || postponeLoading}

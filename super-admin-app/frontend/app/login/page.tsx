@@ -37,7 +37,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 px-4">
+    <div className="relative flex min-h-screen items-center justify-center gradient-auth-bg px-4">
       <div aria-hidden className="absolute inset-0 overflow-hidden">
         <div className="absolute -right-40 -top-40 h-80 w-80 rounded-full bg-brand/10 blur-3xl" />
         <div className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-brand-400/10 blur-3xl" />
@@ -104,7 +104,7 @@ export default function LoginPage() {
             </span>
           </label>
 
-          <Button type="submit" size="lg" className="w-full" disabled={submitting}>
+          <Button type="submit" size="lg" className="w-full gradient-auth-card hover:shadow-xl transition-all" disabled={submitting}>
             {submitting ? "Signing in…" : "Sign in"}
           </Button>
         </form>

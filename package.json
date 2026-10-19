@@ -2,12 +2,15 @@
   "name": "dentalclinic",
   "private": true,
   "scripts": {
-    "dev": "cd client-app/frontend && npm run dev",
-    "dev:client-app": "cd client-app/frontend && npm run dev",
-    "dev:super-admin": "cd super-admin-app/frontend && npm run dev",
+    "dev": "npm run dev:client-app",
     "install:all": "cd client-app/frontend && npm install && cd ../../super-admin-app/frontend && npm install",
     "docker:up": "docker compose up --build",
-    "docker:down": "docker compose down"
+    "docker:down": "docker compose down",
+    "dev:client-app": "concurrently -n frontend,backend -c cyan,magenta \"cd client-app/frontend && npm run dev\" \"cd ../BrightsmileClinicBack/client-app/backend && npm run start:dev\"",
+    "dev:clinic": "npm run dev:client-app",
+    "dev:super-admin": "concurrently -n super-admin-api,super-admin-ui -c green,yellow \"cd ../BrightsmileClinicBack/super-admin-app/backend && npm run start:dev\" \"cd super-admin-app/frontend && npm run dev\"",
+    "dev:platform": "npm run dev:super-admin",
+    "install:super-admin": "cd super-admin-app/frontend && npm install"
   },
   "devDependencies": {
     "concurrently": "^9.2.1"

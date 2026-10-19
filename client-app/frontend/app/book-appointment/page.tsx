@@ -1,6 +1,8 @@
 "use client";
 
 import { apiFetch } from "@/lib/api/client";
+import { ClinicName } from "@/components/ui/ClinicName";
+import { useClinicIdentity } from "@/lib/clinic";
 import { toast } from 'sonner';
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -98,6 +100,7 @@ const procedures: Procedure[] = [
 
 export default function BookAppointment() {
   const router = useRouter();
+  const clinic = useClinicIdentity();
   const [step, setStep] = useState(1);
   const [selectedDoctor, setSelectedDoctor] = useState<number | null>(null);
   const [serviceType, setServiceType] = useState<ServiceType>(null);
@@ -349,9 +352,7 @@ export default function BookAppointment() {
               <div className="w-10 h-10 bg-gradient-to-br from-brand to-brand-400 rounded-lg flex items-center justify-center">
                 <FaTooth className="text-white text-xl" />
               </div>
-              <span className="text-xl font-bold text-gray-900">
-                BrightSmile
-              </span>
+              <ClinicName size="lg" name={clinic?.name} detail={clinic?.branch} />
             </Link>
             <div className="flex items-center gap-4">
               {(photoUrl || patientName) && (

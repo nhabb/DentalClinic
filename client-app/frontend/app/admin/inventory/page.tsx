@@ -550,7 +550,7 @@ export default function InventoryManagement() {
             if (ok > 0) toast.success(`${ok} item${ok > 1 ? "s" : ""} imported.`);
             if (fail > 0) toast.error(`${fail} row${fail > 1 ? "s" : ""} failed — check browser console.`);
           }}
-          onAdd={can("inventory:write") ? () => setShowAddModal(true) : undefined}
+          onAdd={can("inventory:create") ? () => setShowAddModal(true) : undefined}
           addLabel={t("inventory.addItem")}
           actions={[{ key: "analytics", label: "View analytics", icon: <FaChartLine />, href: "/admin/inventory/analytics" }]}
         />
@@ -734,7 +734,7 @@ export default function InventoryManagement() {
                                   <FaCamera />
                                 )}
                               </button>
-                              {can("inventory:write") && (
+                              {can("inventory:edit") && (
                               <button
                                 type="button"
                                 title={t("common.edit")}
@@ -744,7 +744,7 @@ export default function InventoryManagement() {
                                 <FaEdit />
                               </button>
                               )}
-                              {can("inventory:write") && (
+                              {can("inventory:delete") && (
                               <button
                                 type="button"
                                 title={t("common.delete")}
@@ -858,7 +858,7 @@ export default function InventoryManagement() {
                 >
                   <FaCamera className="me-2" /> {t("inventory.uploadPhoto")}
                 </Button>
-                {can("inventory:write") && (
+                {can("inventory:delete") && (
                 <Button
                   variant="outline"
                   className="ms-auto border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"

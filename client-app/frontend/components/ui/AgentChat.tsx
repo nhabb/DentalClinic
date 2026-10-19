@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { apiFetch } from "@/lib/api/client";
 import { FaRobot, FaTimes, FaPaperPlane, FaTrash } from "react-icons/fa";
 
@@ -10,7 +10,7 @@ interface Message {
 
 interface Props {
   doctorName?: string; // kept for display only
-  doctorId?: number;   // no longer sent to backend
+  doctorId?: number;   // identifies whose conversation to load; the API keys it by the token
 }
 
 function MarkdownText({ text }: { text: string }) {
@@ -43,6 +43,12 @@ function renderInline(text: string) {
   );
 }
 
+/**
+ * The clinic AI assistant widget. The conversation lives on the server, keyed
+ * to the signed-in user: the widget loads it when opened, sends only the new
+ * message, and asks the server to forget it on "clear". Nothing is kept in the
+ * browser, so another person signing in on the same page starts from theirs.
+ */
 export default function AgentChat({ doctorName = "Doctor", doctorId }: Props) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -54,19 +60,36 @@ export default function AgentChat({ doctorName = "Doctor", doctorId }: Props) {
     if (open) bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, open]);
 
+  const loadHistory = useCallback(async () => {
+    try {
+      const res = await apiFetch("/api/agent/chat");
+      if (!res.ok) return;
+      const data = (await res.json()) as { messages?: Message[] };
+      setMessages(Array.isArray(data.messages) ? data.messages : []);
+    } catch {
+      /* keep whatever is shown; the next message will tell the user if the API is down */
+    }
+  }, []);
+
+  // The server's conversation is the truth: load it when the panel opens or the
+  // signed-in person changes (and show nothing of the previous person meanwhile).
+  useEffect(() => {
+    setMessages([]);
+    if (open) void loadHistory();
+  }, [open, doctorId, loadHistory]);
+
   const sendMessage = async () => {
     const text = input.trim();
     if (!text || loading) return;
     setInput("");
 
-    const newMessages: Message[] = [...messages, { role: "user", content: text }];
-    setMessages(newMessages);
+    setMessages((prev) => [...prev, { role: "user", content: text }]);
     setLoading(true);
 
     try {
       const res = await apiFetch("/api/agent/chat", {
         method: "POST",
-        body: JSON.stringify({ messages: newMessages }),
+        body: JSON.stringify({ message: text }),
       });
       const data = await res.json();
       setMessages((prev) => [...prev, { role: "assistant", content: data.reply ?? "No response." }]);
@@ -74,6 +97,15 @@ export default function AgentChat({ doctorName = "Doctor", doctorId }: Props) {
       setMessages((prev) => [...prev, { role: "assistant", content: "Sorry, something went wrong. Please try again." }]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const clearConversation = async () => {
+    setMessages([]);
+    try {
+      await apiFetch("/api/agent/chat", { method: "DELETE" });
+    } catch {
+      /* the next open reloads whatever the server still has */
     }
   };
 
@@ -105,7 +137,7 @@ export default function AgentChat({ doctorName = "Doctor", doctorId }: Props) {
               </div>
             </div>
             <button
-              onClick={() => { setMessages([]); }}
+              onClick={clearConversation}
               className="p-1.5 hover:bg-white/20 rounded-lg transition-colors"
               title="Clear conversation"
             >
@@ -181,7 +213,7 @@ export default function AgentChat({ doctorName = "Doctor", doctorId }: Props) {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKey}
-              placeholder="Ask anything..."
+                placeholder="Ask anything..."
                 rows={1}
                 className="flex-1 resize-none text-sm border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent-blue-500/20 focus:border-accent-blue-500 max-h-28 overflow-y-auto"
                 style={{ lineHeight: "1.5" }}
@@ -194,7 +226,9 @@ export default function AgentChat({ doctorName = "Doctor", doctorId }: Props) {
                 <FaPaperPlane size={14} />
               </button>
             </div>
-            <p className="text-[10px] text-gray-400 mt-1.5 text-center">Press Enter to send · Shift+Enter for new line</p>
+            <p className="text-[10px] text-gray-400 mt-1.5 text-center">
+              {doctorName} · Your conversation is private to your account
+            </p>
           </div>
         </div>
       )}

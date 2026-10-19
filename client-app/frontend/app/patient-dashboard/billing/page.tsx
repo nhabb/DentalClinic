@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { ClinicName } from "@/components/ui/ClinicName";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { apiFetch } from "@/lib/api/client";
+import { useClinicIdentity } from "@/lib/clinic";
 import { formatDateBeirut } from "@/lib/utils";
 import { safeStorage } from "@/lib/browser-compat";
 import { useTranslation } from "@/lib/i18n";
@@ -34,12 +36,19 @@ type InvoicePayment = {
 
 type TreatmentInvoice = {
   id: number;
+  /** The clinic's invoice number (INV-2026-00017). */
+  invoice_number: string;
   procedure_date: string;
+  /** When payment is due. */
+  due_date: string;
   notes?: string;
+  subtotal: number;
+  discount_amount: number;
+  discount_reason?: string | null;
   total_amount: number;
   amount_paid: number;
   remaining_amount: number;
-  status: "open" | "partial" | "paid";
+  status: "open" | "partial" | "paid" | "cancelled";
   created_at: string;
   line_items: LineItem[];
   invoice_payments: InvoicePayment[];
@@ -64,6 +73,7 @@ function StatusBadge({ status }: { status: string }) {
 
 export default function PatientBillingPage() {
   const router = useRouter();
+  const clinic = useClinicIdentity();
   const { t } = useTranslation();
 
   const [invoices, setInvoices] = useState<TreatmentInvoice[]>([]);
@@ -109,6 +119,10 @@ export default function PatientBillingPage() {
           raw.map((inv: any) => ({
             ...inv,
             id: Number(inv.id),
+            invoice_number: inv.invoice_number ?? `#${inv.id}`,
+            due_date: inv.due_date ?? inv.procedure_date,
+            subtotal: Number(inv.subtotal ?? inv.total_amount),
+            discount_amount: Number(inv.discount_amount ?? 0),
             total_amount: Number(inv.total_amount),
             amount_paid: Number(inv.amount_paid),
             remaining_amount: Number(inv.remaining_amount),
@@ -145,7 +159,7 @@ export default function PatientBillingPage() {
               <div className="w-10 h-10 bg-gradient-to-br from-brand to-brand-400 rounded-lg flex items-center justify-center">
                 <FaTooth className="text-white text-xl" />
               </div>
-              <span className="text-xl font-bold text-gray-900">BrightSmile</span>
+              <ClinicName size="lg" name={clinic?.name} detail={clinic?.branch} />
             </Link>
             <div className="flex items-center gap-3">
               {(photoUrl || patientName) && (
@@ -197,10 +211,16 @@ export default function PatientBillingPage() {
                       </div>
                       <div>
                         <p className="font-semibold text-gray-900">
-                          Invoice #{inv.id}
+                          Invoice {inv.invoice_number}
                         </p>
                         <p className="text-xs text-gray-500">
                           {formatDateBeirut(inv.procedure_date)}
+                          {(inv.status === "open" || inv.status === "partial") && (
+                            <> · due {formatDateBeirut(inv.due_date)}</>
+                          )}
+                          {inv.discount_amount > 0 && (
+                            <> · discount ${inv.discount_amount.toFixed(2)}</>
+                          )}
                         </p>
                       </div>
                     </div>

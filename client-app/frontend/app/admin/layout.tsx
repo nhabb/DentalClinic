@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useState } from "react";
+import { apiFetch } from "@/lib/api/client";
 
 // Runs before paint on the client; falls back to useEffect during SSR.
 const useIsomorphicLayoutEffect =
@@ -46,10 +47,9 @@ export default function AdminLayout({
   }, []);
 
   useEffect(() => {
-    const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
 
     const resolveByEmail = async (email: string) => {
-      const res = await fetch(`${API_URL}/api/users/by-email?email=${encodeURIComponent(email)}`);
+      const res = await apiFetch(`/api/users/by-email?email=${encodeURIComponent(email)}`);
       if (!res.ok) return;
       const user = await res.json();
       if (user?.id) {

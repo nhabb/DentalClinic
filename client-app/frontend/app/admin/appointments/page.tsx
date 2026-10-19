@@ -40,7 +40,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
 
 const PROCEDURE_DURATIONS: Record<string, number> = {
   "Regular Checkup": 30,
@@ -176,8 +175,7 @@ export default function AppointmentsManagement() {
       if (!email) return;
 
       try {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
-        const res = await fetch(`${API_URL}/api/users/by-email?email=${encodeURIComponent(email)}`);
+        const res = await apiFetch(`/api/users/by-email?email=${encodeURIComponent(email)}`);
         if (!res.ok) return;
         const user = await res.json();
         if (user?.id) setCurrentDoctorDbId(Number(user.id));
@@ -190,11 +188,10 @@ export default function AppointmentsManagement() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
         const [appointmentsRes, usersRes, doctorsRes] = await Promise.all([
           apiFetch(`/api/appointments?limit=1000`),
           apiFetch(`/api/users`),
-          fetch(`${API_URL}/api/users/doctors`),
+          apiFetch(`/api/users/doctors`),
         ]);
         const appointmentsData = await appointmentsRes.json();
         const users: any[] = usersRes.ok ? await usersRes.json() : [];
@@ -722,10 +719,10 @@ export default function AppointmentsManagement() {
           onImport={(rows) =>
             setAppointments((prev) => [...prev, ...(rows as Appointment[])])
           }
-          onAdd={can("appointments:write") ? openAddModal : undefined}
+          onAdd={can("appointments:create") ? openAddModal : undefined}
           addLabel={t("appointments.newAppointment")}
           actions={[
-            ...(can("slots:manage")
+            ...((can("slots:create") || can("slots:delete"))
               ? [{
               key: "availability",
               label: t("appointments.openAvailability"),
@@ -915,7 +912,7 @@ export default function AppointmentsManagement() {
 
                           {/* Actions */}
                           <div className="flex items-center gap-2">
-                            {can("appointments:write") && apt.status === "scheduled" && (
+                            {can("appointments:edit") && apt.status === "scheduled" && (
                               <Button
                                 size="sm"
                                 className="bg-blue-600 hover:bg-blue-700"
@@ -924,7 +921,7 @@ export default function AppointmentsManagement() {
                                 <FaCheckCircle className="mr-1 rtl:mr-0 rtl:ml-1" /> {t("appointments.confirmAppt")}
                               </Button>
                             )}
-                            {can("appointments:write") && (apt.status === "confirmed" || apt.status === "scheduled") && (
+                            {can("appointments:edit") && (apt.status === "confirmed" || apt.status === "scheduled") && (
                               <Button
                                 size="sm"
                                 className="bg-green-600 hover:bg-green-700"
@@ -939,7 +936,7 @@ export default function AppointmentsManagement() {
                                 {t("appointments.complete")}
                               </Button>
                             )}
-                            {(apt.status === "scheduled" || apt.status === "confirmed") && (
+                            {can("appointments:edit") && (apt.status === "scheduled" || apt.status === "confirmed") && (
                               <Button
                                 size="sm"
                                 variant="outline"
@@ -957,7 +954,7 @@ export default function AppointmentsManagement() {
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-44">
-                                  {can("appointments:write") && (
+                                  {can("appointments:edit") && (
                                   <DropdownMenuItem
                                     onClick={() => {
                                       setPostponeApptId(apt.id);
@@ -968,7 +965,7 @@ export default function AppointmentsManagement() {
                                     <FaCalendarPlus className="text-brand" /> {t("appointments.postpone")}
                                   </DropdownMenuItem>
                                   )}
-                                  {can("appointments:write") && (
+                                  {can("appointments:delete") && (
                                   <DropdownMenuItem
                                     onClick={() => handleCancelAppointment(apt.id)}
                                     className="text-red-600 focus:text-red-600"
@@ -1113,7 +1110,7 @@ export default function AppointmentsManagement() {
                       {s.isBooked ? (
                         <span className="text-blue-400 text-[10px] ml-1">{t("appointments.booked")}</span>
                       ) : (
-                        can("slots:manage") && (
+                        can("slots:delete") && (
                         <button
                           onClick={() => handleDeleteSlot(s.id)}
                           className="ml-1 text-red-400 hover:text-red-600 leading-none"
