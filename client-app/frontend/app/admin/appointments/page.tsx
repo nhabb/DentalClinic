@@ -39,6 +39,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { signOut } from "@/lib/auth/session";
 
 
 const PROCEDURE_DURATIONS: Record<string, number> = {
@@ -242,7 +243,7 @@ export default function AppointmentsManagement() {
   const handleLogout = () => {
     toast.success("Logged out.");
     safeStorage.removeItem("adminAuth");
-    safeStorage.removeItem("authToken");
+    void signOut(); // clears the session cookie (server-side) and every hint
     safeStorage.removeItem("adminUser");
     safeStorage.removeItem("userRole");
     safeStorage.removeItem("doctorId");

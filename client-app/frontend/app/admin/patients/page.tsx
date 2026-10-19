@@ -62,8 +62,8 @@ import {
   FaChevronRight,
   FaUserClock,
 } from "react-icons/fa";
+import { signOut } from "@/lib/auth/session";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
 
 interface Patient {
   id: number;
@@ -1222,7 +1222,7 @@ export default function PatientsPage() {
   const handleLogout = () => {
     toast.success("Logged out.");
     safeStorage.removeItem("adminAuth");
-    safeStorage.removeItem("authToken");
+    void signOut(); // clears the session cookie (server-side) and every hint
     safeStorage.removeItem("adminUser");
     safeStorage.removeItem("userRole");
     safeStorage.removeItem("doctorId");

@@ -23,7 +23,8 @@ import { useRouter } from "next/navigation";
 import { useTranslation } from "@/lib/i18n";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
+import { apiFetch } from "@/lib/api/client";
+import { rememberUser } from "@/lib/auth/session";
 import { ar, fr, enUS } from "date-fns/locale";
 import { FaTooth } from "react-icons/fa";
 
@@ -166,9 +167,8 @@ export default function SignupPage() {
         .filter(Boolean)
         .join(", ");
 
-      const res = await fetch(`${API_URL}/api/auth/signup`, {
+      const res = await apiFetch("/api/auth/signup", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: form.email,
           password: form.password,
@@ -187,31 +187,18 @@ export default function SignupPage() {
         return;
       }
 
-      const { user, token } = data;
-
-      sessionStorage.setItem("authToken", token);
-      sessionStorage.setItem("userRole", user.role);
-      sessionStorage.setItem(
-        "adminUser",
-        JSON.stringify({
-          email: user.email,
-          firstName: user.first_name,
-          lastName: user.last_name,
-          role: user.role,
-        })
-      );
+      // The API set the session cookie; keep only display hints here.
+      const { user } = data;
+      rememberUser(user);
 
       // Update patient profile with medical info
       if (form.bloodType || form.medicalConditions || form.allergies || form.currentMedications) {
         try {
-          const profileRes = await fetch(`${API_URL}/api/patients/by-user/${user.id}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
+          const profileRes = await apiFetch(`/api/patients/by-user/${user.id}`);
           if (profileRes.ok) {
             const profile = await profileRes.json();
-            await fetch(`${API_URL}/api/patients/${profile.id}`, {
+            await apiFetch(`/api/patients/${profile.id}`, {
               method: "PATCH",
-              headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
               body: JSON.stringify({
                 blood_type: form.bloodType || undefined,
                 medical_notes: form.medicalConditions || undefined,

@@ -4,11 +4,10 @@
  * This file contains all API endpoint URLs used by the frontend.
  * Backend developers should implement these endpoints to match this contract.
  *
- * Base URL: Configured via NEXT_PUBLIC_API_URL environment variable
- * Default: http://localhost:5000
+ * Base URL: same origin; next.config.ts forwards /api/* to the backend
  */
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
+export const API_BASE_URL = "";
 
 /**
  * API Endpoints

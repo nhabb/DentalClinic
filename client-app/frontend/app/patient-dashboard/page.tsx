@@ -23,6 +23,7 @@ import {
   FaFileInvoiceDollar,
   FaKey,
 } from "react-icons/fa";
+import { signOut } from "@/lib/auth/session";
 
 export default function PatientDashboard() {
   const router = useRouter();
@@ -97,7 +98,7 @@ export default function PatientDashboard() {
   const handleLogout = () => {
     toast.success("Logged out.");
     safeStorage.removeItem("patientAuth");
-    safeStorage.removeItem("authToken");
+    void signOut(); // clears the session cookie (server-side) and every hint
     safeStorage.removeItem("userRole");
     router.push("/login");
   };

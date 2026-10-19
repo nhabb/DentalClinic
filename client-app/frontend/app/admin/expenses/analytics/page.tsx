@@ -27,6 +27,7 @@ import AdminSidebar from "@/components/ui/AdminSidebar";
 import { AdminPageHeader } from "@/components/ui/AdminPageHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Card, Kpi, Donut, ChartTooltip, money, SERIES, INK } from "@/components/dashboard/chart-kit";
+import { signOut } from "@/lib/auth/session";
 
 interface Analytics {
   period_months: number;
@@ -76,7 +77,7 @@ export default function ExpensesAnalyticsPage() {
   const handleLogout = () => {
     toast.success("Logged out.");
     safeStorage.removeItem("adminAuth");
-    safeStorage.removeItem("authToken");
+    void signOut(); // clears the session cookie (server-side) and every hint
     safeStorage.removeItem("adminUser");
     safeStorage.removeItem("userRole");
     safeStorage.removeItem("doctorId");

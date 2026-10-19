@@ -12,6 +12,7 @@ import { apiFetch } from "@/lib/api/client";
 import { safeStorage } from "@/lib/browser-compat";
 import ChangePasswordModal from "@/components/ui/ChangePasswordModal";
 import { useTranslation } from "@/lib/i18n";
+import { signOut } from "@/lib/auth/session";
 
 /**
  * Avatar trigger + account menu, mounted in AdminPageHeader so it's present
@@ -86,7 +87,7 @@ export function ProfileMenu() {
   const handleLogout = () => {
     toast.success("Logged out.");
     safeStorage.removeItem("adminAuth");
-    safeStorage.removeItem("authToken");
+    void signOut(); // clears the session cookie (server-side) and every hint
     safeStorage.removeItem("adminUser");
     safeStorage.removeItem("userRole");
     safeStorage.removeItem("doctorId");

@@ -41,6 +41,7 @@ import {
   FaChartLine,
 } from "react-icons/fa";
 import type { IconType } from "react-icons";
+import { signOut } from "@/lib/auth/session";
 
 // NOTE FOR BACKEND TEAM:
 // inventory_items needs an `image_url` (string, nullable) column.
@@ -98,7 +99,6 @@ const STATUS_RANK: Record<string, number> = { out: 0, low: 1, ok: 2 };
 
 type SortKey = "name" | "category" | "stock" | "supplier" | "status";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
 
 // Clickable image upload box with preview
 function ImageUploadBox({
@@ -241,7 +241,7 @@ export default function InventoryManagement() {
     toast.success("Logged out.");
     safeStorage.removeItem("adminAuth");
     safeStorage.removeItem("adminUser");
-    safeStorage.removeItem("authToken");
+    void signOut(); // clears the session cookie (server-side) and every hint
     safeStorage.removeItem("userRole");
     router.push("/login");
   };
