@@ -711,6 +711,7 @@
     "cash": "Espèces",
     "card": "Carte",
     "bankTransfer": "Virement bancaire",
+    "cheque": "Chèque",
     "otherMethod": "Autre",
     "notes": "Notes",
     "notesPlaceholder": "ex. Premier versement",
