@@ -50,6 +50,7 @@ import {
   FaClipboardList,
 } from "react-icons/fa";
 import { useSignOut } from "@/lib/auth/useSignOut";
+import { fetchAllPatients } from "@/lib/api/patients";
 
 /** The invoice shape, its printing and its aging live in one shared module. */
 type TreatmentInvoice = Invoice;
@@ -135,9 +136,7 @@ export default function BillingPage() {
 
   const fetchPatients = async () => {
     try {
-      const res = await apiFetch("/api/patients");
-      const json = await res.json();
-      const list = Array.isArray(json) ? json : (json.data ?? []);
+      const list = await fetchAllPatients();
       setPatients(
         list.map((p: any) => ({
           id: Number(p.id),
@@ -246,11 +245,6 @@ export default function BillingPage() {
   const liveInvoices = invoices.filter((i) => i.status !== "cancelled");
   const hasInvoiceFilters = !!bq || selectedStatus !== "All";
   const clearInvoiceFilters = () => { setSearchQuery(""); setSelectedStatus("All"); };
-
-  const totalInvoiced = liveInvoices.reduce((s, i) => s + i.total_amount, 0);
-  const totalCollected = liveInvoices.reduce((s, i) => s + i.amount_paid, 0);
-  const outstanding = liveInvoices.filter((i) => i.status !== "paid").reduce((s, i) => s + i.remaining_amount, 0);
-
 
   // ── Refund ──────────────────────────────────────────────────────────────────
 
@@ -430,28 +424,28 @@ export default function BillingPage() {
                   icon={FaFileInvoiceDollar}
                   iconBgClass="bg-blue-100"
                   iconColorClass="text-blue-600"
-                  value={`$${(clinicFigures?.billed ?? totalInvoiced).toFixed(2)}`}
+                  value={clinicMoney(clinicFigures?.billed)}
                   label={MONEY_WORD.billed}
                 />
                 <StatsCard
                   icon={FaCheckCircle}
                   iconBgClass="bg-green-100"
                   iconColorClass="text-green-600"
-                  value={`$${(clinicFigures?.paid ?? totalCollected).toFixed(2)}`}
+                  value={clinicMoney(clinicFigures?.paid)}
                   label={MONEY_WORD.paid}
                 />
                 <StatsCard
                   icon={FaClock}
                   iconBgClass="bg-yellow-100"
                   iconColorClass="text-yellow-600"
-                  value={`$${(clinicFigures?.unpaid ?? outstanding).toFixed(2)}`}
+                  value={clinicMoney(clinicFigures?.unpaid)}
                   label={MONEY_WORD.unpaid}
                 />
                 <StatsCard
                   icon={FaHashtag}
                   iconBgClass="bg-purple-100"
                   iconColorClass="text-purple-600"
-                  value={String(clinicFigures?.bills ?? liveInvoices.length)}
+                  value={clinicFigures ? String(clinicFigures.bills) : "—"}
                   label={MONEY_WORD.bills}
                 />
               </div>
@@ -877,4 +871,13 @@ export default function BillingPage() {
       />
     </div>
   );
+}
+
+/**
+ * A clinic figure, or a dash while /billing/kpis has not answered. It used to
+ * fall back to sums of the 200 loaded rows, a second definition of the same
+ * figure that is wrong as soon as the clinic has more invoices than that.
+ */
+function clinicMoney(value: number | undefined): string {
+  return value === undefined ? "—" : `$${value.toFixed(2)}`;
 }

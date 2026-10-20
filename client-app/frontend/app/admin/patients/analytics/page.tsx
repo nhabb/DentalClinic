@@ -22,6 +22,7 @@ import { Card, Kpi, Donut, HBars, ChartTooltip, SERIES, INK, STATUS } from "@/co
 import { RangeKey, RANGES, rangeBounds, bucketsFor, granularityFor, within, pct } from "@/components/dashboard/date-range";
 import TeethReport, { type RecordRow } from "@/components/dashboard/TeethReport";
 import { useSignOut } from "@/lib/auth/useSignOut";
+import { fetchAllPatients } from "@/lib/api/patients";
 
 interface PatientRow {
   id: number;
@@ -51,7 +52,7 @@ export default function PatientsAnalyticsPage() {
     let cancelled = false;
     setLoading(true);
     Promise.all([
-      apiFetch("/api/patients?limit=1000").then((r) => (r.ok ? r.json() : { data: [] })),
+      fetchAllPatients().then((data) => ({ data })).catch(() => ({ data: [] })),
       apiFetch("/api/appointments?limit=2000").then((r) => (r.ok ? r.json() : { data: [] })),
       apiFetch("/api/patient-records?limit=1000").then((r) => (r.ok ? r.json() : { data: [] })),
     ])

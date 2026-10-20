@@ -37,6 +37,7 @@ import {
 } from "react-icons/fa";
 import { useSignOut } from "@/lib/auth/useSignOut";
 import { reschedule } from "@/lib/appointments/reschedule";
+import { fetchAllPatients } from "@/lib/api/patients";
 
 
 interface AdminUser {
@@ -106,10 +107,10 @@ export default function AdminDashboard() {
     const fetchAll = async () => {
       try {
         // Fire all requests simultaneously — one round-trip wave
-        const [userRes, patientsRes, appointmentsRes, inventoryRes, paymentsRes, expensesRes, invoicesRes, doctorsRes, recordsRes] =
+        const [userRes, allPatients, appointmentsRes, inventoryRes, paymentsRes, expensesRes, invoicesRes, doctorsRes, recordsRes] =
           await Promise.all([
             apiFetch(`/api/auth/me`),
-            apiFetch(`/api/patients`),
+            fetchAllPatients().catch(() => []),
             apiFetch(`/api/appointments?limit=1000`),
             apiFetch(`/api/inventory`),
             apiFetch(`/api/billing/invoice-payments?limit=500`),
@@ -143,7 +144,7 @@ export default function AdminDashboard() {
         );
 
         // ── Patients + inventory stats ────────────────────────────────────────
-        const patientsData = patientsRes.ok ? await patientsRes.json() : { data: [] };
+        const patientsData = { data: allPatients };
         const inventoryData = inventoryRes.ok ? await inventoryRes.json() : { data: [] };
         const inventoryRows = (inventoryData.data || []).map((item: any) => {
           const quantity = Number(item.quantity ?? 0);

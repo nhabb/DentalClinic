@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useSignOut } from "@/lib/auth/useSignOut";
 import { addMinutesToTime, reschedule } from "@/lib/appointments/reschedule";
+import { fetchAllPatients } from "@/lib/api/patients";
 
 
 const PROCEDURE_DURATIONS: Record<string, number> = {
@@ -434,9 +435,7 @@ export default function AppointmentsManagement() {
     setNewAppt({ patientId: "", doctorId: "", date: "", time: "", reason: "Regular Checkup" });
     setShowAddModal(true);
     try {
-      const patientsRes = await apiFetch(`/api/patients`);
-      const patientsData = await patientsRes.json();
-      const mappedPatients = (patientsData.data || []).map((p: any) => ({
+      const mappedPatients = (await fetchAllPatients()).map((p: any) => ({
         id: Number(p.id),
         name: p.users ? `${p.users.first_name} ${p.users.last_name}` : `Patient #${p.id}`,
       }));

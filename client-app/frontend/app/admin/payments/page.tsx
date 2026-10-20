@@ -39,6 +39,7 @@ import {
 import { PatientDrawer } from "@/components/billing/PatientDrawer";
 import type { PatientOption } from "@/components/billing/NewInvoiceModal";
 import { useSignOut } from "@/lib/auth/useSignOut";
+import { fetchAllPatients } from "@/lib/api/patients";
 
 /*
  * Taking money.
@@ -260,9 +261,7 @@ export default function PaymentsPage() {
 
   const fetchPatients = useCallback(async () => {
     try {
-      const res = await apiFetch("/api/patients");
-      const json = await res.json();
-      const list = Array.isArray(json) ? json : (json.data ?? []);
+      const list = await fetchAllPatients();
       setPatients(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         list.map((p: any) => ({

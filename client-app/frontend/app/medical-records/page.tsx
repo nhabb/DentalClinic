@@ -73,9 +73,15 @@ export default function MedicalRecords() {
         return;
       }
       try {
-        const meRes = await apiFetch(`/api/auth/me`);
-        if (!meRes.ok) { router.push("/login"); return; }
-        const me = await meRes.json();
+        // A new tab's ensureSession already asked /auth/me; ask only once.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let me: any = session.me;
+        if (!me) {
+          const meRes = await apiFetch(`/api/auth/me`);
+          if (!meRes.ok) { router.push("/login"); return; }
+          me = await meRes.json();
+        }
+        if (!me) { router.push("/login"); return; }
 
         fetchMyPhoto().then(setPhotoUrl);
 

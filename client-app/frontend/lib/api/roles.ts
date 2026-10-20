@@ -13,6 +13,7 @@
 //   GET    /api/auth/me              → { id, permissions: string[], ... }
 
 import { apiFetch } from "./client";
+import { fetchMe as fetchSharedMe } from "@/lib/permissions";
 
 export type Permission = { key: string; label: string };
 export type PermissionGroup = { key: string; label: string; permissions: Permission[] };
@@ -113,7 +114,9 @@ export async function createStaff(input: StaffInput): Promise<StaffCreated> {
 
 export type Me = { id: string; permissions: string[] };
 
+/** The viewer, from the one shared /auth/me cache (lib/permissions). */
 export async function fetchMe(): Promise<Me> {
-  const me = await request<{ id: string | number; permissions?: string[] }>("/api/auth/me");
-  return { id: String(me.id), permissions: me.permissions ?? [] };
+  const me = await fetchSharedMe();
+  if (!me) throw new Error("Could not load your account");
+  return { id: String(me.id), permissions: me.permissions };
 }

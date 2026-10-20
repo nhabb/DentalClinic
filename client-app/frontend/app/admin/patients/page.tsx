@@ -64,6 +64,7 @@ import {
 } from "react-icons/fa";
 import { useSignOut } from "@/lib/auth/useSignOut";
 import { deleteEach } from "@/lib/api/bulk";
+import { fetchAllPatients } from "@/lib/api/patients";
 
 
 interface Patient {
@@ -492,12 +493,12 @@ export default function PatientsPage() {
   // Fetch patients
   const fetchPatients = async () => {
     try {
-      const [patientsRes, usersRes, apptRes] = await Promise.all([
-        apiFetch(`/api/patients`),
+      const [allPatients, usersRes, apptRes] = await Promise.all([
+        fetchAllPatients(),
         apiFetch(`/api/users`),
         apiFetch(`/api/appointments?limit=2000`),
       ]);
-      const patientsData = await patientsRes.json();
+      const patientsData = { data: allPatients };
       const users: any[] = usersRes.ok ? await usersRes.json() : [];
       const apptData = apptRes.ok ? await apptRes.json() : { data: [] };
 
@@ -530,9 +531,12 @@ export default function PatientsPage() {
   // Fetch patient history when patient is selected
   const fetchPatientHistory = async (patientId: number) => {
     try {
+      // Asked for this patient only: the unfiltered lists were the whole
+      // clinic's records and only the first page of its appointments, so
+      // older visits went missing from the history.
       const [appointmentsRes, recordsRes, usersRes] = await Promise.all([
-        apiFetch(`/api/appointments`),
-        apiFetch(`/api/patient-records`),
+        apiFetch(`/api/appointments?patient_id=${patientId}&limit=500`),
+        apiFetch(`/api/patient-records?patient_id=${patientId}&limit=500`),
         apiFetch(`/api/users`),
       ]);
       const appointmentsData = await appointmentsRes.json();

@@ -132,6 +132,8 @@ export function clearSessionHints(): void {
 export async function ensureSession(): Promise<{
   role: string;
   userId: string;
+  /** The /api/auth/me answer, when this call had to ask for it. */
+  me?: Record<string, unknown> & SessionUser;
 } | null> {
   if (!hasSession()) return null;
   const role = hint("userRole");
@@ -141,9 +143,9 @@ export async function ensureSession(): Promise<{
   try {
     const res = await apiFetch("/api/auth/me");
     if (!res.ok) return null;
-    const me = (await res.json()) as SessionUser | null;
+    const me = (await res.json()) as (Record<string, unknown> & SessionUser) | null;
     if (!me?.id) return null;
-    return { role: rememberUser(me), userId: String(me.id) };
+    return { role: rememberUser(me), userId: String(me.id), me };
   } catch {
     return null;
   }
