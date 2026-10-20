@@ -1,19 +1,21 @@
 "use client";
 
-// Expenses admin page.
+// Expenses admin page: the bills the clinic receives and what it paid on them.
 //
-// Backend contract (NestJS, see backend/src/doctor/expenses):
-//   GET    /api/expenses                        → { data: Expense[] }
-//   POST   /api/expenses                        → create (CreateExpenseDto)
-//   PATCH  /api/expenses/:id                    → update (UpdateExpenseDto)
+// Backend contract (NestJS, BrightsmileClinicBack src/doctor/expenses):
+//   GET    /api/expenses?limit                  → { data: Expense[] } (due repeating expenses are created first)
+//   POST   /api/expenses                        → create; the database gives it an EX26-00012 number
+//   PATCH  /api/expenses/:id                    → update
 //   DELETE /api/expenses/:id                    → delete
-//   GET    /api/expenses/:id/payments           → ExpensePayment[]
+//   GET    /api/expenses/:id                    → one expense with payments and attachments
 //   POST   /api/expenses/:id/payments           → record a partial/full payment, returns updated expense
 //   DELETE /api/expenses/:id/payments/:paymentId→ remove a payment, returns updated expense
+//   POST   /api/expenses/:id/attachments        → keep a file (multipart "file")
+//   /api/expense-categories, /api/expense-suppliers, /api/expense-reminders → the lists behind the form
 //
-// The user-facing "description" is stored in the backend `title` column.
-// Payment status is derived server-side from `amount_paid` vs `amount`:
-//   pending (nothing paid) | partial | paid.
+// The user-facing "description" is stored in the backend `title` column; the
+// free notes go in `description`. Payment status is derived server-side from
+// `amount_paid` vs `amount`: pending (nothing paid) | partial | paid.
 
 import { toast } from "sonner";
 import { useState, useEffect, useRef } from "react";
@@ -32,6 +34,7 @@ import { Modal } from "@/components/ui/Modal";
 import { FormField, inputClass } from "@/components/ui/FormField";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { Tabs } from "@/components/ui/Tabs";
 import {
   FaMoneyBillWave,
   FaCheckCircle,
@@ -41,49 +44,55 @@ import {
   FaTrash,
   FaReceipt,
   FaDollarSign,
+  FaPaperclip,
+  FaBell,
+  FaListUl,
+  FaRedo,
 } from "react-icons/fa";
+import {
+  mapExpense,
+  mapPayment,
+  readError,
+  todayIso as today,
+  type Expense,
+  type ExpenseCategory,
+  type ExpensePayment,
+  type ExpenseStatus,
+  type Supplier,
+} from "@/components/expenses/expense-types";
+import { SupplierPicker } from "@/components/expenses/SupplierPicker";
+import {
+  ACCEPTED_FILES,
+  ExpenseAttachments,
+  uploadExpenseFile,
+} from "@/components/expenses/ExpenseAttachments";
+import { ExpenseListsModal, fetchExpenseLists } from "@/components/expenses/ExpenseListsModal";
+import { RemindersPanel } from "@/components/expenses/RemindersPanel";
 
-type ExpenseStatus = "paid" | "pending" | "partial";
-
-type Expense = {
-  id: number;
-  description: string;
-  category: string; // lowercase key, e.g. "supplies"
-  amount: number;
-  amountPaid: number;
-  remaining: number;
-  status: ExpenseStatus;
-  date: string; // YYYY-MM-DD
-};
-
-type ExpensePayment = {
-  id: number;
-  amount: number;
-  method: string;
-  notes: string | null;
-  date: string; // YYYY-MM-DD
-};
-
-const categoryKeys = ["all", "supplies", "rent", "equipment", "utilities", "maintenance", "other"] as const;
-const categoryValues = ["All", "Supplies", "Rent", "Equipment", "Utilities", "Maintenance", "Other"];
-
-const paymentMethods = ["cash", "card", "bank_transfer", "other"] as const;
+const paymentMethods = ["cash", "card", "bank_transfer", "cheque", "other"] as const;
 const paymentMethodLabelKey: Record<string, string> = {
   cash: "cash",
   card: "card",
   bank_transfer: "bankTransfer",
+  cheque: "cheque",
   other: "otherMethod",
 };
 
-const today = () => new Date().toISOString().split("T")[0];
-
-const emptyForm = {
+const emptyForm = () => ({
   description: "",
   category: "supplies",
   amount: "",
   status: "pending" as "paid" | "pending",
+  /** Bill date: the date on the supplier's bill. */
   date: today(),
-};
+  supplierId: null as number | null,
+  supplierBillNumber: "",
+  vatIncluded: "",
+  notes: "",
+  /** With status "paid": how, and the day the money left. */
+  paymentMethod: "cash" as (typeof paymentMethods)[number],
+  paidDate: today(),
+});
 
 const emptyPaymentForm = {
   amount: "",
@@ -92,58 +101,8 @@ const emptyPaymentForm = {
   notes: "",
 };
 
-const toDateOnly = (value: unknown) =>
-  value ? String(value).split("T")[0] : today();
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function mapExpense(e: any): Expense {
-  const amount = Number(e.amount) || 0;
-  const amountPaid = Number(e.amount_paid) || 0;
-  const remaining =
-    e.remaining_amount != null ? Number(e.remaining_amount) || 0 : Math.max(0, amount - amountPaid);
-  const rawStatus = String(e.status ?? "").toLowerCase();
-  const status: ExpenseStatus =
-    rawStatus === "paid" || rawStatus === "partial" || rawStatus === "pending"
-      ? rawStatus
-      : amountPaid <= 0
-        ? "pending"
-        : remaining <= 0
-          ? "paid"
-          : "partial";
-  return {
-    id: Number(e.id),
-    description: e.title ?? e.description ?? "",
-    category: String(e.category ?? "other").toLowerCase(),
-    amount,
-    amountPaid,
-    remaining,
-    status,
-    date: toDateOnly(e.expense_date),
-  };
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function mapPayment(p: any): ExpensePayment {
-  return {
-    id: Number(p.id),
-    amount: Number(p.amount) || 0,
-    method: String(p.payment_method ?? "cash"),
-    notes: p.notes ?? null,
-    date: toDateOnly(p.payment_date ?? p.created_at),
-  };
-}
-
-async function readError(res: Response, fallback: string): Promise<string> {
-  try {
-    const body = await res.json();
-    const msg = body?.message;
-    if (Array.isArray(msg)) return msg.join(", ");
-    if (typeof msg === "string" && msg.trim()) return msg;
-  } catch {
-    /* ignore */
-  }
-  return fallback;
-}
+/** The page's three views: every bill, what is still to pay, and the repeating ones. */
+type View = "all" | "to_pay" | "repeating";
 
 export default function ExpensesPage() {
   const router = useRouter();
@@ -165,6 +124,12 @@ export default function ExpensesPage() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [form, setForm] = useState(emptyForm);
+  /** Files picked in the add form; uploaded once the expense exists. */
+  const [newFiles, setNewFiles] = useState<File[]>([]);
+  const [view, setView] = useState<View>("all");
+  const [categories, setCategories] = useState<ExpenseCategory[]>([]);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [listsOpen, setListsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
@@ -190,8 +155,19 @@ export default function ExpensesPage() {
     }
   };
 
+  const fetchLists = async () => {
+    try {
+      const lists = await fetchExpenseLists();
+      setCategories(lists.categories);
+      setSuppliers(lists.suppliers);
+    } catch {
+      /* the form falls back to the category key */
+    }
+  };
+
   useEffect(() => {
     fetchExpenses();
+    fetchLists();
   }, []);
 
   const handleLogout = () => {
@@ -203,16 +179,25 @@ export default function ExpensesPage() {
     router.push("/login");
   };
 
+  /** The clinic's own name for a category, falling back to the old translations. */
   const categoryLabel = (key: string) => {
+    const own = categories.find((c) => c.key === key)?.name;
+    if (own) return own;
     const translated = t(`expenses.${key}`);
     return translated === `expenses.${key}`
       ? key.charAt(0).toUpperCase() + key.slice(1)
       : translated;
   };
+  const activeCategories = categories.filter((c) => c.is_active);
+  const categoryChoices = (current?: string) =>
+    categories.filter((c) => c.is_active || c.key === current);
 
   const eq = searchQuery.trim().toLowerCase();
-  const matchesExpenseSearch = (exp: Expense) => !eq || (exp.description ?? "").toLowerCase().includes(eq);
-  const matchesExpenseCategory = (exp: Expense, cat: string = selectedCategory) => cat === "All" || exp.category === cat.toLowerCase();
+  const matchesExpenseSearch = (exp: Expense) =>
+    !eq ||
+    [exp.description, exp.number, exp.supplier?.name, exp.supplierBillNumber]
+      .some((v) => (v ?? "").toLowerCase().includes(eq));
+  const matchesExpenseCategory = (exp: Expense, cat: string = selectedCategory) => cat === "All" || exp.category === cat;
   const matchesExpenseStatus = (exp: Expense, st: "all" | ExpenseStatus = selectedExpenseStatus) => st === "all" || exp.status === st;
   const matchesExpenseDay = (exp: Expense) =>
     selectedDay !== null ? exp.date === selectedDay : !monthFilterOn || exp.date.slice(0, 7) === monthKey(calMonth);
@@ -234,9 +219,14 @@ export default function ExpensesPage() {
   const monthRows = calendarExpenses.filter((e) => e.date.slice(0, 7) === monthKey(calMonth));
   const monthPaid = monthRows.reduce((s, e) => s + e.amountPaid, 0);
   const monthRemaining = monthRows.reduce((s, e) => s + e.remaining, 0);
+  const categoryFilterValues = ["All", ...activeCategories.map((c) => c.key)];
   const expenseCategoryCounts: Record<string, number> = Object.fromEntries(
-    categoryValues.map((c) => [c, expenses.filter((e) => matchesExpenseSearch(e) && matchesExpenseDay(e) && matchesExpenseStatus(e) && matchesExpenseCategory(e, c)).length]),
+    categoryFilterValues.map((c) => [c, expenses.filter((e) => matchesExpenseSearch(e) && matchesExpenseDay(e) && matchesExpenseStatus(e) && matchesExpenseCategory(e, c)).length]),
   );
+  /** To pay: every bill not fully paid, oldest bill first. */
+  const toPay = expenses
+    .filter((e) => e.remaining > 0 && matchesExpenseSearch(e))
+    .sort((a, b) => a.date.localeCompare(b.date) || a.id - b.id);
   const expenseStatusCounts = {
     all: expenses.filter((e) => matchesExpenseSearch(e) && matchesExpenseDay(e) && matchesExpenseCategory(e)).length,
     pending: expenses.filter((e) => matchesExpenseSearch(e) && matchesExpenseDay(e) && matchesExpenseCategory(e) && e.status === "pending").length,
@@ -252,6 +242,7 @@ export default function ExpensesPage() {
 
   const formatAmount = (amount: number) =>
     new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
+  const toPayTotal = toPay.reduce((s, e) => s + e.remaining, 0);
 
   const formatDate = (date: string) => new Date(`${date}T12:00:00`).toLocaleDateString();
 
@@ -266,18 +257,24 @@ export default function ExpensesPage() {
   // ── Add / Edit ──────────────────────────────────────────────────────────────
 
   const handleOpenAdd = () => {
-    setForm({ ...emptyForm, date: today() });
+    setForm(emptyForm());
+    setNewFiles([]);
     setShowAddModal(true);
   };
 
   const handleOpenEdit = (expense: Expense) => {
     setSelectedExpense(expense);
     setForm({
+      ...emptyForm(),
       description: expense.description,
       category: expense.category,
       amount: String(expense.amount),
       status: expense.status === "paid" ? "paid" : "pending",
       date: expense.date,
+      supplierId: expense.supplier?.id ?? null,
+      supplierBillNumber: expense.supplierBillNumber ?? "",
+      vatIncluded: expense.vatIncluded != null ? String(expense.vatIncluded) : "",
+      notes: expense.notes ?? "",
     });
     setShowEditModal(true);
   };
@@ -288,11 +285,26 @@ export default function ExpensesPage() {
       toast.error(t("expenses.invalidAmount"));
       return null;
     }
-    if (parsed > 100000) {
-      toast.error("Amount cannot exceed $100,000.");
+    if (parsed > 1000000) {
+      toast.error("Amount cannot exceed $1,000,000.");
       return null;
     }
     return parsed;
+  };
+
+  /** The fields the add and edit forms share, as the API names them. */
+  const expenseBody = (amount: number) => {
+    const vat = parseFloat(form.vatIncluded);
+    return {
+      title: form.description.trim(),
+      expense_date: form.date,
+      category: form.category,
+      amount,
+      supplier_id: form.supplierId,
+      supplier_bill_number: form.supplierBillNumber.trim() || null,
+      vat_included: Number.isFinite(vat) && vat > 0 ? vat : null,
+      description: form.notes.trim(),
+    };
   };
 
   const handleAdd = async () => {
@@ -307,20 +319,25 @@ export default function ExpensesPage() {
       const res = await apiFetch("/api/expenses", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: form.description.trim(),
-          expense_date: form.date,
-          category: form.category.toLowerCase(),
-          amount: parsedAmount,
-          status: form.status,
+        body: JSON.stringify({ ...expenseBody(parsedAmount), status: form.status,
+          ...(form.status === "paid" ? { payment_method: form.paymentMethod, paid_date: form.paidDate } : {}),
         }),
       });
       if (!res.ok) {
         toast.error(await readError(res, t("expenses.saveFailed")));
         return;
       }
+      const created = mapExpense(await res.json());
+      // Files go up once the expense exists; a failed upload keeps the expense.
+      for (const file of newFiles) {
+        try {
+          await uploadExpenseFile(created.id, file);
+        } catch (e) {
+          toast.error((e as Error).message);
+        }
+      }
       await fetchExpenses();
-      toast.success("Expense added.");
+      toast.success(`Expense ${created.number} added. Write ${created.number} on the paper bill.`);
       setShowAddModal(false);
     } catch {
       toast.error(t("expenses.saveFailed"));
@@ -342,12 +359,7 @@ export default function ExpensesPage() {
       const res = await apiFetch(`/api/expenses/${selectedExpense.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: form.description.trim(),
-          expense_date: form.date,
-          category: form.category.toLowerCase(),
-          amount: parsedAmount,
-        }),
+        body: JSON.stringify(expenseBody(parsedAmount)),
       });
       if (!res.ok) {
         toast.error(await readError(res, t("expenses.saveFailed")));
@@ -521,6 +533,54 @@ export default function ExpensesPage() {
     </div>
   );
 
+  /** Who the bill is from and what is printed on it: shared by add and edit. */
+  const billFields = (
+    <>
+      <div className="grid grid-cols-2 gap-4">
+        <FormField label="Supplier">
+          <SupplierPicker
+            suppliers={suppliers}
+            value={form.supplierId}
+            onChange={(id) => setForm((f) => ({ ...f, supplierId: id }))}
+            onAdded={(sup) => setSuppliers((prev) => [...prev, sup])}
+            canAdd={can("expenses:create")}
+          />
+        </FormField>
+        <FormField label="Supplier's bill number">
+          <input
+            type="text"
+            placeholder="The number on their paper (optional)"
+            className={inputClass}
+            value={form.supplierBillNumber}
+            onChange={(e) => setForm((f) => ({ ...f, supplierBillNumber: e.target.value }))}
+          />
+        </FormField>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <FormField label="VAT included (optional)">
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            placeholder="As shown on the bill"
+            className={inputClass}
+            value={form.vatIncluded}
+            onChange={(e) => setForm((f) => ({ ...f, vatIncluded: e.target.value }))}
+          />
+        </FormField>
+        <FormField label="Notes">
+          <input
+            type="text"
+            placeholder="What was bought, details"
+            className={inputClass}
+            value={form.notes}
+            onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
+          />
+        </FormField>
+      </div>
+    </>
+  );
+
   return (
     <div className="min-h-screen bg-white flex">
       <AdminSidebar activePage="expenses" sidebarOpen={sidebarOpen} onToggle={() => setSidebarOpen((v) => !v)} onLogout={handleLogout} />
@@ -537,8 +597,8 @@ export default function ExpensesPage() {
             for (const row of rows as Record<string, unknown>[]) {
               try {
                 const rawCat = String(row.category ?? "other").toLowerCase();
-                const allowed = ["utilities","rent","equipment","supplies","maintenance","other"];
-                const category = allowed.includes(rawCat) ? rawCat : "other";
+                const known = categories.find((c) => c.key === rawCat || c.name.toLowerCase() === rawCat);
+                const category = known?.key ?? "other";
                 const rawStatus = String(row.status ?? "pending").toLowerCase();
                 const payload = {
                   title: String(row.description ?? row.title ?? "Imported Expense"),
@@ -562,7 +622,10 @@ export default function ExpensesPage() {
           }}
           onAdd={can("expenses:create") ? handleOpenAdd : undefined}
           addLabel={t("expenses.addExpense")}
-          actions={[{ key: "analytics", label: "View analytics", icon: <FaDollarSign />, href: "/admin/expenses/analytics" }]}
+          actions={[
+            { key: "lists", label: "Categories & suppliers", icon: <FaListUl />, onClick: () => setListsOpen(true) },
+            { key: "analytics", label: "View analytics", icon: <FaDollarSign />, href: "/admin/expenses/analytics" },
+          ]}
         />
 
         <main className="flex-1 p-8 overflow-auto">
@@ -594,8 +657,75 @@ export default function ExpensesPage() {
             />
           </div>
 
+          <Tabs
+            className="mb-5"
+            label="Expense views"
+            value={view}
+            onChange={setView}
+            items={[
+              { id: "all", label: "All expenses", icon: <FaReceipt />, count: expenses.length },
+              { id: "to_pay", label: "To pay", icon: <FaClock />, count: toPay.length },
+              { id: "repeating", label: "Repeating", icon: <FaRedo /> },
+            ]}
+          />
+
+          {view === "repeating" && (
+            <RemindersPanel
+              categories={categories}
+              suppliers={suppliers}
+              onSupplierAdded={(sup) => setSuppliers((prev) => [...prev, sup])}
+              onChanged={() => void fetchExpenses()}
+              canCreate={can("expenses:create")}
+              canEdit={can("expenses:edit")}
+              canDelete={can("expenses:delete")}
+            />
+          )}
+
+          {view === "to_pay" && (
+            <div className="space-y-3">
+              <p className="text-sm text-gray-600">
+                Every bill not fully paid, oldest first: <strong>{formatAmount(toPayTotal)}</strong> to pay.
+              </p>
+              {toPay.length === 0 ? (
+                <EmptyState icon={FaCheckCircle} title="Nothing to pay" description="Every bill the clinic received is paid." />
+              ) : (
+                <ul className="divide-y divide-gray-100 overflow-hidden rounded-2xl border border-gray-100 bg-white">
+                  {toPay.map((e) => (
+                    <li key={e.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3">
+                      <span className="w-24 shrink-0 text-sm text-gray-600">{formatDate(e.date)}</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-gray-900">
+                          {e.description}
+                          {e.reminder && <FaBell className="ms-2 inline text-xs text-amber-500" title={`Repeating: ${e.reminder.title}`} />}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          <span className="font-mono">{e.number}</span>
+                          {e.supplier && ` · ${e.supplier.name}`}
+                          {e.supplierBillNumber && ` · bill ${e.supplierBillNumber}`}
+                          {e.amount === 0 && " · enter the amount from the bill"}
+                        </p>
+                      </div>
+                      <span className="text-sm font-semibold tabular-nums text-red-600">{formatAmount(e.remaining)}</span>
+                      <div className="flex gap-2">
+                        {can("expenses:edit") && e.amount === 0 && (
+                          <Button size="sm" variant="outline" onClick={() => handleOpenEdit(e)}>
+                            <FaEdit /> Enter amount
+                          </Button>
+                        )}
+                        <Button size="sm" onClick={() => handleOpenPayments(e)} disabled={e.amount === 0}>
+                          <FaDollarSign /> {t("expenses.recordPayment")}
+                        </Button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
+          {view === "all" && (<>
           <ListToolbar
-            search={{ value: searchQuery, onChange: setSearchQuery, placeholder: t("expenses.searchPlaceholder") }}
+            search={{ value: searchQuery, onChange: setSearchQuery, placeholder: "Search by description, EX number, supplier or bill number" }}
             shown={filteredExpenses.length}
             total={expenses.length}
             unitLabel={t("expenses.expensesCount")}
@@ -609,7 +739,7 @@ export default function ExpensesPage() {
                 variant: "chips",
                 value: selectedCategory,
                 onChange: setSelectedCategory,
-                options: categoryValues.map((cat, idx) => ({ value: cat, label: t(`expenses.${categoryKeys[idx]}`), count: expenseCategoryCounts[cat] ?? 0 })),
+                options: categoryFilterValues.map((cat) => ({ value: cat, label: cat === "All" ? t("expenses.all") : categoryLabel(cat), count: expenseCategoryCounts[cat] ?? 0 })),
               },
               {
                 key: "status",
@@ -736,7 +866,20 @@ export default function ExpensesPage() {
                           {formatDate(expense.date)}
                         </td>
                         <td className="py-3.5 px-5">
-                          <p className="font-medium text-gray-900">{expense.description}</p>
+                          <p className="font-medium text-gray-900">
+                            {expense.description}
+                            {expense.attachmentsCount > 0 && (
+                              <FaPaperclip className="ms-2 inline text-xs text-gray-400" title={`${expense.attachmentsCount} file(s)`} />
+                            )}
+                            {expense.reminder && (
+                              <FaBell className="ms-1 inline text-xs text-amber-500" title={`Repeating: ${expense.reminder.title}`} />
+                            )}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            <span className="font-mono">{expense.number}</span>
+                            {expense.supplier && ` · ${expense.supplier.name}`}
+                            {expense.supplierBillNumber && ` · bill ${expense.supplierBillNumber}`}
+                          </p>
                         </td>
                         <td className="py-3.5 px-5">
                           <span className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
@@ -802,6 +945,7 @@ export default function ExpensesPage() {
             )}
           </div>
           </>)}
+          </>)}
         </main>
       </div>
 
@@ -824,8 +968,8 @@ export default function ExpensesPage() {
                 value={form.category}
                 onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
               >
-                {categoryKeys.slice(1).map((key) => (
-                  <option key={key} value={key}>{categoryLabel(key)}</option>
+                {categoryChoices(form.category).map((c) => (
+                  <option key={c.key} value={c.key}>{c.name}</option>
                 ))}
               </select>
             </FormField>
@@ -846,22 +990,58 @@ export default function ExpensesPage() {
                 type="number"
                 step="0.01"
                 min="0"
-                max={100000}
+                max={1000000}
                 placeholder={t("expenses.amountPlaceholder")}
                 className={inputClass}
                 value={form.amount}
                 onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
               />
             </FormField>
-            <FormField label={t("common.date")}>
+            <FormField label="Bill date">
               <input
                 type="date"
                 className={inputClass}
                 value={form.date}
-                onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
+                onChange={(e) => setForm((f) => ({ ...f, date: e.target.value, paidDate: e.target.value }))}
               />
             </FormField>
           </div>
+          {form.status === "paid" && (
+            <div className="grid grid-cols-2 gap-4">
+              <FormField label={t("expenses.paymentMethod")}>
+                <select
+                  className={inputClass}
+                  value={form.paymentMethod}
+                  onChange={(e) => setForm((f) => ({ ...f, paymentMethod: e.target.value as (typeof paymentMethods)[number] }))}
+                >
+                  {paymentMethods.map((m) => (
+                    <option key={m} value={m}>{t(`expenses.${paymentMethodLabelKey[m]}`)}</option>
+                  ))}
+                </select>
+              </FormField>
+              <FormField label="Paid on">
+                <input
+                  type="date"
+                  className={inputClass}
+                  value={form.paidDate}
+                  onChange={(e) => setForm((f) => ({ ...f, paidDate: e.target.value }))}
+                />
+              </FormField>
+            </div>
+          )}
+          {billFields}
+          <FormField label="Files (supplier PDF, photo of the receipt)">
+            <input
+              type="file"
+              multiple
+              accept={ACCEPTED_FILES}
+              onChange={(e) => setNewFiles(Array.from(e.target.files ?? []))}
+              className="block w-full text-sm text-gray-600 file:me-3 file:rounded-lg file:border-0 file:bg-gray-100 file:px-3 file:py-1.5 file:text-sm"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              No file? The expense gets an EX number: write it on the paper bill and file the paper.
+            </p>
+          </FormField>
         </div>
         <div className="flex gap-3 mt-6">
           <Button variant="outline" className="flex-1" onClick={() => setShowAddModal(false)} disabled={isSaving}>
@@ -874,7 +1054,7 @@ export default function ExpensesPage() {
       </Modal>
 
       {/* Edit Expense Modal */}
-      <Modal isOpen={showEditModal && !!selectedExpense} onClose={() => setShowEditModal(false)} title={t("expenses.editExpense")}>
+      <Modal isOpen={showEditModal && !!selectedExpense} onClose={() => setShowEditModal(false)} title={selectedExpense ? `${t("expenses.editExpense")} · ${selectedExpense.number}` : t("expenses.editExpense")}>
         {selectedExpense && (
           <>
             <div className="space-y-4">
@@ -893,12 +1073,12 @@ export default function ExpensesPage() {
                     value={form.category}
                     onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
                   >
-                    {categoryKeys.slice(1).map((key) => (
-                      <option key={key} value={key}>{categoryLabel(key)}</option>
+                    {categoryChoices(form.category).map((c) => (
+                      <option key={c.key} value={c.key}>{c.name}</option>
                     ))}
                   </select>
                 </FormField>
-                <FormField label={t("common.date")}>
+                <FormField label="Bill date">
                   <input
                     type="date"
                     className={inputClass}
@@ -912,12 +1092,22 @@ export default function ExpensesPage() {
                   type="number"
                   step="0.01"
                   min={selectedExpense.amountPaid > 0 ? selectedExpense.amountPaid : 0}
-                  max={100000}
+                  max={1000000}
                   className={inputClass}
                   value={form.amount}
                   onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
                 />
               </FormField>
+              {billFields}
+              <ExpenseAttachments
+                expenseId={selectedExpense.id}
+                canEdit={can("expenses:edit")}
+                onChanged={(count) =>
+                  setExpenses((prev) =>
+                    prev.map((e) => (e.id === selectedExpense.id ? { ...e, attachmentsCount: count } : e)),
+                  )
+                }
+              />
 
               {/* Payment status is derived from recorded payments; manage it via the payment modal. */}
               <div className="space-y-3">
@@ -947,13 +1137,23 @@ export default function ExpensesPage() {
         )}
       </Modal>
 
+      <ExpenseListsModal
+        isOpen={listsOpen}
+        onClose={() => setListsOpen(false)}
+        categories={categories}
+        suppliers={suppliers}
+        onChanged={() => void fetchLists()}
+        canCreate={can("expenses:create")}
+        canEdit={can("expenses:edit")}
+      />
+
       {/* Record Payment Modal */}
       <Modal isOpen={!!paymentExpense} onClose={handleClosePayments} title={t("expenses.recordPayment")} maxWidth="max-w-xl">
         {paymentExpense && (
           <div className="space-y-5">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="font-semibold text-gray-900">{paymentExpense.description}</p>
+                <p className="font-semibold text-gray-900">{paymentExpense.description} <span className="font-mono text-xs font-normal text-gray-500">{paymentExpense.number}</span></p>
                 <p className="text-sm text-gray-500">
                   {formatDate(paymentExpense.date)} · {categoryLabel(paymentExpense.category)}
                 </p>

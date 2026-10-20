@@ -9,12 +9,10 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/button";
 import { Drawer } from "@/components/ui/Drawer";
-import { Modal } from "@/components/ui/Modal";
-import { FormField, inputClass } from "@/components/ui/FormField";
 import { Tabs } from "@/components/ui/Tabs";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { money, printPlan, readError, type Plan } from "./quote-doc";
-import { PAYMENT_METHODS } from "./TakePaymentModal";
+import { RefundReceiptModal, type RefundableReceipt } from "./RefundReceiptModal";
 import {
   daysOverdue,
   isLive,
@@ -72,6 +70,8 @@ type Allocation = {
 
 type LedgerPayment = {
   id: number;
+  /** RT… for a receipt, RF… for a refund. */
+  document_number: string;
   kind: "payment" | "refund";
   amount: number;
   payment_method: string;
@@ -82,6 +82,8 @@ type LedgerPayment = {
   applied: number;
   /** Still free to put on a bill, or to hand back. */
   unapplied: number;
+  /** Refunded out of this receipt. */
+  refunded: number;
   allocations: Allocation[];
 };
 
@@ -118,6 +120,7 @@ const normalizeStatement = (s: any): Statement => ({
   plan: { ...(s?.plan ?? {}), lines: s?.plan?.lines ?? [] } as Plan,
   payments: (s?.ledger?.payments ?? []).map((p: any) => ({
     id: Number(p.id),
+    document_number: p.document_number ?? `#${p.id}`,
     kind: p.kind === "refund" ? "refund" : "payment",
     amount: num(p.amount),
     payment_method: p.payment_method ?? "cash",
@@ -126,6 +129,7 @@ const normalizeStatement = (s: any): Statement => ({
     reason: p.reason ?? null,
     applied: num(p.applied),
     unapplied: num(p.unapplied),
+    refunded: num(p.refunded),
     allocations: (p.allocations ?? []).map((a: any) => ({
       id: Number(a.id),
       amount: num(a.amount),
@@ -320,11 +324,9 @@ export function PatientDrawer({
   const [busy, setBusy] = useState(false);
   const [tab, setTab] = useState<PatientDrawerTab>(initialTab);
 
-  // Handing credit back needs a reason that lands in audit_logs; a browser
-  // prompt is not where a record like that should come from.
-  const [refundOpen, setRefundOpen] = useState(false);
-  const [refundReason, setRefundReason] = useState("");
-  const [refundMethod, setRefundMethod] = useState(PAYMENT_METHODS[0].value);
+  // A refund always comes out of one receipt, with a reason that lands in
+  // audit_logs; the dialog asks for it properly.
+  const [refunding, setRefunding] = useState<RefundableReceipt | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -463,30 +465,6 @@ export function PatientDrawer({
       `Taken back off ${allocation.invoice.invoice_number}.`,
       "That could not be undone.",
     );
-
-  const handCreditBack = async () => {
-    if (refundReason.trim().length < 3) {
-      toast.error("Say why the credit is being handed back.");
-      return;
-    }
-    const ok = await act(
-      `/api/billing/patients/${patient.id}/credit-refunds`,
-      {
-        method: "POST",
-        body: JSON.stringify({
-          amount: credit,
-          payment_method: refundMethod,
-          reason: refundReason.trim(),
-        }),
-      },
-      "Credit handed back.",
-      "The refund was refused.",
-    );
-    if (ok) {
-      setRefundOpen(false);
-      setRefundReason("");
-    }
-  };
 
   const planAct = (what: "send" | "accept", done: string) =>
     plan?.quote_id
@@ -733,10 +711,11 @@ export function PatientDrawer({
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div>
                           <h4 className="text-sm font-semibold text-ink-900">
-                            {MONEY_WORD.creditOnAccount}
+                            Open deposits
                           </h4>
                           <p className="text-xs text-ink-500">
-                            Money in that no bill has claimed yet.
+                            Receipts not used on a bill yet
+                            {creditSource ? ` (oldest: ${creditSource.document_number})` : ""}.
                           </p>
                         </div>
                         <span className="text-lg font-bold tabular-nums text-brand-800">
@@ -784,14 +763,9 @@ export function PatientDrawer({
                         </ul>
                       )}
 
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={busy}
-                        onClick={() => setRefundOpen(true)}
-                      >
-                        <FaUndo /> Hand ${money(credit)} back
-                      </Button>
+                      <p className="text-xs text-ink-500">
+                        To hand money back, use Refund on the receipt below.
+                      </p>
                     </div>
                   )}
 
@@ -803,6 +777,9 @@ export function PatientDrawer({
                         <li key={p.id} className="px-4 py-3">
                           <div className="flex flex-wrap items-center justify-between gap-2">
                             <div className="flex items-center gap-2">
+                              <span className="font-mono text-xs font-semibold text-ink-700">
+                                {p.document_number}
+                              </span>
                               <span
                                 className={cn(
                                   "text-sm font-bold tabular-nums",
@@ -815,11 +792,31 @@ export function PatientDrawer({
                                 {method(p.payment_method)} · {formatDateBeirut(p.payment_date)}
                               </span>
                             </div>
-                            {p.unapplied > 0 && (
-                              <Badge tone="brand">
-                                ${money(p.unapplied)} {MONEY_WORD.creditOnAccount.toLowerCase()}
-                              </Badge>
-                            )}
+                            <div className="flex items-center gap-2">
+                              {p.kind === "payment" && p.unapplied > 0 && (
+                                <Badge tone="brand">holds ${money(p.unapplied)}</Badge>
+                              )}
+                              {p.kind === "payment" && p.refunded > 0 && (
+                                <Badge tone="brick">${money(p.refunded)} refunded</Badge>
+                              )}
+                              {canMove && p.kind === "payment" && p.unapplied > 0 && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  disabled={busy}
+                                  onClick={() =>
+                                    setRefunding({
+                                      id: p.id,
+                                      document_number: p.document_number,
+                                      held: p.unapplied,
+                                      patient_name: patient.label,
+                                    })
+                                  }
+                                >
+                                  <FaUndo /> Refund
+                                </Button>
+                              )}
+                            </div>
                           </div>
                           {(p.reason ?? p.notes) && (
                             <p className="mt-1 text-xs italic text-ink-500">{p.reason ?? p.notes}</p>
@@ -950,48 +947,14 @@ export function PatientDrawer({
         )}
       </Drawer>
 
-      {/* Handing credit back is a correction with a reason, so it is asked
-          for properly: the reason is written to audit_logs. */}
-      <Modal
-        isOpen={refundOpen}
-        onClose={() => setRefundOpen(false)}
-        title={`Hand $${money(credit)} back`}
-        description="Unapplied credit only. It touches no bill."
-        maxWidth="max-w-md"
-      >
-        <div className="space-y-3">
-          <FormField label="Handed back by *">
-            <select
-              value={refundMethod}
-              onChange={(e) => setRefundMethod(e.target.value)}
-              className={inputClass}
-            >
-              {PAYMENT_METHODS.map((m) => (
-                <option key={m.value} value={m.value}>
-                  {m.label}
-                </option>
-              ))}
-            </select>
-          </FormField>
-          <FormField label="Reason *">
-            <input
-              type="text"
-              value={refundReason}
-              onChange={(e) => setRefundReason(e.target.value)}
-              placeholder="e.g. The patient has moved away"
-              className={inputClass}
-            />
-          </FormField>
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setRefundOpen(false)} disabled={busy}>
-              Cancel
-            </Button>
-            <Button onClick={() => void handCreditBack()} disabled={busy}>
-              {busy ? "Recording…" : `Hand $${money(credit)} back`}
-            </Button>
-          </div>
-        </div>
-      </Modal>
+      <RefundReceiptModal
+        receipt={refunding}
+        onClose={() => setRefunding(null)}
+        onRefunded={() => {
+          void load();
+          onChanged?.();
+        }}
+      />
     </>
   );
 }

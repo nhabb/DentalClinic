@@ -27,6 +27,7 @@ import {
 } from "@/components/billing/money-words";
 import { CONFIRM_PASSWORD_HEADER, PasswordConfirmModal } from "@/components/billing/PasswordConfirmModal";
 import { NewInvoiceModal } from "@/components/billing/NewInvoiceModal";
+import { PAYMENT_METHODS } from "@/components/billing/TakePaymentModal";
 import { PatientDrawer, type PatientDrawerTab } from "@/components/billing/PatientDrawer";
 import { QuotesPanel } from "@/components/billing/QuotesPanel";
 import { Tabs } from "@/components/ui/Tabs";
@@ -37,7 +38,6 @@ import {
   normalizeInvoice as normalizeInvoiceDoc,
   printInvoice,
 } from "@/components/billing/invoice-doc";
-import { clinicToday as todayIso } from "@/components/billing/quote-doc";
 import {
   FaFileInvoiceDollar,
   FaCheckCircle,
@@ -104,15 +104,14 @@ export default function BillingPage() {
     bills: number;
     creditHeld: number;
   } | null>(null);
-  const emptyRefundForm = () => ({ amount: "", payment_method: "cash", payment_date: todayIso(), reason: "" });
 
   // Invoices or quotes
 
-  // Refund / void forms (inside the invoice modal)
-  const [refundForm, setRefundForm] = useState(emptyRefundForm);
-  const [refunding, setRefunding] = useState(false);
-  const [refundError, setRefundError] = useState("");
+  // Cancel form (inside the invoice modal). Cancelling returns the money on
+  // the bill to its receipts; ticking "refund" also hands it back.
   const [voidReason, setVoidReason] = useState("");
+  const [voidRefund, setVoidRefund] = useState(false);
+  const [voidRefundMethod, setVoidRefundMethod] = useState("cash");
   const [voiding, setVoiding] = useState(false);
   const [voidError, setVoidError] = useState("");
 
@@ -252,62 +251,48 @@ export default function BillingPage() {
   const outstanding = liveInvoices.filter((i) => i.status !== "paid").reduce((s, i) => s + i.remaining_amount, 0);
 
 
-  // ── Refund ──────────────────────────────────────────────────────────────────
-
-  const handleRefund = async () => {
-    if (!selectedInvoice) return;
-    setRefundError("");
-    const amount = parseFloat(refundForm.amount);
-    if (!amount || amount <= 0) { setRefundError("Enter the amount being returned."); return; }
-    if (amount > selectedInvoice.amount_paid + 0.001) {
-      setRefundError(`Cannot refund more than was received (${selectedInvoice.amount_paid.toFixed(2)}).`);
-      return;
-    }
-    if (refundForm.reason.trim().length < 3) { setRefundError("Say why the money is being returned."); return; }
-    setRefunding(true);
-    try {
-      const res = await apiFetch(`/api/billing/invoices/${selectedInvoice.id}/refunds`, {
-        method: "POST",
-        body: JSON.stringify({ amount, payment_method: refundForm.payment_method, payment_date: refundForm.payment_date || undefined, reason: refundForm.reason.trim() }),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.message ?? "Failed to record the refund");
-      }
-      const normalized = normalizeInvoice(await res.json());
-      await refreshMoney();
-      toast.success("Refund recorded.");
-      setSelectedInvoice(normalized);
-      setRefundForm(emptyRefundForm());
-    } catch (e: any) {
-      setRefundError(e.message ?? "Something went wrong.");
-    } finally {
-      setRefunding(false);
-    }
-  };
-
   // ── Void (cancel) ───────────────────────────────────────────────────────────
 
   const handleVoid = async () => {
     if (!selectedInvoice) return;
     setVoidError("");
     if (voidReason.trim().length < 3) { setVoidError("Say why this invoice is cancelled."); return; }
-    if (!window.confirm(`Cancel invoice ${selectedInvoice.invoice_number}? It stays on record as cancelled and is no longer owed.`)) return;
+    const paid = selectedInvoice.amount_paid;
+    const what =
+      paid > 0
+        ? voidRefund
+          ? ` The $${paid.toFixed(2)} received on it will be refunded.`
+          : ` The $${paid.toFixed(2)} received on it goes back to the patient's receipts, still theirs.`
+        : "";
+    if (!window.confirm(`Cancel invoice ${selectedInvoice.invoice_number}? It stays on record as cancelled and is no longer owed.${what}`)) return;
     setVoiding(true);
     try {
       const res = await apiFetch(`/api/billing/invoices/${selectedInvoice.id}/void`, {
         method: "POST",
-        body: JSON.stringify({ reason: voidReason.trim() }),
+        body: JSON.stringify({
+          reason: voidReason.trim(),
+          ...(paid > 0 && voidRefund ? { refund: true, refund_method: voidRefundMethod } : {}),
+        }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.message ?? "Failed to cancel the invoice");
       }
-      const normalized = normalizeInvoice(await res.json());
+      const body = await res.json();
+      const normalized = normalizeInvoice(body);
       await refreshMoney();
-      toast.success("Invoice cancelled.");
+      const released = (body.released_receipts ?? []) as { document_number: string }[];
+      const refunds = (body.refunds ?? []) as { document_number: string }[];
+      toast.success(
+        refunds.length > 0
+          ? `Invoice cancelled. Refunded: ${refunds.map((r) => r.document_number).join(", ")}.`
+          : released.length > 0
+            ? `Invoice cancelled. The money is open again on ${released.map((r) => r.document_number).join(", ")}.`
+            : "Invoice cancelled.",
+      );
       setSelectedInvoice(normalized);
       setVoidReason("");
+      setVoidRefund(false);
     } catch (e: any) {
       setVoidError(e.message ?? "Something went wrong.");
     } finally {
@@ -386,8 +371,7 @@ export default function BillingPage() {
 
   const openViewModal = (invoice: TreatmentInvoice) => {
     setSelectedInvoice(invoice);
-    setRefundForm(emptyRefundForm());
-    setRefundError("");
+    setVoidRefund(false);
     setVoidReason("");
     setVoidError("");
     setShowViewModal(true);
@@ -723,17 +707,23 @@ export default function BillingPage() {
                       <td className="px-3 py-2 text-right text-gray-800">${li.amount.toFixed(2)}</td>
                     </tr>
                   ))}
+                  {(selectedInvoice.discount_amount > 0 || selectedInvoice.vat_amount > 0) && (
+                    <tr className="text-gray-600">
+                      <td className="px-3 py-2">Subtotal</td>
+                      <td className="px-3 py-2 text-right">${selectedInvoice.subtotal.toFixed(2)}</td>
+                    </tr>
+                  )}
                   {selectedInvoice.discount_amount > 0 && (
-                    <>
-                      <tr className="text-gray-600">
-                        <td className="px-3 py-2">Subtotal</td>
-                        <td className="px-3 py-2 text-right">${selectedInvoice.subtotal.toFixed(2)}</td>
-                      </tr>
-                      <tr className="text-gray-600">
-                        <td className="px-3 py-2">Discount{selectedInvoice.discount_reason && <span className="ml-2 text-xs italic text-gray-500">{selectedInvoice.discount_reason}</span>}</td>
-                        <td className="px-3 py-2 text-right">−${selectedInvoice.discount_amount.toFixed(2)}</td>
-                      </tr>
-                    </>
+                    <tr className="text-gray-600">
+                      <td className="px-3 py-2">Discount{selectedInvoice.discount_reason && <span className="ml-2 text-xs italic text-gray-500">{selectedInvoice.discount_reason}</span>}</td>
+                      <td className="px-3 py-2 text-right">−${selectedInvoice.discount_amount.toFixed(2)}</td>
+                    </tr>
+                  )}
+                  {selectedInvoice.vat_amount > 0 && (
+                    <tr className="text-gray-600">
+                      <td className="px-3 py-2">VAT {selectedInvoice.vat_percent}%</td>
+                      <td className="px-3 py-2 text-right">${selectedInvoice.vat_amount.toFixed(2)}</td>
+                    </tr>
                   )}
                   <tr className="bg-gray-50 font-semibold">
                     <td className="px-3 py-2">{t("billing.total")}</td>
@@ -770,6 +760,7 @@ export default function BillingPage() {
                         <span className={`font-medium ${p.kind === "refund" ? "text-red-700" : "text-gray-800"}`}>
                           {p.kind === "refund" ? "−" : ""}${p.amount.toFixed(2)}
                         </span>
+                        {p.document_number && <span className="ml-2 font-mono text-xs text-gray-600">{p.document_number}</span>}
                         {p.kind === "refund" && <span className="ml-2 text-xs font-semibold uppercase text-red-600">refund</span>}
                         <span className="ml-2 text-gray-500 capitalize">{p.payment_method}</span>
                         {p.reason && <span className="ml-2 text-gray-500 italic">{p.reason}</span>}
@@ -794,68 +785,37 @@ export default function BillingPage() {
               </div>
             )}
 
-            {/* Refund — money back to the patient, never more than was received */}
-            {can("billing:edit") && selectedInvoice.status !== "cancelled" && selectedInvoice.amount_paid > 0 && (
-              <details className="border-t border-gray-200 pt-4">
-                <summary className="cursor-pointer font-semibold text-gray-800">Refund money to the patient</summary>
-                <div className="mt-3 space-y-3">
-                  <div className="flex gap-3">
-                    <div className="flex-1">
-                      <FormField label={`Amount (max ${selectedInvoice.amount_paid.toFixed(2)}) *`}>
-                        <input type="number" min="0.01" step="0.01" max={selectedInvoice.amount_paid} placeholder="0.00" value={refundForm.amount}
-                          onChange={(e) => setRefundForm((f) => ({ ...f, amount: e.target.value }))} className={inputClass} />
-                      </FormField>
-                    </div>
-                    <div className="flex-1">
-                      <FormField label="Returned by *">
-                        <select value={refundForm.payment_method} onChange={(e) => setRefundForm((f) => ({ ...f, payment_method: e.target.value }))} className={inputClass}>
-                          <option value="cash">{t("billing.cash")}</option>
-                          <option value="card">{t("billing.card")}</option>
-                          <option value="insurance">{t("billing.insurance")}</option>
-                          <option value="bank_transfer">{t("billing.bankTransfer")}</option>
-                        </select>
-                      </FormField>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <FormField label="Returned on *">
-                      <input type="date" value={refundForm.payment_date} max={todayIso()}
-                        onChange={(e) => setRefundForm((f) => ({ ...f, payment_date: e.target.value }))} className={inputClass} />
-                    </FormField>
-                    <FormField label="Reason *">
-                      <input type="text" placeholder="Why the money is returned" value={refundForm.reason}
-                        onChange={(e) => setRefundForm((f) => ({ ...f, reason: e.target.value }))} className={inputClass} />
-                    </FormField>
-                  </div>
-                  {refundError && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{refundError}</p>}
-                  <Button variant="outline" onClick={handleRefund} disabled={refunding} className="w-full">
-                    {refunding ? "Recording…" : "Record refund"}
-                  </Button>
-                </div>
-              </details>
-            )}
-
             {/* Void — the invoice is not owed; it stays on record as cancelled */}
             {can("billing:edit") && selectedInvoice.status !== "cancelled" && (
               <details className="border-t border-gray-200 pt-4">
                 <summary className="cursor-pointer font-semibold text-gray-800">Cancel this invoice</summary>
                 <div className="mt-3 space-y-3">
-                  {selectedInvoice.amount_paid > 0 ? (
-                    <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                      ${selectedInvoice.amount_paid.toFixed(2)} was received on this invoice. Refund it first; then it can be cancelled.
-                    </p>
-                  ) : (
-                    <>
-                      <p className="text-sm text-gray-600">The invoice stays on record, marked cancelled with your reason, and is no longer counted as owed. Chart work billed on it can be billed again.</p>
-                      <FormField label="Reason *">
-                        <input type="text" placeholder="Why this invoice is cancelled" value={voidReason} onChange={(e) => setVoidReason(e.target.value)} className={inputClass} />
-                      </FormField>
-                      {voidError && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{voidError}</p>}
-                      <Button variant="destructive" onClick={handleVoid} disabled={voiding} className="w-full">
-                        {voiding ? "Cancelling…" : "Cancel invoice"}
-                      </Button>
-                    </>
+                  <p className="text-sm text-gray-600">The invoice stays on record, marked cancelled with your reason, and is no longer counted as owed. Chart work billed on it can be billed again.</p>
+                  {selectedInvoice.amount_paid > 0 && (
+                    <div className="space-y-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                      <p>
+                        ${selectedInvoice.amount_paid.toFixed(2)} was received on it. Cancelling is not refunding: that money goes back to the patient&apos;s receipts, open to use on another bill.
+                      </p>
+                      <label className="flex items-center gap-2">
+                        <input type="checkbox" checked={voidRefund} onChange={(e) => setVoidRefund(e.target.checked)} />
+                        <span>Also hand the ${selectedInvoice.amount_paid.toFixed(2)} back to the patient (refund)</span>
+                      </label>
+                      {voidRefund && (
+                        <FormField label="Handed back by *">
+                          <select value={voidRefundMethod} onChange={(e) => setVoidRefundMethod(e.target.value)} className={inputClass}>
+                            {PAYMENT_METHODS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+                          </select>
+                        </FormField>
+                      )}
+                    </div>
                   )}
+                  <FormField label="Reason *">
+                    <input type="text" placeholder="Why this invoice is cancelled" value={voidReason} onChange={(e) => setVoidReason(e.target.value)} className={inputClass} />
+                  </FormField>
+                  {voidError && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{voidError}</p>}
+                  <Button variant="destructive" onClick={handleVoid} disabled={voiding} className="w-full">
+                    {voiding ? "Cancelling…" : voidRefund && selectedInvoice.amount_paid > 0 ? "Cancel and refund" : "Cancel invoice"}
+                  </Button>
                 </div>
               </details>
             )}

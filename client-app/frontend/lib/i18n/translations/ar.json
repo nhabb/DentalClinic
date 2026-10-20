@@ -711,6 +711,7 @@
     "cash": "نقدًا",
     "card": "بطاقة",
     "bankTransfer": "تحويل بنكي",
+    "cheque": "شيك",
     "otherMethod": "أخرى",
     "notes": "ملاحظات",
     "notesPlaceholder": "مثال: الدفعة الأولى",
