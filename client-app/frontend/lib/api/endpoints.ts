@@ -160,6 +160,37 @@ export const ENDPOINTS = {
     INSURANCE_CLAIMS: "/api/billing/insurance-claims",
     /** GET - Get billing summary */
     SUMMARY: "/api/billing/summary",
+    /** GET - Receipts (RT) and refunds (RF); ?patient_id ?kind ?status ?from ?to */
+    RECEIPTS: "/api/billing/receipts",
+    /** POST - A deposit: a receipt with no invoice (billing:create) */
+    NEW_RECEIPT: "/api/billing/receipts",
+    /** GET - One receipt with its invoices and refunds */
+    RECEIPT_BY_ID: (id: string | number) => `/api/billing/receipts/${id}`,
+    /** POST - Refund out of one receipt, never more than it holds (billing:edit) */
+    REFUND_RECEIPT: (id: string | number) => `/api/billing/receipts/${id}/refunds`,
+    /** POST - Use part of a receipt on one invoice (billing:edit) */
+    APPLY_RECEIPT: (id: string | number) => `/api/billing/payments/${id}/allocations`,
+    /** POST - Cancel an invoice; its receipts are released, `refund: true` hands the money back (billing:edit) */
+    CANCEL_INVOICE: (id: string | number) => `/api/billing/invoices/${id}/void`,
+  },
+
+  // ============================================
+  // EXPENSES (what the clinic pays)
+  // ============================================
+  EXPENSES: {
+    /** GET - List (?to_pay ?supplier_id ?category ?status ?search ?from ?to); POST - new expense (EX…) */
+    LIST: "/api/expenses",
+    BY_ID: (id: string | number) => `/api/expenses/${id}`,
+    /** POST - Record a payment on an expense */
+    PAYMENTS: (id: string | number) => `/api/expenses/${id}/payments`,
+    /** POST (multipart "file") - keep a file with the expense; DELETE /:attachmentId removes it */
+    ATTACHMENTS: (id: string | number) => `/api/expenses/${id}/attachments`,
+    /** GET / POST; PATCH /:id - suppliers the clinic pays */
+    SUPPLIERS: "/api/expense-suppliers",
+    /** GET / POST; PATCH /:id - the clinic's own categories */
+    CATEGORIES: "/api/expense-categories",
+    /** GET / POST; PATCH / DELETE /:id - repeating expenses */
+    REMINDERS: "/api/expense-reminders",
   },
 
   // ============================================

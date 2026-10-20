@@ -66,14 +66,14 @@ const ACTION_COMMANDS: NavCommand[] = [
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
   const router = useRouter();
-  const { loading: permsLoading, can } = usePermissions();
+  const { can } = usePermissions();
   const allowed = (href: string) => {
     const needed = screenPermission(href.split("?")[0]);
-    return !needed || permsLoading || can(needed);
+    return !needed || can(needed);
   };
   const navCommands = NAV_COMMANDS.filter((c) => allowed(c.href));
   const actionCommands = ACTION_COMMANDS.filter(
-    (c) => allowed(c.href) && (permsLoading || !ACTION_PERMISSION[c.key] || can(ACTION_PERMISSION[c.key])),
+    (c) => allowed(c.href) && (!ACTION_PERMISSION[c.key] || can(ACTION_PERMISSION[c.key])),
   );
 
   useEffect(() => {

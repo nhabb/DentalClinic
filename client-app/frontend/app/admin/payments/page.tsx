@@ -8,6 +8,8 @@ import {
   FaChartLine,
   FaFileInvoiceDollar,
   FaMoneyBillWave,
+  FaPrint,
+  FaReceipt,
   FaRegClock,
   FaUndo,
   FaWallet,
@@ -38,6 +40,17 @@ import {
   type PayingPatient,
 } from "@/components/billing/TakePaymentModal";
 import { PatientDrawer } from "@/components/billing/PatientDrawer";
+import {
+  normalizeReceipt,
+  printReceipt,
+  RECEIPT_STATUS_LABEL,
+  RECEIPT_STATUS_TONE,
+  type ReceiptRow,
+} from "@/components/billing/receipt-doc";
+import {
+  RefundReceiptModal,
+  type RefundableReceipt,
+} from "@/components/billing/RefundReceiptModal";
 import type { PatientOption } from "@/components/billing/NewInvoiceModal";
 import { signOut } from "@/lib/auth/session";
 
@@ -50,8 +63,9 @@ import { signOut } from "@/lib/auth/session";
  * second one.
  *
  * So the page reads in the order the job goes: who owes money, take it, and
- * what we have taken today — the last of those being what somebody counts the
- * drawer against at closing.
+ * the receipts (RT) and refunds (RF) of the period — what somebody counts the
+ * drawer against at closing. Every payment is a receipt; a deposit is a
+ * receipt not yet used on a bill; a refund always comes out of one receipt.
  *
  * It opens no second payment form. `TakePaymentModal` is the only one in the
  * clinic, whether it is reached from here, from a bill, or from a patient's
@@ -71,29 +85,27 @@ type Owed = {
   days_overdue: number;
 };
 
-type Allocation = { id: number; amount: number; invoice: { invoice_number: string } | null };
-
-type Taken = {
-  id: number;
-  kind: "payment" | "refund";
-  refund_scope: string | null;
-  amount: number;
-  payment_method: string;
-  payment_date: string;
-  notes: string | null;
-  reason: string | null;
-  patient_id: number;
-  patient_name: string;
-  taken_by: string | null;
-  applied: number;
-  unapplied: number;
-  allocations: Allocation[];
-};
-
 type ByMethod = { method: string; payments: number; refunds: number; net: number; count: number };
 
 const num = (v: unknown) => Number(v ?? 0);
 const methodLabel = (m: string) => m.replace(/_/g, " ");
+
+/** The receipt filters the desk asks for; "refunds" lists RF rows. */
+const RECEIPT_FILTERS = {
+  all: "All",
+  open: "Open",
+  used: "Used",
+  refunds: "Refunds",
+} as const;
+type ReceiptFilter = keyof typeof RECEIPT_FILTERS;
+
+const matchesFilter = (r: ReceiptRow, f: ReceiptFilter) => {
+  if (f === "all") return true;
+  if (f === "refunds") return r.kind === "refund";
+  if (r.kind === "refund") return false;
+  // "Open" is anything still holding money; "Used" is fully on bills.
+  return f === "open" ? (r.figures?.held ?? 0) > 0 : r.status === "used";
+};
 
 /** The windows a desk actually asks for. "Today" is the clinic's day. */
 const WINDOWS = {
@@ -120,15 +132,18 @@ export default function PaymentsPage() {
   const router = useRouter();
   const { can } = usePermissions();
   const canTake = can("billing:create");
+  const canRefund = can("billing:edit");
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [view, setView] = useState<"owed" | "taken">("owed");
+  const [receiptFilter, setReceiptFilter] = useState<ReceiptFilter>("all");
+  const [refunding, setRefunding] = useState<RefundableReceipt | null>(null);
   const [window_, setWindow] = useState<WindowId>("today");
   const [search, setSearch] = useState("");
 
   const [owed, setOwed] = useState<Owed[]>([]);
-  const [taken, setTaken] = useState<Taken[]>([]);
+  const [taken, setTaken] = useState<ReceiptRow[]>([]);
   const [byMethod, setByMethod] = useState<ByMethod[]>([]);
   const [takenNet, setTakenNet] = useState(0);
   /** Clinic-wide unpaid and overdue, from the server’s one definition. */
@@ -162,7 +177,7 @@ export default function PaymentsPage() {
     try {
       const [oRes, tRes, sRes, kRes] = await Promise.all([
         apiFetch("/api/billing/outstanding"),
-        apiFetch(`/api/billing/invoice-payments?${q}`),
+        apiFetch(`/api/billing/receipts?${q}`),
         apiFetch(`/api/billing/summary?${summaryQ}`),
         apiFetch("/api/billing/kpis"),
       ]);
@@ -182,16 +197,7 @@ export default function PaymentsPage() {
       }
       if (tRes.ok) {
         const rows = await tRes.json();
-        setTaken(
-          (Array.isArray(rows) ? rows : []).map((r: Record<string, unknown>) => ({
-            ...(r as object),
-            id: Number(r.id),
-            patient_id: Number(r.patient_id),
-            amount: num(r.amount),
-            applied: num(r.applied),
-            unapplied: num(r.unapplied),
-          })) as Taken[],
-        );
+        setTaken((Array.isArray(rows) ? rows : []).map(normalizeReceipt));
       }
       if (sRes.ok) {
         const s = await sRes.json();
@@ -308,13 +314,15 @@ export default function PaymentsPage() {
     () =>
       taken.filter(
         (r) =>
-          !q ||
-          r.patient_name.toLowerCase().includes(q) ||
-          r.allocations.some((a) =>
-            (a.invoice?.invoice_number ?? "").toLowerCase().includes(q),
-          ),
+          matchesFilter(r, receiptFilter) &&
+          (!q ||
+            r.patient_name.toLowerCase().includes(q) ||
+            r.document_number.toLowerCase().includes(q) ||
+            r.allocations.some((a) =>
+              (a.invoice?.invoice_number ?? "").toLowerCase().includes(q),
+            )),
       ),
-    [taken, q],
+    [taken, q, receiptFilter],
   );
 
 
@@ -344,7 +352,7 @@ export default function PaymentsPage() {
       <div className="flex min-w-0 flex-1 flex-col">
         <AdminPageHeader
           title="Payments"
-          subtitle="Take money, and see what was taken"
+          subtitle="Take money, and see every receipt and refund"
           onAdd={
             canTake
               ? () => {
@@ -353,7 +361,7 @@ export default function PaymentsPage() {
                 }
               : undefined
           }
-          addLabel="Take payment"
+          addLabel="New receipt"
           actions={[
             {
               key: "billing",
@@ -423,7 +431,7 @@ export default function PaymentsPage() {
                 onChange={setView}
                 items={[
                   { id: "owed", label: "Owed", icon: <FaFileInvoiceDollar />, count: owed.length },
-                  { id: "taken", label: "Taken", icon: <FaMoneyBillWave />, count: taken.length },
+                  { id: "taken", label: "Receipts", icon: <FaReceipt />, count: taken.length },
                 ]}
               />
 
@@ -431,14 +439,24 @@ export default function PaymentsPage() {
                 search={{
                   value: search,
                   onChange: setSearch,
-                  placeholder: "Search by patient or bill number",
+                  placeholder: "Search by patient, RT / RF or bill number",
                 }}
                 shown={view === "owed" ? owedShown.length : takenShown.length}
                 total={view === "owed" ? owed.length : taken.length}
-                unitLabel={view === "owed" ? "bills" : "payments"}
+                unitLabel={view === "owed" ? "bills" : "receipts"}
                 groups={
                   view === "taken"
                     ? [
+                        {
+                          key: "status",
+                          variant: "segmented",
+                          value: receiptFilter,
+                          onChange: (v: string) => setReceiptFilter(v as ReceiptFilter),
+                          options: (Object.keys(RECEIPT_FILTERS) as ReceiptFilter[]).map((id) => ({
+                            value: id,
+                            label: RECEIPT_FILTERS[id],
+                          })),
+                        },
                         {
                           key: "window",
                           variant: "segmented",
@@ -540,74 +558,116 @@ export default function PaymentsPage() {
                   </div>
                 ))}
 
-              {/* ── What was taken, newest first ──────────────────────────── */}
+              {/* ── Receipts and refunds, newest first ───────────────────── */}
               {view === "taken" &&
                 (takenShown.length === 0 ? (
                   <EmptyState
-                    icon={FaMoneyBillWave}
-                    title={`No money moved ${WINDOWS[window_].toLowerCase()}`}
-                    description="Payments and refunds appear here on the day the money moved."
+                    icon={FaReceipt}
+                    title={`No receipts ${WINDOWS[window_].toLowerCase()}`}
+                    description="Receipts and refunds appear here on the day the money moved."
                   />
                 ) : (
                   <ul className="divide-y divide-ink-100 overflow-hidden rounded-2xl border border-ink-200 bg-card">
-                    {takenShown.map((r) => (
-                      <li
-                        key={r.id}
-                        tabIndex={0}
-                        aria-label={`Open the money file of ${r.patient_name}`}
-                        onClick={() =>
-                          setDrawerPatient({ id: r.patient_id, label: r.patient_name })
-                        }
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            setDrawerPatient({ id: r.patient_id, label: r.patient_name });
-                          }
-                        }}
-                        className="flex cursor-pointer flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 transition-colors hover:bg-brand-50/60 focus-visible:bg-brand-50/60 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-400"
-                      >
-                        <span
-                          className={`w-24 shrink-0 text-sm font-bold tabular-nums ${
-                            r.kind === "refund" ? "text-brick-700" : "text-leaf-700"
-                          }`}
+                    {takenShown.map((r) => {
+                      const held = r.figures?.held ?? 0;
+                      const open = () =>
+                        setDrawerPatient({ id: r.patient_id, label: r.patient_name });
+                      return (
+                        <li
+                          key={r.id}
+                          tabIndex={0}
+                          aria-label={`Open the money file of ${r.patient_name}`}
+                          onClick={open}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              open();
+                            }
+                          }}
+                          className="flex cursor-pointer flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 transition-colors hover:bg-brand-50/60 focus-visible:bg-brand-50/60 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-400"
                         >
-                          {r.kind === "refund" ? "−" : "+"}${money(r.amount)}
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="font-medium text-ink-900">{r.patient_name}</span>
-                            <Badge tone="neutral" className="capitalize">
-                              {methodLabel(r.payment_method)}
-                            </Badge>
-                            {r.kind === "refund" && (
-                              <Badge tone="brick" icon={FaUndo}>
-                                {r.refund_scope === "credit" ? "credit returned" : "off a bill"}
+                          <span
+                            className={`w-24 shrink-0 text-sm font-bold tabular-nums ${
+                              r.kind === "refund" ? "text-brick-700" : "text-leaf-700"
+                            }`}
+                          >
+                            {r.kind === "refund" ? "−" : "+"}${money(r.amount)}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="font-mono text-xs font-semibold text-ink-700">
+                                {r.document_number}
+                              </span>
+                              <span className="font-medium text-ink-900">{r.patient_name}</span>
+                              <Badge tone="neutral" className="capitalize">
+                                {methodLabel(r.payment_method)}
                               </Badge>
-                            )}
-                            {r.unapplied > 0 && r.kind === "payment" && (
-                              <Badge tone="brand">
-                                ${money(r.unapplied)} {MONEY_WORD.creditOnAccount.toLowerCase()}
-                              </Badge>
+                              {r.kind === "refund" ? (
+                                <Badge tone="brick" icon={FaUndo}>
+                                  {r.source ? `out of ${r.source.document_number}` : "refund"}
+                                </Badge>
+                              ) : (
+                                r.status !== "refund" && (
+                                  <Badge tone={RECEIPT_STATUS_TONE[r.status]}>
+                                    {RECEIPT_STATUS_LABEL[r.status]}
+                                  </Badge>
+                                )
+                              )}
+                              {r.kind === "payment" && held > 0 && (
+                                <Badge tone="brand">holds ${money(held)}</Badge>
+                              )}
+                            </div>
+                            <div className="mt-0.5 text-xs text-ink-500">
+                              {r.kind === "refund"
+                                ? r.reason
+                                : [
+                                    ...r.allocations.map(
+                                      (a) =>
+                                        `$${money(a.amount)} → ${a.invoice?.invoice_number ?? "a bill"}`,
+                                    ),
+                                    ...r.refunds.map(
+                                      (f) => `−$${money(f.amount)} refunded (${f.document_number})`,
+                                    ),
+                                  ].join(" · ") || "Deposit: not used on a bill yet"}
+                              {r.kind === "payment" && r.notes && ` · ${r.notes}`}
+                            </div>
+                          </div>
+                          <div className="text-end text-xs text-ink-500">
+                            <div className="tabular-nums">{formatDateBeirut(r.payment_date)}</div>
+                            {r.taken_by && <div>by {r.taken_by}</div>}
+                          </div>
+                          <div
+                            className="flex items-center gap-1"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              aria-label={`Print ${r.document_number}`}
+                              onClick={() => printReceipt(r)}
+                            >
+                              <FaPrint />
+                            </Button>
+                            {canRefund && r.kind === "payment" && held > 0 && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() =>
+                                  setRefunding({
+                                    id: r.id,
+                                    document_number: r.document_number,
+                                    held,
+                                    patient_name: r.patient_name,
+                                  })
+                                }
+                              >
+                                <FaUndo /> Refund
+                              </Button>
                             )}
                           </div>
-                          <div className="mt-0.5 text-xs text-ink-500">
-                            {r.allocations.length > 0
-                              ? r.allocations
-                                  .map(
-                                    (a) =>
-                                      `$${money(num(a.amount))} → ${a.invoice?.invoice_number ?? "a bill"}`,
-                                  )
-                                  .join(" · ")
-                              : `Held as ${MONEY_WORD.creditOnAccount.toLowerCase()}`}
-                            {(r.reason ?? r.notes) && ` · ${r.reason ?? r.notes}`}
-                          </div>
-                        </div>
-                        <div className="text-end text-xs text-ink-500">
-                          <div className="tabular-nums">{formatDateBeirut(r.payment_date)}</div>
-                          {r.taken_by && <div>by {r.taken_by}</div>}
-                        </div>
-                      </li>
-                    ))}
+                        </li>
+                      );
+                    })}
                   </ul>
                 ))}
             </>
@@ -635,8 +695,8 @@ export default function PaymentsPage() {
       <Modal
         isOpen={picking}
         onClose={() => setPicking(false)}
-        title="Take payment: who is paying?"
-        description="No bill needs to be named — anything beyond what they owe is held as credit."
+        title="New receipt: whose money is it?"
+        description="A deposit: a receipt with no bill yet. It stays open and can be used on any of their bills."
         maxWidth="max-w-lg"
       >
         <div className="space-y-3">
@@ -671,6 +731,12 @@ export default function PaymentsPage() {
           </div>
         </div>
       </Modal>
+
+      <RefundReceiptModal
+        receipt={refunding}
+        onClose={() => setRefunding(null)}
+        onRefunded={refresh}
+      />
 
       {/* The one payment form in the clinic, named bill or not. */}
       <TakePaymentModal

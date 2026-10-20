@@ -17,30 +17,58 @@ export interface Me {
   permissions: string[];
 }
 
+// The answer is cached per token. Signing in and out never reloads the page,
+// so a cache that outlived the token showed the previous session's menu (or,
+// after a request made while signed out, no menu at all) until a hard reload.
 let me: Promise<Me | null> | null = null;
+let meToken: string | null = null;
+
+function currentToken(): string | null {
+  try {
+    return sessionStorage.getItem("authToken");
+  } catch {
+    return null;
+  }
+}
 
 export function fetchMe(): Promise<Me | null> {
   if (typeof window === "undefined") return Promise.resolve(null);
-  me ??= apiFetch("/api/auth/me")
+  const token = currentToken();
+  if (!token) return Promise.resolve(null);
+  if (me && meToken === token) return me;
+
+  meToken = token;
+  const request: Promise<Me | null> = apiFetch("/api/auth/me")
     .then((r) => (r.ok ? r.json() : null))
     .then((u) =>
       u?.id
         ? { id: Number(u.id), role: String(u.role ?? ""), permissions: Array.isArray(u.permissions) ? u.permissions : [] }
         : null,
     )
-    .catch(() => null);
-  return me;
+    .catch(() => null)
+    .then((user) => {
+      // A failed answer is not kept: the next screen asks again.
+      if (!user && me === request) resetMe();
+      return user;
+    });
+  me = request;
+  return request;
 }
 
 /** Forget the cached user (after login, logout or a role change). */
 export function resetMe(): void {
   me = null;
+  meToken = null;
 }
 
-/** True when the user holds the permission. Platform superadmins hold everything. */
+/**
+ * True when the user holds the permission. Platform superadmins and clinic
+ * admins hold everything: the API grants an admin the whole catalog in code
+ * (RolesService.permissionsFor), so the screens must not depend on the list.
+ */
 export function can(user: Me | null, permission: string): boolean {
   if (!user) return false;
-  if (user.role === "superadmin") return true;
+  if (user.role === "superadmin" || user.role === "admin") return true;
   return user.permissions.includes(permission);
 }
 

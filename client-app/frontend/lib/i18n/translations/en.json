@@ -711,6 +711,7 @@
     "cash": "Cash",
     "card": "Card",
     "bankTransfer": "Bank Transfer",
+    "cheque": "Cheque",
     "otherMethod": "Other",
     "notes": "Notes",
     "notesPlaceholder": "e.g., First installment",

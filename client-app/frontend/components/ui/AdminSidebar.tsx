@@ -93,10 +93,10 @@ export default function AdminSidebar({
 
   const activeSubId = DASHBOARD_SUB_ITEMS.find((s) => s.href === pathname)?.id ?? null;
   // Sections the role may not open are not listed (lib/adminAccess.ts).
-  const { loading: permsLoading, can } = usePermissions();
+  const { can } = usePermissions();
   const allowed = (href: string) => {
     const needed = screenPermission(href);
-    return !needed || permsLoading || can(needed);
+    return !needed || can(needed);
   };
   const visibleNav = navItems.filter((i) => allowed(i.href));
   const visibleSub = DASHBOARD_SUB_ITEMS.filter((s) => allowed(s.href));
