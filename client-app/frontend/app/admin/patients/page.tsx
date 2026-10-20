@@ -63,6 +63,7 @@ import {
   FaUserClock,
 } from "react-icons/fa";
 import { useSignOut } from "@/lib/auth/useSignOut";
+import { deleteEach } from "@/lib/api/bulk";
 
 
 interface Patient {
@@ -698,7 +699,9 @@ export default function PatientsPage() {
         setShowPatientModal(false);
         toast.success("Patient deleted.");
       } else {
-        toast.error("Failed to delete patient.");
+        // 409 = they have invoices or payments, which are never deleted.
+        const body = await res.json().catch(() => null);
+        toast.error(body?.message || "Failed to delete patient.");
       }
     } catch {
       toast.error("Failed to delete patient.");
@@ -721,13 +724,17 @@ export default function PatientsPage() {
     if (ids.length === 0) return;
     if (!window.confirm(`Delete ${ids.length} patient${ids.length === 1 ? "" : "s"}? This will permanently remove their accounts and all records.`)) return;
     try {
-      await Promise.all(ids.map((id) => apiFetch(`/api/patients/${id}`, { method: "DELETE" })));
-      setPatients((prev) => prev.filter((p) => !selectedIds.has(p.id)));
-      toast.success(`${ids.length} patient${ids.length === 1 ? "" : "s"} deleted.`);
+      const { done, failed } = await deleteEach(ids, (id) => `/api/patients/${id}`);
+      const gone = new Set(done);
+      setPatients((prev) => prev.filter((p) => !gone.has(p.id)));
+      if (done.length > 0) toast.success(`${done.length} patient${done.length === 1 ? "" : "s"} deleted.`);
+      if (failed.length > 0) {
+        // Patients with invoices or payments are kept; the API says so.
+        toast.error(`${failed.length} not deleted: ${failed[0].message}`);
+      }
+      setSelectedIds(new Set(failed.map((f) => f.id)));
     } catch {
       toast.error("Failed to delete selected patients.");
-    } finally {
-      setSelectedIds(new Set());
     }
   };
 
@@ -2683,9 +2690,11 @@ export default function PatientsPage() {
                 </div>
               ) : (
                 <div className="rounded-xl bg-amber-50 border border-amber-100 px-4 py-3 text-sm text-amber-800">
-                  {t("patients.setupLinkNotEmailed")}
+                  {inviteResult.link ? t("patients.setupLinkNotEmailed") : t("patients.setupLinkNotSent")}
                 </div>
               )}
+              {/* No link for an account already in use: it only goes to the owner's inbox. */}
+              {inviteResult.link && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">{t("patients.setupLink")}</label>
                 <div className="flex gap-2">
@@ -2701,6 +2710,7 @@ export default function PatientsPage() {
                 </div>
                 <p className="mt-1 text-xs text-gray-500">{t("patients.setupLinkExpiry")}</p>
               </div>
+              )}
             </div>
             <div className="p-6 border-t border-gray-100 flex justify-end">
               <Button className="bg-brand hover:bg-brand/90" onClick={() => setInviteResult(null)}>

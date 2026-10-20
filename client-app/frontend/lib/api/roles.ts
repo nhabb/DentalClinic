@@ -93,8 +93,11 @@ export type StaffInput = {
   role: string;
 };
 
-/** A one-time set-password link; emailed is false when the server has no SMTP, so show the link. */
-export type StaffInvite = { link: string; emailed: boolean; email: string | null; expires_at: string };
+/**
+ * A one-time set-password link; emailed is false when the server has no SMTP, so show the link.
+ * `link` is null for an account already in use: its reset only goes to the owner's inbox.
+ */
+export type StaffInvite = { link: string | null; emailed: boolean; email: string | null; expires_at: string };
 
 /** The new account and its invite. */
 export type StaffCreated = { user: StaffMember; invite: StaffInvite };

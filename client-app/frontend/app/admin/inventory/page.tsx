@@ -40,6 +40,7 @@ import {
 } from "react-icons/fa";
 import type { IconType } from "react-icons";
 import { useSignOut } from "@/lib/auth/useSignOut";
+import { deleteEach } from "@/lib/api/bulk";
 
 // NOTE FOR BACKEND TEAM:
 // inventory_items needs an `image_url` (string, nullable) column.
@@ -196,7 +197,6 @@ export default function InventoryManagement() {
   const [stockType, setStockType] = useState<"in" | "out">("in");
   const [stockNote, setStockNote] = useState("");
   const [stockSaving, setStockSaving] = useState(false);
-  const [currentUserId, setCurrentUserId] = useState<number>(1);
 
   const fetchInventory = async () => {
     try {
@@ -231,7 +231,6 @@ export default function InventoryManagement() {
 
   useEffect(() => {
     fetchInventory();
-    apiFetch("/api/auth/me").then((r) => r.ok ? r.json() : null).then((u) => { if (u?.id) setCurrentUserId(Number(u.id)); });
   }, []);
 
   const handleLogout = useSignOut();
@@ -360,7 +359,7 @@ export default function InventoryManagement() {
       const res = await apiFetch(`/api/inventory/${selectedItem.id}/movements`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ movement_type: stockType, quantity: stockQty, note: stockNote || undefined, performed_by: currentUserId }),
+        body: JSON.stringify({ movement_type: stockType, quantity: stockQty, note: stockNote || undefined }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -472,14 +471,16 @@ export default function InventoryManagement() {
   const handleBulkDelete = async () => {
     const ids = [...selectedIds];
     if (ids.length === 0) return;
+    if (!window.confirm(`Delete ${ids.length} item${ids.length === 1 ? "" : "s"}? This cannot be undone.`)) return;
     try {
-      await Promise.all(ids.map((id) => apiFetch(`/api/inventory/${id}`, { method: "DELETE" })));
-      setInventoryItems((prev) => prev.filter((item) => !selectedIds.has(item.id)));
-      toast.success(`${ids.length} item${ids.length === 1 ? "" : "s"} deleted.`);
+      const { done, failed } = await deleteEach(ids, (id) => `/api/inventory/${id}`);
+      const gone = new Set(done);
+      setInventoryItems((prev) => prev.filter((item) => !gone.has(item.id)));
+      if (done.length > 0) toast.success(`${done.length} item${done.length === 1 ? "" : "s"} deleted.`);
+      if (failed.length > 0) toast.error(`${failed.length} not deleted: ${failed[0].message}`);
+      setSelectedIds(new Set(failed.map((f) => f.id)));
     } catch {
       toast.error("Failed to delete selected items.");
-    } finally {
-      setSelectedIds(new Set());
     }
   };
 

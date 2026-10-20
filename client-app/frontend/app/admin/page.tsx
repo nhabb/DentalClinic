@@ -36,6 +36,7 @@ import {
   FaTimes,
 } from "react-icons/fa";
 import { useSignOut } from "@/lib/auth/useSignOut";
+import { reschedule } from "@/lib/appointments/reschedule";
 
 
 interface AdminUser {
@@ -103,16 +104,11 @@ export default function AdminDashboard() {
     if (storedDoctorId) setDoctorId(parseInt(storedDoctorId));
 
     const fetchAll = async () => {
-      // Resolve email for user lookup
-      let email = "";
-      if (storedUser) {
-        try { email = JSON.parse(storedUser).email || ""; } catch {}
-      }
       try {
         // Fire all requests simultaneously — one round-trip wave
         const [userRes, patientsRes, appointmentsRes, inventoryRes, paymentsRes, expensesRes, invoicesRes, doctorsRes, recordsRes] =
           await Promise.all([
-            email ? apiFetch(`/api/users/by-email?email=${encodeURIComponent(email)}`) : Promise.resolve(null),
+            apiFetch(`/api/auth/me`),
             apiFetch(`/api/patients`),
             apiFetch(`/api/appointments?limit=1000`),
             apiFetch(`/api/inventory`),
@@ -277,47 +273,16 @@ export default function AdminDashboard() {
     if (!appt || !postponeDate || !postponeTime) return;
     setPostponeLoading(true);
     try {
-      // 1. Find existing slots for that doctor/date
-      const slotsRes = await apiFetch(`/api/appointment-slots?doctor_id=${appt.doctorId}&date=${postponeDate}&limit=100`);
-      const slotsData = slotsRes.ok ? await slotsRes.json() : { data: [] };
-      let slot = (slotsData.data || []).find((s: any) => {
-        const t = new Date(s.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "UTC" });
-        return t === postponeTime && !s.is_booked;
+      const result = await reschedule({
+        appointmentId: appt.id,
+        patientId: appt.patientId,
+        doctorId: appt.doctorId,
+        date: postponeDate,
+        time: postponeTime,
+        durationMinutes: 30,
+        reason: appt.type,
       });
-
-      // 2. If no matching open slot, create one (30-min block)
-      if (!slot) {
-        const [h, m] = postponeTime.split(":").map(Number);
-        const toH = h + Math.floor((m + 30) / 60);
-        const toM = (m + 30) % 60;
-        const toTime = `${String(toH).padStart(2, "0")}:${String(toM).padStart(2, "0")}`;
-        const createRes = await apiFetch(`/api/appointment-slots/bulk`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ doctor_id: appt.doctorId, slot_date: postponeDate, from_time: postponeTime, to_time: toTime, duration_minutes: 30 }),
-        });
-        if (!createRes.ok) { toast.error("Failed to create slot for new date."); return; }
-        // Fetch the newly created slot
-        const refetchRes = await apiFetch(`/api/appointment-slots?doctor_id=${appt.doctorId}&date=${postponeDate}&limit=100`);
-        const refetchData = refetchRes.ok ? await refetchRes.json() : { data: [] };
-        slot = (refetchData.data || []).find((s: any) => {
-          const t = new Date(s.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "UTC" });
-          return t === postponeTime && !s.is_booked;
-        });
-        if (!slot) { toast.error("Could not find the new slot after creation."); return; }
-      }
-
-      // 3. Cancel original appointment
-      const cancelRes = await apiFetch(`/api/appointments/${appt.id}/cancel`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reason: "Postponed" }) });
-      if (!cancelRes.ok) { toast.error("Failed to cancel original appointment."); return; }
-
-      // 4. Book new appointment
-      const bookRes = await apiFetch(`/api/appointments`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ patient_id: appt.patientId, slot_id: Number(slot.id), reason: appt.type }),
-      });
-      if (!bookRes.ok) { toast.error("Failed to book new appointment."); return; }
+      if (!result.ok) { toast.error(result.message); return; }
 
       toast.success(`Appointment postponed to ${postponeDate} at ${postponeTime}.`);
       setTodayAppointments((prev) => prev.map((a) => a.id === appt.id ? { ...a, status: "cancelled" } : a));
