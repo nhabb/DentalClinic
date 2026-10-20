@@ -50,6 +50,25 @@ import {
   FaRedo,
 } from "react-icons/fa";
 import { signOut } from "@/lib/auth/session";
+import {
+  mapExpense,
+  mapPayment,
+  readError,
+  todayIso as today,
+  type Expense,
+  type ExpenseCategory,
+  type ExpensePayment,
+  type ExpenseStatus,
+  type Supplier,
+} from "@/components/expenses/expense-types";
+import { SupplierPicker } from "@/components/expenses/SupplierPicker";
+import {
+  ACCEPTED_FILES,
+  ExpenseAttachments,
+  uploadExpenseFile,
+} from "@/components/expenses/ExpenseAttachments";
+import { ExpenseListsModal, fetchExpenseLists } from "@/components/expenses/ExpenseListsModal";
+import { RemindersPanel } from "@/components/expenses/RemindersPanel";
 
 const paymentMethods = ["cash", "card", "bank_transfer", "cheque", "other"] as const;
 const paymentMethodLabelKey: Record<string, string> = {

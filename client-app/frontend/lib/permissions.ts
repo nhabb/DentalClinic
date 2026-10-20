@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api/client";
+import { csrfToken, sessionUserId } from "@/lib/auth/session";
 
 /**
  * What the signed-in user may do, as the API decides it.
@@ -17,18 +18,19 @@ export interface Me {
   permissions: string[];
 }
 
-// The answer is cached per token. Signing in and out never reloads the page,
-// so a cache that outlived the token showed the previous session's menu (or,
+// The answer is cached per sign-in. Signing in and out never reloads the page,
+// so a cache that outlived the session showed the previous session's menu (or,
 // after a request made while signed out, no menu at all) until a hard reload.
+//
+// The session itself is an httpOnly cookie the page cannot read, so a sign-in
+// is recognised by what it can read: the CSRF cookie, which every sign-in
+// replaces, and the account this tab acts for (lib/auth/session.ts).
 let me: Promise<Me | null> | null = null;
 let meToken: string | null = null;
 
 function currentToken(): string | null {
-  try {
-    return sessionStorage.getItem("authToken");
-  } catch {
-    return null;
-  }
+  const csrf = csrfToken();
+  return csrf ? `${csrf}|${sessionUserId() ?? ""}` : null;
 }
 
 export function fetchMe(): Promise<Me | null> {
