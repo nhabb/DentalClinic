@@ -33,7 +33,7 @@ const TABS: Tab[] = ["overview", "branches", "accounts", "roles", "settings"];
 
 export default function ClinicDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { data: org, error, loading, reload } = useApi<OrganizationDetail>(`/organizations/${id}`);
+  const { data: org, error, reload } = useApi<OrganizationDetail>(`/organizations/${id}`);
   const [tab, setTab] = useState<Tab>("overview");
   useEffect(() => {
     const wanted = new URLSearchParams(window.location.search).get("tab") as Tab | null;
@@ -50,7 +50,10 @@ export default function ClinicDetailPage() {
       </>
     );
   }
-  if (loading || !org) {
+  // The spinner is for the first load only. A reload after a change keeps the
+  // page mounted: swapping it for a spinner unmounted the tabs and lost what
+  // they held, such as the set-password link Add staff had just shown.
+  if (!org) {
     return (
       <>
         <PageHeader eyebrow="Clinics" title="Loading…" />
@@ -350,14 +353,15 @@ function BranchModal({
     e.preventDefault();
     setBusy(true);
     setError("");
-    const orUndefined = (v: string) => (v.trim() ? v.trim() : undefined);
+    // A cleared field is sent as null: undefined is dropped by JSON and the
+    // API then keeps the old value, so a field could never be emptied.
     const details = {
       name: form.name.trim(),
-      code: orUndefined(form.code),
-      city: orUndefined(form.city),
-      address: orUndefined(form.address),
-      phone: orUndefined(form.phone),
-      opening_hours: orUndefined(form.opening_hours),
+      code: orNull(form.code),
+      city: orNull(form.city),
+      address: orNull(form.address),
+      phone: orNull(form.phone),
+      opening_hours: orNull(form.opening_hours),
     };
     try {
       if (branch) {
@@ -446,7 +450,6 @@ function SettingsTab({ org, onChanged }: { org: OrganizationDetail; onChanged: (
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const set = (key: keyof typeof form, value: string) => setForm((f) => ({ ...f, [key]: value }));
-  const orUndefined = (v: string) => (v.trim() ? v.trim() : undefined);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -455,11 +458,12 @@ function SettingsTab({ org, onChanged }: { org: OrganizationDetail; onChanged: (
     try {
       await patch(`/organizations/${org.id}`, {
         name: form.name.trim(),
-        legal_name: orUndefined(form.legal_name),
-        email: orUndefined(form.email),
-        phone: orUndefined(form.phone),
-        website_url: orUndefined(form.website_url),
-        description: orUndefined(form.description),
+        // Cleared fields go as null, so emptying one really empties it.
+        legal_name: orNull(form.legal_name),
+        email: orNull(form.email),
+        phone: orNull(form.phone),
+        website_url: orNull(form.website_url),
+        description: orNull(form.description),
         timezone: form.timezone,
         currency: form.currency,
       });
@@ -520,4 +524,9 @@ function SettingsTab({ org, onChanged }: { org: OrganizationDetail; onChanged: (
       </CardBody>
     </Card>
   );
+}
+
+/** A trimmed form value, or null for an emptied field. */
+function orNull(value: string): string | null {
+  return value.trim() ? value.trim() : null;
 }

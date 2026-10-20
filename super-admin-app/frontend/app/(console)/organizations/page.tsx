@@ -57,7 +57,7 @@ export default function ClinicsPage() {
     { key: "staff", header: "Staff", align: "end", render: (o) => formatNumber(o.staff) },
     { key: "patients", header: "Patients", align: "end", render: (o) => formatNumber(o.patients) },
     { key: "appointments", header: "Appointments", align: "end", render: (o) => formatNumber(o.appointments) },
-    { key: "revenue", header: "Collected", align: "end", render: (o) => formatMoney(o.revenue_collected) },
+    { key: "revenue", header: "Collected", align: "end", render: (o) => formatMoney(o.revenue_collected, o.currency) },
     { key: "activity", header: "Last activity", align: "end", render: (o) => <span className="text-ink-500">{timeAgo(o.last_activity_at)}</span> },
     { key: "since", header: "Since", align: "end", render: (o) => <span className="text-ink-500">{formatDate(o.created_at)}</span> },
   ];
@@ -108,10 +108,16 @@ export default function ClinicsPage() {
               empty={
                 <EmptyState
                   icon={FaHospital}
-                  title={query ? "No clinic matches" : "No clinics yet"}
-                  description={query ? "Try another name or slug." : "Onboard the first clinic to see it here."}
+                  // Filtered to nothing is not "no clinics": only an empty,
+                  // unfiltered list invites onboarding.
+                  title={query || filter !== "all" ? "No clinic matches" : "No clinics yet"}
+                  description={
+                    query || filter !== "all"
+                      ? "Try another name or slug, or another status."
+                      : "Onboard the first clinic to see it here."
+                  }
                   action={
-                    !query && (
+                    !query && filter === "all" && (
                       <Link href="/organizations/new">
                         <Button>Onboard clinic</Button>
                       </Link>
