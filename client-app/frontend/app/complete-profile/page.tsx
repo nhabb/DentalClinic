@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { FaTooth } from "react-icons/fa";
 import Link from "next/link";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
+import { apiFetch } from "@/lib/api/client";
+import { hasSession } from "@/lib/auth/session";
 
 const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
@@ -38,10 +39,9 @@ export default function CompleteProfilePage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const token = sessionStorage.getItem("authToken");
     const userId = sessionStorage.getItem("userId");
 
-    if (!token || !userId) {
+    if (!hasSession() || !userId) {
       // Arrived here without an OAuth session — go back to login
       router.replace("/login");
       return;
@@ -72,7 +72,6 @@ export default function CompleteProfilePage() {
     setIsSaving(true);
     setError("");
 
-    const token = sessionStorage.getItem("authToken")!;
     const userId = sessionStorage.getItem("userId")!;
 
     const {
@@ -82,18 +81,14 @@ export default function CompleteProfilePage() {
       ...userFields
     } = form;
 
-    const headers = { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
-
     try {
       await Promise.all([
-        fetch(`${API_URL}/api/users/${userId}`, {
+        apiFetch(`/api/users/${userId}`, {
           method: "PATCH",
-          headers,
           body: JSON.stringify(userFields),
         }),
-        fetch(`${API_URL}/api/patients/by-user/${userId}`, {
+        apiFetch(`/api/patients/by-user/${userId}`, {
           method: "PATCH",
-          headers,
           body: JSON.stringify({
             city,
             governate,

@@ -34,6 +34,7 @@ import AdminSidebar from "@/components/ui/AdminSidebar";
 import { AdminPageHeader } from "@/components/ui/AdminPageHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Card, Kpi, Donut, HBars, ChartTooltip, money, SERIES, INK, INVOICE_STATUS_COLOR } from "@/components/dashboard/chart-kit";
+import { signOut } from "@/lib/auth/session";
 
 interface Kpis {
   all_time: {
@@ -139,7 +140,7 @@ export default function BillingAnalyticsPage() {
   const handleLogout = () => {
     toast.success("Logged out.");
     safeStorage.removeItem("adminAuth");
-    safeStorage.removeItem("authToken");
+    void signOut(); // clears the session cookie (server-side) and every hint
     safeStorage.removeItem("adminUser");
     safeStorage.removeItem("userRole");
     safeStorage.removeItem("doctorId");

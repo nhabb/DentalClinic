@@ -52,6 +52,7 @@ import {
   type RefundableReceipt,
 } from "@/components/billing/RefundReceiptModal";
 import type { PatientOption } from "@/components/billing/NewInvoiceModal";
+import { signOut } from "@/lib/auth/session";
 
 /*
  * Taking money.
@@ -330,7 +331,7 @@ export default function PaymentsPage() {
     toast.success("Logged out.");
     safeStorage.removeItem("adminAuth");
     safeStorage.removeItem("adminUser");
-    safeStorage.removeItem("authToken");
+    void signOut(); // clears the session cookie (server-side) and every hint
     safeStorage.removeItem("userRole");
     router.push("/login");
   };

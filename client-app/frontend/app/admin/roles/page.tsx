@@ -17,7 +17,6 @@ import { Card } from "@/components/ui/Card";
 import { Tabs } from "@/components/ui/Tabs";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { safeStorage } from "@/lib/browser-compat";
 import { useTranslation } from "@/lib/i18n";
 import {
   assignStaffRole,
@@ -43,6 +42,7 @@ import { RoleList } from "./components/RoleList";
 import { PermissionMatrix } from "./components/PermissionMatrix";
 import { RoleFormModal } from "./components/RoleFormModal";
 import { StaffRolesTable } from "./components/StaffRolesTable";
+import { signOut } from "@/lib/auth/session";
 
 type Tab = "roles" | "staff";
 
@@ -104,7 +104,7 @@ export default function RolesPage() {
 
   const handleLogout = () => {
     toast.success("Logged out.");
-    ["adminAuth", "adminUser", "authToken", "userRole"].forEach((k) => safeStorage.removeItem(k));
+    void signOut(); // clears the session cookie (server-side) and every hint
     router.push("/login");
   };
 

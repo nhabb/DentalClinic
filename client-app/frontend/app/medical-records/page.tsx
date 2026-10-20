@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { safeStorage } from "@/lib/browser-compat";
 import { apiFetch } from "@/lib/api/client";
+import { ensureSession } from "@/lib/auth/session";
 import { fetchMyPhoto } from "@/lib/profilePhoto";
 import { toast } from 'sonner';
 import { Avatar } from "@/components/ui/Avatar";
@@ -27,7 +27,6 @@ import {
   FaTimes,
 } from "react-icons/fa";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
 
 export default function MedicalRecords() {
   const router = useRouter();
@@ -67,13 +66,12 @@ export default function MedicalRecords() {
   const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    const token = safeStorage.getItem("authToken");
-    const role = safeStorage.getItem("userRole");
-    if (!token || role !== "patient") {
-      router.push("/login");
-      return;
-    }
     const fetchAll = async () => {
+      const session = await ensureSession();
+      if (session?.role !== "patient") {
+        router.push("/login");
+        return;
+      }
       try {
         const meRes = await apiFetch(`/api/auth/me`);
         if (!meRes.ok) { router.push("/login"); return; }

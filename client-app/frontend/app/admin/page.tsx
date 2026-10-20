@@ -36,6 +36,7 @@ import {
   FaCalendarPlus,
   FaTimes,
 } from "react-icons/fa";
+import { signOut } from "@/lib/auth/session";
 
 
 interface AdminUser {
@@ -235,7 +236,7 @@ export default function AdminDashboard() {
     toast.success("Logged out.");
     safeStorage.removeItem("adminAuth");
     safeStorage.removeItem("adminUser");
-    safeStorage.removeItem("authToken");
+    void signOut(); // clears the session cookie (server-side) and every hint
     safeStorage.removeItem("userRole");
     safeStorage.removeItem("doctorId");
     safeStorage.removeItem("assignedDoctorIds");

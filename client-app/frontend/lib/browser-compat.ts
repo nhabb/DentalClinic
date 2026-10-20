@@ -12,14 +12,16 @@
 // a SecurityError when any localStorage method is called, even just getItem.
 // All three wrappers below silence that error so the app keeps working.
 //
-// Auth-related keys are intentionally routed to sessionStorage so that each
-// browser tab maintains its own independent session (e.g. a doctor tab and a
-// patient tab open simultaneously will not clobber each other's credentials).
+// Per-tab display hints about the signed-in user live in sessionStorage. The
+// credential itself is the httpOnly session cookie (see lib/auth/session.ts),
+// shared by every tab of the browser.
 // Non-auth keys (e.g. "language") continue to use localStorage so they persist
 // across tabs and sessions as before.
 
 const AUTH_KEYS = new Set([
   "authToken",
+  "userId",
+  "doctorDbId",
   "userRole",
   "adminUser",
   "adminAuth",

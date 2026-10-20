@@ -49,25 +49,7 @@ import {
   FaListUl,
   FaRedo,
 } from "react-icons/fa";
-import {
-  mapExpense,
-  mapPayment,
-  readError,
-  todayIso as today,
-  type Expense,
-  type ExpenseCategory,
-  type ExpensePayment,
-  type ExpenseStatus,
-  type Supplier,
-} from "@/components/expenses/expense-types";
-import { SupplierPicker } from "@/components/expenses/SupplierPicker";
-import {
-  ACCEPTED_FILES,
-  ExpenseAttachments,
-  uploadExpenseFile,
-} from "@/components/expenses/ExpenseAttachments";
-import { ExpenseListsModal, fetchExpenseLists } from "@/components/expenses/ExpenseListsModal";
-import { RemindersPanel } from "@/components/expenses/RemindersPanel";
+import { signOut } from "@/lib/auth/session";
 
 const paymentMethods = ["cash", "card", "bank_transfer", "cheque", "other"] as const;
 const paymentMethodLabelKey: Record<string, string> = {
@@ -174,7 +156,7 @@ export default function ExpensesPage() {
     toast.success("Logged out.");
     safeStorage.removeItem("adminAuth");
     safeStorage.removeItem("adminUser");
-    safeStorage.removeItem("authToken");
+    void signOut(); // clears the session cookie (server-side) and every hint
     safeStorage.removeItem("userRole");
     router.push("/login");
   };

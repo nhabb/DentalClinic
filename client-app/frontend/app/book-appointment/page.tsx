@@ -1,13 +1,13 @@
 "use client";
 
 import { apiFetch } from "@/lib/api/client";
+import { ensureSession } from "@/lib/auth/session";
 import { ClinicName } from "@/components/ui/ClinicName";
 import { useClinicIdentity } from "@/lib/clinic";
 import { toast } from 'sonner';
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { safeStorage } from "@/lib/browser-compat";
 import { Avatar } from "@/components/ui/Avatar";
 import { fetchMyPhoto } from "@/lib/profilePhoto";
 import { supabase } from "@/lib/supabase/client";
@@ -26,7 +26,6 @@ import {
   FaStar,
 } from "react-icons/fa";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
 
 type ServiceType = "checkup" | "procedure" | null;
 
@@ -127,10 +126,9 @@ export default function BookAppointment() {
 
   // Auth guard — empty deps so it only runs on mount, not on tab refocus.
   useEffect(() => {
-    const token = safeStorage.getItem("authToken");
-    if (!token) {
-      router.push("/login");
-    }
+    ensureSession().then((session) => {
+      if (!session) router.push("/login");
+    });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

@@ -23,6 +23,7 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Card, Kpi, Donut, HBars, ChartTooltip, SERIES, INK, STATUS } from "@/components/dashboard/chart-kit";
 import { RangeKey, RANGES, rangeBounds, bucketsFor, granularityFor, within, pct } from "@/components/dashboard/date-range";
 import TeethReport, { type RecordRow } from "@/components/dashboard/TeethReport";
+import { signOut } from "@/lib/auth/session";
 
 interface PatientRow {
   id: number;
@@ -106,7 +107,7 @@ export default function PatientsAnalyticsPage() {
   const handleLogout = () => {
     toast.success("Logged out.");
     safeStorage.removeItem("adminAuth");
-    safeStorage.removeItem("authToken");
+    void signOut(); // clears the session cookie (server-side) and every hint
     safeStorage.removeItem("adminUser");
     safeStorage.removeItem("userRole");
     safeStorage.removeItem("doctorId");

@@ -846,7 +846,9 @@
     "typeCertification": "Certification",
     "typeFellowship": "Adhésion",
     "typeAccreditation": "Accréditation",
-    "typeLicense": "Licence"
+    "typeLicense": "Licence",
+    "cookiePolicy": "Politique de cookies",
+    "cookieSettings": "Paramètres des cookies"
   },
   "termsOfService": {
     "title": "Conditions d'utilisation",
@@ -888,7 +890,7 @@
     "s6Title": "6. Conformité HIPAA",
     "s6Body": "La clinique dentaire BrightSmile s'engage à respecter les lois applicables sur la confidentialité des soins de santé, y compris les normes HIPAA (Health Insurance Portability and Accountability Act) lorsqu'elles s'appliquent. Nous maintenons un Avis de pratiques de confidentialité disponible sur demande.",
     "s7Title": "7. Cookies et services en ligne",
-    "s7Body": "Notre portail patient en ligne utilise des cookies essentiels pour maintenir votre session et fournir les fonctionnalités de base. Nous n'utilisons pas de cookies de suivi ou publicitaires. En utilisant nos services en ligne, vous consentez à notre utilisation des cookies nécessaires.",
+    "s7Body": "Notre site et nos portails en ligne utilisent des cookies essentiels pour vous garder connecté et protéger votre compte. Nous n'utilisons pas de cookies de suivi ni publicitaires. Consultez notre politique de cookies pour la liste complète et pour modifier vos choix.",
     "contactTitle": "Nous contacter",
     "contactBody": "Si vous avez des questions concernant cette Politique de confidentialité ou la manière dont nous traitons vos données, veuillez nous contacter à contact@brightsmile.com ou appelez le +961 1 234 567."
   },
@@ -952,5 +954,82 @@
     "copyFailed": "Copie impossible ; sélectionnez le lien et copiez-le manuellement.",
     "linkExpires": "Le lien expire le",
     "done": "Terminé"
+  },
+  "session": {
+    "switchedAccount": "Vous vous êtes connecté avec un autre compte dans un autre onglet. Reconnectez-vous pour continuer ici.",
+    "googleFailed": "Nous n'avons pas pu terminer votre connexion avec Google. Réessayez ou utilisez votre e-mail et votre mot de passe."
+  },
+  "cookies": {
+    "bannerTitle": "Nous utilisons des cookies",
+    "bannerBody": "Les cookies essentiels vous gardent connecté et protègent votre compte ; le site ne peut pas fonctionner sans eux. Nous n'utilisons aucun cookie publicitaire ni de suivi. Si nous ajoutons un jour des statistiques, elles ne fonctionneront que si vous les autorisez ici.",
+    "policyLink": "Lire notre politique de cookies",
+    "acceptAll": "Tout accepter",
+    "essentialOnly": "Essentiels uniquement",
+    "customise": "Personnaliser",
+    "saveChoices": "Enregistrer mes choix",
+    "settingsTitle": "Paramètres des cookies",
+    "settingsLink": "Paramètres des cookies",
+    "alwaysOn": "Toujours actifs",
+    "essentialTitle": "Essentiels",
+    "essentialBody": "Vous gardent connecté, protègent votre compte contre les requêtes falsifiées et mémorisent ce choix.",
+    "analyticsTitle": "Statistiques",
+    "analyticsBody": "Nous aident à comprendre l'utilisation du site pour l'améliorer. Non utilisés aujourd'hui ; rien n'est collecté sauf si vous les activez."
+  },
+  "cookiePolicy": {
+    "title": "Politique de cookies",
+    "lastUpdated": "Dernière mise à jour : 19 octobre 2026",
+    "intro": "Cette politique explique quels cookies et stockages similaires du navigateur la Clinique Dentaire BrightSmile utilise sur ce site et dans les portails patients et personnel, pourquoi, et comment vous pouvez les contrôler.",
+    "s1Title": "1. Qu'est-ce qu'un cookie",
+    "s1Body": "Les cookies sont de petits fichiers texte qu'un site enregistre dans votre navigateur. Des technologies similaires, comme le stockage local et le stockage de session, conservent des données dans votre navigateur de la même manière. Nous les décrivons tous ici et les appelons « cookies » pour simplifier.",
+    "s2Title": "2. Comment nous les utilisons",
+    "s2Body": "Nous n'utilisons que des cookies essentiels : ils vous gardent connecté, protègent votre compte contre les requêtes falsifiées par d'autres sites, et mémorisent votre choix de cookies et votre langue. Ils ne nécessitent pas votre consentement car le site ne peut pas fonctionner sans eux. Nous n'utilisons pas de cookies publicitaires, nous ne vous suivons pas sur d'autres sites et nous ne vendons aucune information.",
+    "tableTitle": "Ce que nous enregistrons",
+    "colName": "Nom",
+    "colPurpose": "Finalité",
+    "colType": "Type",
+    "colDuration": "Durée",
+    "kind": {
+      "cookie": "Cookie",
+      "local": "Stockage local",
+      "session": "Stockage de session"
+    },
+    "items": {
+      "session": {
+        "purpose": "Vous garde connecté. Il est marqué HttpOnly : aucun script de la page ne peut le lire.",
+        "duration": "7 jours, ou jusqu'à la déconnexion"
+      },
+      "csrf": {
+        "purpose": "Prouve que les modifications de votre compte viennent de nos propres pages et non d'un autre site.",
+        "duration": "7 jours, ou jusqu'à la déconnexion"
+      },
+      "consent": {
+        "purpose": "Mémorise le choix de cookies fait dans le bandeau.",
+        "duration": "6 mois"
+      },
+      "supabase": {
+        "purpose": "Utilisé uniquement si vous vous connectez avec Google, pour finaliser cette connexion (notre fournisseur d'authentification, Supabase).",
+        "duration": "Jusqu'à la déconnexion"
+      },
+      "language": {
+        "purpose": "Mémorise la langue choisie.",
+        "duration": "Jusqu'à ce que vous l'effaciez"
+      },
+      "view": {
+        "purpose": "Personnel uniquement : mémorise l'affichage de la liste des patients.",
+        "duration": "Jusqu'à ce que vous l'effaciez"
+      },
+      "hints": {
+        "purpose": "Mémorise qui est connecté dans cet onglet pour afficher les bons écrans. Ne contient ni mot de passe ni jeton d'accès.",
+        "duration": "Jusqu'à la fermeture de l'onglet"
+      }
+    },
+    "s3Title": "3. Statistiques et tiers",
+    "s3Body": "Nous n'utilisons actuellement aucune statistique. Si nous en ajoutons, elles ne fonctionneront qu'après votre accord dans les paramètres des cookies, et cette politique sera mise à jour avant. Lorsque vous choisissez « Continuer avec Google », la page de connexion de Google dépose ses propres cookies sur le site de Google, selon la politique de confidentialité de Google. Notre hébergeur (Vercel) ne dépose pas de cookies sur ce site.",
+    "s4Title": "4. Gérer les cookies",
+    "s4Body": "Vous pouvez modifier votre choix à tout moment avec le bouton ci-dessous ou le lien « Paramètres des cookies » en bas de la page d'accueil. Vous pouvez aussi bloquer ou supprimer les cookies dans les réglages de votre navigateur ; si vous bloquez les cookies essentiels, vous ne pourrez pas vous connecter.",
+    "s5Title": "5. Modifications de cette politique",
+    "s5Body": "Si nous modifions les cookies utilisés, nous mettrons à jour cette page et sa date. Si un changement nécessite votre consentement, le bandeau vous le redemandera.",
+    "changeChoice": "Modifier les cookies autorisés sur ce navigateur.",
+    "contactBody": "Des questions sur les cookies ou vos données ? Écrivez-nous à contact@brightsmile.com ou appelez le +961 1 234 567."
   }
 }

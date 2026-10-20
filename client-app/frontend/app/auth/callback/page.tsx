@@ -3,7 +3,8 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
+import { apiFetch } from "@/lib/api/client";
+import { rememberUser } from "@/lib/auth/session";
 
 const ROLE_REDIRECTS: Record<string, string> = {
   patient: "/patient-dashboard",
@@ -13,29 +14,19 @@ const ROLE_REDIRECTS: Record<string, string> = {
   superadmin: "/superadmin",
 };
 
-const ADMIN_ROLES = new Set(["doctor", "admin", "secretary", "superadmin"]);
 
 async function provisionAndPersist(supabaseToken: string): Promise<{ redirect: string; userId: string; isNew: boolean }> {
-  const res = await fetch(`${API_URL}/api/auth/provision`, {
+  // The Supabase token proves the Google sign-in; the API answers with our
+  // own session cookie.
+  const res = await apiFetch("/api/auth/provision", {
     method: "POST",
     headers: { Authorization: `Bearer ${supabaseToken}` },
   });
 
   if (!res.ok) throw new Error("Provision failed");
 
-  const { user, token, is_new_user } = await res.json();
-  const role: string = user.role ?? "patient";
-
-  sessionStorage.setItem("authToken", token);
-  sessionStorage.setItem("userRole", role);
-  sessionStorage.setItem("userId", user.id.toString());
-  sessionStorage.setItem(
-    "adminUser",
-    JSON.stringify({ email: user.email, firstName: user.first_name, lastName: user.last_name, role })
-  );
-  if (ADMIN_ROLES.has(role)) {
-    sessionStorage.setItem("adminAuth", "true");
-  }
+  const { user, is_new_user } = await res.json();
+  const role = rememberUser(user);
 
   return {
     redirect: ROLE_REDIRECTS[role] ?? "/patient-dashboard",
@@ -78,9 +69,10 @@ export default function AuthCallbackPage() {
           router.replace(redirect);
         }
       } catch {
-        sessionStorage.setItem("authToken", accessToken);
-        sessionStorage.setItem("userRole", "patient");
-        router.replace("/patient-dashboard");
+        // The API could not turn the Google sign-in into an account. Say so
+        // instead of landing on a dashboard that cannot load anything.
+        await supabase.auth.signOut().catch(() => {});
+        router.replace("/login?reason=google");
       }
     };
 

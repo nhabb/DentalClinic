@@ -1,0 +1,8 @@
+# The Vercel CLI does not read .gitignore, so secrets must be excluded here.
+docker
+docker-compose.yml
+**/node_modules
+**/.next
+**/.env*
+!**/.env.example
+**/*.pem

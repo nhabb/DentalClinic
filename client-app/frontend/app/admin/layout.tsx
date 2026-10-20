@@ -8,6 +8,7 @@ const useIsomorphicLayoutEffect =
   typeof window !== "undefined" ? useLayoutEffect : useEffect;
 import { useRouter, usePathname } from "next/navigation";
 import { safeStorage } from "@/lib/browser-compat";
+import { ADMIN_ROLES, ensureSession } from "@/lib/auth/session";
 import { supabase } from "@/lib/supabase/client";
 import AgentChat from "@/components/ui/AgentChat";
 import { CommandPalette } from "@/components/ui/CommandPalette";
@@ -32,17 +33,11 @@ export default function AdminLayout({
       setAuthChecked(true);
       return;
     }
-    const token = safeStorage.getItem("authToken");
-    const role = safeStorage.getItem("userRole");
-    const adminAuth = safeStorage.getItem("adminAuth");
-    const adminRoles = ["doctor", "admin", "secretary", "superadmin"];
-    const isAuth =
-      adminAuth === "true" || (!!token && adminRoles.includes(role ?? ""));
-    if (!isAuth) {
-      router.push("/login");
-    } else {
-      setAuthChecked(true);
-    }
+    // The session cookie decides; a new tab gets its role from /auth/me.
+    ensureSession().then((session) => {
+      if (session && ADMIN_ROLES.includes(session.role)) setAuthChecked(true);
+      else router.push("/login");
+    });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

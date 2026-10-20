@@ -51,7 +51,7 @@ Backend and Prisma commands: see `CLAUDE.md` in `BrightsmileClinicBack`.
 
 **Frontend** (`.env.local`):
 ```
-NEXT_PUBLIC_API_URL=http://localhost:5000
+API_PROXY_TARGET=http://localhost:5000   # where /api/* is forwarded; the browser never calls it directly
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 ```
@@ -72,7 +72,7 @@ Node version: **20** (see `.nvmrc`)
 ### Frontend — Next.js 16 (App Router)
 - Pages under `app/` using file-based routing
 - UI components: `components/ui/` (shadcn/ui new-york style) and `components/landing/`
-- API calls go through `lib/api/client.ts` — a fetch wrapper that auto-injects the Supabase Bearer token
+- API calls go through `lib/api/client.ts` (`apiFetch`): same-origin `/api/...`, session cookie, CSRF header (see Authentication Flow)
 - All API endpoint contracts are defined in `lib/api/endpoints.ts`
 - Internationalization via `lib/i18n/` — supports EN, AR, FR; use `useTranslation()` hook
 - Supabase client at `lib/supabase/client.ts`
@@ -115,10 +115,17 @@ Schema at `client-app/backend/prisma/schema.prisma`. Key tables: `organizations`
 - Every checked-out connection also runs `SET idle_in_transaction_session_timeout = '30s'` (`TenantPool.prime`): a client that dies mid-transaction behind Supavisor would otherwise keep its row locks (the invoice-number counter among them) and stall every later invoice of that clinic until the pooler notices; the server now ends such a session itself. If invoices ever hang anyway, look for `idle in transaction` rows in `pg_stat_activity` and terminate them.
 - Tests: `npm test` covers the tenancy layer (`src/shared/tenant/*.spec.ts`, `src/shared/prisma/*.spec.ts`, `src/shared/tenancy/*.spec.ts`). `node scripts/smoke-tenancy.js` runs an end-to-end isolation check against a running backend and the real database (creates and removes a throwaway organization).
 
-### Authentication Flow
-1. User authenticates via Supabase (email/password or Google OAuth)
-2. Frontend stores session; `lib/api/client.ts` reads the Supabase session and injects `Authorization: Bearer <jwt>` on every API request
-3. Backend `JwtAuthGuard` validates the JWT against Supabase's service role key
+### Authentication Flow (session cookie)
+1. Sign-in: `POST /api/auth/login` (email + password), `/auth/signup`, or Google through Supabase, whose token the callback page trades at `POST /api/auth/provision`. Each answers with the API's own JWT **in an httpOnly cookie**, `bs_session` (SameSite=Lax, Secure in production, 7 days like the token), plus a readable twin `bs_csrf` (`src/shared/common/session-cookie.ts`). The body still carries `token` for API clients.
+2. **The browser only talks to its own origin.** The frontend calls `/api/...` on its own domain and `next.config.ts` forwards it to the backend (`API_PROXY_TARGET`, falling back to `NEXT_PUBLIC_API_URL`; nginx does it in Docker), so the cookie is first-party: Safari and Chrome block cookies a different site sets. Never point browser code at the API's own URL again.
+3. `requestToken()` reads `Authorization: Bearer` first (Swagger, smoke scripts, other clients) and the cookie second; `JwtAuthGuard` and `TenantContextMiddleware` both use it.
+4. **CSRF:** `CsrfGuard` (global) refuses a cookie-authenticated POST/PUT/PATCH/DELETE unless `X-CSRF-Token` equals the `bs_csrf` cookie (code `csrf_failed`). Bearer requests are exempt, since no browser adds that header by itself; `@SkipCsrf()` exempts a route that another site may harmlessly trigger (only `POST /auth/logout`, which is also `@Public` so signing out always works).
+5. **Tabs share the cookie.** Each tab keeps display hints (`userRole`, `userId`, `adminUser`, …) in sessionStorage and sends `X-Session-User`; if another tab signed in as someone else, the guard answers 401 `session_user_changed` and `apiFetch` sends the tab to `/login?reason=switched` instead of acting under the wrong name. A new tab of a signed-in browser gets its hints from `/api/auth/me` (`ensureSession()`).
+6. Frontend: every call goes through `apiFetch` (`lib/api/client.ts`: same-origin, adds the CSRF and session-user headers); `lib/auth/session.ts` owns `rememberUser`, `ensureSession`, `signOut` (the only way to clear an httpOnly cookie is the API's `POST /auth/logout`). No token is stored in sessionStorage or localStorage any more.
+7. Tests: `session-cookie.spec.ts`, `csrf.guard.spec.ts`, `jwt-auth.guard.spec.ts` (cookie cases), `auth-cookies.spec.ts` (the Set-Cookie headers over HTTP).
+
+### Cookie banner and policy (`components/legal/CookieBanner.tsx`, `lib/consent.ts`, `/cookie-policy`)
+The banner shows until the visitor chooses and again from any "Cookie settings" link (`openCookieSettings()`; the landing footer has one). "Accept all" and "Essential only" are equally prominent on purpose. The choice is the `bs_cookie_consent` cookie (`{v, at, analytics}`, 6 months; bump `CONSENT_VERSION` to ask again when categories change). Essential cookies need no consent. `analytics` is the only optional category and nothing uses it yet: **anything optional you add must check `hasConsent("analytics")` before it loads, and needs a row in the table on `/cookie-policy`** (which lists every cookie and storage key the app uses). All text is in en/fr/ar under `cookies.*` and `cookiePolicy.*`.
 
 ## Demo Accounts (for testing)
 ```
@@ -137,6 +144,7 @@ super@demo.com      / demo123  → /superadmin
 ## API security layers
 Every route passes through, in order (see `AppModule`):
 1. `JwtAuthGuard` (global): valid token, account active, clinic active. Opt out with `@Public()`.
+1b. `CsrfGuard` (global): cookie-authenticated writes carry `X-CSRF-Token` (see Authentication Flow).
 2. `RolesGuard` (global): only for platform routes, `@Roles('superadmin')`.
 3. `PermissionsGuard` (global): `@RequirePermissions('billing:create')` on a controller or handler; the caller's role must hold every listed permission. No decorator = any signed-in user (then step 4 applies).
 4. Ownership: controllers call `AccessControlService` (`assertSelfOrPermission`, `assertPatientProfileAccess(actor, profileId, permission)`, `assertSelf`) so patients only reach their own user, profile, appointments, invoices, records and documents, while staff need the named permission for other people's data.
