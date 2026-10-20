@@ -39,7 +39,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { signOut } from "@/lib/auth/session";
+import { useSignOut } from "@/lib/auth/useSignOut";
 
 
 const PROCEDURE_DURATIONS: Record<string, number> = {
@@ -240,16 +240,7 @@ export default function AppointmentsManagement() {
     fetchData();
   }, [selectedDate]);
 
-  const handleLogout = () => {
-    toast.success("Logged out.");
-    safeStorage.removeItem("adminAuth");
-    void signOut(); // clears the session cookie (server-side) and every hint
-    safeStorage.removeItem("adminUser");
-    safeStorage.removeItem("userRole");
-    safeStorage.removeItem("doctorId");
-    safeStorage.removeItem("assignedDoctorIds");
-    router.push("/login");
-  };
+  const handleLogout = useSignOut();
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString("en-US", {

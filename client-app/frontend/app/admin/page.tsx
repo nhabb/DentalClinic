@@ -4,7 +4,6 @@ import { apiFetch } from '@/lib/api/client';
 import { toast } from 'sonner';
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { safeStorage } from "@/lib/browser-compat";
 import { useTranslation } from "@/lib/i18n";
 import { usePermissions } from "@/lib/permissions";
@@ -36,7 +35,7 @@ import {
   FaCalendarPlus,
   FaTimes,
 } from "react-icons/fa";
-import { signOut } from "@/lib/auth/session";
+import { useSignOut } from "@/lib/auth/useSignOut";
 
 
 interface AdminUser {
@@ -51,7 +50,6 @@ interface AdminUser {
 
 export default function AdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const router = useRouter();
   // Only offer what this role's API permissions allow (the API refuses the rest anyway).
   const { can } = usePermissions();
   const { t } = useTranslation();
@@ -232,16 +230,7 @@ export default function AdminDashboard() {
     fetchAll();
   }, []);
 
-  const handleLogout = () => {
-    toast.success("Logged out.");
-    safeStorage.removeItem("adminAuth");
-    safeStorage.removeItem("adminUser");
-    void signOut(); // clears the session cookie (server-side) and every hint
-    safeStorage.removeItem("userRole");
-    safeStorage.removeItem("doctorId");
-    safeStorage.removeItem("assignedDoctorIds");
-    router.push("/");
-  };
+  const handleLogout = useSignOut("/");
 
   const getStatusBadge = (status: string) => {
     switch (status) {

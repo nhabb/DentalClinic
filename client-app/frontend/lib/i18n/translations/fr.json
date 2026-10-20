@@ -956,6 +956,7 @@
   },
   "session": {
     "switchedAccount": "Vous vous êtes connecté avec un autre compte dans un autre onglet. Reconnectez-vous pour continuer ici.",
+    "sessionExpired": "Votre session a pris fin. Reconnectez-vous pour continuer.",
     "googleFailed": "Nous n'avons pas pu terminer votre connexion avec Google. Réessayez ou utilisez votre e-mail et votre mot de passe."
   },
   "cookies": {

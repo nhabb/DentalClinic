@@ -21,7 +21,8 @@ let me: Promise<Me | null> | null = null;
 
 export function fetchMe(): Promise<Me | null> {
   if (typeof window === "undefined") return Promise.resolve(null);
-  me ??= apiFetch("/api/auth/me")
+  if (me) return me;
+  const loading = apiFetch("/api/auth/me")
     .then((r) => (r.ok ? r.json() : null))
     .then((u) =>
       u?.id
@@ -29,7 +30,13 @@ export function fetchMe(): Promise<Me | null> {
         : null,
     )
     .catch(() => null);
-  return me;
+  me = loading;
+  // A failure is not cached: one network blip must not hide every screen
+  // until a full reload.
+  void loading.then((u) => {
+    if (!u && me === loading) me = null;
+  });
+  return loading;
 }
 
 /** Forget the cached user (after login, logout or a role change). */

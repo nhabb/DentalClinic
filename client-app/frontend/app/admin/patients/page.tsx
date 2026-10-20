@@ -62,7 +62,7 @@ import {
   FaChevronRight,
   FaUserClock,
 } from "react-icons/fa";
-import { signOut } from "@/lib/auth/session";
+import { useSignOut } from "@/lib/auth/useSignOut";
 
 
 interface Patient {
@@ -1219,16 +1219,7 @@ export default function PatientsPage() {
     }
   };
 
-  const handleLogout = () => {
-    toast.success("Logged out.");
-    safeStorage.removeItem("adminAuth");
-    void signOut(); // clears the session cookie (server-side) and every hint
-    safeStorage.removeItem("adminUser");
-    safeStorage.removeItem("userRole");
-    safeStorage.removeItem("doctorId");
-    safeStorage.removeItem("assignedDoctorIds");
-    router.push("/login");
-  };
+  const handleLogout = useSignOut();
 
   const calculateAge = (dateOfBirth: string): number | null => {
     if (!dateOfBirth) return null;

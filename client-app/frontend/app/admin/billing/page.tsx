@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api/client";
 import { formatDateBeirut } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { safeStorage } from "@/lib/browser-compat";
 import { useTranslation } from "@/lib/i18n";
 import { usePermissions } from "@/lib/permissions";
 import AdminSidebar from "@/components/ui/AdminSidebar";
@@ -50,7 +49,7 @@ import {
   FaPrint,
   FaClipboardList,
 } from "react-icons/fa";
-import { signOut } from "@/lib/auth/session";
+import { useSignOut } from "@/lib/auth/useSignOut";
 
 /** The invoice shape, its printing and its aging live in one shared module. */
 type TreatmentInvoice = Invoice;
@@ -395,14 +394,7 @@ export default function BillingPage() {
   };
 
   /** A printable invoice / receipt: number, terms, lines, discount, what was paid and what is owed. */
-  const handleLogout = () => {
-    toast.success("Logged out.");
-    safeStorage.removeItem("adminAuth");
-    safeStorage.removeItem("adminUser");
-    void signOut(); // clears the session cookie (server-side) and every hint
-    safeStorage.removeItem("userRole");
-    router.push("/login");
-  };
+  const handleLogout = useSignOut();
 
   // ── Render ────────────────────────────────────────────────────────────────────
 

@@ -14,7 +14,6 @@ import {
 } from "react-icons/fa";
 import { apiFetch } from "@/lib/api/client";
 import { formatDateBeirut } from "@/lib/utils";
-import { safeStorage } from "@/lib/browser-compat";
 import { usePermissions } from "@/lib/permissions";
 import AdminSidebar from "@/components/ui/AdminSidebar";
 import { AdminPageHeader } from "@/components/ui/AdminPageHeader";
@@ -39,7 +38,7 @@ import {
 } from "@/components/billing/TakePaymentModal";
 import { PatientDrawer } from "@/components/billing/PatientDrawer";
 import type { PatientOption } from "@/components/billing/NewInvoiceModal";
-import { signOut } from "@/lib/auth/session";
+import { useSignOut } from "@/lib/auth/useSignOut";
 
 /*
  * Taking money.
@@ -319,14 +318,7 @@ export default function PaymentsPage() {
 
 
 
-  const handleLogout = () => {
-    toast.success("Logged out.");
-    safeStorage.removeItem("adminAuth");
-    safeStorage.removeItem("adminUser");
-    void signOut(); // clears the session cookie (server-side) and every hint
-    safeStorage.removeItem("userRole");
-    router.push("/login");
-  };
+  const handleLogout = useSignOut();
 
   const pickMatches = patients
     .filter((p) => p.label.toLowerCase().includes(pickSearch.trim().toLowerCase()))

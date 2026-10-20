@@ -3,9 +3,7 @@ import { apiFetch } from '@/lib/api/client';
 import { toast } from 'sonner';
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { safeStorage } from "@/lib/browser-compat";
 import { useTranslation } from "@/lib/i18n";
 import { usePermissions } from "@/lib/permissions";
 import AdminSidebar from "@/components/ui/AdminSidebar";
@@ -41,7 +39,7 @@ import {
   FaChartLine,
 } from "react-icons/fa";
 import type { IconType } from "react-icons";
-import { signOut } from "@/lib/auth/session";
+import { useSignOut } from "@/lib/auth/useSignOut";
 
 // NOTE FOR BACKEND TEAM:
 // inventory_items needs an `image_url` (string, nullable) column.
@@ -162,7 +160,6 @@ async function uploadItemImage(itemId: number, file: File): Promise<string | nul
 }
 
 export default function InventoryManagement() {
-  const router = useRouter();
   const { t } = useTranslation();
   // Only offer what this role's API permissions allow (the API refuses the rest anyway).
   const { can } = usePermissions();
@@ -237,14 +234,7 @@ export default function InventoryManagement() {
     apiFetch("/api/auth/me").then((r) => r.ok ? r.json() : null).then((u) => { if (u?.id) setCurrentUserId(Number(u.id)); });
   }, []);
 
-  const handleLogout = () => {
-    toast.success("Logged out.");
-    safeStorage.removeItem("adminAuth");
-    safeStorage.removeItem("adminUser");
-    void signOut(); // clears the session cookie (server-side) and every hint
-    safeStorage.removeItem("userRole");
-    router.push("/login");
-  };
+  const handleLogout = useSignOut();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");

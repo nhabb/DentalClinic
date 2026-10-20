@@ -17,10 +17,8 @@
 
 import { toast } from "sonner";
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
-import { safeStorage } from "@/lib/browser-compat";
 import { useTranslation } from "@/lib/i18n";
 import { usePermissions } from "@/lib/permissions";
 import AdminSidebar from "@/components/ui/AdminSidebar";
@@ -42,7 +40,7 @@ import {
   FaReceipt,
   FaDollarSign,
 } from "react-icons/fa";
-import { signOut } from "@/lib/auth/session";
+import { useSignOut } from "@/lib/auth/useSignOut";
 
 type ExpenseStatus = "paid" | "pending" | "partial";
 
@@ -147,7 +145,6 @@ async function readError(res: Response, fallback: string): Promise<string> {
 }
 
 export default function ExpensesPage() {
-  const router = useRouter();
   // Only offer what this role's API permissions allow (the API refuses the rest anyway).
   const { can } = usePermissions();
   const { t, language } = useTranslation();
@@ -195,14 +192,7 @@ export default function ExpensesPage() {
     fetchExpenses();
   }, []);
 
-  const handleLogout = () => {
-    toast.success("Logged out.");
-    safeStorage.removeItem("adminAuth");
-    safeStorage.removeItem("adminUser");
-    void signOut(); // clears the session cookie (server-side) and every hint
-    safeStorage.removeItem("userRole");
-    router.push("/login");
-  };
+  const handleLogout = useSignOut();
 
   const categoryLabel = (key: string) => {
     const translated = t(`expenses.${key}`);

@@ -13,12 +13,31 @@
  */
 import { apiFetch } from "@/lib/api/client";
 import { readCookie } from "@/lib/cookies";
+import { resetMe } from "@/lib/permissions";
+import { resetMyPhoto } from "@/lib/profilePhoto";
+import { CSRF_COOKIE, sessionUserId } from "@/lib/auth/session-keys";
 
-export const CSRF_COOKIE = "bs_csrf";
-export const CSRF_HEADER = "X-CSRF-Token";
-export const SESSION_USER_HEADER = "X-Session-User";
+export {
+  CSRF_COOKIE,
+  CSRF_HEADER,
+  SESSION_USER_HEADER,
+  sessionUserId,
+} from "@/lib/auth/session-keys";
 
-export const ADMIN_ROLES = ["doctor", "admin", "secretary", "superadmin"];
+/**
+ * Staff = every role but patient, including a clinic's custom roles (a
+ * "hygienist" belongs in the admin area). What each may see inside it is the
+ * permissions' business, not this gate's.
+ */
+export function isStaffRole(role: string | null | undefined): boolean {
+  return !!role && role !== "patient";
+}
+
+/** Where a role lands after signing in; any staff role, custom ones too, goes to /admin. */
+export function homeFor(role: string | null | undefined): string {
+  if (role === "superadmin") return "/superadmin";
+  return isStaffRole(role) ? "/admin" : "/patient-dashboard";
+}
 
 /** Every display hint a signed-in tab may hold; all cleared on sign-out. */
 const HINT_KEYS = [
@@ -60,11 +79,6 @@ function setHint(key: string, value: string): void {
   }
 }
 
-/** The account this tab was opened for, sent as X-Session-User. */
-export function sessionUserId(): string | null {
-  return hint("userId");
-}
-
 export interface SessionUser {
   id: number | string;
   role?: string | null;
@@ -87,11 +101,18 @@ export function rememberUser(user: SessionUser): string {
       role,
     })
   );
-  if (ADMIN_ROLES.includes(role)) setHint("adminAuth", "true");
+  if (isStaffRole(role)) setHint("adminAuth", "true");
   try {
     sessionStorage.removeItem("authToken");
   } catch {}
+  forgetCachedUser();
   return role;
+}
+
+/** Drops what this page cached about the signed-in user (permissions, photo). */
+function forgetCachedUser(): void {
+  resetMe();
+  resetMyPhoto();
 }
 
 export function clearSessionHints(): void {
@@ -114,7 +135,7 @@ export async function ensureSession(): Promise<{
 } | null> {
   if (!hasSession()) return null;
   const role = hint("userRole");
-  const userId = hint("userId");
+  const userId = sessionUserId();
   if (role && userId) return { role, userId };
 
   try {
@@ -130,21 +151,25 @@ export async function ensureSession(): Promise<{
 
 /**
  * Asks the API to clear the session cookies. Only the server can remove an
- * httpOnly cookie, so this request is what actually signs the browser out;
- * `keepalive` lets it finish while the page navigates away.
+ * httpOnly cookie, so this request is what actually signs the browser out.
+ * Awaited by signOut: a logout still in flight when the next sign-in lands
+ * would clear that new session's cookies.
  */
-export function endServerSession(): void {
-  void fetch("/api/auth/logout", {
-    method: "POST",
-    credentials: "same-origin",
-    keepalive: true,
-  }).catch(() => {});
+export async function endServerSession(): Promise<void> {
+  try {
+    await fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "same-origin",
+      keepalive: true,
+    });
+  } catch {}
 }
 
-/** Full sign-out: server cookies, display hints and any Supabase (Google) session. */
+/** Full sign-out: server cookies, display hints, cached user and any Supabase (Google) session. */
 export async function signOut(): Promise<void> {
-  endServerSession();
+  await endServerSession();
   clearSessionHints();
+  forgetCachedUser();
   try {
     const { supabase } = await import("@/lib/supabase/client");
     await supabase.auth.signOut();
