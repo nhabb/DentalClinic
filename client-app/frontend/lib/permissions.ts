@@ -27,6 +27,27 @@ export interface Me {
 let me: Promise<Me | null> | null = null;
 let meUser: string | null = null;
 
+// The last answer is also kept for the tab, so a reload or the next screen
+// draws its menu at once instead of waiting a round trip for /auth/me. It is
+// only a head start: the fresh answer replaces it, and the API still decides.
+const STORED_ME = "mePermissions";
+
+function storedMe(): Me | null {
+  try {
+    const stored = JSON.parse(sessionStorage.getItem(STORED_ME) ?? "null") as Me | null;
+    return stored?.id && String(stored.id) === sessionUserId() ? stored : null;
+  } catch {
+    return null;
+  }
+}
+
+function storeMe(user: Me | null): void {
+  try {
+    if (user) sessionStorage.setItem(STORED_ME, JSON.stringify(user));
+    else sessionStorage.removeItem(STORED_ME);
+  } catch {}
+}
+
 export function fetchMe(): Promise<Me | null> {
   if (typeof window === "undefined") return Promise.resolve(null);
   // The token is an httpOnly cookie this page cannot read; the account the
@@ -54,6 +75,7 @@ export function fetchMe(): Promise<Me | null> {
     .then((user) => {
       // A failed answer is not kept: the next screen asks again.
       if (!user && me === request) resetMe();
+      else if (user) storeMe(user);
       return user;
     });
   me = request;
@@ -64,6 +86,7 @@ export function fetchMe(): Promise<Me | null> {
 export function resetMe(): void {
   me = null;
   meUser = null;
+  storeMe(null);
 }
 
 /**
@@ -86,8 +109,10 @@ export interface Permissions {
 
 /** The current user's permissions for screens: `const { can } = usePermissions();` */
 export function usePermissions(): Permissions {
-  const [user, setUser] = useState<Me | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Admin screens mount only after the session check, on the client, so the
+  // stored answer can seed the first render without a hydration mismatch.
+  const [user, setUser] = useState<Me | null>(() => (typeof window === "undefined" ? null : storedMe()));
+  const [loading, setLoading] = useState(() => user === null);
 
   useEffect(() => {
     let alive = true;

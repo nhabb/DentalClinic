@@ -17,7 +17,6 @@ import {
   FaCashRegister,
   FaMoneyBillWave,
   FaFileInvoiceDollar,
-  FaUserShield,
   FaBars,
   FaEllipsisH,
   FaChevronDown,
@@ -56,7 +55,6 @@ const navItems = [
   { id: "expenses",     href: "/admin/expenses",     icon: FaMoneyBillWave,     labelKey: "nav.expenses"     },
   { id: "billing",      href: "/admin/billing",      icon: FaFileInvoiceDollar, labelKey: "nav.billing"      },
   { id: "payments",     href: "/admin/payments",     icon: FaCashRegister,      labelKey: "nav.payments"     },
-  { id: "roles",        href: "/admin/roles",        icon: FaUserShield,        labelKey: "nav.roles"        },
 ] as const;
 
 /** The deeper per-category analytics pages — nested under "Dashboard" as a
