@@ -49,45 +49,6 @@ interface Procedure {
   duration: string;
 }
 
-const fallbackTimeSlots = [
-  "9:00 AM",
-  "9:30 AM",
-  "10:00 AM",
-  "10:30 AM",
-  "11:00 AM",
-  "11:30 AM",
-  "2:00 PM",
-  "2:30 PM",
-  "3:00 PM",
-  "3:30 PM",
-  "4:00 PM",
-  "4:30 PM",
-];
-
-const fallbackDoctors: Doctor[] = [
-  {
-    id: 1,
-    name: "Dr. Sarah Haddad",
-    specialty: "General Dentistry",
-    available: true,
-    bio: "15+ years of experience in general dental care",
-  },
-  {
-    id: 2,
-    name: "Dr. Michel Khoury",
-    specialty: "Orthodontics",
-    available: true,
-    bio: "Specialist in braces and teeth alignment",
-  },
-  {
-    id: 3,
-    name: "Dr. Layla Nassar",
-    specialty: "Cosmetic Dentistry",
-    available: true,
-    bio: "Expert in smile makeovers and veneers",
-  },
-];
-
 const procedures: Procedure[] = [
   { id: "cleaning", name: "Teeth Cleaning", duration: "60 min" },
   { id: "whitening", name: "Teeth Whitening", duration: "60 min" },
