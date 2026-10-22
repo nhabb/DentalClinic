@@ -59,9 +59,13 @@ export interface DashboardData {
   doctors: DoctorRef[];
 }
 
+export type DashboardKey = keyof DashboardData;
+export const DASHBOARD_KEYS: readonly DashboardKey[] = ["records", "appointments", "expenses", "payments", "invoices", "inventory", "patients", "doctors"];
+
 interface Props {
   data: DashboardData;
-  loading?: boolean;
+  /** Data sets still loading: the cards built on them show a placeholder. */
+  pending?: ReadonlySet<DashboardKey>;
   /** Operational panels (e.g. today's schedule) rendered between the KPIs and the charts. */
   operations?: ReactNode;
 }
@@ -171,7 +175,7 @@ function bucketsFor(range: RangeKey, start: string | null, end: string, earliest
  * ────────────────────────────────────────────────────────────────────────── */
 const money = (n: number) => `$${Math.round(n).toLocaleString()}`;
 
-function Card({ title, subtitle, action, children, className }: { title: string; subtitle?: string; action?: ReactNode; children: ReactNode; className?: string }) {
+function Card({ title, subtitle, action, children, className, loading = false }: { title: string; subtitle?: string; action?: ReactNode; children: ReactNode; className?: string; loading?: boolean }) {
   return (
     <section className={cn("rounded-2xl border border-gray-200/80 bg-white p-5 shadow-sm", className)}>
       <header className="mb-4 flex items-start justify-between gap-3">
@@ -181,7 +185,7 @@ function Card({ title, subtitle, action, children, className }: { title: string;
         </div>
         {action}
       </header>
-      {children}
+      {loading ? <div className="h-44 animate-pulse rounded-xl bg-gray-100" aria-busy="true" /> : children}
     </section>
   );
 }
@@ -308,15 +312,15 @@ function HBars({ rows, selected, onSelect, emptyLabel, formatter }: {
   );
 }
 
-function Kpi({ icon, label, value, sub, delta, tone = "neutral" }: {
-  icon: ReactNode; label: string; value: string; sub?: string; delta?: number | null; tone?: "neutral" | "good" | "bad" | "warn";
+function Kpi({ icon, label, value, sub, delta, tone = "neutral", loading = false }: {
+  icon: ReactNode; label: string; value: string; sub?: string; delta?: number | null; tone?: "neutral" | "good" | "bad" | "warn"; loading?: boolean;
 }) {
   const valueClass = tone === "bad" ? "text-red-600" : tone === "warn" ? "text-amber-700" : "text-gray-900";
   return (
     <div className="rounded-2xl border border-gray-200/80 bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between">
         <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-100 text-gray-600">{icon}</span>
-        {delta !== undefined && delta !== null && Number.isFinite(delta) && (
+        {!loading && delta !== undefined && delta !== null && Number.isFinite(delta) && (
           <span
             className={cn(
               "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium tabular-nums",
@@ -328,9 +332,13 @@ function Kpi({ icon, label, value, sub, delta, tone = "neutral" }: {
           </span>
         )}
       </div>
-      <p className={cn("mt-3 text-2xl font-bold tabular-nums", valueClass)}>{value}</p>
+      {loading ? (
+        <div className="mt-3 h-8 w-20 animate-pulse rounded-lg bg-gray-100" aria-busy="true" />
+      ) : (
+        <p className={cn("mt-3 text-2xl font-bold tabular-nums", valueClass)}>{value}</p>
+      )}
       <p className="text-xs text-gray-500">{label}</p>
-      {sub && <p className="mt-0.5 text-[11px] text-gray-400">{sub}</p>}
+      {sub && !loading && <p className="mt-0.5 text-[11px] text-gray-400">{sub}</p>}
     </div>
   );
 }
@@ -340,7 +348,8 @@ const pct = (cur: number, prev: number | null) => (prev === null || prev === 0 ?
 /* ──────────────────────────────────────────────────────────────────────────
  * The dashboard
  * ────────────────────────────────────────────────────────────────────────── */
-export default function DashboardAnalytics({ data, loading = false, operations }: Props) {
+export default function DashboardAnalytics({ data, pending = new Set(), operations }: Props) {
+  const waiting = (...keys: DashboardKey[]) => keys.some((k) => pending.has(k));
   const { t, language } = useTranslation();
   const locale = language === "ar" ? "ar-LB" : language === "fr" ? "fr-FR" : "en-US";
   const [filters, setFilters] = useState<Filters>(EMPTY);
@@ -526,7 +535,7 @@ export default function DashboardAnalytics({ data, loading = false, operations }
   const axisTick = { fontSize: 11, fill: INK.muted };
 
   return (
-    <div className={cn("space-y-6 transition-opacity", loading && "pointer-events-none opacity-60")}>
+    <div className="space-y-6">
       {/* ── Filter row ─────────────────────────────────────────────────── */}
       <div className="sticky top-0 z-10 -mx-2 px-2 pt-1 pb-1 bg-gray-50/90 backdrop-blur-sm">
         <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-gray-200/80 bg-white p-3 shadow-sm">
@@ -576,12 +585,12 @@ export default function DashboardAnalytics({ data, loading = false, operations }
 
       {/* ── KPIs ───────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
-        <Kpi icon={<FaCalendarCheck />} label={t("appointments.appointments")} value={kpi.appts.toLocaleString()} sub={`${kpi.appts ? Math.round((kpi.completed / kpi.appts) * 100) : 0}% ${t("adminDashboard.completedRate")}`} delta={kpi.dAppts} />
-        <Kpi icon={<FaDollarSign />} label={t("adminDashboard.totalIncome")} value={money(kpi.income)} delta={kpi.dIncome} />
-        <Kpi icon={<FaWallet />} label={t("adminDashboard.totalExpenses")} value={money(kpi.expenses)} delta={kpi.dExpenses === null ? null : -kpi.dExpenses} />
-        <Kpi icon={<FaChartLine />} label={t("adminDashboard.netProfit")} value={money(kpi.net)} delta={kpi.dNet} tone={kpi.net < 0 ? "bad" : "neutral"} />
-        <Kpi icon={<FaFileInvoiceDollar />} label={t("adminDashboard.outstanding")} value={money(kpi.outstanding)} tone={kpi.outstanding > 0 ? "warn" : "neutral"} />
-        <Kpi icon={<FaUserPlus />} label={t("adminDashboard.newPatients")} value={kpi.newPatients.toLocaleString()} delta={kpi.dPatients} />
+        <Kpi icon={<FaCalendarCheck />} label={t("appointments.appointments")} value={kpi.appts.toLocaleString()} sub={`${kpi.appts ? Math.round((kpi.completed / kpi.appts) * 100) : 0}% ${t("adminDashboard.completedRate")}`} delta={kpi.dAppts} loading={waiting("appointments")} />
+        <Kpi icon={<FaDollarSign />} label={t("adminDashboard.totalIncome")} value={money(kpi.income)} delta={kpi.dIncome} loading={waiting("payments")} />
+        <Kpi icon={<FaWallet />} label={t("adminDashboard.totalExpenses")} value={money(kpi.expenses)} delta={kpi.dExpenses === null ? null : -kpi.dExpenses} loading={waiting("expenses")} />
+        <Kpi icon={<FaChartLine />} label={t("adminDashboard.netProfit")} value={money(kpi.net)} delta={kpi.dNet} tone={kpi.net < 0 ? "bad" : "neutral"} loading={waiting("payments", "expenses")} />
+        <Kpi icon={<FaFileInvoiceDollar />} label={t("adminDashboard.outstanding")} value={money(kpi.outstanding)} tone={kpi.outstanding > 0 ? "warn" : "neutral"} loading={waiting("invoices")} />
+        <Kpi icon={<FaUserPlus />} label={t("adminDashboard.newPatients")} value={kpi.newPatients.toLocaleString()} delta={kpi.dPatients} loading={waiting("patients")} />
       </div>
 
       {operations}
@@ -592,6 +601,7 @@ export default function DashboardAnalytics({ data, loading = false, operations }
           title={t("adminDashboard.incomeVsExpenses")}
           subtitle={`${rangeLabel(filters.range)} · ${hint}`}
           className="xl:col-span-2"
+          loading={waiting("payments", "expenses")}
           action={
             <div className="flex items-center gap-3 text-[11px] text-gray-500">
               <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm" style={{ background: INCOME }} />{t("adminDashboard.income")}</span>
@@ -622,20 +632,20 @@ export default function DashboardAnalytics({ data, loading = false, operations }
             <p className="flex h-[260px] items-center justify-center text-sm text-gray-400">{t("adminDashboard.noFinancialData")}</p>
           )}
         </Card>
-        <Card title={t("adminDashboard.expensesByCategory")} subtitle={hint}>
+        <Card title={t("adminDashboard.expensesByCategory")} subtitle={hint} loading={waiting("expenses")}>
           <Donut slices={expenseByCat} selected={filters.expenseCategory} onSelect={(k) => k !== "__other" && toggle("expenseCategory", k)} formatter={money} emptyLabel={empty} hint={t("adminDashboard.expenses")} />
         </Card>
       </div>
 
       {/* ── Appointments ───────────────────────────────────────────────── */}
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-        <Card title={t("adminDashboard.appointmentsByStatus")} subtitle={hint}>
+        <Card title={t("adminDashboard.appointmentsByStatus")} subtitle={hint} loading={waiting("appointments")}>
           <Donut slices={apptByStatus} selected={filters.apptStatus} onSelect={(k) => toggle("apptStatus", k)} emptyLabel={empty} hint={t("appointments.appointments")} />
         </Card>
-        <Card title={t("adminDashboard.appointmentsByType")} subtitle={hint}>
+        <Card title={t("adminDashboard.appointmentsByType")} subtitle={hint} loading={waiting("appointments")}>
           <HBars rows={apptByType} selected={filters.apptType} onSelect={(k) => k !== "__other" && toggle("apptType", k)} emptyLabel={empty} />
         </Card>
-        <Card title={t("adminDashboard.busiestDays")} subtitle={hint}>
+        <Card title={t("adminDashboard.busiestDays")} subtitle={hint} loading={waiting("appointments")}>
           {apptByWeekday.some((d) => d.value > 0) ? (
             <ResponsiveContainer width="100%" height={176}>
               <BarChart data={apptByWeekday} margin={{ top: 8, right: 4, left: -24, bottom: 0 }} barCategoryGap="28%">
@@ -655,27 +665,31 @@ export default function DashboardAnalytics({ data, loading = false, operations }
             <p className="flex h-44 items-center justify-center text-sm text-gray-400">{empty}</p>
           )}
         </Card>
-        <Card title={t("adminDashboard.appointmentsByDoctor")} subtitle={hint}>
+        <Card title={t("adminDashboard.appointmentsByDoctor")} subtitle={hint} loading={waiting("appointments", "doctors")}>
           <Donut slices={apptByDoctor} selected={filters.doctorId === null ? null : String(filters.doctorId)} onSelect={(k) => toggle("doctorId", Number(k))} emptyLabel={empty} hint={t("appointments.appointments")} />
         </Card>
       </div>
 
       {/* ── Teeth worked on (3D) ───────────────────────────────────────── */}
-      <TeethReport
-        records={data.records.filter(
-          (r) => within(r.date, start, end) && (filters.doctorId === null || r.doctorId === filters.doctorId),
-        )}
-      />
+      {waiting("records") ? (
+        <div className="h-72 animate-pulse rounded-2xl border border-gray-200/80 bg-gray-100" aria-busy="true" />
+      ) : (
+        <TeethReport
+          records={data.records.filter(
+            (r) => within(r.date, start, end) && (filters.doctorId === null || r.doctorId === filters.doctorId),
+          )}
+        />
+      )}
 
       {/* ── Billing & growth ───────────────────────────────────────────── */}
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-        <Card title={t("adminDashboard.invoicesByStatus")} subtitle={hint}>
+        <Card title={t("adminDashboard.invoicesByStatus")} subtitle={hint} loading={waiting("invoices")}>
           <Donut slices={invoiceByStatus} selected={filters.invoiceStatus} onSelect={(k) => toggle("invoiceStatus", k)} formatter={money} emptyLabel={empty} hint={t("adminDashboard.invoiced")} />
         </Card>
-        <Card title={t("adminDashboard.paymentsByMethod")} subtitle={hint}>
+        <Card title={t("adminDashboard.paymentsByMethod")} subtitle={hint} loading={waiting("payments")}>
           <Donut slices={paymentByMethod} selected={filters.paymentMethod} onSelect={(k) => toggle("paymentMethod", k)} formatter={money} emptyLabel={empty} hint={t("adminDashboard.collected")} />
         </Card>
-        <Card title={t("adminDashboard.newPatientsByPeriod")} subtitle={hint}>
+        <Card title={t("adminDashboard.newPatientsByPeriod")} subtitle={hint} loading={waiting("patients")}>
           {series.some((s) => s.newPatients > 0) ? (
             <ResponsiveContainer width="100%" height={176}>
               <BarChart data={series} margin={{ top: 8, right: 4, left: -24, bottom: 0 }} barCategoryGap="28%">
@@ -700,6 +714,7 @@ export default function DashboardAnalytics({ data, loading = false, operations }
         <Card
           title={t("adminDashboard.stockHealth")}
           subtitle={hint}
+          loading={waiting("inventory")}
           className="xl:col-span-2"
           action={
             <div className="flex items-center gap-3 text-[11px] text-gray-500">
@@ -736,6 +751,7 @@ export default function DashboardAnalytics({ data, loading = false, operations }
         </Card>
         <Card
           title={t("adminDashboard.lowStockAlerts")}
+          loading={waiting("inventory")}
           subtitle={filters.inventoryCategory ? inventoryCatLabel(filters.inventoryCategory) : undefined}
           action={
             <Link href="/admin/inventory" className="inline-flex items-center gap-1 text-xs font-medium text-brand hover:underline">
