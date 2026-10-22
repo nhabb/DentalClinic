@@ -7,6 +7,8 @@ import { apiFetch } from "@/lib/api/client";
 import { formatDateBeirut } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/i18n";
+import { ShowMore } from "@/components/ui/ShowMore";
+import { useDebounced, usePagedList } from "@/lib/api/paged";
 import { usePermissions } from "@/lib/permissions";
 import AdminSidebar from "@/components/ui/AdminSidebar";
 import { StatsCard } from "@/components/ui/StatsCard";
@@ -75,7 +77,6 @@ export default function BillingPage() {
   const { t } = useTranslation();
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [invoices, setInvoices] = useState<TreatmentInvoice[]>([]);
   const [patients, setPatients] = useState<PatientOption[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -125,13 +126,16 @@ export default function BillingPage() {
 
   const normalizeInvoice = normalizeInvoiceDoc;
 
-  const fetchInvoices = async () => {
-    try {
-      const res = await apiFetch("/api/billing/invoices?limit=200");
-      const json = await res.json();
-      setInvoices((Array.isArray(json.data) ? json.data : []).map(normalizeInvoice));
-    } catch { /* silent */ }
-  };
+  // The API searches, filters and counts the bills; the screen shows ten at a time.
+  const bq = useDebounced(searchQuery.trim());
+  const list = usePagedList<TreatmentInvoice, { status: Partial<Record<string, number>> }>({
+    path: "/api/billing/invoices",
+    params: { search: bq, status: selectedStatus === "All" ? undefined : selectedStatus.toLowerCase() },
+    map: normalizeInvoiceDoc,
+    withCounts: true,
+  });
+  const invoices = list.rows;
+  const fetchInvoices = list.reload;
 
   const fetchPatients = async () => {
     try {
@@ -167,7 +171,7 @@ export default function BillingPage() {
   };
 
   useEffect(() => {
-    Promise.all([fetchInvoices(), fetchPatients(), fetchClinicFigures()]).finally(() =>
+    Promise.all([fetchPatients(), fetchClinicFigures()]).finally(() =>
       setIsLoading(false),
     );
   }, []);
@@ -228,21 +232,16 @@ export default function BillingPage() {
 
   // ── Filtering + stats ────────────────────────────────────────────────────────
 
-  const bq = searchQuery.trim().toLowerCase();
-  const matchesInvoiceSearch = (inv: TreatmentInvoice) =>
-    !bq || `${inv.patient.users.first_name} ${inv.patient.users.last_name}`.toLowerCase().includes(bq);
-  const filtered = invoices.filter(
-    (inv) => matchesInvoiceSearch(inv) && (selectedStatus === "All" || inv.status === selectedStatus.toLowerCase()),
-  );
+  const filtered = invoices;
+  const byStatus = list.counts?.status ?? {};
   const invoiceStatusCounts: Record<string, number> = {
-    All: invoices.filter(matchesInvoiceSearch).length,
-    Open: invoices.filter((i) => matchesInvoiceSearch(i) && i.status === "open").length,
-    Partial: invoices.filter((i) => matchesInvoiceSearch(i) && i.status === "partial").length,
-    Paid: invoices.filter((i) => matchesInvoiceSearch(i) && i.status === "paid").length,
-    Cancelled: invoices.filter((i) => matchesInvoiceSearch(i) && i.status === "cancelled").length,
+    All: Object.values(byStatus).reduce<number>((a, n) => a + (n ?? 0), 0),
+    Open: byStatus.open ?? 0,
+    Partial: byStatus.partial ?? 0,
+    Paid: byStatus.paid ?? 0,
+    Cancelled: byStatus.cancelled ?? 0,
   };
-  const liveInvoices = invoices.filter((i) => i.status !== "cancelled");
-  const hasInvoiceFilters = !!bq || selectedStatus !== "All";
+  const hasInvoiceFilters = !!searchQuery.trim() || selectedStatus !== "All";
   const clearInvoiceFilters = () => { setSearchQuery(""); setSelectedStatus("All"); };
 
 
@@ -319,7 +318,6 @@ export default function BillingPage() {
         return;
       }
       if (confirm.kind === "invoice") {
-        setInvoices((prev) => prev.filter((i) => i.id !== confirm.id));
         void refreshMoney();
         setShowViewModal(false);
         setSelectedInvoice(null);
@@ -454,7 +452,7 @@ export default function BillingPage() {
                 value={view}
                 onChange={setView}
                 items={[
-                  { id: "bills", label: "Bills", icon: <FaFileInvoiceDollar />, count: invoices.length },
+                  { id: "bills", label: "Bills", icon: <FaFileInvoiceDollar />, count: invoiceStatusCounts.All },
                   { id: "plans", label: "Treatment plans", icon: <FaClipboardList /> },
                 ]}
               />
@@ -467,8 +465,8 @@ export default function BillingPage() {
               <>
               <ListToolbar
                 search={{ value: searchQuery, onChange: setSearchQuery, placeholder: t("billing.searchPlaceholder") }}
-                shown={filtered.length}
-                total={invoices.length}
+                shown={list.total}
+                total={invoiceStatusCounts.All}
                 unitLabel={t("billing.invoicesCount")}
                 hasActiveFilters={hasInvoiceFilters}
                 onClear={clearInvoiceFilters}
@@ -492,7 +490,9 @@ export default function BillingPage() {
 
               {/* Table */}
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                {filtered.length === 0 ? (
+                {list.loading && filtered.length === 0 ? (
+                  <div className="space-y-2 p-5">{[0, 1, 2].map((i) => <div key={i} className="h-12 animate-pulse rounded-xl bg-gray-100" />)}</div>
+                ) : filtered.length === 0 ? (
                   <EmptyState
                     icon={FaFileInvoiceDollar}
                     title={t("billing.noInvoices")}
@@ -581,6 +581,7 @@ export default function BillingPage() {
                     </table>
                   </div>
                 )}
+                <ShowMore shown={filtered.length} total={list.total} loading={list.loadingMore} onClick={list.loadMore} />
               </div>
               </>
               )}
