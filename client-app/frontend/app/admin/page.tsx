@@ -164,7 +164,7 @@ export default function AdminDashboard() {
 
     const loadInventory = () =>
       load("inventory", allowedTo("inventory:read"), async () => {
-        const rows = rowsOf(await getJson(`/api/inventory`)).map((item: any) => {
+        const rows = rowsOf(await getJson(`/api/inventory?limit=1000`)).map((item: any) => {
           const quantity = Number(item.quantity ?? 0);
           const minimum = Number(item.minimum_quantity ?? 0);
           const status: "ok" | "low" | "out" = quantity === 0 ? "out" : quantity <= minimum ? "low" : "ok";

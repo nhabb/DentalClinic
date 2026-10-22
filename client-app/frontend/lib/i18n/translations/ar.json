@@ -39,7 +39,9 @@
     "creating": "جار الإنشاء...",
     "recording": "جار التسجيل...",
     "scheduling": "جار الجدولة...",
-    "goToDashboard": "الذهاب إلى لوحة التحكم"
+    "goToDashboard": "الذهاب إلى لوحة التحكم",
+    "showMore": "عرض المزيد",
+    "showingOf": "عرض {shown} من {total}"
   },
   "nav": {
     "dashboard": "لوحة التحكم",

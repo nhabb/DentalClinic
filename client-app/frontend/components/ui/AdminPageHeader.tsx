@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { Plus } from "lucide-react";
 import type { ReactNode } from "react";
 import type { HeaderAction } from "@/components/ui/HeaderSpeedDial";
-import type { Row } from "@/components/ui/useImportExport";
+import type { ExportData, Row } from "@/components/ui/useImportExport";
 import { NotificationsBell } from "@/components/ui/NotificationsBell";
 import { ProfileMenu } from "@/components/ui/ProfileMenu";
 
@@ -18,7 +18,7 @@ const HeaderSpeedDial = dynamic(() => import("@/components/ui/HeaderSpeedDial"),
 interface AdminPageHeaderProps {
   title: string;
   subtitle?: string;
-  data?: Row[];
+  data?: ExportData;
   filename?: string;
   onImport?: (rows: Row[]) => void;
   onAdd?: () => void;

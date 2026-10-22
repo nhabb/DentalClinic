@@ -39,7 +39,9 @@
     "creating": "Création...",
     "recording": "Enregistrement...",
     "scheduling": "Planification...",
-    "goToDashboard": "Aller au tableau de bord"
+    "goToDashboard": "Aller au tableau de bord",
+    "showMore": "Afficher plus",
+    "showingOf": "{shown} sur {total} affichés"
   },
   "nav": {
     "dashboard": "Tableau de bord",
