@@ -10,7 +10,8 @@ import { cn } from "@/lib/utils";
  * selection filters). Pair it with MonthTotalsList to jump between months.
  * ────────────────────────────────────────────────────────────────────────── */
 
-export interface CalendarItem { date: string; amount: number }
+/** One dated amount; `count` lets one item stand for several (a day's sum from the API). */
+export interface CalendarItem { date: string; amount: number; count?: number }
 
 export interface MonthCalendarLabels {
   title: string;
@@ -66,7 +67,7 @@ export function MonthCalendar({
       const d = it.date.slice(0, 10);
       if (d < from || d > to) continue;
       const t = (totals[d] ??= { amount: 0, count: 0 });
-      t.amount += it.amount; t.count += 1;
+      t.amount += it.amount; t.count += it.count ?? 1;
     }
     const lead = (first.getDay() + 6) % 7; // Monday-first
     const cells: ({ date: string; day: number; amount: number; count: number } | null)[] = Array(lead).fill(null);

@@ -39,7 +39,9 @@
     "creating": "Creating...",
     "recording": "Recording...",
     "scheduling": "Scheduling...",
-    "goToDashboard": "Go to Dashboard"
+    "goToDashboard": "Go to Dashboard",
+    "showMore": "Show more",
+    "showingOf": "Showing {shown} of {total}"
   },
   "nav": {
     "dashboard": "Dashboard",

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Plus, Download, Upload, FileSpreadsheet, FileJson, Languages } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/lib/i18n";
-import { useImportExport, type Row } from "@/components/ui/useImportExport";
+import { useImportExport, type ExportData, type Row } from "@/components/ui/useImportExport";
 
 export type HeaderActionTone = "primary" | "teal" | "blue" | "neutral";
 
@@ -25,7 +25,7 @@ interface HeaderSpeedDialProps {
   /** Page-specific actions. */
   actions?: HeaderAction[];
   /** When all three are provided, Export / Import rows are shown. */
-  data?: Row[];
+  data?: ExportData;
   filename?: string;
   onImport?: (rows: Row[]) => void | Promise<void>;
 }

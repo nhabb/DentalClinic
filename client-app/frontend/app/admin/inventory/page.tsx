@@ -14,6 +14,8 @@ import { ListToolbar } from "@/components/ui/ListToolbar";
 import { AdminPageHeader } from "@/components/ui/AdminPageHeader";
 import { BulkActionBar } from "@/components/ui/BulkActionBar";
 import { useImportExport } from "@/components/ui/useImportExport";
+import { ShowMore } from "@/components/ui/ShowMore";
+import { useDebounced, usePagedList } from "@/lib/api/paged";
 import { Modal } from "@/components/ui/Modal";
 import { FormField, inputClass } from "@/components/ui/FormField";
 import {
@@ -77,6 +79,38 @@ type InventoryItem = {
 const categoryKeys = ["all", "disposables", "materials", "medications", "instruments"] as const;
 const categoryValues = ["All", "Disposables", "Materials", "Medications", "Instruments"];
 
+const normalizeCategory = (cat: string) => {
+  const c = (cat || "").toLowerCase();
+  if (c === "disposables") return "Disposables";
+  if (c === "materials") return "Materials";
+  if (c === "medications") return "Medications";
+  if (c === "instruments") return "Instruments";
+  return cat || "General";
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mapItem = (item: any): InventoryItem => ({
+  id: Number(item.id),
+  name: item.name,
+  category: normalizeCategory(item.category),
+  currentStock: item.quantity,
+  minimumStock: item.minimum_quantity,
+  unit: item.unit,
+  supplier: item.description || "",
+  lastRestocked: item.updated_at?.split("T")[0] || "",
+  status: item.quantity <= 0 ? "out" : item.quantity <= item.minimum_quantity ? "low" : "ok",
+  image_url: item.image_url ?? undefined,
+  cost_price: item.cost_price ? Number(item.cost_price) : 0,
+});
+
+/** meta.counts of GET /api/inventory?with_counts=true. */
+type InventoryCounts = {
+  status: Record<"ok" | "low" | "out", number>;
+  category: { category: string | null; count: number }[];
+  low_or_out: number;
+  all_items: number;
+};
+
 type CategoryMeta = { icon: IconType; color: string; chip: string };
 const CATEGORY_META: Record<string, CategoryMeta> = {
   Disposables: { icon: FaBoxOpen, color: "text-blue-500", chip: "bg-blue-50 text-blue-700" },
@@ -88,13 +122,13 @@ const DEFAULT_CATEGORY_META: CategoryMeta = { icon: FaBoxes, color: "text-gray-5
 const categoryMeta = (category: string) => CATEGORY_META[category] ?? DEFAULT_CATEGORY_META;
 
 type StatusFilter = "All" | "OK" | "Low" | "Out";
+const STATUS_PARAM: Record<StatusFilter, "ok" | "low" | "out" | undefined> = { All: undefined, OK: "ok", Low: "low", Out: "out" };
 const STATUS_FILTERS: { value: StatusFilter; labelKey: string; dot?: string }[] = [
   { value: "All", labelKey: "inventory.statusAll" },
   { value: "OK", labelKey: "inventory.statusOk", dot: "bg-emerald-500" },
   { value: "Low", labelKey: "inventory.statusLow", dot: "bg-amber-500" },
   { value: "Out", labelKey: "inventory.statusOut", dot: "bg-red-500" },
 ];
-const STATUS_RANK: Record<string, number> = { out: 0, low: 1, ok: 2 };
 
 type SortKey = "name" | "category" | "stock" | "supplier" | "status";
 
@@ -165,7 +199,6 @@ export default function InventoryManagement() {
   // Only offer what this role's API permissions allow (the API refuses the rest anyway).
   const { can } = usePermissions();
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
 
   const [addImageFile, setAddImageFile] = useState<File | null>(null);
   const [addImagePreview, setAddImagePreview] = useState<string | null>(null);
@@ -198,41 +231,6 @@ export default function InventoryManagement() {
   const [stockNote, setStockNote] = useState("");
   const [stockSaving, setStockSaving] = useState(false);
 
-  const fetchInventory = async () => {
-    try {
-      const res = await apiFetch(`/api/inventory`);
-      const data = await res.json();
-      const normalizeCategory = (cat: string) => {
-        const c = (cat || "").toLowerCase();
-        if (c === "disposables") return "Disposables";
-        if (c === "materials") return "Materials";
-        if (c === "medications") return "Medications";
-        if (c === "instruments") return "Instruments";
-        return cat || "General";
-      };
-      const mapped = (data.data || []).map((item: any) => ({
-        id: Number(item.id),
-        name: item.name,
-        category: normalizeCategory(item.category),
-        currentStock: item.quantity,
-        minimumStock: item.minimum_quantity,
-        unit: item.unit,
-        supplier: item.description || "",
-        lastRestocked: item.updated_at?.split("T")[0] || "",
-        status: item.quantity === 0 ? "out" : item.quantity <= item.minimum_quantity ? "low" : "ok",
-        image_url: item.image_url ?? undefined,
-        cost_price: item.cost_price ? Number(item.cost_price) : 0,
-      }));
-      setInventoryItems(mapped);
-    } catch (e) {
-      console.error("Failed to fetch inventory", e);
-    }
-  };
-
-  useEffect(() => {
-    fetchInventory();
-  }, []);
-
   const handleLogout = useSignOut();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -248,37 +246,38 @@ export default function InventoryManagement() {
   const [movements, setMovements] = useState<InventoryMovement[]>([]);
   const [movementsLoading, setMovementsLoading] = useState(false);
 
-  const q = searchQuery.trim().toLowerCase();
-  const matchesSearch = (item: InventoryItem) =>
-    !q || item.name.toLowerCase().includes(q) || item.supplier.toLowerCase().includes(q);
-  const matchesCategory = (item: InventoryItem, cat: string = selectedCategory) => cat === "All" || item.category === cat;
-  const matchesStatus = (item: InventoryItem, st: StatusFilter = selectedStatus) =>
-    st === "All" || (st === "OK" && item.status === "ok") || (st === "Low" && item.status === "low") || (st === "Out" && item.status === "out");
+  // The API searches, filters, sorts and counts; the screen shows ten at a time.
+  const q = useDebounced(searchQuery.trim());
+  const list = usePagedList<InventoryItem, InventoryCounts>({
+    path: "/api/inventory",
+    params: { search: q, category: selectedCategory === "All" ? undefined : selectedCategory, status: STATUS_PARAM[selectedStatus], sort: sort.key, dir: sort.dir },
+    map: mapItem,
+    withCounts: true,
+  });
+  const inventoryItems = list.rows;
+  const fetchInventory = list.reload;
 
-  const filteredItems = inventoryItems
-    .filter((item) => matchesSearch(item) && matchesCategory(item) && matchesStatus(item))
-    .sort((a, b) => {
-      let r = 0;
-      switch (sort.key) {
-        case "name": r = a.name.localeCompare(b.name); break;
-        case "category": r = a.category.localeCompare(b.category); break;
-        case "stock": r = a.currentStock - b.currentStock; break;
-        case "supplier": r = a.supplier.localeCompare(b.supplier); break;
-        case "status": r = (STATUS_RANK[a.status] ?? 3) - (STATUS_RANK[b.status] ?? 3); break;
-      }
-      if (r === 0) r = a.name.localeCompare(b.name);
-      return sort.dir === "asc" ? r : -r;
-    });
-
-  // Faceted counts: each group is counted against the *other* active filters.
+  // Faceted counts: each group is counted against the *other* active filter.
+  const categoryTotals: Record<string, number> = {};
+  for (const { category, count } of list.counts?.category ?? []) {
+    const name = normalizeCategory(category ?? "");
+    categoryTotals[name] = (categoryTotals[name] ?? 0) + count;
+  }
   const categoryCounts: Record<string, number> = Object.fromEntries(
-    categoryValues.map((c) => [c, inventoryItems.filter((i) => matchesSearch(i) && matchesStatus(i) && matchesCategory(i, c)).length]),
+    categoryValues.map((c) => [c, c === "All" ? Object.values(categoryTotals).reduce((a, n) => a + n, 0) : categoryTotals[c] ?? 0]),
   );
-  const statusCounts: Record<StatusFilter, number> = Object.fromEntries(
-    STATUS_FILTERS.map((s) => [s.value, inventoryItems.filter((i) => matchesSearch(i) && matchesCategory(i) && matchesStatus(i, s.value)).length]),
-  ) as Record<StatusFilter, number>;
+  const byStatus = list.counts?.status ?? { ok: 0, low: 0, out: 0 };
+  const statusCounts: Record<StatusFilter, number> = { All: byStatus.ok + byStatus.low + byStatus.out, OK: byStatus.ok, Low: byStatus.low, Out: byStatus.out };
+  const clinicItems = list.counts?.all_items ?? 0;
 
-  const hasActiveFilters = !!q || selectedCategory !== "All" || selectedStatus !== "All";
+  // Export is of every item, not just the ten on screen.
+  const exportAllItems = async () => {
+    const res = await apiFetch("/api/inventory?limit=1000&sort=name");
+    if (!res.ok) throw new Error(`Request failed (${res.status})`);
+    return ((await res.json()).data ?? []).map(mapItem);
+  };
+
+  const hasActiveFilters = !!searchQuery.trim() || selectedCategory !== "All" || selectedStatus !== "All";
   const clearFilters = () => { setSearchQuery(""); setSelectedCategory("All"); setSelectedStatus("All"); };
   const toggleSort = (key: SortKey) =>
     setSort((p) => (p.key === key ? { key, dir: p.dir === "asc" ? "desc" : "asc" } : { key, dir: "asc" }));
@@ -307,7 +306,7 @@ export default function InventoryManagement() {
     </th>
   );
 
-  const lowStockCount = inventoryItems.filter((item) => item.status === "low" || item.status === "out").length;
+  const lowStockCount = list.counts?.low_or_out ?? 0;
 
   const openDetails = async (item: InventoryItem) => {
     setDetailItem(item);
@@ -441,7 +440,7 @@ export default function InventoryManagement() {
       const res = await apiFetch(`/api/inventory/${id}`, { method: "DELETE" });
       if (res.ok) {
         toast.success("Item deleted.");
-        setInventoryItems((prev) => prev.filter((item) => item.id !== id));
+        await fetchInventory();
       } else {
         toast.error("Failed to delete item.");
       }
@@ -459,10 +458,10 @@ export default function InventoryManagement() {
     });
   };
 
-  const allVisibleSelected = filteredItems.length > 0 && filteredItems.every((item) => selectedIds.has(item.id));
+  const allVisibleSelected = inventoryItems.length > 0 && inventoryItems.every((item) => selectedIds.has(item.id));
 
   const toggleSelectAll = () => {
-    setSelectedIds(allVisibleSelected ? new Set() : new Set(filteredItems.map((item) => item.id)));
+    setSelectedIds(allVisibleSelected ? new Set() : new Set(inventoryItems.map((item) => item.id)));
   };
 
   const selectedItems = inventoryItems.filter((item) => selectedIds.has(item.id));
@@ -474,8 +473,7 @@ export default function InventoryManagement() {
     if (!window.confirm(`Delete ${ids.length} item${ids.length === 1 ? "" : "s"}? This cannot be undone.`)) return;
     try {
       const { done, failed } = await deleteEach(ids, (id) => `/api/inventory/${id}`);
-      const gone = new Set(done);
-      setInventoryItems((prev) => prev.filter((item) => !gone.has(item.id)));
+      if (done.length > 0) await fetchInventory();
       if (done.length > 0) toast.success(`${done.length} item${done.length === 1 ? "" : "s"} deleted.`);
       if (failed.length > 0) toast.error(`${failed.length} not deleted: ${failed[0].message}`);
       setSelectedIds(new Set(failed.map((f) => f.id)));
@@ -514,7 +512,7 @@ export default function InventoryManagement() {
         <AdminPageHeader
           title={t("inventory.inventoryManagement")}
           subtitle={t("inventory.manageSupplies")}
-          data={inventoryItems}
+          data={exportAllItems}
           filename="inventory"
           onImport={async (rows) => {
             let ok = 0; let fail = 0;
@@ -548,15 +546,15 @@ export default function InventoryManagement() {
 
         <main className="flex-1 p-8 overflow-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <StatsCard icon={FaBoxes} iconBgClass="bg-blue-100" iconColorClass="text-blue-600" value={inventoryItems.length} label={t("inventory.totalItems")} />
+            <StatsCard icon={FaBoxes} iconBgClass="bg-blue-100" iconColorClass="text-blue-600" value={clinicItems} label={t("inventory.totalItems")} />
             <StatsCard icon={FaExclamationTriangle} iconBgClass="bg-red-100" iconColorClass="text-red-600" value={lowStockCount} label={t("inventory.lowStock")} />
-            <StatsCard icon={FaCheckCircle} iconBgClass="bg-green-100" iconColorClass="text-green-600" value={inventoryItems.length - lowStockCount} label={t("inventory.wellStocked")} />
+            <StatsCard icon={FaCheckCircle} iconBgClass="bg-green-100" iconColorClass="text-green-600" value={clinicItems - lowStockCount} label={t("inventory.wellStocked")} />
           </div>
 
           <ListToolbar
             search={{ value: searchQuery, onChange: setSearchQuery, placeholder: t("inventory.searchPlaceholder") }}
-            shown={filteredItems.length}
-            total={inventoryItems.length}
+            shown={list.total}
+            total={clinicItems}
             unitLabel={t("inventory.items")}
             hasActiveFilters={hasActiveFilters}
             onClear={clearFilters}
@@ -591,12 +589,14 @@ export default function InventoryManagement() {
 
           {/* Listing */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            {filteredItems.length === 0 ? (
+            {list.loading && inventoryItems.length === 0 ? (
+              <div className="space-y-2 p-5">{[0, 1, 2].map((i) => <div key={i} className="h-12 animate-pulse rounded-xl bg-gray-100" />)}</div>
+            ) : inventoryItems.length === 0 ? (
               <>
                 <EmptyState
                   icon={FaBoxes}
-                  title={inventoryItems.length === 0 ? t("inventory.noItems") : t("inventory.noMatches")}
-                  description={inventoryItems.length === 0 ? undefined : t("inventory.noMatchesHint")}
+                  title={clinicItems === 0 ? t("inventory.noItems") : t("inventory.noMatches")}
+                  description={clinicItems === 0 ? undefined : t("inventory.noMatchesHint")}
                 />
                 {hasActiveFilters && (
                   <div className="-mt-6 pb-10 text-center">
@@ -638,7 +638,7 @@ export default function InventoryManagement() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 stagger">
-                    {filteredItems.map((item) => {
+                    {inventoryItems.map((item) => {
                       const tone = statusTone(item.status);
                       const meta = categoryMeta(item.category);
                       const Icon = meta.icon;
@@ -759,6 +759,7 @@ export default function InventoryManagement() {
                 </table>
               </div>
             )}
+            <ShowMore shown={inventoryItems.length} total={list.total} loading={list.loadingMore} onClick={list.loadMore} />
           </div>
         </main>
       </div>

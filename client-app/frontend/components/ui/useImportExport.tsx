@@ -7,9 +7,12 @@ import * as XLSX from "xlsx";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Row = Record<string, any>;
 
+/** What to export: the rows, or a loader for lists the screen only holds a page of. */
+export type ExportData = Row[] | (() => Promise<Row[]>);
+
 export interface ImportExportOptions {
   /** Data to export */
-  data: Row[];
+  data: ExportData;
   /** Base filename (without extension) */
   filename: string;
   /** Called with parsed rows after a successful import */
@@ -17,8 +20,8 @@ export interface ImportExportOptions {
 }
 
 export interface ImportExportHandle {
-  exportExcel: () => void;
-  exportJson: () => void;
+  exportExcel: () => Promise<void>;
+  exportJson: () => Promise<void>;
   importExcel: () => void;
   importJson: () => void;
   /** Hidden file inputs; render these once somewhere in the tree. */
@@ -59,14 +62,28 @@ export function useImportExport({ data, filename, onImport }: ImportExportOption
   const jsonInputRef = useRef<HTMLInputElement>(null);
   const excelInputRef = useRef<HTMLInputElement>(null);
 
-  function exportJson() {
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  async function rows(): Promise<Row[] | null> {
+    if (Array.isArray(data)) return data;
+    try {
+      return await data();
+    } catch {
+      toast.error("Could not load the rows to export.");
+      return null;
+    }
+  }
+
+  async function exportJson() {
+    const all = await rows();
+    if (!all) return;
+    const blob = new Blob([JSON.stringify(all, null, 2)], { type: "application/json" });
     triggerDownload(blob, `${filename}.json`);
     toast.success(`Exported ${filename}.json`);
   }
 
-  function exportExcel() {
-    const sanitized = data.map(sanitizeRow);
+  async function exportExcel() {
+    const all = await rows();
+    if (!all) return;
+    const sanitized = all.map(sanitizeRow);
     const ws = XLSX.utils.json_to_sheet(sanitized);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, filename.slice(0, 31));

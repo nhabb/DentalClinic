@@ -33,6 +33,8 @@ import { FormField, inputClass } from "@/components/ui/FormField";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Tabs } from "@/components/ui/Tabs";
+import { ShowMore } from "@/components/ui/ShowMore";
+import { useDebounced, usePagedList } from "@/lib/api/paged";
 import {
   FaMoneyBillWave,
   FaCheckCircle,
@@ -100,6 +102,28 @@ const emptyPaymentForm = {
   notes: "",
 };
 
+/** meta.counts of GET /api/expenses?with_counts=true. */
+type ExpenseCounts = {
+  category: Record<string, number>;
+  status: Partial<Record<ExpenseStatus, number>>;
+  to_pay: { count: number; remaining: number };
+  clinic: { count: number; amount: number; paid: number; remaining: number };
+};
+
+/** One bill day of GET /api/expenses/calendar. */
+type CalendarDay = { date: string; amount: number; amount_paid: number; count: number };
+
+const isoDay = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const lastOfMonth = (first: Date) => new Date(first.getFullYear(), first.getMonth() + 1, 0);
+
+/** Export is of every bill, not just the ten on screen. */
+async function exportAllExpenses(): Promise<Expense[]> {
+  const res = await apiFetch("/api/expenses?limit=1000");
+  if (!res.ok) throw new Error(`Request failed (${res.status})`);
+  return ((await res.json()).data ?? []).map(mapExpense);
+}
+
 /** The page's three views: every bill, what is still to pay, and the repeating ones. */
 type View = "all" | "to_pay" | "repeating";
 
@@ -109,7 +133,6 @@ export default function ExpensesPage() {
   const { t, language } = useTranslation();
   const locale = language === "ar" ? "ar-LB" : language === "fr" ? "fr-FR" : "en-US";
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [expenses, setExpenses] = useState<Expense[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedExpenseStatus, setSelectedExpenseStatus] = useState<"all" | ExpenseStatus>("all");
@@ -128,7 +151,6 @@ export default function ExpensesPage() {
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [listsOpen, setListsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
@@ -139,19 +161,6 @@ export default function ExpensesPage() {
   const [paymentForm, setPaymentForm] = useState(emptyPaymentForm);
   const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
   const [deletingPaymentId, setDeletingPaymentId] = useState<number | null>(null);
-
-  const fetchExpenses = async () => {
-    setIsLoading(true);
-    try {
-      const res = await apiFetch("/api/expenses?limit=500");
-      const data = await res.json();
-      setExpenses((data.data || []).map(mapExpense));
-    } catch {
-      setExpenses([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const fetchLists = async () => {
     try {
@@ -164,7 +173,6 @@ export default function ExpensesPage() {
   };
 
   useEffect(() => {
-    fetchExpenses();
     fetchLists();
   }, []);
 
@@ -183,15 +191,61 @@ export default function ExpensesPage() {
   const categoryChoices = (current?: string) =>
     categories.filter((c) => c.is_active || c.key === current);
 
-  const eq = searchQuery.trim().toLowerCase();
-  const matchesExpenseSearch = (exp: Expense) =>
-    !eq ||
-    [exp.description, exp.number, exp.supplier?.name, exp.supplierBillNumber]
-      .some((v) => (v ?? "").toLowerCase().includes(eq));
-  const matchesExpenseCategory = (exp: Expense, cat: string = selectedCategory) => cat === "All" || exp.category === cat;
-  const matchesExpenseStatus = (exp: Expense, st: "all" | ExpenseStatus = selectedExpenseStatus) => st === "all" || exp.status === st;
-  const matchesExpenseDay = (exp: Expense) =>
-    selectedDay !== null ? exp.date === selectedDay : !monthFilterOn || exp.date.slice(0, 7) === monthKey(calMonth);
+  // The API searches, filters, counts and pages; the screen shows ten bills at a time.
+  const eq = useDebounced(searchQuery.trim());
+  const listFilters = {
+    search: eq,
+    category: selectedCategory === "All" ? undefined : selectedCategory,
+    status: selectedExpenseStatus === "all" ? undefined : selectedExpenseStatus,
+  };
+  const dayRange =
+    selectedDay !== null
+      ? { from: selectedDay, to: selectedDay }
+      : monthFilterOn
+        ? { from: isoDay(calMonth), to: isoDay(lastOfMonth(calMonth)) }
+        : {};
+  const list = usePagedList<Expense, ExpenseCounts>({
+    path: "/api/expenses",
+    params: { ...listFilters, ...dayRange },
+    map: mapExpense,
+    withCounts: true,
+  });
+  const toPayList = usePagedList<Expense>({
+    path: "/api/expenses",
+    params: { search: eq, to_pay: true },
+    map: mapExpense,
+    enabled: view === "to_pay",
+  });
+  const expenses = list.rows;
+  const isLoading = list.loading && expenses.length === 0 && !list.counts;
+
+  // The calendar and the twelve-month strip read day sums, not every bill:
+  // the last twelve months, widened to the month on display.
+  const stripStart = firstOfMonth(new Date(new Date().getFullYear(), new Date().getMonth() - 11, 1));
+  const calFrom = isoDay(calMonth < stripStart ? calMonth : stripStart);
+  const calTo = isoDay(lastOfMonth(calMonth > firstOfMonth() ? calMonth : firstOfMonth()));
+  const [calendarDays, setCalendarDays] = useState<CalendarDay[]>([]);
+  const [calendarVersion, setCalendarVersion] = useState(0);
+  useEffect(() => {
+    let alive = true;
+    const q = new URLSearchParams({ from: calFrom, to: calTo });
+    for (const [k, v] of Object.entries(listFilters)) if (v) q.set(k, v);
+    apiFetch(`/api/expenses/calendar?${q}`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((days: CalendarDay[]) => alive && setCalendarDays(days))
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [calFrom, calTo, listFilters.search, listFilters.category, listFilters.status, calendarVersion]);
+
+  /** After any change: the lists, their counts and the calendar all ask again. */
+  const fetchExpenses = async () => {
+    setCalendarVersion((v) => v + 1);
+    await Promise.all([list.reload(), view === "to_pay" ? toPayList.reload() : Promise.resolve()]);
+  };
+
   const goToMonth = (first: Date) => { setCalMonth(first); setMonthFilterOn(true); setSelectedDay(null); };
   const pickDay = (d: string | null) => {
     setSelectedDay(d);
@@ -201,39 +255,38 @@ export default function ExpensesPage() {
       setTimeout(() => tableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
     }
   };
-  const filteredExpenses = expenses.filter(
-    (exp) => matchesExpenseSearch(exp) && matchesExpenseCategory(exp) && matchesExpenseStatus(exp) && matchesExpenseDay(exp),
-  );
-  /** Rows the calendar shades: every filter except the day itself. */
-  const calendarExpenses = expenses.filter((exp) => matchesExpenseSearch(exp) && matchesExpenseCategory(exp) && matchesExpenseStatus(exp));
-  const calendarItems = calendarExpenses.map((e) => ({ date: e.date, amount: e.amount }));
-  const monthRows = calendarExpenses.filter((e) => e.date.slice(0, 7) === monthKey(calMonth));
-  const monthPaid = monthRows.reduce((s, e) => s + e.amountPaid, 0);
-  const monthRemaining = monthRows.reduce((s, e) => s + e.remaining, 0);
+  const filteredExpenses = expenses;
+  const calendarItems = calendarDays.map((d) => ({ date: d.date, amount: d.amount, count: d.count }));
+  const monthDays = calendarDays.filter((d) => d.date.slice(0, 7) === monthKey(calMonth));
+  const monthPaid = monthDays.reduce((s, d) => s + d.amount_paid, 0);
+  const monthRemaining = monthDays.reduce((s, d) => s + Math.max(0, d.amount - d.amount_paid), 0);
   const categoryFilterValues = ["All", ...activeCategories.map((c) => c.key)];
+  const counts = list.counts;
+  const statusTotals = counts?.status ?? {};
   const expenseCategoryCounts: Record<string, number> = Object.fromEntries(
-    categoryFilterValues.map((c) => [c, expenses.filter((e) => matchesExpenseSearch(e) && matchesExpenseDay(e) && matchesExpenseStatus(e) && matchesExpenseCategory(e, c)).length]),
+    categoryFilterValues.map((c) => [
+      c,
+      c === "All" ? Object.values(counts?.category ?? {}).reduce((a, n) => a + n, 0) : counts?.category[c] ?? 0,
+    ]),
   );
   /** To pay: every bill not fully paid, oldest bill first. */
-  const toPay = expenses
-    .filter((e) => e.remaining > 0 && matchesExpenseSearch(e))
-    .sort((a, b) => a.date.localeCompare(b.date) || a.id - b.id);
+  const toPay = toPayList.rows;
   const expenseStatusCounts = {
-    all: expenses.filter((e) => matchesExpenseSearch(e) && matchesExpenseDay(e) && matchesExpenseCategory(e)).length,
-    pending: expenses.filter((e) => matchesExpenseSearch(e) && matchesExpenseDay(e) && matchesExpenseCategory(e) && e.status === "pending").length,
-    partial: expenses.filter((e) => matchesExpenseSearch(e) && matchesExpenseDay(e) && matchesExpenseCategory(e) && e.status === "partial").length,
-    paid: expenses.filter((e) => matchesExpenseSearch(e) && matchesExpenseDay(e) && matchesExpenseCategory(e) && e.status === "paid").length,
+    all: (statusTotals.pending ?? 0) + (statusTotals.partial ?? 0) + (statusTotals.paid ?? 0),
+    pending: statusTotals.pending ?? 0,
+    partial: statusTotals.partial ?? 0,
+    paid: statusTotals.paid ?? 0,
   };
-  const hasExpenseFilters = !!eq || selectedCategory !== "All" || selectedExpenseStatus !== "all" || selectedDay !== null || monthFilterOn;
+  const hasExpenseFilters = !!searchQuery.trim() || selectedCategory !== "All" || selectedExpenseStatus !== "all" || selectedDay !== null || monthFilterOn;
   const clearExpenseFilters = () => { setSearchQuery(""); setSelectedCategory("All"); setSelectedExpenseStatus("all"); setSelectedDay(null); setMonthFilterOn(false); };
 
-  const totalAmount = expenses.reduce((sum, e) => sum + e.amount, 0);
-  const totalPaid = expenses.reduce((sum, e) => sum + e.amountPaid, 0);
-  const totalRemaining = expenses.reduce((sum, e) => sum + e.remaining, 0);
+  const totalAmount = counts?.clinic.amount ?? 0;
+  const totalPaid = counts?.clinic.paid ?? 0;
+  const totalRemaining = counts?.clinic.remaining ?? 0;
 
   const formatAmount = (amount: number) =>
     new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
-  const toPayTotal = toPay.reduce((s, e) => s + e.remaining, 0);
+  const toPayTotal = counts?.to_pay.remaining ?? 0;
 
   const formatDate = (date: string) => new Date(`${date}T12:00:00`).toLocaleDateString();
 
@@ -241,7 +294,11 @@ export default function ExpensesPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const applyUpdatedExpense = (raw: any) => {
     const updated = mapExpense(raw);
-    setExpenses((prev) => prev.map((e) => (e.id === updated.id ? updated : e)));
+    const swap = (prev: Expense[]) => prev.map((e) => (e.id === updated.id ? updated : e));
+    list.setRows(swap);
+    toPayList.setRows(swap);
+    // Totals, counts and the To pay queue move with the money.
+    void fetchExpenses();
     return updated;
   };
 
@@ -374,7 +431,7 @@ export default function ExpensesPage() {
         toast.error(await readError(res, "Could not delete the expense."));
         return;
       }
-      setExpenses((prev) => prev.filter((e) => e.id !== id));
+      await fetchExpenses();
       toast.success("Expense deleted.");
     } catch {
       toast.error("Could not delete the expense.");
@@ -580,7 +637,7 @@ export default function ExpensesPage() {
         <AdminPageHeader
           title={t("expenses.title")}
           subtitle={t("expenses.subtitle")}
-          data={expenses}
+          data={exportAllExpenses}
           filename="expenses"
           onImport={async (rows) => {
             let ok = 0; let fail = 0;
@@ -654,8 +711,8 @@ export default function ExpensesPage() {
             value={view}
             onChange={setView}
             items={[
-              { id: "all", label: "All expenses", icon: <FaReceipt />, count: expenses.length },
-              { id: "to_pay", label: "To pay", icon: <FaClock />, count: toPay.length },
+              { id: "all", label: "All expenses", icon: <FaReceipt />, count: counts?.clinic.count ?? 0 },
+              { id: "to_pay", label: "To pay", icon: <FaClock />, count: counts?.to_pay.count ?? 0 },
               { id: "repeating", label: "Repeating", icon: <FaRedo /> },
             ]}
           />
@@ -677,7 +734,9 @@ export default function ExpensesPage() {
               <p className="text-sm text-gray-600">
                 Every bill not fully paid, oldest first: <strong>{formatAmount(toPayTotal)}</strong> to pay.
               </p>
-              {toPay.length === 0 ? (
+              {toPayList.loading && toPay.length === 0 ? (
+                <LoadingSpinner />
+              ) : toPay.length === 0 ? (
                 <EmptyState icon={FaCheckCircle} title="Nothing to pay" description="Every bill the clinic received is paid." />
               ) : (
                 <ul className="divide-y divide-gray-100 overflow-hidden rounded-2xl border border-gray-100 bg-white">
@@ -711,14 +770,15 @@ export default function ExpensesPage() {
                   ))}
                 </ul>
               )}
+              <ShowMore shown={toPay.length} total={toPayList.total} loading={toPayList.loadingMore} onClick={toPayList.loadMore} />
             </div>
           )}
 
           {view === "all" && (<>
           <ListToolbar
             search={{ value: searchQuery, onChange: setSearchQuery, placeholder: "Search by description, EX number, supplier or bill number" }}
-            shown={filteredExpenses.length}
-            total={expenses.length}
+            shown={list.total}
+            total={counts?.clinic.count ?? 0}
             unitLabel={t("expenses.expensesCount")}
             hasActiveFilters={hasExpenseFilters}
             onClear={clearExpenseFilters}
@@ -934,6 +994,7 @@ export default function ExpensesPage() {
                 </table>
               </div>
             )}
+            <ShowMore shown={expenses.length} total={list.total} loading={list.loadingMore} onClick={list.loadMore} />
           </div>
           </>)}
           </>)}
@@ -1094,7 +1155,7 @@ export default function ExpensesPage() {
                 expenseId={selectedExpense.id}
                 canEdit={can("expenses:edit")}
                 onChanged={(count) =>
-                  setExpenses((prev) =>
+                  list.setRows((prev) =>
                     prev.map((e) => (e.id === selectedExpense.id ? { ...e, attachmentsCount: count } : e)),
                   )
                 }

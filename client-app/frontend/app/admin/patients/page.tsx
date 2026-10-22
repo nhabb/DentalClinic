@@ -64,6 +64,8 @@ import {
 } from "react-icons/fa";
 import { useSignOut } from "@/lib/auth/useSignOut";
 import { deleteEach } from "@/lib/api/bulk";
+import { ShowMore } from "@/components/ui/ShowMore";
+import { useDebounced, usePagedList } from "@/lib/api/paged";
 import { fetchAllPatients } from "@/lib/api/patients";
 
 
@@ -293,6 +295,17 @@ const emptyNewPatient = {
 
 /** One patient row, as every screen in this page expects it. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+/** meta.counts of GET /api/patients?with_counts=true. */
+type PatientCounts = {
+  status: Record<"all" | "active" | "inactive", number>;
+  clinic: { patients: number; active: number; visits: number };
+};
+
+/** Export is of every patient, not just the ten on screen. */
+async function exportAllPatients(): Promise<Patient[]> {
+  return (await fetchAllPatients()).map((p) => mapPatientRow(p));
+}
+
 function mapPatientRow(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   p: any,
@@ -319,8 +332,8 @@ function mapPatientRow(
     allergies: p.allergies ? p.allergies.split(",").map((a: string) => a.trim()).filter(Boolean) : [],
     insurance: p.insurance_provider || "",
     registeredDate: (userEmbed?.created_at || user?.created_at || "").split("T")[0],
-    lastVisit: lastVisitByPatient[Number(p.id)] || "",
-    totalVisits: visitsByPatient[Number(p.id)] || 0,
+    lastVisit: p.last_visit ?? lastVisitByPatient[Number(p.id)] ?? "",
+    totalVisits: p.completed_visits ?? visitsByPatient[Number(p.id)] ?? 0,
     status: isActive ? "active" : "inactive",
     notes: p.medical_notes || "",
     occupation: p.occupation || "",
@@ -356,6 +369,17 @@ export default function PatientsPage() {
   >("all");
   const [patientsView, setPatientsView] = useState<"grid" | "list">("grid");
   const [patientsSort, setPatientsSort] = useState<"name" | "recent" | "visits">("name");
+
+  // The API searches, filters, sorts and counts; the screen shows ten patients at a time.
+  const pq = useDebounced(searchQuery.trim());
+  const list = usePagedList<Patient, PatientCounts>({
+    path: "/api/patients",
+    params: { search: pq, status: statusFilter === "all" ? undefined : statusFilter, sort: patientsSort, with_visits: true },
+    map: (p) => mapPatientRow(p),
+    withCounts: true,
+  });
+  const patients = list.rows;
+  const fetchPatients = list.reload;
   useEffect(() => {
     const v = safeStorage.getItem("patientsView");
     if (v === "list" || v === "grid") setPatientsView(v);
@@ -372,9 +396,7 @@ export default function PatientsPage() {
   const [currentUser, setCurrentUser] = useState<any>(null);
 
   // Data state
-  const [patients, setPatients] = useState<Patient[]>([]);
   const [patientHistory, setPatientHistory] = useState<PatientHistory | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
   // Book appointment state
   const [showBookModal, setShowBookModal] = useState(false);
@@ -490,43 +512,7 @@ export default function PatientsPage() {
     if (storedUser) setCurrentUser(JSON.parse(storedUser));
   }, [router]);
 
-  // Fetch patients
-  const fetchPatients = async () => {
-    try {
-      const [allPatients, usersRes, apptRes] = await Promise.all([
-        fetchAllPatients(),
-        apiFetch(`/api/users`),
-        apiFetch(`/api/appointments?limit=2000`),
-      ]);
-      const patientsData = { data: allPatients };
-      const users: any[] = usersRes.ok ? await usersRes.json() : [];
-      const apptData = apptRes.ok ? await apptRes.json() : { data: [] };
 
-      const visitsByPatient: Record<number, number> = {};
-      const lastVisitByPatient: Record<number, string> = {};
-      for (const a of (apptData.data || [])) {
-        if (a.status === "completed") {
-          const pid = Number(a.patient_id);
-          visitsByPatient[pid] = (visitsByPatient[pid] || 0) + 1;
-          const date = a.appointment_date?.split("T")[0] || "";
-          if (date && (!lastVisitByPatient[pid] || date > lastVisitByPatient[pid])) {
-            lastVisitByPatient[pid] = date;
-          }
-        }
-      }
-
-      const mapped = (patientsData.data || []).map((p: any) =>
-        mapPatientRow(p, users, visitsByPatient, lastVisitByPatient),
-      );
-      setPatients(mapped);
-    } catch (e) {
-      console.error("Failed to fetch patients", e);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => { fetchPatients(); }, []);
 
   // Fetch patient history when patient is selected
   const fetchPatientHistory = async (patientId: number) => {
@@ -677,9 +663,10 @@ export default function PatientsPage() {
       });
       if (res.ok) {
         const newStatusStr = newIsActive ? "active" : "inactive";
-        setPatients((prev) =>
+        list.setRows((prev) =>
           prev.map((p) => p.id === patient.id ? { ...p, status: newStatusStr } : p)
         );
+        void fetchPatients();
         if (selectedPatient?.id === patient.id) {
           setSelectedPatient((prev) => prev ? { ...prev, status: newStatusStr } : prev);
         }
@@ -699,7 +686,7 @@ export default function PatientsPage() {
     try {
       const res = await apiFetch(`/api/patients/${patient.id}`, { method: "DELETE" });
       if (res.ok) {
-        setPatients((prev) => prev.filter((p) => p.id !== patient.id));
+        void fetchPatients();
         setShowPatientModal(false);
         toast.success("Patient deleted.");
       } else {
@@ -729,8 +716,7 @@ export default function PatientsPage() {
     if (!window.confirm(`Delete ${ids.length} patient${ids.length === 1 ? "" : "s"}? This will permanently remove their accounts and all records.`)) return;
     try {
       const { done, failed } = await deleteEach(ids, (id) => `/api/patients/${id}`);
-      const gone = new Set(done);
-      setPatients((prev) => prev.filter((p) => !gone.has(p.id)));
+      if (done.length > 0) void fetchPatients();
       if (done.length > 0) toast.success(`${done.length} patient${done.length === 1 ? "" : "s"} deleted.`);
       if (failed.length > 0) {
         // Patients with invoices or payments are kept; the API says so.
@@ -841,7 +827,7 @@ export default function PatientsPage() {
         preferredLanguage: f.preferredLanguage,
       };
       setSelectedPatient(updatedPatient);
-      setPatients((prev) => prev.map((p) => p.id === selectedPatient.id ? updatedPatient : p));
+      list.setRows((prev) => prev.map((p) => p.id === selectedPatient.id ? updatedPatient : p));
       toast.success("Patient updated.");
       setShowEditPatientModal(false);
     } catch {
@@ -951,7 +937,7 @@ export default function PatientsPage() {
         link: data?.link ?? "",
         emailed: data?.emailed === true,
       });
-      setPatients((prev) => prev.map((p) => (p.id === patient.id ? { ...p, mustSetPassword: true } : p)));
+      list.setRows((prev) => prev.map((p) => (p.id === patient.id ? { ...p, mustSetPassword: true } : p)));
       setSelectedPatient((prev) => (prev && prev.id === patient.id ? { ...prev, mustSetPassword: true } : prev));
     } catch {
       toast.error(t("patients.inviteFailed"));
@@ -1251,28 +1237,15 @@ export default function PatientsPage() {
     return isNaN(d.getTime()) ? "—" : d.toLocaleDateString();
   };
 
-  const pq = searchQuery.trim().toLowerCase();
-  const matchesPatientSearch = (p: Patient) =>
-    !pq || p.name.toLowerCase().includes(pq) || p.email.toLowerCase().includes(pq) || p.phone.includes(pq);
-  const filteredPatients = patients
-    .filter((p) => matchesPatientSearch(p) && (statusFilter === "all" || p.status === statusFilter))
-    .sort((a, b) => {
-      if (patientsSort === "recent") return (b.lastVisit || "").localeCompare(a.lastVisit || "") || a.name.localeCompare(b.name);
-      if (patientsSort === "visits") return b.totalVisits - a.totalVisits || a.name.localeCompare(b.name);
-      return a.name.localeCompare(b.name);
-    });
-  const statusCounts: Record<"all" | "active" | "inactive", number> = {
-    all: patients.filter(matchesPatientSearch).length,
-    active: patients.filter((p) => matchesPatientSearch(p) && p.status === "active").length,
-    inactive: patients.filter((p) => matchesPatientSearch(p) && p.status !== "active").length,
-  };
+  const filteredPatients = patients;
+  const statusCounts: Record<"all" | "active" | "inactive", number> = list.counts?.status ?? { all: 0, active: 0, inactive: 0 };
   const allVisibleSelected = filteredPatients.length > 0 && filteredPatients.every((p) => selectedIds.has(p.id));
   const toggleSelectAll = () => {
     setSelectedIds(allVisibleSelected ? new Set() : new Set(filteredPatients.map((p) => p.id)));
   };
   const selectedPatientRows = patients.filter((p) => selectedIds.has(p.id));
   const bulkExport = useImportExport({ data: selectedPatientRows, filename: "patients-selected", onImport: () => {} });
-  const hasPatientFilters = !!pq || statusFilter !== "all";
+  const hasPatientFilters = !!searchQuery.trim() || statusFilter !== "all";
   const clearPatientFilters = () => { setSearchQuery(""); setStatusFilter("all"); };
   const statusBadgeClass = (active: boolean) =>
     cn("inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset",
@@ -1333,9 +1306,9 @@ export default function PatientsPage() {
   }, [focusHistoryId, activeTab, chart, chartLoading]);
 
   // Calculate stats
-  const totalPatients = patients.length;
-  const activePatients = patients.filter((p) => p.status === "active").length;
-  const totalVisits = patients.reduce((sum, p) => sum + p.totalVisits, 0);
+  const totalPatients = list.counts?.clinic.patients ?? 0;
+  const activePatients = list.counts?.clinic.active ?? 0;
+  const totalVisits = list.counts?.clinic.visits ?? 0;
 
   return (
     <div className="min-h-screen bg-white flex">
@@ -1346,7 +1319,7 @@ export default function PatientsPage() {
         <AdminPageHeader
           title={t("patients.patients")}
           subtitle={`${currentUser ? `${currentUser.firstName} ${currentUser.lastName}'s` : t("common.manage")} ${t("patients.patientRecords")}`}
-          data={patients}
+          data={exportAllPatients}
           filename="patients"
           onImport={async (rows) => {
             let ok = 0; let fail = 0;
@@ -1376,7 +1349,7 @@ export default function PatientsPage() {
         />
 
         <main className="flex-1 p-8 overflow-auto">
-          {isLoading ? (
+          {list.loading && !list.counts ? (
             <LoadingSpinner />
           ) : (
             <>
@@ -1389,8 +1362,8 @@ export default function PatientsPage() {
 
               <ListToolbar
                 search={{ value: searchQuery, onChange: setSearchQuery, placeholder: t("patients.searchPlaceholder") }}
-                shown={filteredPatients.length}
-                total={patients.length}
+                shown={list.total}
+                total={totalPatients}
                 unitLabel={t("patients.patientsCount")}
                 hasActiveFilters={hasPatientFilters}
                 onClear={clearPatientFilters}
@@ -1620,6 +1593,7 @@ export default function PatientsPage() {
                   </div>
                 </div>
               )}
+              <ShowMore shown={patients.length} total={list.total} loading={list.loadingMore} onClick={list.loadMore} />
             </>
           )}
         </main>
