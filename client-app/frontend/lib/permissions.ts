@@ -16,6 +16,9 @@ export interface Me {
   id: number;
   role: string;
   permissions: string[];
+  firstName: string;
+  lastName: string;
+  email: string;
 }
 
 // The answer is cached per signed-in account. Signing in and out never reloads the page,
@@ -37,7 +40,14 @@ export function fetchMe(): Promise<Me | null> {
     .then((r) => (r.ok ? r.json() : null))
     .then((u) =>
       u?.id
-        ? { id: Number(u.id), role: String(u.role ?? ""), permissions: Array.isArray(u.permissions) ? u.permissions : [] }
+        ? {
+            id: Number(u.id),
+            role: String(u.role ?? ""),
+            permissions: Array.isArray(u.permissions) ? u.permissions : [],
+            firstName: String(u.first_name ?? ""),
+            lastName: String(u.last_name ?? ""),
+            email: String(u.email ?? ""),
+          }
         : null,
     )
     .catch(() => null)
