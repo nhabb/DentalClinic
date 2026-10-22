@@ -246,11 +246,20 @@ export const ENDPOINTS = {
   // ============================================
   // ADMIN - SETTINGS
   // ============================================
+  // The /admin/settings page; wrappers in lib/api/settings.ts.
   SETTINGS: {
-    /** GET - Get clinic settings */
-    GET: "/api/admin/settings",
-    /** PUT - Update clinic settings */
-    UPDATE: "/api/admin/settings",
+    /** GET; PATCH (clinic:settings) - name, legal name, contact, timezone, currency */
+    ORGANIZATION: "/api/organizations/me",
+    /** GET; PATCH (clinic:settings) - address and opening hours */
+    CLINIC_PROFILE: "/api/clinic-profile",
+    /** PATCH multipart "file" (clinic:settings) - the clinic logo */
+    CLINIC_LOGO: "/api/clinic-profile/logo",
+    /** GET ?include_inactive=true; POST (branches:create) */
+    BRANCHES: "/api/branches",
+    /** PATCH (branches:edit); DELETE (branches:delete, only with no data) */
+    BRANCH: (id: string | number) => `/api/branches/${id}`,
+    /** PATCH (branches:edit) - make it the default branch */
+    BRANCH_DEFAULT: (id: string | number) => `/api/branches/${id}/default`,
   },
 } as const;
 

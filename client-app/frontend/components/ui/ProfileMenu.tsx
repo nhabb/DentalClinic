@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { FaKey, FaSignOutAlt, FaChevronDown } from "react-icons/fa";
+import Link from "next/link";
+import { FaKey, FaSignOutAlt, FaChevronDown, FaCog } from "react-icons/fa";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Avatar } from "@/components/ui/Avatar";
 import { fetchMyPhoto, uploadMyPhoto } from "@/lib/profilePhoto";
@@ -12,6 +13,16 @@ import { safeStorage } from "@/lib/browser-compat";
 import ChangePasswordModal from "@/components/ui/ChangePasswordModal";
 import { useTranslation } from "@/lib/i18n";
 import { useSignOut } from "@/lib/auth/useSignOut";
+import { usePermissions } from "@/lib/permissions";
+
+/** Any of these opens a section of /admin/settings. */
+const SETTINGS_PERMISSIONS = [
+  "clinic:settings",
+  "branches:create",
+  "branches:edit",
+  "branches:delete",
+  "staff:read",
+];
 
 /**
  * Avatar trigger + account menu, mounted in AdminPageHeader so it's present
@@ -29,6 +40,8 @@ export function ProfileMenu() {
   const [userId, setUserId] = useState<number>(0);
   const [isOAuth, setIsOAuth] = useState(false);
   const [userRole, setUserRole] = useState("");
+  const { can } = usePermissions();
+  const showSettings = SETTINGS_PERMISSIONS.some(can);
 
   useEffect(() => {
     setUserRole(safeStorage.getItem("userRole") ?? "");
@@ -117,6 +130,17 @@ export function ProfileMenu() {
           </div>
 
           <div className="p-1.5">
+            {showSettings && (
+              <Link
+                href="/admin/settings"
+                onClick={() => setOpen(false)}
+                style={{ animationDelay: "0ms", animationFillMode: "backwards" }}
+                className="press flex w-full animate-in fade-in slide-in-from-top-1 items-center gap-3 rounded-xl px-3 py-2.5 text-start text-sm font-medium text-ink-700 duration-200 hover:bg-ink-100"
+              >
+                <FaCog className="shrink-0 text-ink-400" />
+                {t("settings.settings")}
+              </Link>
+            )}
             {!isOAuth && (
               <button
                 type="button"
