@@ -25,6 +25,7 @@ import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 
 import { apiFetch } from "@/lib/api/client";
 import { rememberUser } from "@/lib/auth/session";
+import { toast } from "sonner";
 import { ar, fr, enUS } from "date-fns/locale";
 import { FaTooth } from "react-icons/fa";
 
@@ -191,23 +192,26 @@ export default function SignupPage() {
       const { user } = data;
       rememberUser(user);
 
-      // Update patient profile with medical info
-      if (form.bloodType || form.medicalConditions || form.allergies || form.currentMedications) {
-        try {
-          const profileRes = await apiFetch(`/api/patients/by-user/${user.id}`);
-          if (profileRes.ok) {
-            const profile = await profileRes.json();
-            await apiFetch(`/api/patients/${profile.id}`, {
-              method: "PATCH",
-              body: JSON.stringify({
-                blood_type: form.bloodType || undefined,
-                medical_notes: form.medicalConditions || undefined,
-                allergies: form.allergies || undefined,
-                current_medications: form.currentMedications || undefined,
-              }),
-            });
-          }
-        } catch {}
+      // The rest of the form lives on the patient profile. The emergency
+      // contact is required above, so this save always runs; it used to run
+      // only when a medical field was filled, and never sent the contact.
+      try {
+        const profileRes = await apiFetch(`/api/patients/by-user/${user.id}`, {
+          method: "PATCH",
+          body: JSON.stringify({
+            emergency_contact_name: form.emergencyContact.trim(),
+            emergency_contact_phone: form.emergencyPhone.trim() || undefined,
+            blood_type: form.bloodType || undefined,
+            medical_notes: form.medicalConditions || undefined,
+            allergies: form.allergies || undefined,
+            current_medications: form.currentMedications || undefined,
+          }),
+        });
+        if (!profileRes.ok) {
+          toast.error("Your account was created, but your details could not be saved. Add them from your profile.");
+        }
+      } catch {
+        toast.error("Your account was created, but your details could not be saved. Add them from your profile.");
       }
 
       router.push("/patient-dashboard");

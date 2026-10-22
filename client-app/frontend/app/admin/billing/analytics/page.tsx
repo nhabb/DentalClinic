@@ -17,7 +17,6 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import {
   ResponsiveContainer,
   BarChart,
@@ -29,12 +28,11 @@ import {
 } from "recharts";
 import { FaFileInvoiceDollar, FaWallet, FaChartPie, FaPercentage } from "react-icons/fa";
 import { apiFetch } from "@/lib/api/client";
-import { safeStorage } from "@/lib/browser-compat";
 import AdminSidebar from "@/components/ui/AdminSidebar";
 import { AdminPageHeader } from "@/components/ui/AdminPageHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Card, Kpi, Donut, HBars, ChartTooltip, money, SERIES, INK, INVOICE_STATUS_COLOR } from "@/components/dashboard/chart-kit";
-import { signOut } from "@/lib/auth/session";
+import { useSignOut } from "@/lib/auth/useSignOut";
 
 interface Kpis {
   all_time: {
@@ -83,7 +81,6 @@ const monthLabel = (ym: string) => {
 const methodLabel = (m: string) => m.charAt(0).toUpperCase() + m.slice(1).replace(/_/g, " ");
 
 export default function BillingAnalyticsPage() {
-  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [kpis, setKpis] = useState<Kpis | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -137,16 +134,7 @@ export default function BillingAnalyticsPage() {
     };
   }, []);
 
-  const handleLogout = () => {
-    toast.success("Logged out.");
-    safeStorage.removeItem("adminAuth");
-    void signOut(); // clears the session cookie (server-side) and every hint
-    safeStorage.removeItem("adminUser");
-    safeStorage.removeItem("userRole");
-    safeStorage.removeItem("doctorId");
-    safeStorage.removeItem("assignedDoctorIds");
-    router.push("/login");
-  };
+  const handleLogout = useSignOut();
 
   // Invoices by status — totals in dollars. A cancelled invoice was never really billed.
   const statusTotals: Record<string, number> = { open: 0, partial: 0, paid: 0 };

@@ -13,6 +13,7 @@
 //   GET    /api/auth/me              → { id, permissions: string[], ... }
 
 import { apiFetch } from "./client";
+import { fetchMe as fetchSharedMe } from "@/lib/permissions";
 
 export type Permission = { key: string; label: string };
 export type PermissionGroup = { key: string; label: string; permissions: Permission[] };
@@ -93,8 +94,11 @@ export type StaffInput = {
   role: string;
 };
 
-/** A one-time set-password link; emailed is false when the server has no SMTP, so show the link. */
-export type StaffInvite = { link: string; emailed: boolean; email: string | null; expires_at: string };
+/**
+ * A one-time set-password link; emailed is false when the server has no SMTP, so show the link.
+ * `link` is null for an account already in use: its reset only goes to the owner's inbox.
+ */
+export type StaffInvite = { link: string | null; emailed: boolean; email: string | null; expires_at: string };
 
 /** The new account and its invite. */
 export type StaffCreated = { user: StaffMember; invite: StaffInvite };
@@ -110,7 +114,9 @@ export async function createStaff(input: StaffInput): Promise<StaffCreated> {
 
 export type Me = { id: string; permissions: string[] };
 
+/** The viewer, from the one shared /auth/me cache (lib/permissions). */
 export async function fetchMe(): Promise<Me> {
-  const me = await request<{ id: string | number; permissions?: string[] }>("/api/auth/me");
-  return { id: String(me.id), permissions: me.permissions ?? [] };
+  const me = await fetchSharedMe();
+  if (!me) throw new Error("Could not load your account");
+  return { id: String(me.id), permissions: me.permissions };
 }

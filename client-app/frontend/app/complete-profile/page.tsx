@@ -6,7 +6,7 @@ import { FaTooth } from "react-icons/fa";
 import Link from "next/link";
 
 import { apiFetch } from "@/lib/api/client";
-import { hasSession } from "@/lib/auth/session";
+import { ensureSession, sessionUserId } from "@/lib/auth/session";
 
 const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
@@ -39,28 +39,35 @@ export default function CompleteProfilePage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const userId = sessionStorage.getItem("userId");
+    let alive = true;
+    // ensureSession, like every other guard: a new tab with a valid cookie
+    // has no sessionStorage hints yet and gets them from /api/auth/me.
+    ensureSession().then((session) => {
+      if (!alive) return;
+      if (!session) {
+        // Arrived here without a session — go back to login
+        router.replace("/login");
+        return;
+      }
 
-    if (!hasSession() || !userId) {
-      // Arrived here without an OAuth session — go back to login
-      router.replace("/login");
-      return;
-    }
+      // Pre-fill name from Google (stored in sessionStorage by the callback)
+      const raw = sessionStorage.getItem("adminUser");
+      if (raw) {
+        try {
+          const { firstName, lastName } = JSON.parse(raw);
+          setForm((prev) => ({
+            ...prev,
+            first_name: firstName || prev.first_name,
+            last_name: lastName || prev.last_name,
+          }));
+        } catch {}
+      }
 
-    // Pre-fill name from Google (stored in sessionStorage by the callback)
-    const raw = sessionStorage.getItem("adminUser");
-    if (raw) {
-      try {
-        const { firstName, lastName } = JSON.parse(raw);
-        setForm((prev) => ({
-          ...prev,
-          first_name: firstName || prev.first_name,
-          last_name: lastName || prev.last_name,
-        }));
-      } catch {}
-    }
-
-    setIsLoading(false);
+      setIsLoading(false);
+    });
+    return () => {
+      alive = false;
+    };
   }, [router]);
 
   const handleChange = (
@@ -72,7 +79,11 @@ export default function CompleteProfilePage() {
     setIsSaving(true);
     setError("");
 
-    const userId = sessionStorage.getItem("userId")!;
+    const userId = sessionUserId();
+    if (!userId) {
+      router.replace("/login");
+      return;
+    }
 
     const {
       city, governate, emergency_contact_name, emergency_contact_phone,
@@ -82,7 +93,7 @@ export default function CompleteProfilePage() {
     } = form;
 
     try {
-      await Promise.all([
+      const answers = await Promise.all([
         apiFetch(`/api/users/${userId}`, {
           method: "PATCH",
           body: JSON.stringify(userFields),
@@ -104,6 +115,15 @@ export default function CompleteProfilePage() {
           }),
         }),
       ]);
+      // fetch does not reject on 4xx/5xx: a refused save must not pass for one.
+      const refused = answers.find((res) => !res.ok);
+      if (refused) {
+        const body = await refused.json().catch(() => null);
+        const message = Array.isArray(body?.message) ? body.message.join(", ") : body?.message;
+        setError(message || "Failed to save your profile. Please try again.");
+        setIsSaving(false);
+        return;
+      }
 
       router.replace("/patient-dashboard");
     } catch {

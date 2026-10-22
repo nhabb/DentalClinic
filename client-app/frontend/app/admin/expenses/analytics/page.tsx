@@ -9,7 +9,6 @@
 // page charts the response directly rather than re-deriving it client-side.
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   ResponsiveContainer,
@@ -22,12 +21,11 @@ import {
 } from "recharts";
 import { FaMoneyBillWave, FaCheckCircle, FaWallet, FaLayerGroup } from "react-icons/fa";
 import { apiFetch } from "@/lib/api/client";
-import { safeStorage } from "@/lib/browser-compat";
 import AdminSidebar from "@/components/ui/AdminSidebar";
 import { AdminPageHeader } from "@/components/ui/AdminPageHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Card, Kpi, Donut, ChartTooltip, money, SERIES, INK } from "@/components/dashboard/chart-kit";
-import { signOut } from "@/lib/auth/session";
+import { useSignOut } from "@/lib/auth/useSignOut";
 
 interface Analytics {
   period_months: number;
@@ -48,7 +46,6 @@ const monthLabel = (ym: string) => {
 const categoryLabel = (c: string) => c.charAt(0).toUpperCase() + c.slice(1);
 
 export default function ExpensesAnalyticsPage() {
-  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [months, setMonths] = useState<(typeof MONTH_OPTIONS)[number]>(12);
   const [data, setData] = useState<Analytics | null>(null);
@@ -74,16 +71,7 @@ export default function ExpensesAnalyticsPage() {
     };
   }, [months]);
 
-  const handleLogout = () => {
-    toast.success("Logged out.");
-    safeStorage.removeItem("adminAuth");
-    void signOut(); // clears the session cookie (server-side) and every hint
-    safeStorage.removeItem("adminUser");
-    safeStorage.removeItem("userRole");
-    safeStorage.removeItem("doctorId");
-    safeStorage.removeItem("assignedDoctorIds");
-    router.push("/login");
-  };
+  const handleLogout = useSignOut();
 
   const monthlyChart = (data?.monthly ?? []).map((m) => ({ label: monthLabel(m.month), amount: m.amount }));
   const categorySlices = (data?.by_category ?? []).map((c, i) => ({

@@ -16,7 +16,6 @@ import {
 } from "react-icons/fa";
 import { apiFetch } from "@/lib/api/client";
 import { formatDateBeirut } from "@/lib/utils";
-import { safeStorage } from "@/lib/browser-compat";
 import { usePermissions } from "@/lib/permissions";
 import AdminSidebar from "@/components/ui/AdminSidebar";
 import { AdminPageHeader } from "@/components/ui/AdminPageHeader";
@@ -52,7 +51,8 @@ import {
   type RefundableReceipt,
 } from "@/components/billing/RefundReceiptModal";
 import type { PatientOption } from "@/components/billing/NewInvoiceModal";
-import { signOut } from "@/lib/auth/session";
+import { useSignOut } from "@/lib/auth/useSignOut";
+import { fetchAllPatients } from "@/lib/api/patients";
 
 /*
  * Taking money.
@@ -267,9 +267,7 @@ export default function PaymentsPage() {
 
   const fetchPatients = useCallback(async () => {
     try {
-      const res = await apiFetch("/api/patients");
-      const json = await res.json();
-      const list = Array.isArray(json) ? json : (json.data ?? []);
+      const list = await fetchAllPatients();
       setPatients(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         list.map((p: any) => ({
@@ -327,14 +325,7 @@ export default function PaymentsPage() {
 
 
 
-  const handleLogout = () => {
-    toast.success("Logged out.");
-    safeStorage.removeItem("adminAuth");
-    safeStorage.removeItem("adminUser");
-    void signOut(); // clears the session cookie (server-side) and every hint
-    safeStorage.removeItem("userRole");
-    router.push("/login");
-  };
+  const handleLogout = useSignOut();
 
   const pickMatches = patients
     .filter((p) => p.label.toLowerCase().includes(pickSearch.trim().toLowerCase()))

@@ -8,8 +8,7 @@ const useIsomorphicLayoutEffect =
   typeof window !== "undefined" ? useLayoutEffect : useEffect;
 import { useRouter, usePathname } from "next/navigation";
 import { safeStorage } from "@/lib/browser-compat";
-import { ADMIN_ROLES, ensureSession } from "@/lib/auth/session";
-import { supabase } from "@/lib/supabase/client";
+import { ensureSession, isStaffRole } from "@/lib/auth/session";
 import AgentChat from "@/components/ui/AgentChat";
 import { CommandPalette } from "@/components/ui/CommandPalette";
 import { AdminScreenGuard } from "@/components/ui/AdminScreenGuard";
@@ -35,7 +34,7 @@ export default function AdminLayout({
     }
     // The session cookie decides; a new tab gets its role from /auth/me.
     ensureSession().then((session) => {
-      if (session && ADMIN_ROLES.includes(session.role)) setAuthChecked(true);
+      if (session && isStaffRole(session.role)) setAuthChecked(true);
       else router.push("/login");
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -43,8 +42,8 @@ export default function AdminLayout({
 
   useEffect(() => {
 
-    const resolveByEmail = async (email: string) => {
-      const res = await apiFetch(`/api/users/by-email?email=${encodeURIComponent(email)}`);
+    const resolveSignedInUser = async () => {
+      const res = await apiFetch(`/api/auth/me`);
       if (!res.ok) return;
       const user = await res.json();
       if (user?.id) {
@@ -62,13 +61,10 @@ export default function AdminLayout({
         return;
       }
 
-      // 2. Fall back: resolve by Supabase session email (OAuth users on first load)
+      // 2. Fall back: ask the API who the session belongs to (a new tab).
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user?.email) {
-          await resolveByEmail(session.user.email);
-          return;
-        }
+        await resolveSignedInUser();
+        return;
       } catch {}
 
       // 3. Last resort: use the name stored in adminUser (no ID lookup possible)

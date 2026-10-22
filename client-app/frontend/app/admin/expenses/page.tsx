@@ -19,10 +19,8 @@
 
 import { toast } from "sonner";
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
-import { safeStorage } from "@/lib/browser-compat";
 import { useTranslation } from "@/lib/i18n";
 import { usePermissions } from "@/lib/permissions";
 import AdminSidebar from "@/components/ui/AdminSidebar";
@@ -49,7 +47,26 @@ import {
   FaListUl,
   FaRedo,
 } from "react-icons/fa";
-import { signOut } from "@/lib/auth/session";
+import { useSignOut } from "@/lib/auth/useSignOut";
+import {
+  mapExpense,
+  mapPayment,
+  readError,
+  todayIso as today,
+  type Expense,
+  type ExpenseCategory,
+  type ExpensePayment,
+  type ExpenseStatus,
+  type Supplier,
+} from "@/components/expenses/expense-types";
+import { SupplierPicker } from "@/components/expenses/SupplierPicker";
+import {
+  ACCEPTED_FILES,
+  ExpenseAttachments,
+  uploadExpenseFile,
+} from "@/components/expenses/ExpenseAttachments";
+import { ExpenseListsModal, fetchExpenseLists } from "@/components/expenses/ExpenseListsModal";
+import { RemindersPanel } from "@/components/expenses/RemindersPanel";
 
 const paymentMethods = ["cash", "card", "bank_transfer", "cheque", "other"] as const;
 const paymentMethodLabelKey: Record<string, string> = {
@@ -87,7 +104,6 @@ const emptyPaymentForm = {
 type View = "all" | "to_pay" | "repeating";
 
 export default function ExpensesPage() {
-  const router = useRouter();
   // Only offer what this role's API permissions allow (the API refuses the rest anyway).
   const { can } = usePermissions();
   const { t, language } = useTranslation();
@@ -152,14 +168,7 @@ export default function ExpensesPage() {
     fetchLists();
   }, []);
 
-  const handleLogout = () => {
-    toast.success("Logged out.");
-    safeStorage.removeItem("adminAuth");
-    safeStorage.removeItem("adminUser");
-    void signOut(); // clears the session cookie (server-side) and every hint
-    safeStorage.removeItem("userRole");
-    router.push("/login");
-  };
+  const handleLogout = useSignOut();
 
   /** The clinic's own name for a category, falling back to the old translations. */
   const categoryLabel = (key: string) => {

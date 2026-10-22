@@ -573,7 +573,9 @@ export function PatientDrawer({
                   <FlowArrow />
                   <FlowStage
                     stage={MONEY_WORD.paid}
-                    value={`$${money(figures.received)}`}
+                    // Applied, not received: credit held is not a stage, and
+                    // billed - applied = due_now is what this chain shows.
+                    value={`$${money(figures.applied)}`}
                     accent="leaf"
                     leak={
                       figures.due_now > 0 ? (

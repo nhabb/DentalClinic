@@ -18,9 +18,12 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # .env.local is copied in via COPY . . above — Next.js reads NEXT_PUBLIC_* from
-# it automatically during build. We only override API_URL to empty so all API
-# calls go through nginx as relative paths (/api/…) instead of localhost:5000.
+# it automatically during build. Both proxy settings are emptied here: the
+# /api rewrite is fixed at build time, so a value from .env.local would bake
+# a proxy to the container's own localhost into the image. Behind Docker,
+# nginx routes /api instead (next.config.ts adds no rewrite when both are empty).
 ENV NEXT_PUBLIC_API_URL=""
+ENV API_PROXY_TARGET=""
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 

@@ -8,6 +8,18 @@ export function formatMoney(amount: number, currency = "USD"): string {
   }
 }
 
+/**
+ * Money in several currencies, one amount per currency ("$1,200 · LBP 3,000,000").
+ * Amounts in different currencies are never added together.
+ */
+export function formatMoneyByCurrency(
+  rows: { currency: string; amount: number }[],
+): string {
+  const shown = rows.filter((r) => r.amount !== 0);
+  if (shown.length === 0) return formatMoney(0, rows[0]?.currency ?? "USD");
+  return shown.map((r) => formatMoney(r.amount, r.currency)).join(" · ");
+}
+
 export function formatNumber(n: number): string {
   return n.toLocaleString("en");
 }
@@ -42,6 +54,8 @@ export function slugify(name: string): string {
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "")
     .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 60);
+    .slice(0, 60)
+    // Trimmed after the cut: cutting at a word break would otherwise leave a
+    // trailing "-" that the onboarding form's own pattern then refuses.
+    .replace(/^-+|-+$/g, "");
 }

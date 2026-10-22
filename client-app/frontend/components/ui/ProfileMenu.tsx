@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { FaKey, FaSignOutAlt, FaChevronDown } from "react-icons/fa";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -12,7 +11,7 @@ import { apiFetch } from "@/lib/api/client";
 import { safeStorage } from "@/lib/browser-compat";
 import ChangePasswordModal from "@/components/ui/ChangePasswordModal";
 import { useTranslation } from "@/lib/i18n";
-import { signOut } from "@/lib/auth/session";
+import { useSignOut } from "@/lib/auth/useSignOut";
 
 /**
  * Avatar trigger + account menu, mounted in AdminPageHeader so it's present
@@ -21,7 +20,6 @@ import { signOut } from "@/lib/auth/session";
  * lived at the bottom of AdminSidebar).
  */
 export function ProfileMenu() {
-  const router = useRouter();
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
@@ -84,16 +82,7 @@ export function ProfileMenu() {
     }
   };
 
-  const handleLogout = () => {
-    toast.success("Logged out.");
-    safeStorage.removeItem("adminAuth");
-    void signOut(); // clears the session cookie (server-side) and every hint
-    safeStorage.removeItem("adminUser");
-    safeStorage.removeItem("userRole");
-    safeStorage.removeItem("doctorId");
-    safeStorage.removeItem("assignedDoctorIds");
-    router.push("/login");
-  };
+  const handleLogout = useSignOut();
 
   return (
     <>

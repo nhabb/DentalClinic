@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api/client";
+import { sessionUserId } from "@/lib/auth/session-keys";
 
 /**
  * What the signed-in user may do, as the API decides it.
@@ -17,27 +18,21 @@ export interface Me {
   permissions: string[];
 }
 
-// The answer is cached per token. Signing in and out never reloads the page,
-// so a cache that outlived the token showed the previous session's menu (or,
+// The answer is cached per signed-in account. Signing in and out never reloads the page,
+// so a cache that outlived the session showed the previous session's menu (or,
 // after a request made while signed out, no menu at all) until a hard reload.
 let me: Promise<Me | null> | null = null;
-let meToken: string | null = null;
-
-function currentToken(): string | null {
-  try {
-    return sessionStorage.getItem("authToken");
-  } catch {
-    return null;
-  }
-}
+let meUser: string | null = null;
 
 export function fetchMe(): Promise<Me | null> {
   if (typeof window === "undefined") return Promise.resolve(null);
-  const token = currentToken();
-  if (!token) return Promise.resolve(null);
-  if (me && meToken === token) return me;
+  // The token is an httpOnly cookie this page cannot read; the account the
+  // tab signed in as stands in for it. A new tab may not know it yet, so it
+  // still asks: the cookie decides.
+  const user = sessionUserId() ?? "";
+  if (me && meUser === user) return me;
 
-  meToken = token;
+  meUser = user;
   const request: Promise<Me | null> = apiFetch("/api/auth/me")
     .then((r) => (r.ok ? r.json() : null))
     .then((u) =>
@@ -58,7 +53,7 @@ export function fetchMe(): Promise<Me | null> {
 /** Forget the cached user (after login, logout or a role change). */
 export function resetMe(): void {
   me = null;
-  meToken = null;
+  meUser = null;
 }
 
 /**

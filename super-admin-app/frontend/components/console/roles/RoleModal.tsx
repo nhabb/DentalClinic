@@ -119,7 +119,10 @@ export function RoleModal({
             <FormField label="Key" required hint="Lowercase, e.g. hygienist. Cannot change later.">
               <Input
                 required
-                pattern="[a-z][a-z0-9_-]{1,39}"
+                // "-" goes last, escaped: browsers compile `pattern` with the
+                // v flag, where an unescaped "-" in a class is a syntax error
+                // and the whole constraint is silently dropped.
+                pattern="[a-z][a-z0-9_\-]{1,39}"
                 value={form.key}
                 onChange={(e) => setForm({ ...form, key: e.target.value })}
                 placeholder="hygienist"

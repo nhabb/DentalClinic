@@ -7,7 +7,6 @@ import { useState, useEffect } from "react";
 import { apiFetch } from "@/lib/api/client";
 import { useClinicIdentity } from "@/lib/clinic";
 import { formatDateBeirut } from "@/lib/utils";
-import { safeStorage } from "@/lib/browser-compat";
 import { useTranslation } from "@/lib/i18n";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
@@ -21,7 +20,7 @@ import {
   FaChevronDown,
   FaChevronUp,
 } from "react-icons/fa";
-import { signOut } from "@/lib/auth/session";
+import { useSignOut } from "@/lib/auth/useSignOut";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -140,12 +139,7 @@ export default function PatientBillingPage() {
     fetchData();
   }, []);
 
-  const handleLogout = () => {
-    safeStorage.removeItem("patientAuth");
-    void signOut(); // clears the session cookie (server-side) and every hint
-    safeStorage.removeItem("userRole");
-    router.push("/login");
-  };
+  const handleLogout = useSignOut();
 
   const toggleExpand = (id: number) =>
     setExpandedId((prev) => (prev === id ? null : id));

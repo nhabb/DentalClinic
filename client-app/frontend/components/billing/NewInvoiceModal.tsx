@@ -11,7 +11,6 @@ import { FormField, inputClass } from "@/components/ui/FormField";
 import { Avatar } from "@/components/ui/Avatar";
 import { clinicToday, money, readError } from "./quote-doc";
 import {
-  DEFAULT_PRICES,
   Invoice,
   normalizeInvoice,
   PROCEDURES,
@@ -107,6 +106,9 @@ export function NewInvoiceModal({
 
   /** The patient's unbilled completed work becomes the starting lines. */
   useEffect(() => {
+    // Lines belong to one patient: drop the previous patient's before
+    // loading, so they can never show (or be issued) under another name.
+    setLines([]);
     if (!open || !patientId) return;
     let cancelled = false;
     setLoadingWork(true);
@@ -125,17 +127,20 @@ export function NewInvoiceModal({
             recordId: Number(r.id),
             procedure: r.title,
             tooth: r.tooth_number ?? '',
-            // The price the plan carries; the chart is where it was set.
-            amount: String(r.quoted_amount ?? DEFAULT_PRICES[r.title] ?? ''),
-            included: true,
+            // The price the plan carries; the chart is where it was set. An
+            // unpriced line stays empty and unticked: a list price the chart
+            // never set must not end up on the bill unnoticed.
+            amount: r.quoted_amount == null ? '' : String(r.quoted_amount),
+            included: r.quoted_amount != null,
             // Planned work bills as readily as completed work: a patient
             // paying for a crown before it is cut is the ordinary case.
             hint:
-              r.state === 'done'
+              (r.state === 'done'
                 ? r.treatment_date
                   ? `Done ${formatDateBeirut(r.treatment_date)}`
                   : 'Done'
-                : 'Planned, not done yet',
+                : 'Planned, not done yet') +
+              (r.quoted_amount == null ? ' · not priced on the chart' : ''),
           })),
         );
       } catch {
@@ -518,7 +523,7 @@ export function NewInvoiceModal({
           <Button variant="outline" onClick={onClose} disabled={saving} className="mr-auto">
             Cancel
           </Button>
-          <Button onClick={submit} disabled={saving || included.length === 0}>
+          <Button onClick={submit} disabled={saving || loadingWork || included.length === 0}>
             {saving ? "Issuing…" : `Issue invoice ($${money(total)})`}
           </Button>
         </div>

@@ -10,7 +10,8 @@ import { Modal } from "@/components/ui/Modal";
 import { ApiError, post } from "@/lib/api";
 import type { Invite, Role } from "@/lib/types";
 
-const empty = { first_name: "", last_name: "", email: "", phone: "", role: "admin" };
+// No role is pre-chosen: an unchosen role used to mean a full clinic admin.
+const empty = { first_name: "", last_name: "", email: "", phone: "", role: "" };
 
 /** Creates a staff account; the person receives a link to set their password in the clinic app. */
 export function AddStaffModal({
@@ -68,7 +69,7 @@ export function AddStaffModal({
           <Button variant="ghost" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit" form="add-staff" disabled={busy}>
+          <Button type="submit" form="add-staff" disabled={busy || !form.role}>
             {busy ? "Creating…" : "Create account"}
           </Button>
         </div>
@@ -93,7 +94,15 @@ export function AddStaffModal({
           <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
         </FormField>
         <FormField label="Role" className="sm:col-span-2" hint="Roles come from the clinic's own list; edit them on the Roles tab.">
-          <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} className={inputClass}>
+          <select
+            required
+            value={form.role}
+            onChange={(e) => setForm({ ...form, role: e.target.value })}
+            className={inputClass}
+          >
+            <option value="" disabled>
+              {staffRoles.length === 0 ? "Loading roles…" : "Choose a role"}
+            </option>
             {staffRoles.map((r) => (
               <option key={r.key} value={r.key}>
                 {r.name} ({r.key})
