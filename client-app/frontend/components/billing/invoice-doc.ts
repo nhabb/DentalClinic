@@ -62,6 +62,8 @@ export type InvoiceLineItem = {
 
 export type InvoicePayment = {
   id: number;
+  /** The receipt (RT…) this money came from, or the refund (RF…). */
+  document_number?: string;
   /** payment = money received, refund = money returned (shown as a minus). */
   kind: "payment" | "refund";
   amount: number;
@@ -75,7 +77,7 @@ export type InvoicePayment = {
 
 export type Invoice = {
   id: number;
-  /** Sequential per clinic and year (INV-2026-00017): what the patient sees. */
+  /** IV26-00017: sequential per clinic and year, what the patient sees. */
   invoice_number: string;
   patient: {
     id: number;
@@ -85,10 +87,13 @@ export type Invoice = {
   /** Payment terms: balances age from this day. */
   due_date: string;
   notes?: string;
-  /** Lines before the discount; total_amount = subtotal - discount_amount. */
+  /** Lines before the discount; total_amount = subtotal - discount_amount + vat_amount. */
   subtotal: number;
   discount_amount: number;
   discount_reason?: string | null;
+  /** VAT rate in percent (0 unless the user entered one), charged after the discount. */
+  vat_percent: number;
+  vat_amount: number;
   total_amount: number;
   amount_paid: number;
   remaining_amount: number;
@@ -123,6 +128,8 @@ export function normalizeInvoice(inv: any): Invoice {
     due_date: inv.due_date ?? inv.procedure_date,
     subtotal: Number(inv.subtotal ?? inv.total_amount),
     discount_amount: Number(inv.discount_amount ?? 0),
+    vat_percent: Number(inv.vat_percent ?? 0),
+    vat_amount: Number(inv.vat_amount ?? 0),
     total_amount: Number(inv.total_amount),
     amount_paid: Number(inv.amount_paid),
     remaining_amount: Number(inv.remaining_amount),
@@ -155,7 +162,7 @@ export function printInvoice(inv: Invoice) {
   const received = inv.invoice_payments
     .map(
       (p) =>
-        `<tr><td>${formatDateBeirut(p.payment_date)} · ${p.kind === "refund" ? "Refund" : "Payment"} · ${esc(p.payment_method)}${p.reason ? ` <small>${esc(p.reason)}</small>` : ""}</td><td class="r">${p.kind === "refund" ? "−" : ""}${money(p.amount)}</td></tr>`,
+        `<tr><td>${formatDateBeirut(p.payment_date)} · ${p.kind === "refund" ? "Refund" : "Receipt"}${p.document_number ? ` ${esc(p.document_number)}` : ""} · ${esc(p.payment_method)}${p.reason ? ` <small>${esc(p.reason)}</small>` : ""}</td><td class="r">${p.kind === "refund" ? "−" : ""}${money(p.amount)}</td></tr>`,
     )
     .join("");
   const overdue = daysOverdue(inv);
@@ -165,11 +172,20 @@ export function printInvoice(inv: Invoice) {
       : inv.status === "paid"
         ? ' <span class="stamp">PAID</span>'
         : "";
+  const plain = 'style="font-weight:400"';
   const discountRows =
-    inv.discount_amount > 0
-      ? `<tr><td style="font-weight:400">Subtotal</td><td class="r" style="font-weight:400">${money(inv.subtotal)}</td></tr><tr><td style="font-weight:400">Discount${
-          inv.discount_reason ? ` <small>${esc(inv.discount_reason)}</small>` : ""
-        }</td><td class="r" style="font-weight:400">−${money(inv.discount_amount)}</td></tr>`
+    inv.discount_amount > 0 || inv.vat_amount > 0
+      ? `<tr><td ${plain}>Subtotal</td><td class="r" ${plain}>${money(inv.subtotal)}</td></tr>${
+          inv.discount_amount > 0
+            ? `<tr><td ${plain}>Discount${
+                inv.discount_reason ? ` <small>${esc(inv.discount_reason)}</small>` : ""
+              }</td><td class="r" ${plain}>−${money(inv.discount_amount)}</td></tr>`
+            : ""
+        }${
+          inv.vat_amount > 0
+            ? `<tr><td ${plain}>VAT ${money(inv.vat_percent).replace(/\.00$/, "")}%</td><td class="r" ${plain}>${money(inv.vat_amount)}</td></tr>`
+            : ""
+        }`
       : "";
   w.document
     .write(`<!doctype html><html><head><title>Invoice ${esc(inv.invoice_number)}</title>

@@ -79,6 +79,8 @@ export function NewInvoiceModal({
   const [dueDate, setDueDate] = useState("");
   const [discount, setDiscount] = useState("");
   const [discountReason, setDiscountReason] = useState("");
+  /** VAT in percent; 0 (no VAT) unless the user types a rate. */
+  const [vatPercent, setVatPercent] = useState("");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -91,6 +93,7 @@ export function NewInvoiceModal({
     setDueDate("");
     setDiscount("");
     setDiscountReason("");
+    setVatPercent("");
     setNotes("");
     setError("");
   }, []);
@@ -183,7 +186,13 @@ export function NewInvoiceModal({
     setLines((prev) => prev.map((l) => ({ ...l, included: include })));
   const subtotal = included.reduce((s, l) => s + (parseFloat(l.amount) || 0), 0);
   const draftDiscount = parseFloat(discount) || 0;
-  const total = Math.max(0, subtotal - draftDiscount);
+  // The server's rule (invoice-math.ts): VAT is charged after the discount,
+  // each figure rounded to cents.
+  const round2 = (n: number) => Math.round(n * 100) / 100;
+  const draftVat = parseFloat(vatPercent) || 0;
+  const taxable = Math.max(0, round2(subtotal - draftDiscount));
+  const vatAmount = round2((taxable * draftVat) / 100);
+  const total = round2(taxable + vatAmount);
   const patient = patients.find((p) => p.id === patientId) ?? null;
 
   const submit = async () => {
@@ -199,6 +208,8 @@ export function NewInvoiceModal({
       return setError("The discount cannot exceed the lines.");
     if (draftDiscount > 0 && discountReason.trim().length < 3)
       return setError("Say why the discount is given.");
+    if (draftVat < 0 || draftVat > 100)
+      return setError("VAT must be between 0% and 100%.");
     if (dueDate && dueDate < procedureDate)
       return setError("The due date cannot be before the work date.");
 
@@ -216,6 +227,7 @@ export function NewInvoiceModal({
                 discount_reason: discountReason.trim(),
               }
             : {}),
+          ...(draftVat > 0 ? { vat_percent: draftVat } : {}),
           ...(notes.trim() ? { notes: notes.trim() } : {}),
           line_items: included.map((l) => ({
             ...(l.recordId ? { record_id: l.recordId } : {}),
@@ -463,6 +475,19 @@ export function NewInvoiceModal({
           </FormField>
         </div>
 
+        <FormField label="VAT %">
+          <input
+            type="number"
+            min="0"
+            max="100"
+            step="0.01"
+            placeholder="0 (no VAT)"
+            value={vatPercent}
+            onChange={(e) => setVatPercent(e.target.value)}
+            className={inputClass}
+          />
+        </FormField>
+
         <FormField label="Note on the invoice">
           <input
             type="text"
@@ -474,10 +499,15 @@ export function NewInvoiceModal({
         </FormField>
 
         <div className="space-y-0.5 text-right text-sm text-gray-700">
-          {draftDiscount > 0 && (
+          {(draftDiscount > 0 || vatAmount > 0) && (
             <>
               <p>Lines: ${money(subtotal)}</p>
-              <p>Discount: −${money(draftDiscount)}</p>
+              {draftDiscount > 0 && <p>Discount: −${money(draftDiscount)}</p>}
+              {vatAmount > 0 && (
+                <p>
+                  VAT {draftVat}%: ${money(vatAmount)}
+                </p>
+              )}
             </>
           )}
           <p className="font-semibold text-gray-900">Total to bill: ${money(total)}</p>

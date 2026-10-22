@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api/client";
+import { sessionUserId } from "@/lib/auth/session-keys";
 
 /**
  * What the signed-in user may do, as the API decides it.
@@ -17,37 +18,52 @@ export interface Me {
   permissions: string[];
 }
 
+// The answer is cached per signed-in account. Signing in and out never reloads the page,
+// so a cache that outlived the session showed the previous session's menu (or,
+// after a request made while signed out, no menu at all) until a hard reload.
 let me: Promise<Me | null> | null = null;
+let meUser: string | null = null;
 
 export function fetchMe(): Promise<Me | null> {
   if (typeof window === "undefined") return Promise.resolve(null);
-  if (me) return me;
-  const loading = apiFetch("/api/auth/me")
+  // The token is an httpOnly cookie this page cannot read; the account the
+  // tab signed in as stands in for it. A new tab may not know it yet, so it
+  // still asks: the cookie decides.
+  const user = sessionUserId() ?? "";
+  if (me && meUser === user) return me;
+
+  meUser = user;
+  const request: Promise<Me | null> = apiFetch("/api/auth/me")
     .then((r) => (r.ok ? r.json() : null))
     .then((u) =>
       u?.id
         ? { id: Number(u.id), role: String(u.role ?? ""), permissions: Array.isArray(u.permissions) ? u.permissions : [] }
         : null,
     )
-    .catch(() => null);
-  me = loading;
-  // A failure is not cached: one network blip must not hide every screen
-  // until a full reload.
-  void loading.then((u) => {
-    if (!u && me === loading) me = null;
-  });
-  return loading;
+    .catch(() => null)
+    .then((user) => {
+      // A failed answer is not kept: the next screen asks again.
+      if (!user && me === request) resetMe();
+      return user;
+    });
+  me = request;
+  return request;
 }
 
 /** Forget the cached user (after login, logout or a role change). */
 export function resetMe(): void {
   me = null;
+  meUser = null;
 }
 
-/** True when the user holds the permission. Platform superadmins hold everything. */
+/**
+ * True when the user holds the permission. Platform superadmins and clinic
+ * admins hold everything: the API grants an admin the whole catalog in code
+ * (RolesService.permissionsFor), so the screens must not depend on the list.
+ */
 export function can(user: Me | null, permission: string): boolean {
   if (!user) return false;
-  if (user.role === "superadmin") return true;
+  if (user.role === "superadmin" || user.role === "admin") return true;
   return user.permissions.includes(permission);
 }
 
