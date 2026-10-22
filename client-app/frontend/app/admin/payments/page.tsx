@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -53,6 +53,8 @@ import {
 import type { PatientOption } from "@/components/billing/NewInvoiceModal";
 import { useSignOut } from "@/lib/auth/useSignOut";
 import { fetchAllPatients } from "@/lib/api/patients";
+import { ShowMore } from "@/components/ui/ShowMore";
+import { useDebounced, usePagedList } from "@/lib/api/paged";
 
 /*
  * Taking money.
@@ -90,7 +92,7 @@ type ByMethod = { method: string; payments: number; refunds: number; net: number
 const num = (v: unknown) => Number(v ?? 0);
 const methodLabel = (m: string) => m.replace(/_/g, " ");
 
-/** The receipt filters the desk asks for; "refunds" lists RF rows. */
+/** The receipt filters the desk asks for (the API applies them); "refunds" lists RF rows. */
 const RECEIPT_FILTERS = {
   all: "All",
   open: "Open",
@@ -99,13 +101,6 @@ const RECEIPT_FILTERS = {
 } as const;
 type ReceiptFilter = keyof typeof RECEIPT_FILTERS;
 
-const matchesFilter = (r: ReceiptRow, f: ReceiptFilter) => {
-  if (f === "all") return true;
-  if (f === "refunds") return r.kind === "refund";
-  if (r.kind === "refund") return false;
-  // "Open" is anything still holding money; "Used" is fully on bills.
-  return f === "open" ? (r.figures?.held ?? 0) > 0 : r.status === "used";
-};
 
 /** The windows a desk actually asks for. "Today" is the clinic's day. */
 const WINDOWS = {
@@ -142,8 +137,6 @@ export default function PaymentsPage() {
   const [window_, setWindow] = useState<WindowId>("today");
   const [search, setSearch] = useState("");
 
-  const [owed, setOwed] = useState<Owed[]>([]);
-  const [taken, setTaken] = useState<ReceiptRow[]>([]);
   const [byMethod, setByMethod] = useState<ByMethod[]>([]);
   const [takenNet, setTakenNet] = useState(0);
   /** Clinic-wide unpaid and overdue, from the server’s one definition. */
@@ -166,39 +159,42 @@ export default function PaymentsPage() {
 
   const range = windowRange(window_);
 
+  // Both registers page ten at a time; the API searches, filters and counts.
+  const q = useDebounced(search.trim());
+  const owedList = usePagedList<Owed, { all: number }>({
+    path: "/api/billing/outstanding",
+    params: { search: q },
+    map: (r: Record<string, unknown>) =>
+      ({
+        ...(r as object),
+        id: Number(r.id),
+        patient_id: Number(r.patient_id),
+        total_amount: num(r.total_amount),
+        amount_paid: num(r.amount_paid),
+        remaining: num(r.remaining),
+        days_overdue: Number(r.days_overdue ?? 0),
+      }) as Owed,
+    withCounts: true,
+  });
+  const takenList = usePagedList<ReceiptRow, Record<ReceiptFilter, number>>({
+    path: "/api/billing/receipts",
+    params: { search: q, filter: receiptFilter, from: range.from, to: range.to },
+    map: normalizeReceipt,
+    withCounts: true,
+  });
+  const owed = owedList.rows;
+  const taken = takenList.rows;
+
   const load = useCallback(async () => {
-    const q = new URLSearchParams({ limit: "400" });
-    if (range.from) q.set("from", range.from);
-    if (range.to) q.set("to", range.to);
     const summaryQ = new URLSearchParams();
     if (range.from) summaryQ.set("from", range.from);
     if (range.to) summaryQ.set("to", range.to);
 
     try {
-      const [oRes, tRes, sRes, kRes] = await Promise.all([
-        apiFetch("/api/billing/outstanding"),
-        apiFetch(`/api/billing/receipts?${q}`),
+      const [sRes, kRes] = await Promise.all([
         apiFetch(`/api/billing/summary?${summaryQ}`),
         apiFetch("/api/billing/kpis"),
       ]);
-      if (oRes.ok) {
-        const rows = await oRes.json();
-        setOwed(
-          (Array.isArray(rows) ? rows : []).map((r: Record<string, unknown>) => ({
-            ...(r as object),
-            id: Number(r.id),
-            patient_id: Number(r.patient_id),
-            total_amount: num(r.total_amount),
-            amount_paid: num(r.amount_paid),
-            remaining: num(r.remaining),
-            days_overdue: Number(r.days_overdue ?? 0),
-          })) as Owed[],
-        );
-      }
-      if (tRes.ok) {
-        const rows = await tRes.json();
-        setTaken((Array.isArray(rows) ? rows : []).map(normalizeReceipt));
-      }
       if (sRes.ok) {
         const s = await sRes.json();
         // The headline and the split come from the server together, so the
@@ -222,6 +218,14 @@ export default function PaymentsPage() {
   useEffect(() => {
     void load();
   }, [load, moneyMoved]);
+
+  // Money moved: the registers ask again too (the first load is the hooks' own).
+  useEffect(() => {
+    if (moneyMoved === 0) return;
+    void owedList.reload();
+    void takenList.reload();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [moneyMoved]);
 
   /**
    * `/admin/payments?patient=<id>` opens that patient’s money file — where
@@ -297,33 +301,8 @@ export default function PaymentsPage() {
 
   const refresh = () => setMoneyMoved((n) => n + 1);
 
-  const q = search.trim().toLowerCase();
-  const owedShown = useMemo(
-    () =>
-      owed.filter(
-        (r) =>
-          !q ||
-          r.patient_name.toLowerCase().includes(q) ||
-          r.invoice_number.toLowerCase().includes(q),
-      ),
-    [owed, q],
-  );
-  const takenShown = useMemo(
-    () =>
-      taken.filter(
-        (r) =>
-          matchesFilter(r, receiptFilter) &&
-          (!q ||
-            r.patient_name.toLowerCase().includes(q) ||
-            r.document_number.toLowerCase().includes(q) ||
-            r.allocations.some((a) =>
-              (a.invoice?.invoice_number ?? "").toLowerCase().includes(q),
-            )),
-      ),
-    [taken, q, receiptFilter],
-  );
-
-
+  const owedShown = owed;
+  const takenShown = taken;
 
   const handleLogout = useSignOut();
 
@@ -421,8 +400,8 @@ export default function PaymentsPage() {
                 value={view}
                 onChange={setView}
                 items={[
-                  { id: "owed", label: "Owed", icon: <FaFileInvoiceDollar />, count: owed.length },
-                  { id: "taken", label: "Receipts", icon: <FaReceipt />, count: taken.length },
+                  { id: "owed", label: "Owed", icon: <FaFileInvoiceDollar />, count: owedList.counts?.all ?? 0 },
+                  { id: "taken", label: "Receipts", icon: <FaReceipt />, count: takenList.counts?.all ?? 0 },
                 ]}
               />
 
@@ -432,8 +411,8 @@ export default function PaymentsPage() {
                   onChange: setSearch,
                   placeholder: "Search by patient, RT / RF or bill number",
                 }}
-                shown={view === "owed" ? owedShown.length : takenShown.length}
-                total={view === "owed" ? owed.length : taken.length}
+                shown={view === "owed" ? owedList.total : takenList.total}
+                total={view === "owed" ? owedList.counts?.all ?? 0 : takenList.counts?.all ?? 0}
                 unitLabel={view === "owed" ? "bills" : "receipts"}
                 groups={
                   view === "taken"
@@ -446,6 +425,7 @@ export default function PaymentsPage() {
                           options: (Object.keys(RECEIPT_FILTERS) as ReceiptFilter[]).map((id) => ({
                             value: id,
                             label: RECEIPT_FILTERS[id],
+                            count: takenList.counts?.[id] ?? 0,
                           })),
                         },
                         {
@@ -546,6 +526,7 @@ export default function PaymentsPage() {
                         ))}
                       </tbody>
                     </table>
+                    <ShowMore shown={owed.length} total={owedList.total} loading={owedList.loadingMore} onClick={owedList.loadMore} />
                   </div>
                 ))}
 
@@ -661,6 +642,9 @@ export default function PaymentsPage() {
                     })}
                   </ul>
                 ))}
+              {view === "taken" && takenShown.length > 0 && (
+                <ShowMore shown={taken.length} total={takenList.total} loading={takenList.loadingMore} onClick={takenList.loadMore} />
+              )}
             </>
           )}
         </main>
