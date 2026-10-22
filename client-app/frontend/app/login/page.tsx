@@ -11,15 +11,7 @@ import { useTranslation } from "@/lib/i18n";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { supabase } from "@/lib/supabase/client";
 import { apiFetch } from "@/lib/api/client";
-import { rememberUser } from "@/lib/auth/session";
-
-const ROLE_REDIRECTS: Record<string, string> = {
-  patient: "/patient-dashboard",
-  doctor: "/admin",
-  admin: "/admin",
-  secretary: "/admin",
-  superadmin: "/superadmin",
-};
+import { homeFor, rememberUser } from "@/lib/auth/session";
 
 const DEMO_ACCOUNTS = [
   { role: "Patient",   email: "patient@demo.com",   password: "demo123", icon: FaUser,   color: "text-blue-500" },
@@ -39,6 +31,7 @@ export default function LoginPage() {
   useEffect(() => {
     const reason = new URLSearchParams(window.location.search).get("reason");
     if (reason === "switched") setError(t("session.switchedAccount"));
+    if (reason === "expired") setError(t("session.sessionExpired"));
     if (reason === "google") setError(t("session.googleFailed"));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -90,7 +83,7 @@ export default function LoginPage() {
       rememberUser(user);
 
       toast.success("Logged in successfully.");
-      const redirect = ROLE_REDIRECTS[user.role] ?? "/patient-dashboard";
+      const redirect = homeFor(user.role);
       router.push(redirect);
     } catch {
       setError("Unable to connect to server. Please try again.");

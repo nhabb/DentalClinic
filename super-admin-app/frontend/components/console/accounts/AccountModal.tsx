@@ -48,6 +48,13 @@ export function AccountModal({
     });
   }, [isOpen, account]);
 
+  // A restriction needs a home branch and never applies to administrators.
+  // While it can't apply, it is shown unticked and sent as false; sending the
+  // stale true made the API refuse the save, with the box greyed out.
+  const canRestrict = !!form.branch_id && form.role !== "admin";
+  // Patients may sign up with a phone only; staff always have an email.
+  const emailRequired = !isPatient || !!account?.email;
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!account) return;
@@ -57,7 +64,8 @@ export function AccountModal({
       await patch(`/organizations/${account.organization_id}/accounts/${account.id}`, {
         first_name: form.first_name.trim(),
         last_name: form.last_name.trim(),
-        email: form.email.trim(),
+        // An empty email on a phone-only account means "still none", not "".
+        ...(form.email.trim() ? { email: form.email.trim() } : {}),
         phone: form.phone,
         is_active: form.is_active,
         ...(isPatient
@@ -65,7 +73,7 @@ export function AccountModal({
           : {
               role: form.role,
               branch_id: form.branch_id ? Number(form.branch_id) : null,
-              restrict_to_branch: form.restrict_to_branch,
+              restrict_to_branch: canRestrict && form.restrict_to_branch,
             }),
       });
       toast.success("Account saved");
@@ -107,8 +115,13 @@ export function AccountModal({
         <FormField label="Last name" required>
           <Input required value={form.last_name} onChange={(e) => set("last_name", e.target.value)} />
         </FormField>
-        <FormField label="Email" required>
-          <Input type="email" required value={form.email} onChange={(e) => set("email", e.target.value)} />
+        <FormField label="Email" required={emailRequired}>
+          <Input
+            type="email"
+            required={emailRequired}
+            value={form.email}
+            onChange={(e) => set("email", e.target.value)}
+          />
         </FormField>
         <FormField label="Phone">
           <Input value={form.phone} onChange={(e) => set("phone", e.target.value)} />
@@ -140,8 +153,8 @@ export function AccountModal({
             <label className="flex items-center gap-3 text-sm text-ink-800 sm:col-span-2">
               <input
                 type="checkbox"
-                checked={form.restrict_to_branch}
-                disabled={!form.branch_id || form.role === "admin"}
+                checked={canRestrict && form.restrict_to_branch}
+                disabled={!canRestrict}
                 onChange={(e) => set("restrict_to_branch", e.target.checked)}
                 className="h-4 w-4 rounded border-ink-300"
               />

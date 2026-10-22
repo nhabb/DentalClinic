@@ -4,9 +4,7 @@ import { toast } from 'sonner';
 import { ClinicName } from "@/components/ui/ClinicName";
 import { uploadMyPhoto } from "@/lib/profilePhoto";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { safeStorage } from "@/lib/browser-compat";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/i18n";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
@@ -23,10 +21,9 @@ import {
   FaFileInvoiceDollar,
   FaKey,
 } from "react-icons/fa";
-import { signOut } from "@/lib/auth/session";
+import { useSignOut } from "@/lib/auth/useSignOut";
 
 export default function PatientDashboard() {
-  const router = useRouter();
   const clinic = useClinicIdentity();
   const { t } = useTranslation();
   const [upcomingAppointments, setUpcomingAppointments] = useState<any[]>([]);
@@ -95,13 +92,7 @@ export default function PatientDashboard() {
     }
   };
 
-  const handleLogout = () => {
-    toast.success("Logged out.");
-    safeStorage.removeItem("patientAuth");
-    void signOut(); // clears the session cookie (server-side) and every hint
-    safeStorage.removeItem("userRole");
-    router.push("/login");
-  };
+  const handleLogout = useSignOut();
 
   const quickActions = [
     {

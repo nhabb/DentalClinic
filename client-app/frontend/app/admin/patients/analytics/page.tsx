@@ -12,18 +12,17 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import { FaUsers, FaUserCheck, FaUserPlus, FaCalendarCheck } from "react-icons/fa";
 import { apiFetch } from "@/lib/api/client";
-import { safeStorage } from "@/lib/browser-compat";
 import AdminSidebar from "@/components/ui/AdminSidebar";
 import { AdminPageHeader } from "@/components/ui/AdminPageHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Card, Kpi, Donut, HBars, ChartTooltip, SERIES, INK, STATUS } from "@/components/dashboard/chart-kit";
 import { RangeKey, RANGES, rangeBounds, bucketsFor, granularityFor, within, pct } from "@/components/dashboard/date-range";
 import TeethReport, { type RecordRow } from "@/components/dashboard/TeethReport";
-import { signOut } from "@/lib/auth/session";
+import { useSignOut } from "@/lib/auth/useSignOut";
+import { fetchAllPatients } from "@/lib/api/patients";
 
 interface PatientRow {
   id: number;
@@ -40,7 +39,6 @@ const bucketLabel = (b: { start: string; end: string }, g: ReturnType<typeof gra
 };
 
 export default function PatientsAnalyticsPage() {
-  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [range, setRange] = useState<RangeKey>("12m");
   const [patients, setPatients] = useState<PatientRow[]>([]);
@@ -54,7 +52,7 @@ export default function PatientsAnalyticsPage() {
     let cancelled = false;
     setLoading(true);
     Promise.all([
-      apiFetch("/api/patients?limit=1000").then((r) => (r.ok ? r.json() : { data: [] })),
+      fetchAllPatients().then((data) => ({ data })).catch(() => ({ data: [] })),
       apiFetch("/api/appointments?limit=2000").then((r) => (r.ok ? r.json() : { data: [] })),
       apiFetch("/api/patient-records?limit=1000").then((r) => (r.ok ? r.json() : { data: [] })),
     ])
@@ -104,16 +102,7 @@ export default function PatientsAnalyticsPage() {
     };
   }, []);
 
-  const handleLogout = () => {
-    toast.success("Logged out.");
-    safeStorage.removeItem("adminAuth");
-    void signOut(); // clears the session cookie (server-side) and every hint
-    safeStorage.removeItem("adminUser");
-    safeStorage.removeItem("userRole");
-    safeStorage.removeItem("doctorId");
-    safeStorage.removeItem("assignedDoctorIds");
-    router.push("/login");
-  };
+  const handleLogout = useSignOut();
 
   const bounds = useMemo(() => rangeBounds(range), [range]);
   const earliest = useMemo(

@@ -6,7 +6,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { safeStorage } from "@/lib/browser-compat";
-import { supabase } from "@/lib/supabase/client";
 import { useTranslation } from "@/lib/i18n";
 import { usePermissions } from "@/lib/permissions";
 import AdminSidebar from "@/components/ui/AdminSidebar";
@@ -39,7 +38,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { signOut } from "@/lib/auth/session";
+import { useSignOut } from "@/lib/auth/useSignOut";
+import { addMinutesToTime, reschedule } from "@/lib/appointments/reschedule";
+import { fetchAllPatients } from "@/lib/api/patients";
 
 
 const PROCEDURE_DURATIONS: Record<string, number> = {
@@ -55,11 +56,6 @@ const PROCEDURE_DURATIONS: Record<string, number> = {
 const getProcedureDuration = (reason: string) =>
   PROCEDURE_DURATIONS[reason.replace(/^Rescheduled: /, "")] ?? 30;
 
-const addMinutesToTime = (hhmm: string, minutes: number) => {
-  const [h, m] = hhmm.split(":").map(Number);
-  const total = h * 60 + m + minutes;
-  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
-};
 
 interface Appointment {
   id: number;
@@ -156,27 +152,10 @@ export default function AppointmentsManagement() {
     if (storedAssignedIds) setAssignedDoctorIds(JSON.parse(storedAssignedIds));
     if (storedUser) setCurrentUser(JSON.parse(storedUser));
 
-    // Resolve the logged-in user's DB id via Supabase session or localStorage fallback
+    // The signed-in user's id, from the session itself.
     const resolveDbUser = async () => {
-      let email: string | null = null;
-
-      // Try Supabase session first, fall back to localStorage
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user?.email) email = session.user.email;
-      } catch {}
-
-      if (!email) {
-        const stored = safeStorage.getItem("adminUser");
-        if (stored) {
-          try { email = JSON.parse(stored)?.email ?? null; } catch {}
-        }
-      }
-
-      if (!email) return;
-
-      try {
-        const res = await apiFetch(`/api/users/by-email?email=${encodeURIComponent(email)}`);
+        const res = await apiFetch(`/api/auth/me`);
         if (!res.ok) return;
         const user = await res.json();
         if (user?.id) setCurrentDoctorDbId(Number(user.id));
@@ -240,16 +219,7 @@ export default function AppointmentsManagement() {
     fetchData();
   }, [selectedDate]);
 
-  const handleLogout = () => {
-    toast.success("Logged out.");
-    safeStorage.removeItem("adminAuth");
-    void signOut(); // clears the session cookie (server-side) and every hint
-    safeStorage.removeItem("adminUser");
-    safeStorage.removeItem("userRole");
-    safeStorage.removeItem("doctorId");
-    safeStorage.removeItem("assignedDoctorIds");
-    router.push("/login");
-  };
+  const handleLogout = useSignOut();
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString("en-US", {
@@ -465,9 +435,7 @@ export default function AppointmentsManagement() {
     setNewAppt({ patientId: "", doctorId: "", date: "", time: "", reason: "Regular Checkup" });
     setShowAddModal(true);
     try {
-      const patientsRes = await apiFetch(`/api/patients`);
-      const patientsData = await patientsRes.json();
-      const mappedPatients = (patientsData.data || []).map((p: any) => ({
+      const mappedPatients = (await fetchAllPatients()).map((p: any) => ({
         id: Number(p.id),
         name: p.users ? `${p.users.first_name} ${p.users.last_name}` : `Patient #${p.id}`,
       }));
@@ -639,47 +607,16 @@ export default function AppointmentsManagement() {
     if (!appt || !postponeDate || !postponeTime) return;
     setPostponeLoading(true);
     try {
-      const slotsRes = await apiFetch(`/api/appointment-slots?doctor_id=${appt.doctorId}&date=${postponeDate}&limit=100`);
-      const slotsData = slotsRes.ok ? await slotsRes.json() : { data: [] };
-      const slotHHMM = (start_time: string) => {
-        const d = new Date(start_time);
-        return `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
-      };
-
-      let slot = (slotsData.data || []).find((s: any) =>
-        slotHHMM(s.start_time) === postponeTime && !s.is_booked
-      );
-
-      if (!slot) {
-        const duration = getProcedureDuration(appt.type);
-        const toTime = addMinutesToTime(postponeTime, duration);
-        const createRes = await apiFetch(`/api/appointment-slots/bulk`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ doctor_id: appt.doctorId, slot_date: postponeDate, from_time: postponeTime, to_time: toTime, duration_minutes: duration }),
-        });
-        if (!createRes.ok) { toast.error("Failed to create slot for new date."); return; }
-        const refetchRes = await apiFetch(`/api/appointment-slots?doctor_id=${appt.doctorId}&date=${postponeDate}&limit=100`);
-        const refetchData = refetchRes.ok ? await refetchRes.json() : { data: [] };
-        slot = (refetchData.data || []).find((s: any) =>
-          slotHHMM(s.start_time) === postponeTime && !s.is_booked
-        );
-        if (!slot) { toast.error("Could not find the new slot after creation."); return; }
-      }
-
-      const cancelRes = await apiFetch(`/api/appointments/${appt.id}/cancel`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reason: "Postponed" }),
+      const result = await reschedule({
+        appointmentId: appt.id,
+        patientId: appt.patientId,
+        doctorId: appt.doctorId,
+        date: postponeDate,
+        time: postponeTime,
+        durationMinutes: getProcedureDuration(appt.type),
+        reason: `Rescheduled: ${appt.type}`,
       });
-      if (!cancelRes.ok) { toast.error("Failed to cancel original appointment."); return; }
-
-      const bookRes = await apiFetch(`/api/appointments`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ patient_id: appt.patientId, slot_id: Number(slot.id), reason: `Rescheduled: ${appt.type}` }),
-      });
-      if (!bookRes.ok) { toast.error("Failed to book new appointment."); return; }
+      if (!result.ok) { toast.error(result.message); return; }
 
       toast.success(`Appointment postponed to ${postponeDate} at ${postponeTime}.`);
       setPostponeApptId(null);

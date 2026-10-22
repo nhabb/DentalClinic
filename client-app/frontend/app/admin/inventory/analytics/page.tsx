@@ -12,7 +12,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   ResponsiveContainer,
@@ -26,7 +25,6 @@ import {
 } from "recharts";
 import { FaBoxes, FaExclamationTriangle, FaTimesCircle, FaDollarSign, FaChevronRight, FaShoppingCart, FaTimes } from "react-icons/fa";
 import { apiFetch } from "@/lib/api/client";
-import { safeStorage } from "@/lib/browser-compat";
 import { cn } from "@/lib/utils";
 import AdminSidebar from "@/components/ui/AdminSidebar";
 import { AdminPageHeader } from "@/components/ui/AdminPageHeader";
@@ -34,7 +32,7 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Card, Kpi, Donut, ChartTooltip, money, SERIES, INK, STOCK_COLOR } from "@/components/dashboard/chart-kit";
 import { pct } from "@/components/dashboard/date-range";
 import { FilterSelect } from "@/components/dashboard/FilterSelect";
-import { signOut } from "@/lib/auth/session";
+import { useSignOut } from "@/lib/auth/useSignOut";
 
 interface Item {
   id: number;
@@ -76,7 +74,6 @@ const categoryLabel = (c: string) => {
 };
 
 export default function InventoryAnalyticsPage() {
-  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
@@ -266,16 +263,7 @@ export default function InventoryAnalyticsPage() {
   const periodLabel = focusMonth ? monthLabel(focusMonth) : year === thisYear ? `${year} to date` : String(year);
   const compareLabel = focusMonth ? "vs. previous month" : year === thisYear ? "vs. same period last year" : "vs. previous year";
 
-  const handleLogout = () => {
-    toast.success("Logged out.");
-    safeStorage.removeItem("adminAuth");
-    void signOut(); // clears the session cookie (server-side) and every hint
-    safeStorage.removeItem("adminUser");
-    safeStorage.removeItem("userRole");
-    safeStorage.removeItem("doctorId");
-    safeStorage.removeItem("assignedDoctorIds");
-    router.push("/login");
-  };
+  const handleLogout = useSignOut();
 
   const lowCount = scopedItems.filter((i) => i.status === "low").length;
   const outCount = scopedItems.filter((i) => i.status === "out").length;

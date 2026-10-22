@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import Link from "next/link";
 import { FaCookieBite } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
@@ -118,7 +118,9 @@ function CategoryRow(props: {
   stateLabel?: string;
   onChange?: (value: boolean) => void;
 }) {
-  const id = `cookie-cat-${props.title.replace(/\W+/g, "-").toLowerCase()}`;
+  // useId, not the title: \W strips every Arabic letter, so both rows got
+  // the same id and the Analytics label toggled the Essential checkbox.
+  const id = useId();
   return (
     <div className="flex items-start justify-between gap-4 rounded-xl border border-ink-200 p-3">
       <label htmlFor={id} className="min-w-0">

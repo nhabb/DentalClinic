@@ -547,6 +547,7 @@
     "setupLink": "Lien de création de mot de passe",
     "setupLinkEmailed": "Le lien a été envoyé par e-mail au patient.",
     "setupLinkNotEmailed": "L'envoi d'e-mails n'est pas configuré sur le serveur, le lien n'a donc pas été envoyé. Copiez-le et transmettez-le au patient, par exemple via WhatsApp.",
+    "setupLinkNotSent": "L'e-mail n'a pas pu être envoyé. Ce compte est déjà utilisé : son lien de réinitialisation n'est envoyé qu'à la boîte de réception de son titulaire. Réessayez plus tard.",
     "setupLinkExpiry": "Le lien est à usage unique et expire dans 72 heures.",
     "copyLink": "Copier",
     "linkCopied": "Lien copié.",
@@ -948,6 +949,7 @@
     "staffCreated": "Compte créé",
     "linkEmailed": "Un lien de création de mot de passe lui a été envoyé par e-mail.",
     "linkNotEmailed": "L’e-mail n’est pas configuré sur le serveur : transmettez-lui ce lien vous-même :",
+    "linkNotSent": "L'e-mail n'a pas pu être envoyé. Ce compte est déjà utilisé : son lien de réinitialisation n'est envoyé qu'à la boîte de réception de son titulaire. Réessayez plus tard.",
     "setPasswordLink": "Lien de mot de passe",
     "copyLink": "Copier le lien",
     "linkCopied": "Lien copié",
@@ -957,6 +959,7 @@
   },
   "session": {
     "switchedAccount": "Vous vous êtes connecté avec un autre compte dans un autre onglet. Reconnectez-vous pour continuer ici.",
+    "sessionExpired": "Votre session a pris fin. Reconnectez-vous pour continuer.",
     "googleFailed": "Nous n'avons pas pu terminer votre connexion avec Google. Réessayez ou utilisez votre e-mail et votre mot de passe."
   },
   "cookies": {

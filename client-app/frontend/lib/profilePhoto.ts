@@ -16,11 +16,21 @@ let myPhoto: Promise<string | undefined> | null = null;
 /** The signed-in user's saved avatar (users.avatar_url), falling back to a legacy local copy. */
 export function fetchMyPhoto(): Promise<string | undefined> {
   if (typeof window === "undefined") return Promise.resolve(undefined);
-  myPhoto ??= apiFetch("/api/auth/me")
+  const loading = apiFetch("/api/auth/me")
     .then((r) => (r.ok ? r.json() : null))
     .then((me) => me?.avatar_url || getStoredPhoto(me?.email))
     .catch(() => undefined);
+  myPhoto ??= loading;
+  // A failed or empty answer is not kept: the next screen asks again.
+  void loading.then((photo) => {
+    if (!photo && myPhoto === loading) myPhoto = null;
+  });
   return myPhoto;
+}
+
+/** Forget the cached photo (on sign-in and sign-out, so it never shows for the next user). */
+export function resetMyPhoto(): void {
+  myPhoto = null;
 }
 
 /** Uploads a photo picked in <Avatar> to storage and returns its public URL. */

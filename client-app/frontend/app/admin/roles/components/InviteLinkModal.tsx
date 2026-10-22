@@ -31,7 +31,7 @@ export function InviteLinkModal({ isOpen, title, description, invite, onClose }:
   }, [isOpen, invite]);
 
   const copyLink = async () => {
-    if (!invite) return;
+    if (!invite?.link) return;
     try {
       await navigator.clipboard.writeText(invite.link);
       setCopied(true);
@@ -55,6 +55,9 @@ export function InviteLinkModal({ isOpen, title, description, invite, onClose }:
     >
       {!invite ? null : invite.emailed ? (
         <p className="text-sm text-ink-700">{t("roles.linkEmailed")}</p>
+      ) : !invite.link ? (
+        // An account already in use: its link only ever goes to the owner.
+        <p className="text-sm text-ink-700">{t("roles.linkNotSent")}</p>
       ) : (
         <div className="space-y-3">
           <p className="text-sm text-ink-700">{t("roles.linkNotEmailed")}</p>

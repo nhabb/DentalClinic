@@ -5,6 +5,8 @@ export interface OrganizationSummary {
   name: string;
   slug: string;
   is_active: boolean;
+  /** The clinic's billing currency; revenue_collected is in it. */
+  currency: string;
   created_at: string;
   branches: number;
   staff: number;
@@ -88,6 +90,8 @@ export interface PlatformOverview {
   appointments_this_month: number;
   revenue_this_month: number;
   revenue_all_time: number;
+  /** Money collected per clinic currency; the totals above add unlike amounts. */
+  revenue_by_currency: { currency: string; this_month: number; all_time: number }[];
   monthly: { month: string; new_organizations: number; appointments: number; collected: number }[];
 }
 

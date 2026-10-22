@@ -4,15 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import { apiFetch } from "@/lib/api/client";
-import { rememberUser } from "@/lib/auth/session";
-
-const ROLE_REDIRECTS: Record<string, string> = {
-  patient: "/patient-dashboard",
-  doctor: "/admin",
-  admin: "/admin",
-  secretary: "/admin",
-  superadmin: "/superadmin",
-};
+import { homeFor, rememberUser } from "@/lib/auth/session";
 
 
 async function provisionAndPersist(supabaseToken: string): Promise<{ redirect: string; userId: string; isNew: boolean }> {
@@ -29,7 +21,7 @@ async function provisionAndPersist(supabaseToken: string): Promise<{ redirect: s
   const role = rememberUser(user);
 
   return {
-    redirect: ROLE_REDIRECTS[role] ?? "/patient-dashboard",
+    redirect: homeFor(role),
     userId: user.id.toString(),
     isNew: !!is_new_user,
   };

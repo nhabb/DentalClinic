@@ -8,7 +8,6 @@
 // for the contract.
 
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { FaShieldAlt } from "react-icons/fa";
 import AdminSidebar from "@/components/ui/AdminSidebar";
@@ -42,14 +41,13 @@ import { RoleList } from "./components/RoleList";
 import { PermissionMatrix } from "./components/PermissionMatrix";
 import { RoleFormModal } from "./components/RoleFormModal";
 import { StaffRolesTable } from "./components/StaffRolesTable";
-import { signOut } from "@/lib/auth/session";
+import { useSignOut } from "@/lib/auth/useSignOut";
 
 type Tab = "roles" | "staff";
 
 const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 export default function RolesPage() {
-  const router = useRouter();
   const { t } = useTranslation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [tab, setTab] = useState<Tab>("roles");
@@ -102,11 +100,7 @@ export default function RolesPage() {
 
   const refreshRoles = async () => setRoles(await fetchRoles());
 
-  const handleLogout = () => {
-    toast.success("Logged out.");
-    void signOut(); // clears the session cookie (server-side) and every hint
-    router.push("/login");
-  };
+  const handleLogout = useSignOut();
 
   const savePermissions = async (permissions: string[]) => {
     if (!selectedKey) return;
