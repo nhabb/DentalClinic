@@ -6,8 +6,8 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { safeStorage } from "@/lib/browser-compat";
 import { useTranslation } from "@/lib/i18n";
-import { usePermissions } from "@/lib/permissions";
-import DashboardAnalytics, { type DashboardData } from "@/components/dashboard/DashboardAnalytics";
+import { can, fetchMe, usePermissions, type Me } from "@/lib/permissions";
+import DashboardAnalytics, { DASHBOARD_KEYS, type DashboardData, type DashboardKey } from "@/components/dashboard/DashboardAnalytics";
 import AdminSidebar from "@/components/ui/AdminSidebar";
 import { AdminPageHeader } from "@/components/ui/AdminPageHeader";
 import {
@@ -53,7 +53,7 @@ interface AdminUser {
 export default function AdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   // Only offer what this role's API permissions allow (the API refuses the rest anyway).
-  const { can } = usePermissions();
+  const { can: canDo } = usePermissions();
   const { t } = useTranslation();
   const [user, setUser] = useState<AdminUser | null>(null);
   const [userRole, setUserRole] = useState<string>("doctor");
@@ -90,13 +90,19 @@ export default function AdminDashboard() {
       minimum: number;
     }[]
   >([]);
-  const [loading, setLoading] = useState(true);
+  // The data sets still on their way; each chart shows a placeholder until its own arrives.
+  const [pending, setPending] = useState<Set<DashboardKey>>(() => new Set(DASHBOARD_KEYS));
 
   // Normalised datasets for the analytics charts
   const [dash, setDash] = useState<DashboardData>({ records: [], appointments: [], expenses: [], payments: [], invoices: [], inventory: [], patients: [], doctors: [] });
 
-  // Single effect: fire all requests in parallel, set all state together
+  // Progressive load: the signed-in user first (the sidebar waits on the same
+  // cached /auth/me), then today's work, then the history the charts need.
+  // Each data set is drawn the moment it arrives instead of after the slowest.
   useEffect(() => {
+    let alive = true;
+    // Leaving the dashboard cancels what it still waits for, so the next screen's requests go first.
+    const abort = new AbortController();
     const storedUser = safeStorage.getItem("adminUser");
     const storedRole = safeStorage.getItem("userRole");
     const storedDoctorId = safeStorage.getItem("doctorId");
@@ -104,49 +110,61 @@ export default function AdminDashboard() {
     if (storedRole) setUserRole(storedRole);
     if (storedDoctorId) setDoctorId(parseInt(storedDoctorId));
 
-    const fetchAll = async () => {
+    const done = (key: DashboardKey) =>
+      setPending((prev) => {
+        const next = new Set(prev);
+        next.delete(key);
+        return next;
+      });
+    const put = <K extends DashboardKey>(key: K, rows: DashboardData[K]) => {
+      if (!alive) return;
+      setDash((d) => ({ ...d, [key]: rows }));
+      done(key);
+    };
+    const getJson = async (path: string) => {
+      const res = await apiFetch(path, { signal: abort.signal });
+      return res.ok ? res.json() : null;
+    };
+    const rowsOf = (json: any): any[] => (Array.isArray(json?.data) ? json.data : Array.isArray(json) ? json : []);
+    const day = (v: any) => (typeof v === "string" ? v.slice(0, 10) : "");
+    // A data set the role may not read is skipped: the API would refuse it.
+    const load = async <K extends DashboardKey>(key: K, allowed: boolean, fetchRows: () => Promise<DashboardData[K]>) => {
+      if (!allowed) return put(key, [] as unknown as DashboardData[K]);
       try {
-        // Fire all requests simultaneously — one round-trip wave
-        const [userRes, allPatients, appointmentsRes, inventoryRes, paymentsRes, expensesRes, invoicesRes, doctorsRes, recordsRes] =
-          await Promise.all([
-            apiFetch(`/api/auth/me`),
-            fetchAllPatients().catch(() => []),
-            apiFetch(`/api/appointments?limit=1000`),
-            apiFetch(`/api/inventory`),
-            apiFetch(`/api/billing/invoice-payments?limit=500`),
-            apiFetch(`/api/expenses?limit=500`),
-            apiFetch(`/api/billing/invoices?limit=200`),
-            apiFetch(`/api/users/doctors`),
-            apiFetch(`/api/patient-records?limit=1000`),
-          ]);
+        put(key, await fetchRows());
+      } catch (e) {
+        if (!abort.signal.aborted) console.error(`Failed to load dashboard ${key}`, e);
+        if (alive) done(key);
+      }
+    };
 
-        // ── User ──────────────────────────────────────────────────────────────
-        if (userRes?.ok) {
-          const u = await userRes.json();
-          setUser({ id: Number(u.id), firstName: u.first_name || "", lastName: u.last_name || "", email: u.email, role: u.role });
-          if (u.id) safeStorage.setItem("doctorDbId", String(u.id));
-        } else if (storedUser) {
-          const parsed = JSON.parse(storedUser);
-          setUser({ ...parsed, firstName: parsed.firstName || parsed.first_name || "", lastName: parsed.lastName || parsed.last_name || "" });
-        }
-
-        // ── Appointments ──────────────────────────────────────────────────────
-        const appointmentsData = appointmentsRes.ok ? await appointmentsRes.json() : { data: [] };
+    const loadAppointments = () =>
+      load("appointments", allowedTo("appointments:read"), async () => {
+        const rows = rowsOf(await getJson(`/api/appointments?limit=1000`));
         const today = new Date().toISOString().split("T")[0];
-        const todayAppts = (appointmentsData.data || []).filter((a: any) => a.appointment_date?.startsWith(today));
-        const completedToday = todayAppts.filter((a: any) => a.status === "completed").length;
-        setTodayAppointments(
-          todayAppts.map((a: any) => {
-            const patientUser = (a.patient_profiles ?? a.patient_profile)?.users;
-            const time = a.start_time ? new Date(a.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
-            return { id: Number(a.id), time, patient: patientUser ? `${patientUser.first_name} ${patientUser.last_name}` : `Patient #${a.patient_id}`, type: a.reason || "Checkup", status: a.status, doctorId: Number(a.doctor_id || 0), patientId: Number(a.patient_id || 0), date: a.appointment_date?.split("T")[0] || today };
-          })
-        );
+        const todayAppts = rows.filter((a: any) => a.appointment_date?.startsWith(today));
+        if (alive) {
+          setClinicStats((s) => ({ ...s, todayAppointments: todayAppts.length, completedToday: todayAppts.filter((a: any) => a.status === "completed").length }));
+          setTodayAppointments(
+            todayAppts.map((a: any) => {
+              const patientUser = (a.patient_profiles ?? a.patient_profile)?.users;
+              const time = a.start_time ? new Date(a.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+              return { id: Number(a.id), time, patient: patientUser ? `${patientUser.first_name} ${patientUser.last_name}` : `Patient #${a.patient_id}`, type: a.reason || "Checkup", status: a.status, doctorId: Number(a.doctor_id || 0), patientId: Number(a.patient_id || 0), date: a.appointment_date?.split("T")[0] || today };
+            }),
+          );
+        }
+        return rows.map((a: any) => ({
+          id: Number(a.id),
+          date: day(a.appointment_date),
+          status: String(a.status ?? "scheduled"),
+          type: String(a.reason || "Checkup"),
+          doctorId: Number(a.doctor_id || a.created_by || 0),
+        }));
+      });
 
-        // ── Patients + inventory stats ────────────────────────────────────────
-        const patientsData = { data: allPatients };
-        const inventoryData = inventoryRes.ok ? await inventoryRes.json() : { data: [] };
-        const inventoryRows = (inventoryData.data || []).map((item: any) => {
+    const loadInventory = () =>
+      load("inventory", allowedTo("inventory:read"), async () => {
+        const rows = rowsOf(await getJson(`/api/inventory?limit=1000`)).map((item: any) => {
           const quantity = Number(item.quantity ?? 0);
           const minimum = Number(item.minimum_quantity ?? 0);
           const status: "ok" | "low" | "out" = quantity === 0 ? "out" : quantity <= minimum ? "low" : "ok";
@@ -154,77 +172,101 @@ export default function AdminDashboard() {
           const category = rawCat ? rawCat.charAt(0).toUpperCase() + rawCat.slice(1).toLowerCase() : "General";
           return { id: Number(item.id), name: String(item.name ?? ""), category, quantity, minimum, status };
         });
-        const lowRows = inventoryRows.filter((i: { status: string }) => i.status !== "ok");
-        setClinicStats({
-          todayAppointments: todayAppts.length,
-          completedToday,
-          lowStockItems: lowRows.length,
-          totalPatients: (patientsData.data || []).length,
-        });
-        setLowStockAlerts(lowRows.map((i: any) => ({ id: i.id, item: i.name, current: i.quantity, minimum: i.minimum })));
+        const lowRows = rows.filter((i) => i.status !== "ok");
+        if (alive) {
+          setClinicStats((s) => ({ ...s, lowStockItems: lowRows.length }));
+          setLowStockAlerts(lowRows.map((i) => ({ id: i.id, item: i.name, current: i.quantity, minimum: i.minimum })));
+        }
+        return rows;
+      });
 
-        // ── Datasets for the analytics charts ─────────────────────────────
-        const invoicePayments: any[] = paymentsRes.ok ? ((await paymentsRes.json()) ?? []) : [];
-        const expenses: any[] = expensesRes.ok ? ((await expensesRes.json()).data ?? []) : [];
-        const invoicesJson = invoicesRes.ok ? await invoicesRes.json() : { data: [] };
-        const invoices: any[] = Array.isArray(invoicesJson?.data) ? invoicesJson.data : Array.isArray(invoicesJson) ? invoicesJson : [];
-        const doctorsList: any[] = doctorsRes?.ok ? await doctorsRes.json() : [];
-        const recordsJson = recordsRes.ok ? await recordsRes.json() : { data: [] };
-        const recordRows: any[] = Array.isArray(recordsJson?.data) ? recordsJson.data : [];
-        const day = (v: any) => (typeof v === "string" ? v.slice(0, 10) : "");
+    const loadDoctors = () =>
+      load("doctors", true, async () => {
+        const rows: any[] = (await getJson(`/api/users/doctors`)) ?? [];
+        return rows.map((d: any) => ({ id: Number(d.id), name: `Dr. ${d.first_name ?? ""} ${d.last_name ?? ""}`.trim() }));
+      });
 
-        setDash({
-          records: recordRows.map((r: any) => {
-            const pu = r.patient_profiles?.users;
-            return {
-              id: Number(r.id),
-              date: day(r.treatment_date || r.created_at),
-              tooth: r.tooth_number ? String(r.tooth_number) : "",
-              procedure: String(r.title || "—"),
-              status: (r.record_type === "treatment_plan" ? "planned" : r.record_type === "missing_tooth" ? "missing" : "completed") as "completed" | "planned" | "missing",
-              patientId: Number(r.patient_id || r.patient_profiles?.id || 0),
-              patientName: pu ? `${pu.first_name ?? ""} ${pu.last_name ?? ""}`.trim() : `#${r.patient_id}`,
-              doctorId: Number(r.created_by || r.users?.id || 0),
-            };
-          }),
-          appointments: (appointmentsData.data || []).map((a: any) => ({
-            id: Number(a.id),
-            date: day(a.appointment_date),
-            status: String(a.status ?? "scheduled"),
-            type: String(a.reason || "Checkup"),
-            doctorId: Number(a.doctor_id || a.created_by || 0),
-          })),
-          expenses: expenses.map((e: any) => ({
-            id: Number(e.id),
-            date: day(e.expense_date || e.created_at),
-            category: String(e.category ?? "other").toLowerCase(),
-            amount: Number(e.amount ?? 0),
-          })),
-          payments: invoicePayments
-            .filter((p: any) => Number(p.amount ?? 0) > 0)
-            .map((p: any) => ({ id: Number(p.id), date: day(p.created_at), amount: Number(p.amount), method: String(p.payment_method ?? "other") })),
-          invoices: invoices.map((i: any) => ({
-            id: Number(i.id),
-            date: day(i.procedure_date || i.created_at),
-            status: (["open", "partial", "paid"].includes(i.status) ? i.status : "open") as "open" | "partial" | "paid",
-            total: Number(i.total_amount ?? 0),
-            remaining: Number(i.remaining_amount ?? 0),
-          })),
-          inventory: inventoryRows,
-          patients: (patientsData.data || []).map((p: any) => ({
-            id: Number(p.id),
-            registeredDate: day(p.users?.created_at || p.created_at),
-          })),
-          doctors: doctorsList.map((d: any) => ({ id: Number(d.id), name: `Dr. ${d.first_name ?? ""} ${d.last_name ?? ""}`.trim() })),
-        });
-      } catch (e) {
-        console.error("Failed to fetch dashboard data", e);
-      } finally {
-        setLoading(false);
+    const loadPayments = () =>
+      load("payments", allowedTo("billing:read"), async () =>
+        rowsOf(await getJson(`/api/billing/invoice-payments?limit=500`))
+          .filter((p: any) => Number(p.amount ?? 0) > 0)
+          .map((p: any) => ({ id: Number(p.id), date: day(p.created_at), amount: Number(p.amount), method: String(p.payment_method ?? "other") })),
+      );
+
+    const loadInvoices = () =>
+      load("invoices", allowedTo("billing:read"), async () =>
+        rowsOf(await getJson(`/api/billing/invoices?limit=200`)).map((i: any) => ({
+          id: Number(i.id),
+          date: day(i.procedure_date || i.created_at),
+          status: (["open", "partial", "paid"].includes(i.status) ? i.status : "open") as "open" | "partial" | "paid",
+          total: Number(i.total_amount ?? 0),
+          remaining: Number(i.remaining_amount ?? 0),
+        })),
+      );
+
+    const loadExpenses = () =>
+      load("expenses", allowedTo("expenses:read"), async () =>
+        rowsOf(await getJson(`/api/expenses?limit=500`)).map((e: any) => ({
+          id: Number(e.id),
+          date: day(e.expense_date || e.created_at),
+          category: String(e.category ?? "other").toLowerCase(),
+          amount: Number(e.amount ?? 0),
+        })),
+      );
+
+    const loadPatients = () =>
+      load("patients", allowedTo("patients:read"), async () => {
+        const rows = await fetchAllPatients();
+        if (alive) setClinicStats((s) => ({ ...s, totalPatients: rows.length }));
+        return rows.map((p: any) => ({ id: Number(p.id), registeredDate: day(p.users?.created_at || p.created_at) }));
+      });
+
+    const loadRecords = () =>
+      load("records", allowedTo("records:read"), async () =>
+        rowsOf(await getJson(`/api/patient-records?limit=1000`)).map((r: any) => {
+          const pu = r.patient_profiles?.users;
+          return {
+            id: Number(r.id),
+            date: day(r.treatment_date || r.created_at),
+            tooth: r.tooth_number ? String(r.tooth_number) : "",
+            procedure: String(r.title || "—"),
+            status: (r.record_type === "treatment_plan" ? "planned" : r.record_type === "missing_tooth" ? "missing" : "completed") as "completed" | "planned" | "missing",
+            patientId: Number(r.patient_id || r.patient_profiles?.id || 0),
+            patientName: pu ? `${pu.first_name ?? ""} ${pu.last_name ?? ""}`.trim() : `#${r.patient_id}`,
+            doctorId: Number(r.created_by || r.users?.id || 0),
+          };
+        }),
+      );
+
+    let me: Me | null = null;
+    const allowedTo = (permission: string) => !me || can(me, permission);
+
+    (async () => {
+      // 1. Who is signed in — shared with the sidebar and the permission checks.
+      me = await fetchMe();
+      if (!alive) return;
+      if (me) {
+        setUser({ id: me.id, firstName: me.firstName, lastName: me.lastName, email: me.email, role: me.role });
+        safeStorage.setItem("doctorDbId", String(me.id));
+      } else if (storedUser) {
+        try {
+          const parsed = JSON.parse(storedUser);
+          setUser({ ...parsed, firstName: parsed.firstName || parsed.first_name || "", lastName: parsed.lastName || parsed.last_name || "" });
+        } catch {}
       }
-    };
 
-    fetchAll();
+      // 2. Today's schedule, stock alerts and the KPIs everyone looks at first.
+      await Promise.allSettled([loadAppointments(), loadInventory(), loadDoctors(), loadPayments(), loadExpenses()]);
+      if (!alive) return;
+
+      // 3. The heavier history: every patient, every treatment record, invoices.
+      await Promise.allSettled([loadInvoices(), loadPatients(), loadRecords()]);
+    })();
+
+    return () => {
+      alive = false;
+      abort.abort();
+    };
   }, []);
 
   const handleLogout = useSignOut("/");
@@ -321,7 +363,7 @@ export default function AdminDashboard() {
         <main className="flex-1 p-8 overflow-auto">
           <DashboardAnalytics
             data={dash}
-            loading={loading}
+            pending={pending}
             operations={
               <div className="bg-white rounded-2xl shadow-sm border border-gray-200/80 p-6">
                 <div className="flex items-center justify-between mb-6">
@@ -337,7 +379,9 @@ export default function AdminDashboard() {
                   </Link>
                 </div>
                 <div className="space-y-3">
-                  {todayAppointments.length > 0 ? (
+                  {pending.has("appointments") ? (
+                    [0, 1, 2].map((i) => <div key={i} className="h-[74px] animate-pulse rounded-xl bg-gray-100" />)
+                  ) : todayAppointments.length > 0 ? (
                     todayAppointments.map((apt) => (
                       <div
                         key={apt.id}
@@ -371,7 +415,7 @@ export default function AdminDashboard() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-44">
-                                {can("appointments:edit") && can("slots:create") && (
+                                {canDo("appointments:edit") && canDo("slots:create") && (
                                 <DropdownMenuItem
                                   onClick={() => {
                                     setPostponeApptId(apt.id);
@@ -382,7 +426,7 @@ export default function AdminDashboard() {
                                   <FaCalendarPlus className="text-brand" /> {t("adminDashboard.postpone")}
                                 </DropdownMenuItem>
                                 )}
-                                {can("appointments:delete") && (
+                                {canDo("appointments:delete") && (
                                 <DropdownMenuItem
                                   onClick={() => handleCancelAppointment(apt.id)}
                                   className="text-red-600 focus:text-red-600"
@@ -444,7 +488,7 @@ export default function AdminDashboard() {
               >
                 {t("common.cancel")}
               </button>
-              {(can("appointments:edit") && can("slots:create")) && (
+              {(canDo("appointments:edit") && canDo("slots:create")) && (
               <button
                 onClick={handlePostponeSubmit}
                 disabled={!postponeDate || !postponeTime || postponeLoading}

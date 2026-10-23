@@ -39,6 +39,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useSignOut } from "@/lib/auth/useSignOut";
+import { ShowMore } from "@/components/ui/ShowMore";
+import { useDebounced, usePagedList } from "@/lib/api/paged";
 import { addMinutesToTime, reschedule } from "@/lib/appointments/reschedule";
 import { fetchAllPatients } from "@/lib/api/patients";
 
@@ -78,6 +80,32 @@ interface Doctor {
   name: string;
   specialty: string;
   color: string;
+}
+
+/** One API appointment as the screen shows it; `users` names the doctor. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapAppointment(a: any, users: any[]): Appointment {
+  const patientUser = a.patient_profiles?.users;
+  const doctorId = a.doctor_id || a.created_by;
+  const doctor = users.find((u) => u.id === doctorId || u.id === String(doctorId));
+  const time = a.start_time ? new Date(a.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "UTC" }) : "";
+  return {
+    id: Number(a.id),
+    date: a.appointment_date ? String(a.appointment_date).slice(0, 10) : "",
+    time,
+    patient: patientUser ? `${patientUser.first_name} ${patientUser.last_name}` : `Patient #${a.patient_id}`,
+    phone: patientUser?.phone || "",
+    type: (a.reason || "Checkup").replace(/^Rescheduled: /, ""),
+    duration: a.end_time && a.start_time
+      ? Math.round((new Date(a.end_time).getTime() - new Date(a.start_time).getTime()) / 60000)
+      : getProcedureDuration(a.reason || ""),
+    status: a.status,
+    notes: a.notes || "",
+    doctor: doctor ? `Dr. ${doctor.first_name} ${doctor.last_name}` : "",
+    doctorId: Number(doctorId),
+    patientId: Number(a.patient_id || 0),
+    isRescheduled: (a.reason || "").startsWith("Rescheduled:"),
+  };
 }
 
 export default function AppointmentsManagement() {
@@ -123,9 +151,9 @@ export default function AppointmentsManagement() {
   const [currentUser, setCurrentUser] = useState<any>(null);
 
   // Data state
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  /** Staff accounts, to name the doctor of each appointment. */
+  const [staffUsers, setStaffUsers] = useState<any[] | null>(null);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   // Postpone state
   const [postponeApptId, setPostponeApptId] = useState<number | null>(null);
@@ -164,60 +192,28 @@ export default function AppointmentsManagement() {
     resolveDbUser();
   }, [router]);
 
-  // Fetch appointments and doctors
+  // Doctors and staff once; the day's appointments come from the paged list below.
   useEffect(() => {
-    const fetchData = async () => {
+    (async () => {
       try {
-        const [appointmentsRes, usersRes, doctorsRes] = await Promise.all([
-          apiFetch(`/api/appointments?limit=1000`),
-          apiFetch(`/api/users`),
-          apiFetch(`/api/users/doctors`),
-        ]);
-        const appointmentsData = await appointmentsRes.json();
+        const [usersRes, doctorsRes] = await Promise.all([apiFetch(`/api/users`), apiFetch(`/api/users/doctors`)]);
         const users: any[] = usersRes.ok ? await usersRes.json() : [];
         const doctorsList: any[] = doctorsRes.ok ? await doctorsRes.json() : [];
-
-        const doctors = doctorsList.map((u, i) => ({
-          id: Number(u.id),
-          name: `${u.first_name} ${u.last_name}`,
-          specialty: "Dentist",
-          color: ["bg-blue-500", "bg-teal-500", "bg-purple-500"][i % 3],
-        }));
-        setDoctors(doctors);
-
-        const mapped = (appointmentsData.data || []).map((a: any) => {
-          const patientUser = a.patient_profiles?.users;
-          const doctorId = a.doctor_id || a.created_by;
-          const doctor = users.find((u) => u.id === doctorId || u.id === String(doctorId));
-          const time = a.start_time ? new Date(a.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "UTC" }) : "";
-          return {
-            id: Number(a.id),
-            date: a.appointment_date ? String(a.appointment_date).slice(0, 10) : "",
-            time,
-            patient: patientUser ? `${patientUser.first_name} ${patientUser.last_name}` : `Patient #${a.patient_id}`,
-            phone: patientUser?.phone || "",
-            type: (a.reason || "Checkup").replace(/^Rescheduled: /, ""),
-            duration: a.end_time && a.start_time
-              ? Math.round((new Date(a.end_time).getTime() - new Date(a.start_time).getTime()) / 60000)
-              : getProcedureDuration(a.reason || ""),
-            status: a.status,
-            notes: a.notes || "",
-            doctor: doctor ? `Dr. ${doctor.first_name} ${doctor.last_name}` : "",
-            doctorId: Number(doctorId),
-            patientId: Number(a.patient_id || 0),
-            isRescheduled: (a.reason || "").startsWith("Rescheduled:"),
-          };
-        });
-        setAppointments(mapped);
+        setStaffUsers(users);
+        setDoctors(
+          doctorsList.map((u, i) => ({
+            id: Number(u.id),
+            name: `${u.first_name} ${u.last_name}`,
+            specialty: "Dentist",
+            color: ["bg-blue-500", "bg-teal-500", "bg-purple-500"][i % 3],
+          })),
+        );
       } catch (e) {
-        console.error("Failed to fetch appointments", e);
-      } finally {
-        setIsLoading(false);
+        console.error("Failed to fetch doctors", e);
+        setStaffUsers([]);
       }
-    };
-
-    fetchData();
-  }, [selectedDate]);
+    })();
+  }, []);
 
   const handleLogout = useSignOut();
 
@@ -278,23 +274,33 @@ export default function AppointmentsManagement() {
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   })();
 
-  const filteredAppointments = appointments.filter((apt) => {
-    const matchesSearch =
-      apt.patient.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      apt.type.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesDoctor =
-      selectedDoctor === "all" || apt.doctorId === Number(selectedDoctor);
-    const matchesDate = apt.date === selectedDateStr;
-    return matchesSearch && matchesDoctor && matchesDate;
+  // The selected day, searched and narrowed by doctor in the API, ten at a time.
+  const debouncedSearch = useDebounced(searchQuery.trim());
+  const list = usePagedList<Appointment, { status: Record<string, number>; doctor: Record<string, number> }>({
+    path: "/api/appointments",
+    params: { date: selectedDateStr, doctor_id: selectedDoctor === "all" ? undefined : selectedDoctor, search: debouncedSearch },
+    map: (a) => mapAppointment(a, staffUsers ?? []),
+    withCounts: true,
+    // Rows name their doctor, so the first page waits for the staff list.
+    enabled: staffUsers !== null,
   });
-
-  const dateAppointments = appointments.filter((a) => a.date === selectedDateStr);
+  const appointments = list.rows;
+  const isLoading = list.loading && !list.counts;
+  /** A status change: redraw the row now, then let the day's figures catch up. */
+  const setAppointments = (update: (prev: Appointment[]) => Appointment[]) => {
+    list.setRows(update);
+    void list.reload();
+  };
+  const filteredAppointments = appointments;
+  const dayStatus = list.counts?.status ?? {};
+  const dayCount = (...statuses: string[]) => statuses.reduce((n, st) => n + (dayStatus[st] ?? 0), 0);
+  const dayTotal = Object.values(dayStatus).reduce((n, c) => n + c, 0);
 
   const todayStats = {
-    total: dateAppointments.length,
-    completed: dateAppointments.filter((a) => a.status === "completed").length,
-    upcoming: dateAppointments.filter((a) => ["scheduled", "confirmed"].includes(a.status)).length,
-    cancelled: dateAppointments.filter((a) => ["cancelled", "no_show"].includes(a.status)).length,
+    total: dayTotal,
+    completed: dayCount("completed"),
+    upcoming: dayCount("scheduled", "confirmed"),
+    cancelled: dayCount("cancelled", "no_show"),
   };
 
   const navigateDate = (direction: "prev" | "next") => {
@@ -534,6 +540,7 @@ export default function AppointmentsManagement() {
       // Navigate to the appointment's date — this triggers fetchData via useEffect
       const [y, mo, d] = newAppt.date.split("-").map(Number);
       setSelectedDate(new Date(y, mo - 1, d));
+      if (newAppt.date === selectedDateStr) void list.reload();
     } catch (e: any) {
       setAddError(e.message || "Failed to create appointment.");
     } finally {
@@ -652,10 +659,15 @@ export default function AppointmentsManagement() {
         <AdminPageHeader
           title={t("appointments.appointments")}
           subtitle={`${currentUser ? `${currentUser.firstName} ${currentUser.lastName}'s` : t("common.manage")} ${t("appointments.manageAppointments")}`}
-          data={appointments}
+          data={async () => {
+            // Every appointment, not just the day on screen.
+            const res = await apiFetch(`/api/appointments?limit=5000`);
+            if (!res.ok) throw new Error(`Request failed (${res.status})`);
+            return ((await res.json()).data ?? []).map((a: unknown) => mapAppointment(a, staffUsers ?? []));
+          }}
           filename="appointments"
           onImport={(rows) =>
-            setAppointments((prev) => [...prev, ...(rows as Appointment[])])
+            list.setRows((prev) => [...prev, ...(rows as Appointment[])])
           }
           onAdd={can("appointments:create") ? openAddModal : undefined}
           addLabel={t("appointments.newAppointment")}
@@ -756,8 +768,8 @@ export default function AppointmentsManagement() {
                   </div>
                 }
                 search={{ value: searchQuery, onChange: setSearchQuery, placeholder: t("appointments.searchPlaceholder") }}
-                shown={filteredAppointments.length}
-                total={dateAppointments.length}
+                shown={list.total}
+                total={dayTotal}
                 unitLabel={t("appointments.appointmentsCount")}
                 hasActiveFilters={!!searchQuery || selectedDoctor !== "all"}
                 onClear={() => { setSearchQuery(""); setSelectedDoctor("all"); }}
@@ -772,12 +784,12 @@ export default function AppointmentsManagement() {
                           value: selectedDoctor,
                           onChange: setSelectedDoctor,
                           options: [
-                            { value: "all", label: t("appointments.allDoctors"), count: dateAppointments.length },
+                            { value: "all", label: t("appointments.allDoctors"), count: dayTotal },
                             ...visibleDoctors.map((doctor) => ({
                               value: String(doctor.id),
                               label: doctor.name,
                               dot: doctor.color || "bg-brand",
-                              count: dateAppointments.filter((a) => a.doctorId === doctor.id).length,
+                              count: list.counts?.doctor[String(doctor.id)] ?? 0,
                             })),
                           ],
                         },
@@ -926,6 +938,7 @@ export default function AppointmentsManagement() {
                     description={t("appointments.noAppointmentsDesc")}
                   />
                 )}
+                <ShowMore shown={appointments.length} total={list.total} loading={list.loadingMore} onClick={list.loadMore} />
               </div>
             </>
           )}
