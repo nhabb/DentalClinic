@@ -15,7 +15,13 @@ import type { BadgeTone } from "@/components/ui/Badge";
  *     Plan total   the whole course of treatment
  *     Billed       what the invoices came to      <-> Not yet billed
  *     Paid         money in, net of refunds       <-> Unpaid
- *     Credit on account   money in that is on no bill
+ *     Prepaid      money in that is on no bill yet. It used to be "credit on
+ *                  account" in one place and "balance" in another; to a
+ *                  normal person a balance is what you owe, so the word is
+ *                  gone from every screen.
+ *     Receive payment / Refund   the two money acts, named as the desk
+ *                  names them: money came in, money went back
+ *     Replace bill / Replaces / Replaced by   the chain a corrected bill makes
  *
  * Paid and Unpaid are used of one bill, of one patient and of the whole
  * clinic. That is not drift: the scope is said by where they sit — a bill row,
@@ -35,10 +41,17 @@ export const MONEY_WORD = {
   billed: "Billed",
   paid: "Paid",
   unpaid: "Unpaid",
-  creditOnAccount: "Credit on account",
+  prepaid: "Prepaid",
   billTotal: "Bill total",
   acrossTheClinic: "Across the clinic",
   bills: "Bills",
+  replaceBill: "Replace bill",
+  replaces: "Replaces",
+  replacedBy: "Replaced by",
+  quote: "Quote",
+  quoteTotal: "Quote total",
+  receivePayment: "Receive payment",
+  refund: "Refund",
 } as const;
 
 export type MoneyWord = keyof typeof MONEY_WORD;

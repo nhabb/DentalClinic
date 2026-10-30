@@ -8,6 +8,7 @@ import {
   FaChartLine,
   FaFileInvoiceDollar,
   FaMoneyBillWave,
+  FaPiggyBank,
   FaPrint,
   FaReceipt,
   FaRegClock,
@@ -29,15 +30,16 @@ import { StatsCard } from "@/components/ui/StatsCard";
 import { Tabs } from "@/components/ui/Tabs";
 import { Avatar } from "@/components/ui/Avatar";
 import { MONEY_WORD } from "@/components/billing/money-words";
-import { money, clinicToday, readError } from "@/components/billing/quote-doc";
+import { money, clinicToday } from "@/components/billing/quote-doc";
 import {
-  normalizeInvoice,
-  type Invoice,
-} from "@/components/billing/invoice-doc";
-import {
-  TakePaymentModal,
+  ReceivePaymentModal,
   type PayingPatient,
-} from "@/components/billing/TakePaymentModal";
+  type ReceiveOutcome,
+} from "@/components/billing/ReceivePaymentModal";
+import {
+  RefundPrepaidModal,
+  type RefundablePatient,
+} from "@/components/billing/RefundPrepaidModal";
 import { PatientDrawer } from "@/components/billing/PatientDrawer";
 import {
   normalizeReceipt,
@@ -46,10 +48,6 @@ import {
   RECEIPT_STATUS_TONE,
   type ReceiptRow,
 } from "@/components/billing/receipt-doc";
-import {
-  RefundReceiptModal,
-  type RefundableReceipt,
-} from "@/components/billing/RefundReceiptModal";
 import type { PatientOption } from "@/components/billing/NewInvoiceModal";
 import { useSignOut } from "@/lib/auth/useSignOut";
 import { fetchAllPatients } from "@/lib/api/patients";
@@ -57,21 +55,23 @@ import { ShowMore } from "@/components/ui/ShowMore";
 import { useDebounced, usePagedList } from "@/lib/api/paged";
 
 /*
- * Taking money.
+ * Payments: money in, money back, and who still owes.
  *
- * Billing is where a bill is made; this is where money is received. They are
- * two different acts, often by two different people minutes apart, and the
- * desk should not have to go hunting through a list of documents to do the
- * second one.
+ * Billing is where a bill is made; this is where money is received. The desk
+ * records what happened — a patient paid this much, this way — and the
+ * bookkeeping follows: the money goes on their unpaid bills oldest first and
+ * whatever is left stays prepaid for the next bill. So one dialog covers a
+ * bill paid in full, an instalment, a prepayment and a late payment, and
+ * there is no second act to learn.
  *
- * So the page reads in the order the job goes: who owes money, take it, and
- * the receipts (RT) and refunds (RF) of the period — what somebody counts the
- * drawer against at closing. Every payment is a receipt; a deposit is a
- * receipt not yet used on a bill; a refund always comes out of one receipt.
+ * Three lists, each the answer to one question the desk asks: who owes money
+ * (Owed, longest overdue first), what came in (Received: receipts RT and
+ * refunds RF of the window, what the drawer is counted against), and who is
+ * holding prepaid money (Prepaid: the patients who stopped coming, or paid
+ * ahead, with money still on their account).
  *
- * It opens no second payment form. `TakePaymentModal` is the only one in the
- * clinic, whether it is reached from here, from a bill, or from a patient's
- * money file.
+ * `ReceivePaymentModal` is the only payment form in the clinic, whether it is
+ * reached from here, from a bill, or from a patient's money file.
  */
 
 type Owed = {
@@ -87,6 +87,14 @@ type Owed = {
   days_overdue: number;
 };
 
+type Prepaid = {
+  patient_id: number;
+  patient_name: string;
+  prepaid: number;
+  receipts: number;
+  since: string;
+};
+
 type ByMethod = { method: string; payments: number; refunds: number; net: number; count: number };
 
 const num = (v: unknown) => Number(v ?? 0);
@@ -95,12 +103,11 @@ const methodLabel = (m: string) => m.replace(/_/g, " ");
 /** The receipt filters the desk asks for (the API applies them); "refunds" lists RF rows. */
 const RECEIPT_FILTERS = {
   all: "All",
-  open: "Open",
+  open: "Prepaid",
   used: "Used",
   refunds: "Refunds",
 } as const;
 type ReceiptFilter = keyof typeof RECEIPT_FILTERS;
-
 
 /** The windows a desk actually asks for. "Today" is the clinic's day. */
 const WINDOWS = {
@@ -123,6 +130,8 @@ function windowRange(id: WindowId): { from?: string; to?: string } {
   return { from: `${today.slice(0, 7)}-01`, to: today };
 }
 
+type View = "owed" | "taken" | "prepaid";
+
 export default function PaymentsPage() {
   const router = useRouter();
   const { can } = usePermissions();
@@ -131,24 +140,23 @@ export default function PaymentsPage() {
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
-  const [view, setView] = useState<"owed" | "taken">("owed");
+  const [view, setView] = useState<View>("owed");
   const [receiptFilter, setReceiptFilter] = useState<ReceiptFilter>("all");
-  const [refunding, setRefunding] = useState<RefundableReceipt | null>(null);
   const [window_, setWindow] = useState<WindowId>("today");
   const [search, setSearch] = useState("");
 
   const [byMethod, setByMethod] = useState<ByMethod[]>([]);
   const [takenNet, setTakenNet] = useState(0);
-  /** Clinic-wide unpaid and overdue, from the server’s one definition. */
+  /** Clinic-wide unpaid, overdue and prepaid, from the server’s one definition. */
   const [totalOwed, setTotalOwed] = useState(0);
   const [overdueOwed, setOverdueOwed] = useState(0);
+  const [prepaidHeld, setPrepaidHeld] = useState(0);
 
-  /** The one payment form, reached from a bill or with no bill named. */
-  const [payingInvoice, setPayingInvoice] = useState<Invoice | null>(null);
-  const [depositPatient, setDepositPatient] = useState<PayingPatient | null>(null);
-  const [openingBill, setOpeningBill] = useState<number | null>(null);
+  /** The two acts: money in (for one bill, or for whatever they owe), money back. */
+  const [receiving, setReceiving] = useState<{ patient: PayingPatient; invoiceId: number | null } | null>(null);
+  const [refunding, setRefunding] = useState<RefundablePatient | null>(null);
 
-  /** Picking who is paying, when no bill was named. */
+  /** Picking whose money it is, when no bill was named. */
   const [picking, setPicking] = useState(false);
   const [patients, setPatients] = useState<PatientOption[]>([]);
   const [pickSearch, setPickSearch] = useState("");
@@ -159,7 +167,7 @@ export default function PaymentsPage() {
 
   const range = windowRange(window_);
 
-  // Both registers page ten at a time; the API searches, filters and counts.
+  // The registers page ten at a time; the API searches, filters and counts.
   const q = useDebounced(search.trim());
   const owedList = usePagedList<Owed, { all: number }>({
     path: "/api/billing/outstanding",
@@ -182,8 +190,21 @@ export default function PaymentsPage() {
     map: normalizeReceipt,
     withCounts: true,
   });
+  const prepaidList = usePagedList<Prepaid, { all: number }>({
+    path: "/api/billing/prepaid",
+    params: { search: q },
+    map: (r: Record<string, unknown>) => ({
+      patient_id: Number(r.patient_id),
+      patient_name: String(r.patient_name ?? ""),
+      prepaid: num(r.prepaid),
+      receipts: Number(r.receipts ?? 0),
+      since: String(r.since ?? ""),
+    }),
+    withCounts: true,
+  });
   const owed = owedList.rows;
   const taken = takenList.rows;
+  const prepaid = prepaidList.rows;
 
   const load = useCallback(async () => {
     const summaryQ = new URLSearchParams();
@@ -206,6 +227,7 @@ export default function PaymentsPage() {
         const all = (await kRes.json())?.all_time ?? {};
         setTotalOwed(num(all.total_outstanding));
         setOverdueOwed(num(all.total_overdue));
+        setPrepaidHeld(num(all.total_credit_held));
       }
     } catch {
       toast.error("Could not reach the server.");
@@ -224,13 +246,38 @@ export default function PaymentsPage() {
     if (moneyMoved === 0) return;
     void owedList.reload();
     void takenList.reload();
+    void prepaidList.reload();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [moneyMoved]);
 
+  /** The patient's name, from the lists already loaded or from the API. */
+  const nameOf = useCallback(
+    async (id: number): Promise<string> => {
+      const known =
+        owed.find((r) => r.patient_id === id)?.patient_name ??
+        taken.find((r) => r.patient_id === id)?.patient_name ??
+        prepaid.find((r) => r.patient_id === id)?.patient_name;
+      if (known) return known;
+      const res = await apiFetch(`/api/patients/${id}`);
+      if (!res.ok) throw new Error();
+      const p = await res.json();
+      return p?.users ? `${p.users.first_name} ${p.users.last_name}`.trim() : `Patient #${id}`;
+    },
+    [owed, taken, prepaid],
+  );
+
+  /** What they have prepaid right now, for the refund dialog. */
+  const prepaidOf = async (id: number): Promise<number> => {
+    const res = await apiFetch(`/api/billing/patients/${id}/ledger`);
+    if (!res.ok) throw new Error();
+    return num((await res.json())?.credit_balance);
+  };
+
   /**
-   * `/admin/payments?patient=<id>` opens that patient’s money file — where
-   * Billing sends the desk after issuing a bill, since taking the money for
-   * it is this page’s job.
+   * `/admin/payments?patient=<id>` opens that patient’s money file;
+   * `&receive=<invoiceId|1>` opens the receive dialog on it (for that bill,
+   * or for whatever they owe) and `&refund=1` the refund dialog — where
+   * Billing sends the desk, since money is received here.
    *
    * Read inside the effect and not in a lazy initial state: the page is
    * server-rendered first, where there is no window, and hydration would
@@ -243,25 +290,22 @@ export default function PaymentsPage() {
     const params = new URLSearchParams(window.location.search);
     const wanted = Number(params.get("patient"));
     if (!wanted) return;
+    const receive = Number(params.get("receive"));
+    const refund = params.get("refund") === "1";
     window.history.replaceState(null, "", "/admin/payments");
 
-    // The name is known from a bill they owe, or from the money that has
-    // moved; failing both, ask for the patient rather than guessing.
-    const fromOwed = owed.find((r) => r.patient_id === wanted)?.patient_name;
-    const fromTaken = taken.find((r) => r.patient_id === wanted)?.patient_name;
-    if (fromOwed || fromTaken) {
-      setDrawerPatient({ id: wanted, label: (fromOwed || fromTaken) as string });
-      return;
-    }
     void (async () => {
       try {
-        const res = await apiFetch(`/api/patients/${wanted}`);
-        if (!res.ok) throw new Error();
-        const p = await res.json();
-        const label = p?.users
-          ? `${p.users.first_name} ${p.users.last_name}`.trim()
-          : `Patient #${wanted}`;
-        setDrawerPatient({ id: wanted, label });
+        const label = await nameOf(wanted);
+        const patient = { id: wanted, label };
+        setDrawerPatient(patient);
+        if (receive) {
+          setReceiving({ patient, invoiceId: receive > 1 ? receive : null });
+        } else if (refund && canRefund) {
+          const held = await prepaidOf(wanted);
+          if (held > 0) setRefunding({ ...patient, prepaid: held });
+          else toast.info(`${label} has nothing ${MONEY_WORD.prepaid.toLowerCase()} to refund.`);
+        }
       } catch {
         toast.error("That patient could not be opened.");
       }
@@ -282,33 +326,26 @@ export default function PaymentsPage() {
     } catch { /* the picker shows its own empty state */ }
   }, []);
 
-  /** Open the one payment form against a bill, fetching it in full first. */
-  const takeOnBill = async (row: Owed) => {
-    setOpeningBill(row.id);
-    try {
-      const res = await apiFetch(`/api/billing/invoices/${row.id}`);
-      if (!res.ok) {
-        toast.error(await readError(res, "Could not open that bill."));
-        return;
-      }
-      setPayingInvoice(normalizeInvoice(await res.json()));
-    } catch {
-      toast.error("Could not reach the server.");
-    } finally {
-      setOpeningBill(null);
-    }
-  };
-
   const refresh = () => setMoneyMoved((n) => n + 1);
 
-  const owedShown = owed;
-  const takenShown = taken;
+  /** The toast after money came in: the receipt, where it went, what stayed. */
+  const sayReceived = (who: string, o: ReceiveOutcome) => {
+    const went = o.applied.map((a) => `${a.invoice_number} $${money(a.amount)}`);
+    const parts = [
+      `${o.receipt.document_number}: $${money(o.receipt.amount)} from ${who}.`,
+      went.length > 0 ? `Paid ${went.join(", ")}.` : "",
+      o.prepaid > 0 ? `$${money(o.prepaid)} stays ${MONEY_WORD.prepaid.toLowerCase()}.` : "",
+    ].filter(Boolean);
+    toast.success(parts.join(" "));
+  };
 
   const handleLogout = useSignOut();
 
   const pickMatches = patients
     .filter((p) => p.label.toLowerCase().includes(pickSearch.trim().toLowerCase()))
     .slice(0, 50);
+
+  const openFile = (id: number, label: string) => setDrawerPatient({ id, label });
 
   return (
     <div className="flex min-h-screen bg-white">
@@ -322,7 +359,7 @@ export default function PaymentsPage() {
       <div className="flex min-w-0 flex-1 flex-col">
         <AdminPageHeader
           title="Payments"
-          subtitle="Take money, and see every receipt and refund"
+          subtitle="Money received and money owed"
           onAdd={
             canTake
               ? () => {
@@ -331,7 +368,7 @@ export default function PaymentsPage() {
                 }
               : undefined
           }
-          addLabel="New receipt"
+          addLabel={MONEY_WORD.receivePayment}
           actions={[
             {
               key: "billing",
@@ -349,15 +386,15 @@ export default function PaymentsPage() {
           ) : (
             <>
               <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-ink-400">
-                {MONEY_WORD.acrossTheClinic} · {WINDOWS[window_].toLowerCase()}
+                {MONEY_WORD.acrossTheClinic}
               </p>
-              <div className="mb-3 grid grid-cols-1 gap-6 md:grid-cols-3">
+              <div className="mb-3 grid grid-cols-1 gap-6 md:grid-cols-4">
                 <StatsCard
                   icon={FaCashRegister}
                   iconBgClass="bg-green-100"
                   iconColorClass="text-green-600"
                   value={`$${money(takenNet)}`}
-                  label="Taken"
+                  label={`Received ${WINDOWS[window_].toLowerCase()}`}
                 />
                 <StatsCard
                   icon={FaWallet}
@@ -373,6 +410,13 @@ export default function PaymentsPage() {
                   value={`$${money(overdueOwed)}`}
                   label="Overdue"
                 />
+                <StatsCard
+                  icon={FaPiggyBank}
+                  iconBgClass="bg-blue-100"
+                  iconColorClass="text-blue-600"
+                  value={`$${money(prepaidHeld)}`}
+                  label={`${MONEY_WORD.prepaid}, held`}
+                />
               </div>
 
               {/* What the drawer should hold, split the way it was taken. The
@@ -380,14 +424,14 @@ export default function PaymentsPage() {
                   they add up to it. */}
               <p className="mb-6 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-ink-500">
                 {byMethod.length === 0 ? (
-                  <span>Nothing was taken {WINDOWS[window_].toLowerCase()}.</span>
+                  <span>Nothing was received {WINDOWS[window_].toLowerCase()}.</span>
                 ) : (
                   byMethod.map((m) => (
                     <span key={m.method} className="capitalize">
                       {methodLabel(m.method)}{" "}
                       <strong className="tabular-nums text-ink-800">${money(m.net)}</strong>
                       {m.refunds > 0 && (
-                        <span className="text-brick-700"> (−${money(m.refunds)} returned)</span>
+                        <span className="text-brick-700"> (−${money(m.refunds)} refunded)</span>
                       )}
                     </span>
                   ))
@@ -401,7 +445,8 @@ export default function PaymentsPage() {
                 onChange={setView}
                 items={[
                   { id: "owed", label: "Owed", icon: <FaFileInvoiceDollar />, count: owedList.counts?.all ?? 0 },
-                  { id: "taken", label: "Receipts", icon: <FaReceipt />, count: takenList.counts?.all ?? 0 },
+                  { id: "taken", label: "Received", icon: <FaReceipt />, count: takenList.counts?.all ?? 0 },
+                  { id: "prepaid", label: MONEY_WORD.prepaid, icon: <FaPiggyBank />, count: prepaidList.counts?.all ?? 0 },
                 ]}
               />
 
@@ -409,11 +454,22 @@ export default function PaymentsPage() {
                 search={{
                   value: search,
                   onChange: setSearch,
-                  placeholder: "Search by patient, RT / RF or bill number",
+                  placeholder:
+                    view === "taken"
+                      ? "Search by patient, RT / RF or bill number"
+                      : view === "owed"
+                        ? "Search by patient or bill number"
+                        : "Search by patient",
                 }}
-                shown={view === "owed" ? owedList.total : takenList.total}
-                total={view === "owed" ? owedList.counts?.all ?? 0 : takenList.counts?.all ?? 0}
-                unitLabel={view === "owed" ? "bills" : "receipts"}
+                shown={view === "owed" ? owedList.total : view === "taken" ? takenList.total : prepaidList.total}
+                total={
+                  view === "owed"
+                    ? owedList.counts?.all ?? 0
+                    : view === "taken"
+                      ? takenList.counts?.all ?? 0
+                      : prepaidList.counts?.all ?? 0
+                }
+                unitLabel={view === "owed" ? "bills" : view === "taken" ? "receipts" : "patients"}
                 groups={
                   view === "taken"
                     ? [
@@ -445,7 +501,7 @@ export default function PaymentsPage() {
 
               {/* ── Who owes money, longest overdue first ─────────────────── */}
               {view === "owed" &&
-                (owedShown.length === 0 ? (
+                (owed.length === 0 ? (
                   <EmptyState
                     icon={FaCashRegister}
                     title={`Nothing is ${MONEY_WORD.unpaid.toLowerCase()}`}
@@ -466,18 +522,16 @@ export default function PaymentsPage() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-ink-100">
-                        {owedShown.map((r) => (
+                        {owed.map((r) => (
                           <tr
                             key={r.id}
                             tabIndex={0}
                             aria-label={`Open the money file of ${r.patient_name}`}
-                            onClick={() =>
-                              setDrawerPatient({ id: r.patient_id, label: r.patient_name })
-                            }
+                            onClick={() => openFile(r.patient_id, r.patient_name)}
                             onKeyDown={(e) => {
                               if (e.key === "Enter" || e.key === " ") {
                                 e.preventDefault();
-                                setDrawerPatient({ id: r.patient_id, label: r.patient_name });
+                                openFile(r.patient_id, r.patient_name);
                               }
                             }}
                             className="cursor-pointer transition-colors hover:bg-brand-50/60 focus-visible:bg-brand-50/60 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-400"
@@ -508,19 +562,21 @@ export default function PaymentsPage() {
                             <td className="px-4 py-3 text-end font-semibold tabular-nums text-brick-700">
                               ${money(r.remaining)}
                             </td>
-                            <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                              <div className="flex justify-end">
-                                {canTake && (
-                                  <Button
-                                    size="sm"
-                                    disabled={openingBill === r.id}
-                                    onClick={() => void takeOnBill(r)}
-                                  >
-                                    <FaMoneyBillWave />
-                                    {openingBill === r.id ? "Opening…" : "Take payment"}
-                                  </Button>
-                                )}
-                              </div>
+                            <td className="px-4 py-3 text-end" onClick={(e) => e.stopPropagation()}>
+                              {/* One act: the money for this bill. */}
+                              {canTake && (
+                                <Button
+                                  size="sm"
+                                  onClick={() =>
+                                    setReceiving({
+                                      patient: { id: r.patient_id, label: r.patient_name },
+                                      invoiceId: r.id,
+                                    })
+                                  }
+                                >
+                                  <FaMoneyBillWave /> {MONEY_WORD.receivePayment}
+                                </Button>
+                              )}
                             </td>
                           </tr>
                         ))}
@@ -532,18 +588,17 @@ export default function PaymentsPage() {
 
               {/* ── Receipts and refunds, newest first ───────────────────── */}
               {view === "taken" &&
-                (takenShown.length === 0 ? (
+                (taken.length === 0 ? (
                   <EmptyState
                     icon={FaReceipt}
-                    title={`No receipts ${WINDOWS[window_].toLowerCase()}`}
+                    title={`Nothing received ${WINDOWS[window_].toLowerCase()}`}
                     description="Receipts and refunds appear here on the day the money moved."
                   />
                 ) : (
                   <ul className="divide-y divide-ink-100 overflow-hidden rounded-2xl border border-ink-200 bg-card">
-                    {takenShown.map((r) => {
+                    {taken.map((r) => {
                       const held = r.figures?.held ?? 0;
-                      const open = () =>
-                        setDrawerPatient({ id: r.patient_id, label: r.patient_name });
+                      const open = () => openFile(r.patient_id, r.patient_name);
                       return (
                         <li
                           key={r.id}
@@ -586,7 +641,9 @@ export default function PaymentsPage() {
                                 )
                               )}
                               {r.kind === "payment" && held > 0 && (
-                                <Badge tone="brand">holds ${money(held)}</Badge>
+                                <Badge tone="brand">
+                                  ${money(held)} {MONEY_WORD.prepaid.toLowerCase()}
+                                </Badge>
                               )}
                             </div>
                             <div className="mt-0.5 text-xs text-ink-500">
@@ -600,7 +657,7 @@ export default function PaymentsPage() {
                                     ...r.refunds.map(
                                       (f) => `−$${money(f.amount)} refunded (${f.document_number})`,
                                     ),
-                                  ].join(" · ") || "Deposit: not used on a bill yet"}
+                                  ].join(" · ") || `${MONEY_WORD.prepaid}: not on a bill yet`}
                               {r.kind === "payment" && r.notes && ` · ${r.notes}`}
                             </div>
                           </div>
@@ -608,43 +665,92 @@ export default function PaymentsPage() {
                             <div className="tabular-nums">{formatDateBeirut(r.payment_date)}</div>
                             {r.taken_by && <div>by {r.taken_by}</div>}
                           </div>
-                          <div
-                            className="flex items-center gap-1"
-                            onClick={(e) => e.stopPropagation()}
-                          >
+                          <div onClick={(e) => e.stopPropagation()}>
                             <Button
                               size="sm"
-                              variant="outline"
+                              variant="ghost"
                               aria-label={`Print ${r.document_number}`}
                               onClick={() => printReceipt(r)}
                             >
                               <FaPrint />
                             </Button>
-                            {canRefund && r.kind === "payment" && held > 0 && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() =>
-                                  setRefunding({
-                                    id: r.id,
-                                    document_number: r.document_number,
-                                    held,
-                                    patient_name: r.patient_name,
-                                  })
-                                }
-                              >
-                                <FaUndo /> Refund
-                              </Button>
-                            )}
                           </div>
                         </li>
                       );
                     })}
                   </ul>
                 ))}
-              {view === "taken" && takenShown.length > 0 && (
+              {view === "taken" && taken.length > 0 && (
                 <ShowMore shown={taken.length} total={takenList.total} loading={takenList.loadingMore} onClick={takenList.loadMore} />
               )}
+
+              {/* ── Who is holding prepaid money ──────────────────────────── */}
+              {view === "prepaid" &&
+                (prepaid.length === 0 ? (
+                  <EmptyState
+                    icon={FaPiggyBank}
+                    title={`Nobody has ${MONEY_WORD.prepaid.toLowerCase()} money`}
+                    description="A payment that no bill has used yet shows here, until the next bill takes it or it is refunded."
+                  />
+                ) : (
+                  <div className="overflow-hidden rounded-2xl border border-ink-200 bg-card">
+                    <table className="w-full text-sm">
+                      <thead className="bg-ink-50/80 text-xs uppercase tracking-wide text-ink-500">
+                        <tr>
+                          <th className="px-4 py-3 text-start">Patient</th>
+                          <th className="px-4 py-3 text-start">Since</th>
+                          <th className="px-4 py-3 text-start">Receipts</th>
+                          <th className="px-4 py-3 text-end">{MONEY_WORD.prepaid}</th>
+                          <th className="px-4 py-3" />
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-ink-100">
+                        {prepaid.map((r) => (
+                          <tr
+                            key={r.patient_id}
+                            tabIndex={0}
+                            aria-label={`Open the money file of ${r.patient_name}`}
+                            onClick={() => openFile(r.patient_id, r.patient_name)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                openFile(r.patient_id, r.patient_name);
+                              }
+                            }}
+                            className="cursor-pointer transition-colors hover:bg-brand-50/60 focus-visible:bg-brand-50/60 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-400"
+                          >
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-2">
+                                <Avatar name={r.patient_name} size="sm" />
+                                <span className="font-medium text-ink-900">{r.patient_name}</span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-ink-600">{formatDateBeirut(r.since)}</td>
+                            <td className="px-4 py-3 text-ink-600">{r.receipts}</td>
+                            <td className="px-4 py-3 text-end font-semibold tabular-nums text-brand-800">
+                              ${money(r.prepaid)}
+                            </td>
+                            <td className="px-4 py-3 text-end" onClick={(e) => e.stopPropagation()}>
+                              {/* One act: hand it back. A bill takes it by itself. */}
+                              {canRefund && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() =>
+                                    setRefunding({ id: r.patient_id, label: r.patient_name, prepaid: r.prepaid })
+                                  }
+                                >
+                                  <FaUndo /> {MONEY_WORD.refund}
+                                </Button>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    <ShowMore shown={prepaid.length} total={prepaidList.total} loading={prepaidList.loadingMore} onClick={prepaidList.loadMore} />
+                  </div>
+                ))}
             </>
           )}
         </main>
@@ -656,11 +762,11 @@ export default function PaymentsPage() {
           patient={drawerPatient}
           isOpen={!!drawerPatient}
           onClose={() => setDrawerPatient(null)}
-          onTakePayment={(inv) =>
-            inv ? setPayingInvoice(inv) : setDepositPatient(drawerPatient)
+          onReceivePayment={(invoiceId) =>
+            setReceiving({ patient: drawerPatient, invoiceId: invoiceId ?? null })
           }
+          onRefundPrepaid={(held) => setRefunding({ ...drawerPatient, prepaid: held })}
           onViewInvoice={() => router.push(`/admin/billing?patient=${drawerPatient.id}`)}
-          allowMoneyActs
           onChanged={refresh}
           refreshToken={moneyMoved}
         />
@@ -670,8 +776,8 @@ export default function PaymentsPage() {
       <Modal
         isOpen={picking}
         onClose={() => setPicking(false)}
-        title="New receipt: whose money is it?"
-        description="A deposit: a receipt with no bill yet. It stays open and can be used on any of their bills."
+        title={`${MONEY_WORD.receivePayment}: from whom?`}
+        description="It pays their unpaid bills, oldest first; anything beyond that stays prepaid for their next bill."
         maxWidth="max-w-lg"
       >
         <div className="space-y-3">
@@ -690,7 +796,7 @@ export default function PaymentsPage() {
                 type="button"
                 onClick={() => {
                   setPicking(false);
-                  setDepositPatient({ id: p.id, label: p.label });
+                  setReceiving({ patient: p, invoiceId: null });
                 }}
                 className="flex w-full items-center gap-3 px-3 py-2 text-start text-sm hover:bg-ink-50"
               >
@@ -707,28 +813,26 @@ export default function PaymentsPage() {
         </div>
       </Modal>
 
-      <RefundReceiptModal
-        receipt={refunding}
-        onClose={() => setRefunding(null)}
-        onRefunded={refresh}
+      {/* Money in. */}
+      <ReceivePaymentModal
+        patient={receiving?.patient ?? null}
+        open={!!receiving}
+        initialInvoiceId={receiving?.invoiceId ?? null}
+        onClose={() => setReceiving(null)}
+        onReceived={(outcome) => {
+          const who = receiving?.patient.label ?? "the patient";
+          setReceiving(null);
+          refresh();
+          sayReceived(who, outcome);
+        }}
       />
 
-      {/* The one payment form in the clinic, named bill or not. */}
-      <TakePaymentModal
-        invoice={payingInvoice}
-        patient={depositPatient}
-        open={!!depositPatient}
-        onClose={() => {
-          setPayingInvoice(null);
-          setDepositPatient(null);
-        }}
-        onPaid={(inv) => {
-          setDepositPatient(null);
-          setPayingInvoice(inv && inv.remaining_amount > 0 ? inv : null);
-          refresh();
-        }}
+      {/* Money back. */}
+      <RefundPrepaidModal
+        patient={refunding}
+        onClose={() => setRefunding(null)}
+        onRefunded={refresh}
       />
     </div>
   );
 }
-

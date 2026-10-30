@@ -10,6 +10,7 @@ export const ADMIN_SCREEN_PERMISSION: Readonly<Record<string, string>> = {
   "/admin/patients": "patients:read",
   "/admin/inventory": "inventory:read",
   "/admin/expenses": "expenses:read",
+  "/admin/quotes": "billing:read",
   "/admin/billing": "billing:read",
   "/admin/payments": "billing:read",
   "/admin/roles": "staff:read",

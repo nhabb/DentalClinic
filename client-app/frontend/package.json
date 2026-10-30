@@ -4,11 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "next dev --webpack",
+    "dev": "next dev",
+    "dev:webpack": "next dev --webpack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "dev:turbo": "next dev"
+    "lint": "next lint"
   },
   "repository": {
     "type": "git",

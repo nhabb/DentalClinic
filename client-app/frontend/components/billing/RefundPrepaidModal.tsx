@@ -7,36 +7,33 @@ import { apiFetch } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/Modal";
 import { FormField, inputClass } from "@/components/ui/FormField";
+import { MONEY_WORD } from "./money-words";
+import { PAYMENT_METHODS } from "./payment-methods";
 import { clinicToday, money, readError } from "./quote-doc";
-import { PAYMENT_METHODS } from "./TakePaymentModal";
 
 /*
- * Hand money back out of one receipt (a refund, RF…).
+ * Refund: the one way money goes back.
  *
- * Only what the receipt still holds can go back: money already on a bill has
- * to be released first by cancelling that bill, which returns it to the
- * receipt. The server checks the same bound, under a lock.
+ * Only prepaid money can be handed back — money on a bill has to be released
+ * first by cancelling or replacing that bill, which is where that choice is
+ * offered. The server takes it out of the receipts that hold it, newest
+ * first, one refund (RF) per receipt, and refuses more than is held.
  */
 
-export interface RefundableReceipt {
-  id: number;
-  document_number: string;
-  /** What the receipt still holds. */
-  held: number;
-  patient_name?: string;
+export interface RefundablePatient {
+  id: number | string;
+  label: string;
+  /** What they have prepaid right now. */
+  prepaid: number;
 }
 
-interface RefundReceiptModalProps {
-  receipt: RefundableReceipt | null;
+interface Props {
+  patient: RefundablePatient | null;
   onClose: () => void;
   onRefunded: () => void;
 }
 
-export function RefundReceiptModal({
-  receipt,
-  onClose,
-  onRefunded,
-}: RefundReceiptModalProps) {
+export function RefundPrepaidModal({ patient, onClose, onRefunded }: Props) {
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState("cash");
   const [date, setDate] = useState(clinicToday());
@@ -45,27 +42,26 @@ export function RefundReceiptModal({
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!receipt) return;
-    setAmount(receipt.held > 0 ? receipt.held.toFixed(2) : "");
+    if (!patient) return;
+    setAmount(patient.prepaid > 0 ? patient.prepaid.toFixed(2) : "");
     setMethod("cash");
     setDate(clinicToday());
     setReason("");
     setError("");
-  }, [receipt]);
+  }, [patient]);
 
-  if (!receipt) return null;
+  if (!patient) return null;
 
   const submit = async () => {
     setError("");
     const value = parseFloat(amount);
-    if (!Number.isFinite(value) || value <= 0)
-      return setError("Enter the amount handed back.");
-    if (value > receipt.held + 0.005)
-      return setError(`This receipt holds $${money(receipt.held)}.`);
+    if (!Number.isFinite(value) || value <= 0) return setError("Enter the amount handed back.");
+    if (value > patient.prepaid + 0.005)
+      return setError(`They have $${money(patient.prepaid)} ${MONEY_WORD.prepaid.toLowerCase()}, not more.`);
     if (reason.trim().length < 3) return setError("Say why the money goes back.");
     setSaving(true);
     try {
-      const res = await apiFetch(`/api/billing/receipts/${receipt.id}/refunds`, {
+      const res = await apiFetch(`/api/billing/patients/${patient.id}/credit-refunds`, {
         method: "POST",
         body: JSON.stringify({
           amount: value,
@@ -76,10 +72,11 @@ export function RefundReceiptModal({
       });
       if (!res.ok) throw new Error(await readError(res, "The refund was refused."));
       const body = await res.json();
-      const made = (body?.refunds ?? []).at(-1);
-      toast.success(
-        `Refunded $${money(value)}${made?.document_number ? ` (${made.document_number})` : ""}.`,
-      );
+      const numbers = ((body?.refunds ?? []) as { document_number?: string }[])
+        .map((r) => r.document_number)
+        .filter(Boolean)
+        .join(", ");
+      toast.success(`Refunded $${money(value)} to ${patient.label}${numbers ? ` (${numbers})` : ""}.`);
       onRefunded();
       onClose();
     } catch (e) {
@@ -91,10 +88,10 @@ export function RefundReceiptModal({
 
   return (
     <Modal
-      isOpen={!!receipt}
+      isOpen={!!patient}
       onClose={onClose}
-      title={`Refund out of ${receipt.document_number}`}
-      description={`It holds $${money(receipt.held)}${receipt.patient_name ? ` for ${receipt.patient_name}` : ""}. Money on a bill must be released first by cancelling that bill.`}
+      title={`${MONEY_WORD.refund} — ${patient.label}`}
+      description={`They have $${money(patient.prepaid)} ${MONEY_WORD.prepaid.toLowerCase()}. Money already on a bill is released by cancelling or replacing that bill.`}
       maxWidth="max-w-md"
     >
       <div className="space-y-3">
@@ -104,7 +101,7 @@ export function RefundReceiptModal({
               type="number"
               min="0.01"
               step="0.01"
-              max={receipt.held}
+              max={patient.prepaid}
               value={amount}
               autoFocus
               onChange={(e) => setAmount(e.target.value)}
@@ -112,11 +109,7 @@ export function RefundReceiptModal({
             />
           </FormField>
           <FormField label="Handed back by *">
-            <select
-              value={method}
-              onChange={(e) => setMethod(e.target.value)}
-              className={inputClass}
-            >
+            <select value={method} onChange={(e) => setMethod(e.target.value)} className={inputClass}>
               {PAYMENT_METHODS.map((m) => (
                 <option key={m.value} value={m.value}>
                   {m.label}
@@ -125,7 +118,7 @@ export function RefundReceiptModal({
             </select>
           </FormField>
         </div>
-        <FormField label="Handed back on *">
+        <FormField label="On *">
           <input
             type="date"
             value={date}
@@ -139,7 +132,7 @@ export function RefundReceiptModal({
             type="text"
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            placeholder="e.g. The patient changed their mind"
+            placeholder="e.g. Stopped treatment"
             className={inputClass}
           />
         </FormField>
@@ -154,7 +147,7 @@ export function RefundReceiptModal({
           </Button>
           <Button variant="destructive" onClick={submit} disabled={saving}>
             <FaUndo className="mr-2" />
-            {saving ? "Recording…" : "Record refund"}
+            {saving ? "Recording…" : `${MONEY_WORD.refund} $${money(parseFloat(amount) || 0)}`}
           </Button>
         </div>
       </div>

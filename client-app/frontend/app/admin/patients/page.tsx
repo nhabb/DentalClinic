@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { safeStorage } from "@/lib/browser-compat";
 import { useTranslation } from "@/lib/i18n";
 import { usePermissions } from "@/lib/permissions";
-import { DEFAULT_PRICES } from "@/components/billing/invoice-doc";
 import { PlanQuoteBand } from "@/components/chart/PlanQuoteBand";
 import type { Plan } from "@/components/billing/quote-doc";
 import AdminSidebar from "@/components/ui/AdminSidebar";
@@ -208,8 +207,6 @@ interface WorkItem {
   tooth: string;
   procedure: string;
   status: WorkStatus;
-  /** Planned work carries this price into the patient's quote. */
-  amount: number;
   notes: string;
 }
 
@@ -223,13 +220,12 @@ interface ChartHistoryEntry {
   notes: string;
   /**
    * Whether this work is already on an invoice. That — not any document's
-   * status — is what locks a line: its price belongs to the invoice now.
+   * status — is what locks a line: it can no longer be deleted or re-priced
+   * on the Quote page, and the row says which bill holds it.
    */
   billed: boolean;
-  /** The invoice that froze it, so the row can say which one. */
+  invoiceId: number | null;
   invoiceNumber: string | null;
-  /** Price planned for this work; null when nobody has priced it yet. */
-  price: number | null;
 }
 
 interface ChartData {
@@ -261,8 +257,9 @@ function mapChart(raw: any): ChartData {
     doctor: r.users ? `Dr. ${r.users.first_name} ${r.users.last_name}` : "",
     notes: r.description ?? "",
     billed: r.invoice?.id != null,
+    invoiceId: r.invoice?.id != null ? Number(r.invoice.id) : null,
     invoiceNumber: r.invoice?.invoice_number ?? null,
-    price: r.quoted_amount != null && r.quoted_amount !== "" ? Number(r.quoted_amount) : null,
+    // quoted_amount is deliberately not read: the chart shows no money.
   }));
   const plan: Plan | null = raw?.plan ?? null;
   // Every treatment per tooth (history is newest first) so hovering a tooth
@@ -462,10 +459,9 @@ export default function PatientsPage() {
   const [focusHistoryId, setFocusHistoryId] = useState<number | null>(null);
   const [selectedTeeth, setSelectedTeeth] = useState<string[]>([]);
   const [workItems, setWorkItems] = useState<WorkItem[]>([]);
-  const [workForm, setWorkForm] = useState<{ procedure: string; status: WorkStatus; amount: string; notes: string }>({
+  const [workForm, setWorkForm] = useState<{ procedure: string; status: WorkStatus; notes: string }>({
     procedure: "Filling",
     status: "completed",
-    amount: String(DEFAULT_PRICES["Filling"] ?? ""),
     notes: "",
   });
   const [workDate, setWorkDate] = useState(new Date().toISOString().split("T")[0]);
@@ -480,17 +476,10 @@ export default function PatientsPage() {
   const [completeDate, setCompleteDate] = useState(new Date().toISOString().split("T")[0]);
   const [completing, setCompleting] = useState(false);
   const [removingRecordId, setRemovingRecordId] = useState<number | null>(null);
-  const [repricingId, setRepricingId] = useState<number | null>(null);
-  /** The billed line whose frozen price somebody just tried to change. */
-  const [frozenPrice, setFrozenPrice] = useState<ChartHistoryEntry | null>(null);
   const { can } = usePermissions();
 
-  // Bumped whenever the plan changed, so the estimate band rebuilds itself.
+  // Bumped whenever the plan changed.
   const [planToken, setPlanToken] = useState(0);
-  const refreshChart = () => {
-    if (selectedPatient) fetchChart(selectedPatient.id);
-    setPlanToken((n) => n + 1);
-  };
 
   // Check auth and load user data (auth disabled)
   useEffect(() => {
@@ -1017,7 +1006,7 @@ export default function PatientsPage() {
   };
 
   const handleWorkProcedureChange = (procedure: string) => {
-    setWorkForm((f) => ({ ...f, procedure, amount: String(DEFAULT_PRICES[procedure] ?? "") }));
+    setWorkForm((f) => ({ ...f, procedure }));
   };
 
   /**
@@ -1039,7 +1028,6 @@ export default function PatientsPage() {
         tooth,
         procedure: workForm.procedure,
         status: workForm.status,
-        amount: workForm.status === "missing" ? 0 : parseFloat(workForm.amount) || 0,
         notes: workForm.notes.trim(),
       })),
     ]);
@@ -1084,10 +1072,8 @@ export default function PatientsPage() {
           ...(workNotes.trim() ? { notes: workNotes.trim() } : {}),
           items: workItems.map((i) => ({
             ...(i.tooth ? { tooth_number: i.tooth } : {}),
-            // The price is noted on the record; the billing page bills it.
-            ...(i.status === "missing"
-              ? {}
-              : { procedure_name: i.procedure, amount: i.amount }),
+            // No price: the chart is clinical. The Quote page prices the plan.
+            ...(i.status === "missing" ? {} : { procedure_name: i.procedure }),
             status: i.status,
             ...(i.notes ? { notes: i.notes } : {}),
           })),
@@ -1162,35 +1148,6 @@ export default function PatientsPage() {
       toast.error(t("dentalChart.completeFailed"));
     } finally {
       setCompleting(false);
-    }
-  };
-
-  /** Reprice one planned item; the patient's estimate follows it. */
-  const handleReprice = async (h: ChartHistoryEntry, raw: string) => {
-    const amount = parseFloat(raw);
-    if (!Number.isFinite(amount) || amount < 0) {
-      toast.error("Enter a price of 0 or more.");
-      return;
-    }
-    if (h.price != null && Math.abs(h.price - amount) < 0.005) return;
-    setRepricingId(h.id);
-    try {
-      const res = await apiFetch(`/api/patient-work/records/${h.id}/price`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount }),
-      });
-      if (!res.ok) {
-        toast.error(await readApiError(res, "Could not change the price."));
-        return;
-      }
-      const data = await res.json();
-      if (data?.chart) setChart(mapChart(data.chart));
-      setPlanToken((n) => n + 1);
-    } catch {
-      toast.error("Could not change the price.");
-    } finally {
-      setRepricingId(null);
     }
   };
 
@@ -2083,31 +2040,19 @@ export default function PatientsPage() {
                                 <p className="mt-1 text-xs text-gray-500">{t("dentalChart.missingHint")}</p>
                               )}
                             </div>
-                            <div className="grid grid-cols-2 gap-3">
-                              <div>
-                                <label className="block text-xs font-medium text-gray-700 mb-1">{t("common.status")}</label>
-                                <select
-                                  value={workForm.status}
-                                  onChange={(e) => handleWorkStatusChange(e.target.value as WorkStatus)}
-                                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
-                                >
-                                  <option value="completed">{t("dentalChart.completed")}</option>
-                                  <option value="planned">{t("dentalChart.plannedStatus")}</option>
-                                  <option value="missing">{t("dentalChart.missingStatus")}</option>
-                                </select>
-                              </div>
-                              <div>
-                                <label className="block text-xs font-medium text-gray-700 mb-1">Price per tooth</label>
-                                <input
-                                  type="number"
-                                  min="0"
-                                  step="0.01"
-                                  value={workForm.amount}
-                                  onChange={(e) => setWorkForm((f) => ({ ...f, amount: e.target.value }))}
-                                  disabled={workForm.status === "missing"}
-                                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 disabled:bg-gray-100 disabled:text-gray-400"
-                                />
-                              </div>
+                            {/* No price here: the chart is clinical. The plan is
+                                priced on the Quote page, once the work is listed. */}
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 mb-1">{t("common.status")}</label>
+                              <select
+                                value={workForm.status}
+                                onChange={(e) => handleWorkStatusChange(e.target.value as WorkStatus)}
+                                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
+                              >
+                                <option value="completed">{t("dentalChart.completed")}</option>
+                                <option value="planned">{t("dentalChart.plannedStatus")}</option>
+                                <option value="missing">{t("dentalChart.missingStatus")}</option>
+                              </select>
                             </div>
                             <div>
                               <label className="block text-xs font-medium text-gray-700 mb-1">{t("patients.notesSection")}</label>
@@ -2207,15 +2152,13 @@ export default function PatientsPage() {
                         </div>
                       </div>
 
-                      {/* The plan IS the chart rows above; this only adds them up. */}
+                      {/* The plan IS the chart rows above; this says how far
+                          it has got and leads to the Quote page, which is
+                          where it is priced. No amount appears on the chart. */}
                       {can("billing:read") && (
                         <PlanQuoteBand
                           patientId={selectedPatient.id}
                           plan={chart?.plan ?? null}
-                          canConfirm={can("billing:create")}
-                          canSeeMoney={can("billing:read")}
-                          onChanged={refreshChart}
-                          patientName={selectedPatient.name}
                         />
                       )}
 
@@ -2270,7 +2213,7 @@ export default function PatientsPage() {
                                   <th className="py-2.5 px-3">{t("dentalChart.procedure")}</th>
                                   <th className="py-2.5 px-3">{t("common.status")}</th>
                                   <th className="py-2.5 px-3">{t("dentalChart.doctor")}</th>
-                                  <th className="py-2.5 px-3">Price</th>
+                                  <th className="py-2.5 px-3">Bill</th>
                                   <th className="py-2.5 px-3 text-right rtl:text-left">{t("common.actions")}</th>
                                 </tr>
                               </thead>
@@ -2310,56 +2253,25 @@ export default function PatientsPage() {
                                     </td>
                                     <td className="py-2.5 px-3 text-gray-600 whitespace-nowrap">{h.doctor || "—"}</td>
                                     {/*
-                                      Work is priced right here, and stays
-                                      repriceable until it is billed — a plan
-                                      is allowed to change part-way through
-                                      treatment. A billed row shows the price
-                                      the invoice froze, with a lock: this
-                                      column is money, so it must never read
-                                      "Billed" instead of an amount, and the
-                                      figure you agreed must never disappear.
+                                      No money on the chart. This column only
+                                      says whether the work is on a bill, which
+                                      is what locks the row: a billed row can
+                                      be neither deleted here nor re-priced on
+                                      the Quote page until that bill is replaced.
                                     */}
                                     <td className="py-2.5 px-3 text-gray-600 whitespace-nowrap">
                                       {h.billed ? (
-                                        <button
-                                          type="button"
-                                          onClick={() => setFrozenPrice(h)}
-                                          aria-label={`Why the price of ${h.procedure} cannot be changed`}
-                                          title={
-                                            h.invoiceNumber
-                                              ? `Billed on ${h.invoiceNumber} — click to see why this price cannot be changed`
-                                              : "Billed — click to see why this price cannot be changed"
-                                          }
-                                          className="press inline-flex items-center gap-1.5 rounded-lg px-1.5 py-0.5 hover:bg-honey-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400"
+                                        <span
+                                          className="inline-flex items-center gap-1.5 font-mono text-xs text-gray-700"
+                                          title={`On ${h.invoiceNumber ?? "a bill"} — priced on the Quote page; replace that bill on the Billing page to change it`}
                                         >
-                                          <span className="font-medium text-gray-800">
-                                            {h.price != null ? `${h.price.toFixed(2)}` : "—"}
-                                          </span>
                                           <FaLock className="text-[10px] text-gray-400" aria-hidden />
-                                        </button>
-                                      ) : h.status !== "missing" && can("records:edit") ? (
-                                        <span className="inline-flex items-center gap-1">
-                                          <span className="text-gray-400">$</span>
-                                          <input
-                                            type="number"
-                                            min="0"
-                                            step="0.01"
-                                            defaultValue={h.price ?? ""}
-                                            disabled={repricingId === h.id}
-                                            onBlur={(e) => handleReprice(h, e.target.value)}
-                                            onKeyDown={(e) => {
-                                              if (e.key === "Enter") e.currentTarget.blur();
-                                            }}
-                                            aria-label={`Price for ${h.procedure}`}
-                                            className="w-24 rounded-lg border border-gray-200 px-2 py-1 text-right text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 disabled:bg-gray-100"
-                                          />
+                                          {h.invoiceNumber ?? "On a bill"}
                                         </span>
-                                      ) : h.price != null && h.status !== "missing" ? (
-                                        <span className="font-medium text-gray-800">
-                                          ${h.price.toFixed(2)}
-                                        </span>
-                                      ) : (
+                                      ) : h.status === "missing" ? (
                                         "—"
+                                      ) : (
+                                        <span className="text-xs text-gray-400">Not billed</span>
                                       )}
                                     </td>
                                     <td className="py-2.5 px-3">
@@ -3200,64 +3112,6 @@ export default function PatientsPage() {
           </div>
         )}
       </Drawer>
-
-      {/* Why a billed price will not budge.
-
-          The row renders no input for billed work, so clicking the price
-          used to do nothing and the only explanation lived in a hover
-          title — invisible on a touch screen, invisible to a keyboard, and
-          only findable by someone who already suspected it was there. */}
-      {frozenPrice && (
-        <Modal
-          isOpen={!!frozenPrice}
-          onClose={() => setFrozenPrice(null)}
-          title="This price is on a bill"
-          description={
-            frozenPrice.invoiceNumber
-              ? `${frozenPrice.procedure} was billed on ${frozenPrice.invoiceNumber}`
-              : `${frozenPrice.procedure} has been billed`
-          }
-          maxWidth="max-w-md"
-        >
-          <div className="space-y-3 text-sm text-ink-700">
-            <p>
-              A bill’s lines cannot be changed after it is issued — that is what
-              keeps the invoice, the receipt and the books saying the same thing.
-              {frozenPrice.price != null && (
-                <>
-                  {" "}This work was billed at{" "}
-                  <strong className="tabular-nums">
-                    ${frozenPrice.price.toFixed(2)}
-                  </strong>
-                  .
-                </>
-              )}
-            </p>
-            <p>
-              To charge a different amount, cancel that bill and issue a new
-              one. If money has already been received on it, refund that first.
-            </p>
-            <p className="text-xs text-ink-500">
-              Everything on this plan that is not on a bill can still be
-              repriced here.
-            </p>
-            <div className="flex flex-wrap justify-end gap-2 border-t border-ink-200/70 pt-3">
-              <Button variant="outline" onClick={() => setFrozenPrice(null)}>
-                Close
-              </Button>
-              {can("billing:read") && selectedPatient && (
-                <Button
-                  onClick={() =>
-                    router.push(`/admin/billing?patient=${selectedPatient.id}`)
-                  }
-                >
-                  Open the money file
-                </Button>
-              )}
-            </div>
-          </div>
-        </Modal>
-      )}
 
       <BulkActionBar
         count={selectedIds.size}

@@ -14,14 +14,12 @@ import { money } from "./quote-doc";
 import type { PatientOption } from "./NewInvoiceModal";
 
 /*
- * Every patient's treatment plan, in one list.
+ * Every patient's quote, in one list.
  *
- * This is the register — who has a plan, what it comes to, how much of it has
- * been billed — and nothing else. A plan is chart work, so it is built on the
- * chart; and one patient's plan is read in their money file alongside their
- * bills and their payments, which is where giving it to them and recording
- * that they agreed now live. This list used to carry a third copy of both,
- * with its own wording for the same totals.
+ * This is the register — who has a plan, what its quote comes to, whether
+ * they agreed — and nothing else. A plan is chart work, so it is built on the
+ * chart; opening a row opens that patient's quote, where the lines are priced,
+ * given to the patient and agreed.
  */
 
 /** One row of the clinic-wide list. */
@@ -45,7 +43,7 @@ const nameOf = (r: PlanRow) =>
 export function QuotesPanel({
   onOpenPatient,
 }: {
-  /** Open that patient's money file, landing on their plan. */
+  /** Open that patient's quote. */
   onOpenPatient: (patient: PatientOption) => void;
 }) {
   const router = useRouter();
@@ -81,7 +79,7 @@ export function QuotesPanel({
     );
   }, [rows, search]);
 
-  if (loading) return <LoadingSpinner label="Loading treatment plans" />;
+  if (loading) return <LoadingSpinner label="Loading quotes" />;
 
   return (
     <div className="space-y-4">
@@ -89,18 +87,18 @@ export function QuotesPanel({
         search={{
           value: search,
           onChange: setSearch,
-          placeholder: "Search by patient or plan number",
+          placeholder: "Search by patient or quote number",
         }}
         shown={filtered.length}
         total={rows.length}
-        unitLabel="plans"
+        unitLabel="quotes"
       />
 
       {filtered.length === 0 ? (
         <EmptyState
           icon={FaTooth}
-          title="No treatment plans yet"
-          description="A plan is built on a patient's dental chart: plan the work, price it there, and it appears here."
+          title="No quotes yet"
+          description="A quote is a patient's plan, priced. Plan the work on their dental chart and it appears here to be priced."
         />
       ) : (
         <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
@@ -108,9 +106,9 @@ export function QuotesPanel({
             <thead className="bg-gray-50 text-start text-xs uppercase tracking-wide text-gray-500">
               <tr>
                 <th className="px-4 py-3 text-start">Patient</th>
-                <th className="px-4 py-3 text-start">Plan</th>
+                <th className="px-4 py-3 text-start">{MONEY_WORD.quote}</th>
                 <th className="px-4 py-3 text-start">Items</th>
-                <th className="px-4 py-3 text-end">{MONEY_WORD.planTotal}</th>
+                <th className="px-4 py-3 text-end">{MONEY_WORD.quoteTotal}</th>
                 <th className="px-4 py-3 text-start">Agreed</th>
                 <th className="px-4 py-3" />
               </tr>
@@ -120,7 +118,7 @@ export function QuotesPanel({
                 <tr
                   key={String(r.id)}
                   tabIndex={0}
-                  aria-label={`Open the money file of ${nameOf(r)}`}
+                  aria-label={`Open the quote of ${nameOf(r)}`}
                   onClick={() =>
                     onOpenPatient({ id: Number(r.patient_id), label: nameOf(r) })
                   }
@@ -157,7 +155,7 @@ export function QuotesPanel({
                       <Button
                         size="sm"
                         variant="ghost"
-                        title="Plan the work and price it on the chart"
+                        title="Plan the work on the chart"
                         onClick={() =>
                           router.push(`/admin/patients?patient=${r.patient_id}&tab=chart`)
                         }

@@ -75,10 +75,40 @@ export type InvoicePayment = {
   created_at: string;
 };
 
+/** Another bill in the replacement chain: the one this replaced, or the one that replaced this. */
+export type LinkedInvoice = {
+  id: number;
+  invoice_number: string;
+  status?: InvoiceStatus;
+};
+
+/** Chart work this bill holds, so a line can be paired with its plan row. */
+export type InvoiceRecord = {
+  id: number;
+  title: string;
+  tooth_number: string | null;
+  quoted_amount: number | null;
+};
+
+/** Money taken off one receipt (RT) and put on a bill as it was issued. */
+export type ReceiptMovement = {
+  receipt_id: number;
+  document_number: string;
+  amount: number;
+};
+
 export type Invoice = {
   id: number;
   /** IV26-00017: sequential per clinic and year, what the patient sees. */
   invoice_number: string;
+  /** The cancelled bill this one was issued in place of (Replace bill). */
+  replaces?: LinkedInvoice | null;
+  /** The bill issued in place of this one, once it was replaced. */
+  replaced_by?: LinkedInvoice | null;
+  /** The chart records on this bill; a line keeps only its figures. */
+  records: InvoiceRecord[];
+  /** What the balance paid as the bill was issued; only on a fresh create/replace answer. */
+  paid_from_balance?: ReceiptMovement[];
   patient: {
     id: number;
     users: { first_name: string; last_name: string; email: string };
@@ -120,11 +150,32 @@ export function daysOverdue(
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+const linked = (v: any): LinkedInvoice | null =>
+  v ? { id: Number(v.id), invoice_number: v.invoice_number ?? `#${v.id}`, status: v.status } : null;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function normalizeInvoice(inv: any): Invoice {
   return {
     ...inv,
     id: Number(inv.id),
     invoice_number: inv.invoice_number ?? `#${inv.id}`,
+    replaces: linked(inv.replaces),
+    replaced_by: linked(inv.replaced_by),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    records: (inv.patient_records ?? inv.records ?? []).map((r: any) => ({
+      id: Number(r.id),
+      title: r.title ?? "",
+      tooth_number: r.tooth_number ?? null,
+      quoted_amount: r.quoted_amount == null ? null : Number(r.quoted_amount),
+    })),
+    paid_from_balance: Array.isArray(inv.paid_from_balance)
+      ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        inv.paid_from_balance.map((m: any) => ({
+          receipt_id: Number(m.receipt_id),
+          document_number: m.document_number ?? "",
+          amount: Number(m.amount),
+        }))
+      : undefined,
     due_date: inv.due_date ?? inv.procedure_date,
     subtotal: Number(inv.subtotal ?? inv.total_amount),
     discount_amount: Number(inv.discount_amount ?? 0),
@@ -197,6 +248,8 @@ export function printInvoice(inv: Invoice) {
     <div class="meta">Work done ${formatDateBeirut(inv.procedure_date)} · due ${formatDateBeirut(inv.due_date)}${
       overdue > 0 ? ` (${overdue} days overdue)` : ""
     }</div>
+    ${inv.replaces ? `<div class="meta">${MONEY_WORD.replaces} ${esc(inv.replaces.invoice_number)}</div>` : ""}
+    ${inv.replaced_by ? `<div class="meta">${MONEY_WORD.replacedBy} ${esc(inv.replaced_by.invoice_number)}</div>` : ""}
     <p><strong>${esc(inv.patient.users.first_name)} ${esc(inv.patient.users.last_name)}</strong></p>
     <table><thead><tr><th>Procedure</th><th class="r">Amount</th></tr></thead><tbody>${lines}</tbody>
     <tfoot>${discountRows}<tr><td>Total</td><td class="r">${money(inv.total_amount)}</td></tr></tfoot></table>

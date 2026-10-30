@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api/client";
 import { cn, formatDateBeirut } from "@/lib/utils";
@@ -12,12 +13,10 @@ import { Drawer } from "@/components/ui/Drawer";
 import { Tabs } from "@/components/ui/Tabs";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { money, printPlan, readError, type Plan } from "./quote-doc";
-import { RefundReceiptModal, type RefundableReceipt } from "./RefundReceiptModal";
 import {
   daysOverdue,
   isLive,
   normalizeInvoice,
-  printInvoice,
   type Invoice,
 } from "./invoice-doc";
 import type { PatientOption } from "./NewInvoiceModal";
@@ -30,11 +29,10 @@ import {
   type InvoiceStatus,
 } from "./money-words";
 import {
-  FaCheck,
   FaChevronRight,
+  FaExchangeAlt,
   FaFileInvoiceDollar,
   FaMoneyBillWave,
-  FaPaperPlane,
   FaPlus,
   FaPrint,
   FaRegClock,
@@ -280,21 +278,22 @@ type Props = {
   initialTab?: PatientDrawerTab;
   /** Open one bill in the page's own invoice detail. */
   onViewInvoice?: (invoice: Invoice) => void;
-  /** Hand a bill to the payment form, or `null` to take a deposit. */
-  onTakePayment?: (invoice: Invoice | null) => void;
+  /**
+   * Open the bill builder to replace one bill: cancel it and issue a
+   * corrected one in its place, its money moving across. Billing passes it,
+   * since a bill is a document.
+   */
+  onReplaceInvoice?: (invoice: Invoice) => void;
+  /**
+   * Receive money from this patient, for one bill when an id is given. The
+   * file carries this act wherever it opens: the Payments page opens the
+   * dialog in place, Billing lands on Payments with it open.
+   */
+  onReceivePayment?: (invoiceId?: number) => void;
+  /** Hand back what they have prepaid; offered only while there is some. */
+  onRefundPrepaid?: (prepaid: number) => void;
   /** Open the bill builder for this patient. */
   onNewBill?: () => void;
-  /**
-   * May this drawer move money that is already in — credit onto a bill,
-   * an allocation undone, credit handed back? Only the Payments page says
-   * yes; Billing reads the same history without being able to move it.
-   */
-  allowMoneyActs?: boolean;
-  /**
-   * May it act on the plan — give it to the patient, record that they
-   * agreed? Only Billing says yes: a plan is a document, not money.
-   */
-  allowPlanActs?: boolean;
   /** Bumped by the page when money moved elsewhere, so this redraws with it. */
   refreshToken?: number;
   /** Money moved in here, so the page behind should refresh too. */
@@ -307,26 +306,25 @@ export function PatientDrawer({
   onClose,
   initialTab = "timeline",
   onViewInvoice,
-  onTakePayment,
+  onReplaceInvoice,
+  onReceivePayment,
+  onRefundPrepaid,
   onNewBill,
-  allowMoneyActs = false,
-  allowPlanActs = false,
   refreshToken = 0,
   onChanged,
 }: Props) {
+  const router = useRouter();
   const { can } = usePermissions();
   const canTake = can("billing:create");
-  const canMove = allowMoneyActs && can("billing:edit");
+  const canCorrect = can("billing:edit");
+  // Replacing issues a bill and cancels one, so it needs both.
+  const canReplace = !!onReplaceInvoice && can("billing:create") && can("billing:edit");
 
   const [statement, setStatement] = useState<Statement | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [tab, setTab] = useState<PatientDrawerTab>(initialTab);
-
-  // A refund always comes out of one receipt, with a reason that lands in
-  // audit_logs; the dialog asks for it properly.
-  const [refunding, setRefunding] = useState<RefundableReceipt | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -390,26 +388,61 @@ export function PatientDrawer({
         at: inv.procedure_date,
         kind: "invoice",
         title: `${inv.invoice_number} issued`,
-        detail:
-          inv.status === "cancelled"
-            ? `Cancelled${inv.cancel_reason ? ` — ${inv.cancel_reason}` : ""}`
-            : `${inv.line_items.length} ${inv.line_items.length === 1 ? "item" : "items"} · due ${formatDateBeirut(inv.due_date)}`,
+        detail: [
+          inv.replaces ? `${MONEY_WORD.replaces} ${inv.replaces.invoice_number}` : null,
+          `${inv.line_items.length} ${inv.line_items.length === 1 ? "item" : "items"} · due ${formatDateBeirut(inv.due_date)}`,
+        ]
+          .filter(Boolean)
+          .join(" · "),
         amount: `$${money(inv.total_amount)}`,
       });
+      // A cancellation is its own moment, after the issue: the story reads
+      // issued → paid → cancelled → replaced by, in the order it happened.
+      if (inv.status === "cancelled") {
+        out.push({
+          key: `inv-${inv.id}-cancelled`,
+          at: inv.cancelled_at ?? inv.procedure_date,
+          kind: "invoice",
+          title: `${inv.invoice_number} cancelled`,
+          detail: inv.replaced_by
+            ? `${MONEY_WORD.replacedBy} ${inv.replaced_by.invoice_number}`
+            : (inv.cancel_reason ?? ""),
+          amount: `−$${money(inv.total_amount)}`,
+        });
+      }
     }
 
     for (const p of statement?.payments ?? []) {
-      const where =
-        p.allocations.length > 0
-          ? p.allocations.map((a) => a.invoice.invoice_number).join(", ")
-          : `Held as ${MONEY_WORD.creditOnAccount.toLowerCase()}`;
+      // Where the money went is the story: which bills, and what stayed
+      // prepaid. The note the desk typed rides along after it.
+      const went = p.allocations.map((a) => `$${money(a.amount)} → ${a.invoice.invoice_number}`);
+      if (p.kind === "payment" && p.unapplied > 0) {
+        went.push(`$${money(p.unapplied)} ${MONEY_WORD.prepaid.toLowerCase()}`);
+      }
+      const where = went.length > 0 ? went.join(" · ") : `${MONEY_WORD.prepaid}, now used`;
       out.push({
         key: `pay-${p.id}`,
         at: p.payment_date,
         kind: p.kind === "refund" ? "refund" : "payment",
-        title: p.kind === "refund" ? "Refund paid out" : `Payment received (${method(p.payment_method)})`,
-        detail: p.reason ?? p.notes ?? where,
+        title:
+          p.kind === "refund"
+            ? `${MONEY_WORD.refund} ${p.document_number} (${method(p.payment_method)})`
+            : `Payment ${p.document_number} received (${method(p.payment_method)})`,
+        detail: p.kind === "refund" ? (p.reason ?? "") : [where, p.notes].filter(Boolean).join(" · "),
         amount: `${p.kind === "refund" ? "−" : "+"}$${money(p.amount)}`,
+      });
+    }
+
+    if (statement?.plan?.accepted_at) {
+      out.push({
+        key: "plan-agreed",
+        at: statement.plan.accepted_at,
+        kind: "clinical",
+        title: "Plan agreed by the patient",
+        detail: statement.plan.agreement_stale
+          ? "The plan has changed since; give them the new quote"
+          : `${MONEY_WORD.quoteTotal} $${money(statement.plan_figures.plan_value)}`,
+        amount: "",
       });
     }
 
@@ -440,36 +473,50 @@ export function PatientDrawer({
   const planLines = plan?.lines ?? [];
   const payments = statement?.payments ?? [];
   const liveInvoices = invoices.filter(isLive);
-  const credit = figures?.credit_held ?? 0;
-  /** Bills still owed, from the list already loaded — not a second request. */
-  const openBills = invoices.filter((i) => isLive(i) && i.remaining_amount > 0);
-  /** The payment the credit would come out of: oldest money first. */
-  const creditSource = [...payments]
-    .reverse()
-    .find((p) => p.kind === "payment" && p.unapplied > 0);
+  const prepaid = figures?.credit_held ?? 0;
+  const overdueBills = liveInvoices.filter((i) => daysOverdue(i) > 0 && i.remaining_amount > 0);
+  const owedBills = liveInvoices.filter((i) => i.remaining_amount > 0);
 
-  // ── The acts ───────────────────────────────────────────────────────────────
+  // ── The one correction ─────────────────────────────────────────────────────
+  // Prepaid money pays a bill as it is issued, so a patient holding prepaid
+  // money beside an unpaid bill is the rare case (a bill from before the
+  // deposit, or the desk unticked it). This puts it on that bill; it is the
+  // only money act the file does itself.
 
-  const applyCredit = (paymentId: number, invoice: Invoice, amount: number) =>
+  const usePrepaidOn = (invoice: Invoice) =>
     act(
-      `/api/billing/payments/${paymentId}/allocations`,
-      { method: "POST", body: JSON.stringify({ invoice_id: invoice.id, amount }) },
-      `Applied to ${invoice.invoice_number}.`,
-      "That credit could not be applied.",
+      `/api/billing/invoices/${invoice.id}/pay-from-balance`,
+      { method: "POST", body: JSON.stringify({}) },
+      `${MONEY_WORD.prepaid} money put on ${invoice.invoice_number}.`,
+      "That could not be applied.",
     );
 
-  const unapply = (allocation: Allocation) =>
-    act(
-      `/api/billing/allocations/${allocation.id}`,
-      { method: "DELETE" },
-      `Taken back off ${allocation.invoice.invoice_number}.`,
-      "That could not be undone.",
-    );
-
-  const planAct = (what: "send" | "accept", done: string) =>
-    plan?.quote_id
-      ? act(`/api/quotes/${plan.quote_id}/${what}`, { method: "POST" }, done, "That did not work.")
-      : undefined;
+  /**
+   * The sentence a person reads first. The figures are the same server
+   * figures as the chain below; this only says them in words.
+   */
+  const summary = (() => {
+    if (!figures) return "";
+    const parts: string[] = [];
+    if (figures.due_now > 0) {
+      const late = overdueBills.length;
+      parts.push(
+        `Owes $${money(figures.due_now)} on ${owedBills.length} ${owedBills.length === 1 ? "bill" : "bills"}` +
+          (late > 0
+            ? `, ${late === 1 ? "one" : late} overdue by ${Math.max(...overdueBills.map(daysOverdue))} days`
+            : ""),
+      );
+    } else if (figures.billed > 0) {
+      parts.push("Every bill is paid");
+    } else {
+      parts.push("Nothing billed yet");
+    }
+    if (prepaid > 0) parts.push(`$${money(prepaid)} ${MONEY_WORD.prepaid.toLowerCase()}`);
+    if (planFigures && planFigures.unbilled_value > 0) {
+      parts.push(`$${money(planFigures.unbilled_value)} of the plan ${MONEY_WORD.notYetBilled.toLowerCase()}`);
+    }
+    return parts.join(" · ") + ".";
+  })();
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
@@ -508,22 +555,28 @@ export function PatientDrawer({
     </div>
   );
 
-  const footer = canTake ? (
-    <div className="flex flex-wrap items-center gap-2">
-      {onTakePayment && (
-        <Button onClick={() => onTakePayment(null)}>
-          <FaMoneyBillWave /> Take payment
-        </Button>
-      )}
-      {onNewBill && (
-        <Button variant="outline" onClick={onNewBill}>
-          <FaPlus /> New bill
-        </Button>
-      )}
-      {/* What happens to money with no bill named is said in the payment
-          form itself, where the choice is actually made. */}
-    </div>
-  ) : undefined;
+  // The acts, and only the acts: money in, money back, a new bill. Each
+  // shows only when it can be done, so an empty account has one button.
+  const footer =
+    canTake || canCorrect ? (
+      <div className="flex flex-wrap items-center gap-2">
+        {canTake && onReceivePayment && (
+          <Button onClick={() => onReceivePayment()}>
+            <FaMoneyBillWave /> {MONEY_WORD.receivePayment}
+          </Button>
+        )}
+        {canCorrect && onRefundPrepaid && prepaid > 0 && (
+          <Button variant="outline" onClick={() => onRefundPrepaid(prepaid)}>
+            <FaUndo /> {MONEY_WORD.refund} ${money(prepaid)}
+          </Button>
+        )}
+        {canTake && onNewBill && (
+          <Button variant="outline" onClick={onNewBill}>
+            <FaPlus /> New bill
+          </Button>
+        )}
+      </div>
+    ) : undefined;
 
   return (
     <>
@@ -541,6 +594,10 @@ export function PatientDrawer({
         ) : (
           <div className="space-y-5">
             {header}
+
+            {summary && (
+              <p className="text-sm font-semibold text-ink-900">{summary}</p>
+            )}
 
             {/* ── Plan → Bill → Collect, with what leaks at each step ──────── */}
             {figures && planFigures && (
@@ -578,13 +635,20 @@ export function PatientDrawer({
                     value={`$${money(figures.applied)}`}
                     accent="leaf"
                     leak={
-                      figures.due_now > 0 ? (
-                        <Badge tone="brick">
-                          ${money(figures.due_now)} {MONEY_WORD.unpaid.toLowerCase()}
-                        </Badge>
-                      ) : (
-                        <Badge tone="leaf">Nothing {MONEY_WORD.unpaid.toLowerCase()}</Badge>
-                      )
+                      <span className="flex flex-wrap gap-1">
+                        {figures.due_now > 0 ? (
+                          <Badge tone="brick">
+                            ${money(figures.due_now)} {MONEY_WORD.unpaid.toLowerCase()}
+                          </Badge>
+                        ) : (
+                          <Badge tone="leaf">Nothing {MONEY_WORD.unpaid.toLowerCase()}</Badge>
+                        )}
+                        {prepaid > 0 && (
+                          <Badge tone="brand">
+                            ${money(prepaid)} {MONEY_WORD.prepaid.toLowerCase()}
+                          </Badge>
+                        )}
+                      </span>
                     }
                   />
                 </div>
@@ -634,6 +698,11 @@ export function PatientDrawer({
                               <Badge tone={INVOICE_STATUS_TONE[inv.status] ?? "neutral"} dot>
                                 {INVOICE_STATUS_LABEL[inv.status] ?? inv.status}
                               </Badge>
+                              {inv.replaced_by && (
+                                <Badge tone="brand">
+                                  {MONEY_WORD.replacedBy} {inv.replaced_by.invoice_number}
+                                </Badge>
+                              )}
                               {late > 0 && (
                                 <Badge tone="brick" icon={FaRegClock}>
                                   {late}d overdue
@@ -644,6 +713,11 @@ export function PatientDrawer({
                               {formatDateBeirut(inv.procedure_date)} · due{" "}
                               {formatDateBeirut(inv.due_date)} · {inv.line_items.length}{" "}
                               {inv.line_items.length === 1 ? "item" : "items"}
+                              {inv.replaces && (
+                                <>
+                                  {" "}· {MONEY_WORD.replaces.toLowerCase()} {inv.replaces.invoice_number}
+                                </>
+                              )}
                             </div>
                           </div>
 
@@ -680,21 +754,38 @@ export function PatientDrawer({
                           </dl>
 
                           <div className="flex items-center gap-1.5">
-                            {onTakePayment && canTake && isLive(inv) && inv.remaining_amount > 0 && (
-                              <Button size="sm" onClick={() => onTakePayment(inv)}>
-                                <FaMoneyBillWave /> Take payment
+                            {/* One act per state: an unpaid bill takes money;
+                                prepaid money, when there is any, can be put on
+                                it; a live bill can be replaced. Printing lives
+                                in the bill itself (Open). */}
+                            {canTake && onReceivePayment && isLive(inv) && inv.remaining_amount > 0 && (
+                              <Button size="sm" onClick={() => onReceivePayment(inv.id)}>
+                                <FaMoneyBillWave /> {MONEY_WORD.receivePayment}
                               </Button>
                             )}
-                            <Button
-                              variant="ghost"
-                              size="icon-sm"
-                              title="Print"
-                              onClick={() => printInvoice(inv)}
-                            >
-                              <FaPrint />
-                            </Button>
+                            {canCorrect && prepaid > 0 && isLive(inv) && inv.remaining_amount > 0 && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                disabled={busy}
+                                title={`Put their ${MONEY_WORD.prepaid.toLowerCase()} money on this bill`}
+                                onClick={() => void usePrepaidOn(inv)}
+                              >
+                                Use {MONEY_WORD.prepaid.toLowerCase()}
+                              </Button>
+                            )}
+                            {canReplace && isLive(inv) && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                title="Cancel this bill and issue a corrected one in its place; money on it moves across"
+                                onClick={() => onReplaceInvoice?.(inv)}
+                              >
+                                <FaExchangeAlt /> Replace
+                              </Button>
+                            )}
                             {onViewInvoice && (
-                              <Button variant="outline" size="sm" onClick={() => onViewInvoice(inv)}>
+                              <Button variant="ghost" size="sm" onClick={() => onViewInvoice(inv)}>
                                 Open
                               </Button>
                             )}
@@ -705,70 +796,14 @@ export function PatientDrawer({
                   </ul>
                 ))}
 
-              {/* ── Payments, and the credit that has not reached a bill ──── */}
+              {/* ── Payments: every receipt and refund, read-only ─────────── */}
               {tab === "payments" && (
                 <div className="space-y-4">
-                  {canMove && credit > 0 && (
-                    <div className="space-y-3 rounded-2xl border border-brand-200 bg-brand-50/50 p-4">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div>
-                          <h4 className="text-sm font-semibold text-ink-900">
-                            Open deposits
-                          </h4>
-                          <p className="text-xs text-ink-500">
-                            Receipts not used on a bill yet
-                            {creditSource ? ` (oldest: ${creditSource.document_number})` : ""}.
-                          </p>
-                        </div>
-                        <span className="text-lg font-bold tabular-nums text-brand-800">
-                          ${money(credit)}
-                        </span>
-                      </div>
-
-                      {openBills.length === 0 ? (
-                        <p className="text-xs text-ink-500">
-                          Nothing is {MONEY_WORD.unpaid.toLowerCase()} right now. The credit waits
-                          here until the next bill is issued.
-                        </p>
-                      ) : (
-                        <ul className="space-y-2">
-                          {openBills.map((inv) => {
-                            // Never offer more than the payment it comes out
-                            // of actually has free, or the server refuses it.
-                            const amount = creditSource
-                              ? Math.min(creditSource.unapplied, inv.remaining_amount)
-                              : 0;
-                            return (
-                              <li
-                                key={inv.id}
-                                className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-ink-200 bg-card px-3 py-2 text-sm"
-                              >
-                                <span className="font-mono text-xs text-ink-600">
-                                  {inv.invoice_number}
-                                </span>
-                                <span className="text-ink-700 tabular-nums">
-                                  ${money(inv.remaining_amount)} {MONEY_WORD.unpaid.toLowerCase()}
-                                </span>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  disabled={busy || !creditSource || amount <= 0}
-                                  onClick={() =>
-                                    creditSource && applyCredit(creditSource.id, inv, amount)
-                                  }
-                                >
-                                  Apply ${money(amount)}
-                                </Button>
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      )}
-
-                      <p className="text-xs text-ink-500">
-                        To hand money back, use Refund on the receipt below.
-                      </p>
-                    </div>
+                  {prepaid > 0 && (
+                    <p className="rounded-xl bg-brand-50/60 px-3 py-2 text-xs text-brand-800 ring-1 ring-inset ring-brand-200">
+                      ${money(prepaid)} is {MONEY_WORD.prepaid.toLowerCase()}: it pays their next
+                      bill as it is issued, or can be refunded from the footer.
+                    </p>
                   )}
 
                   {payments.length === 0 ? (
@@ -801,23 +836,6 @@ export function PatientDrawer({
                               {p.kind === "payment" && p.refunded > 0 && (
                                 <Badge tone="brick">${money(p.refunded)} refunded</Badge>
                               )}
-                              {canMove && p.kind === "payment" && p.unapplied > 0 && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  disabled={busy}
-                                  onClick={() =>
-                                    setRefunding({
-                                      id: p.id,
-                                      document_number: p.document_number,
-                                      held: p.unapplied,
-                                      patient_name: patient.label,
-                                    })
-                                  }
-                                >
-                                  <FaUndo /> Refund
-                                </Button>
-                              )}
                             </div>
                           </div>
                           {(p.reason ?? p.notes) && (
@@ -828,23 +846,9 @@ export function PatientDrawer({
                               {p.allocations.map((a) => (
                                 <li
                                   key={a.id}
-                                  className="flex items-center gap-1.5 rounded-lg bg-ink-100/80 px-2 py-0.5 font-mono text-[11px] text-ink-600"
+                                  className="rounded-lg bg-ink-100/80 px-2 py-0.5 font-mono text-[11px] text-ink-600"
                                 >
-                                  <span>
-                                    ${money(a.amount)} → {a.invoice.invoice_number}
-                                  </span>
-                                  {/* A refund's allocation is the money
-                                      leaving; it is never taken back off. */}
-                                  {canMove && p.kind === "payment" && (
-                                    <button
-                                      type="button"
-                                      className="font-sans text-brand-700 underline underline-offset-2 disabled:opacity-50"
-                                      disabled={busy}
-                                      onClick={() => void unapply(a)}
-                                    >
-                                      undo
-                                    </button>
-                                  )}
+                                  ${money(a.amount)} → {a.invoice.invoice_number}
                                 </li>
                               ))}
                             </ul>
@@ -861,8 +865,9 @@ export function PatientDrawer({
                 <div className="space-y-4">
                   {plan?.agreement_stale && (
                     <p className="rounded-xl bg-honey-50 px-3 py-2 text-xs font-medium text-honey-800 ring-1 ring-inset ring-honey-200">
-                      The plan has changed since the patient agreed to it. Give them
-                      the new plan and record that they agreed again.
+                      The plan has changed since the patient agreed to it. On the
+                      Quotes page, give them the new quote and record that they
+                      agreed again.
                     </p>
                   )}
 
@@ -905,40 +910,25 @@ export function PatientDrawer({
 
                   {plan && planLines.length > 0 && (
                     <div className="flex flex-wrap items-center gap-2 border-t border-ink-200/70 pt-3">
-                      {allowPlanActs && canTake && plan.quote_id && (
-                        <Button
-                          size="sm"
-                          disabled={busy}
-                          onClick={() => void planAct("send", "Given to the patient.")}
-                        >
-                          <FaPaperPlane /> Give to patient
-                        </Button>
-                      )}
+                      {/* Read-only here. Pricing, giving the quote to the
+                          patient and recording their agreement are the
+                          Quotes page's acts. */}
                       <Button
                         size="sm"
                         variant="outline"
+                        onClick={() => router.push(`/admin/quotes?patient=${patient.id}`)}
+                      >
+                        <FaFileInvoiceDollar /> Open {MONEY_WORD.quote.toLowerCase()}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
                         onClick={() => printPlan(plan, patient.label)}
                       >
                         <FaPrint /> Print
                       </Button>
-                      {allowPlanActs &&
-                        canTake &&
-                        plan.quote_id &&
-                        (!plan.accepted_at || plan.agreement_stale) && (
-                          <Button
-                            size="sm"
-                            variant={plan.agreement_stale ? "accent" : "outline"}
-                            disabled={busy}
-                            onClick={() =>
-                              void planAct("accept", "Recorded that the patient agreed.")
-                            }
-                          >
-                            <FaCheck />{" "}
-                            {plan.accepted_at ? "Agree again" : "Patient agreed"}
-                          </Button>
-                        )}
                       <span className="ms-auto text-xs text-ink-500">
-                        Planned and priced on the chart.
+                        Planned on the chart, priced on the {MONEY_WORD.quote.toLowerCase()}.
                       </span>
                     </div>
                   )}
@@ -948,15 +938,6 @@ export function PatientDrawer({
           </div>
         )}
       </Drawer>
-
-      <RefundReceiptModal
-        receipt={refunding}
-        onClose={() => setRefunding(null)}
-        onRefunded={() => {
-          void load();
-          onChanged?.();
-        }}
-      />
     </>
   );
 }

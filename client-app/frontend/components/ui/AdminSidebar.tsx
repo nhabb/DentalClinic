@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { ClinicName } from "@/components/ui/ClinicName";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useTranslation } from "@/lib/i18n";
 import { usePermissions } from "@/lib/permissions";
 import { useClinicIdentity } from "@/lib/clinic";
@@ -15,11 +14,11 @@ import {
   FaBoxes,
   FaUsers,
   FaCashRegister,
+  FaClipboardList,
   FaMoneyBillWave,
   FaFileInvoiceDollar,
   FaBars,
   FaEllipsisH,
-  FaChevronDown,
 } from "react-icons/fa";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +27,7 @@ type ActivePage =
   | "appointments"
   | "inventory"
   | "patients"
+  | "quotes"
   | "notifications"
   | "expenses"
   | "billing"
@@ -52,20 +52,16 @@ const navItems = [
   { id: "appointments", href: "/admin/appointments", icon: FaCalendarAlt,       labelKey: "nav.appointments" },
   { id: "inventory",    href: "/admin/inventory",    icon: FaBoxes,             labelKey: "nav.inventory"    },
   { id: "patients",     href: "/admin/patients",     icon: FaUsers,             labelKey: "nav.patients"     },
+  // The four money stages read in order: Patients (the plan), Quotes, Billing, Payments.
+  { id: "quotes",       href: "/admin/quotes",       icon: FaClipboardList,     labelKey: "nav.quotes"       },
   { id: "expenses",     href: "/admin/expenses",     icon: FaMoneyBillWave,     labelKey: "nav.expenses"     },
   { id: "billing",      href: "/admin/billing",      icon: FaFileInvoiceDollar, labelKey: "nav.billing"      },
   { id: "payments",     href: "/admin/payments",     icon: FaCashRegister,      labelKey: "nav.payments"     },
 ] as const;
 
-/** The deeper per-category analytics pages — nested under "Dashboard" as a
- * collapsible sub-section rather than living in the top-level rail. */
-const DASHBOARD_SUB_ITEMS = [
-  { id: "appointments-analytics", href: "/admin/appointments/analytics", label: "Appointments" },
-  { id: "inventory-analytics",    href: "/admin/inventory/analytics",    label: "Inventory"    },
-  { id: "patients-analytics",     href: "/admin/patients/analytics",     label: "Patients"     },
-  { id: "expenses-analytics",     href: "/admin/expenses/analytics",     label: "Expenses"     },
-  { id: "billing-analytics",      href: "/admin/billing/analytics",      label: "Billing"      },
-] as const;
+// The per-section analytics pages are not listed here: each section's own
+// header links to its analytics, and a second list of the same five names
+// under Dashboard read as a duplicated menu.
 
 const BAR_IDS: readonly ActivePage[] = ["dashboard", "appointments", "billing", "payments"];
 
@@ -84,12 +80,10 @@ export default function AdminSidebar({
   badges,
 }: Props) {
   const { t } = useTranslation();
-  const pathname = usePathname();
   const clinic = useClinicIdentity();
   const [moreOpen, setMoreOpen] = useState(false);
   const [playEntrance] = useState(() => !sidebarHasAnimated);
 
-  const activeSubId = DASHBOARD_SUB_ITEMS.find((s) => s.href === pathname)?.id ?? null;
   // Sections the role may not open are not listed (lib/adminAccess.ts).
   const { can } = usePermissions();
   const allowed = (href: string) => {
@@ -97,8 +91,6 @@ export default function AdminSidebar({
     return !needed || can(needed);
   };
   const visibleNav = navItems.filter((i) => allowed(i.href));
-  const visibleSub = DASHBOARD_SUB_ITEMS.filter((s) => allowed(s.href));
-  const [dashboardExpanded, setDashboardExpanded] = useState(() => activeSubId !== null);
 
   useEffect(() => {
     sidebarHasAnimated = true;
@@ -180,7 +172,6 @@ export default function AdminSidebar({
           {visibleNav.map(({ id, href, icon: Icon, labelKey }) => {
             const isActive = activePage === id;
             const badge = badgeFor(id);
-            const isDashboard = id === "dashboard";
             return (
               <div key={id}>
                 <div className="group/row relative flex items-center">
@@ -195,7 +186,6 @@ export default function AdminSidebar({
                         ? "bg-accent-blue-50 text-accent-blue-700"
                         : "text-ink-600 hover:bg-ink-100 hover:text-ink-900",
                       !sidebarOpen && "justify-center",
-                      isDashboard && sidebarOpen && "pe-9",
                     )}
                   >
                     {/* Active marker: a short bar on the inline edge. Reads as
@@ -224,44 +214,7 @@ export default function AdminSidebar({
 
                     {/* Tooltip for the collapsed rail. */}
                   </Link>
-
-                  {isDashboard && sidebarOpen && (
-                    <button
-                      type="button"
-                      onClick={() => setDashboardExpanded((v) => !v)}
-                      aria-label={dashboardExpanded ? "Collapse analytics" : "Expand analytics"}
-                      aria-expanded={dashboardExpanded}
-                      className="press absolute end-1.5 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-ink-400 hover:bg-ink-200/70 hover:text-ink-700"
-                    >
-                      <FaChevronDown className={cn("h-3 w-3 transition-transform duration-200", dashboardExpanded && "rotate-180")} />
-                    </button>
-                  )}
                 </div>
-
-                {/* Analytics sub-section, nested under Dashboard. */}
-                {isDashboard && sidebarOpen && dashboardExpanded && (
-                  <ul className="ms-5 mt-1 space-y-0.5 border-s border-ink-200 ps-3">
-                    {visibleSub.map((s) => {
-                      const subActive = activeSubId === s.id;
-                      return (
-                        <li key={s.id}>
-                          <Link
-                            href={s.href}
-                            aria-current={subActive ? "page" : undefined}
-                            className={cn(
-                              "block rounded-lg px-2.5 py-2 text-sm transition-colors",
-                              subActive
-                                ? "bg-accent-blue-50 font-semibold text-accent-blue-700"
-                                : "text-ink-500 hover:bg-ink-100 hover:text-ink-900",
-                            )}
-                          >
-                            {s.label}
-                          </Link>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
               </div>
             );
           })}

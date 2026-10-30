@@ -10,6 +10,7 @@ import { Modal } from "@/components/ui/Modal";
 import { FormField, inputClass } from "@/components/ui/FormField";
 import { Avatar } from "@/components/ui/Avatar";
 import { clinicToday, money, readError } from "./quote-doc";
+import { MONEY_WORD } from "./money-words";
 import {
   Invoice,
   normalizeInvoice,
@@ -18,11 +19,31 @@ import {
 
 /*
  * The invoice builder: the one place a bill is created. Pick the patient, tick
- * the completed chart work to bill (each line carries its record so the same
- * work can never be billed twice) and add any charge that is not chart work.
+ * the chart work to bill (each line carries its record so the same work can
+ * never be billed twice) and add any charge that is not chart work.
+ *
+ * A bill is paid from the patient's prepaid money as it is issued, if they
+ * have any (the server does it in the same transaction); whatever is left
+ * unpaid is received on the Payments page. This builder never takes money
+ * itself — with one exception:
+ *
+ *   - It replaces a bill. A bill's lines are frozen once issued, so when the
+ *     plan changes after billing the correction is a new bill: the old one is
+ *     cancelled with the reason, the money on it goes back to the receipts and
+ *     straight onto this bill, and the two point at each other. Opened with
+ *     `replacing`, the builder starts from that bill's lines, discount and VAT
+ *     and issues through the replace route, all in one server transaction.
  */
 
 export type PatientOption = { id: number; label: string };
+
+/** What issuing did beyond creating the row, for the page's toast. */
+export type IssueOutcome = {
+  /** Drawn from the patient's balance as the bill was issued. */
+  paidFromBalance: number;
+  /** When replacing: the bill that was cancelled in the same step. */
+  replaced: Invoice | null;
+};
 
 /**
  * One line of the patient's plan that is not on an invoice yet, as the API
@@ -52,6 +73,8 @@ type DraftLine = {
   /** Chart work the user has not ticked is left off the invoice. */
   included: boolean;
   hint: string;
+  /** Came off the bill being replaced; it re-bills unless unticked. */
+  fromReplaced?: boolean;
 };
 
 interface NewInvoiceModalProps {
@@ -60,8 +83,44 @@ interface NewInvoiceModalProps {
   patients: PatientOption[];
   /** Pre-selected patient (deep link from the chart), if any. */
   initialPatientId?: number | null;
-  /** The new invoice, so the page can list it and offer to take payment. */
-  onCreated: (invoice: Invoice) => void;
+  /**
+   * The bill being replaced. Its patient, lines, discount, VAT and note
+   * pre-fill the builder; issuing cancels it and moves its money here.
+   */
+  replacing?: Invoice | null;
+  /** The new invoice, so the page can list it and say what else happened. */
+  onCreated: (invoice: Invoice, outcome: IssueOutcome) => void;
+}
+
+const round2 = (n: number) => Math.round(n * 100) / 100;
+const dateOnly = (d: string | null | undefined) => (d ? d.slice(0, 10) : "");
+
+/**
+ * The lines of the bill being replaced, as draft lines. A line keeps only its
+ * figures, so its chart record is found among the records the bill holds by
+ * procedure and tooth — each record paired once — and goes back out as
+ * `record_id`; a line with no match was a free charge and stays one.
+ */
+function linesOfReplaced(inv: Invoice): DraftLine[] {
+  const spare = [...inv.records];
+  return inv.line_items.map((li, i) => {
+    const at = spare.findIndex(
+      (r) => r.title === li.procedure_name && (r.tooth_number ?? "") === (li.tooth_number ?? ""),
+    );
+    const record = at >= 0 ? spare.splice(at, 1)[0] : null;
+    return {
+      key: record ? `rec-${record.id}` : `old-${li.id ?? i}`,
+      recordId: record ? record.id : null,
+      procedure: li.procedure_name,
+      tooth: li.tooth_number ?? "",
+      amount: String(li.amount),
+      included: true,
+      hint: record
+        ? `On ${inv.invoice_number} · re-billed as it stands unless you change it`
+        : `Charge on ${inv.invoice_number} · re-billed as it stands`,
+      fromReplaced: true,
+    };
+  });
 }
 
 export function NewInvoiceModal({
@@ -69,6 +128,7 @@ export function NewInvoiceModal({
   onClose,
   patients,
   initialPatientId,
+  replacing = null,
   onCreated,
 }: NewInvoiceModalProps) {
   const [patientId, setPatientId] = useState<number | null>(null);
@@ -82,6 +142,8 @@ export function NewInvoiceModal({
   /** VAT in percent; 0 (no VAT) unless the user types a rate. */
   const [vatPercent, setVatPercent] = useState("");
   const [notes, setNotes] = useState("");
+  /** Why the bill is replaced; required in replace mode, kept on the cancelled bill. */
+  const [reason, setReason] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -95,16 +157,34 @@ export function NewInvoiceModal({
     setDiscountReason("");
     setVatPercent("");
     setNotes("");
+    setReason("");
     setError("");
   }, []);
 
   useEffect(() => {
     if (!open) return;
     reset();
-    if (initialPatientId) setPatientId(initialPatientId);
-  }, [open, initialPatientId, reset]);
+    if (replacing) {
+      // Start from the bill as it was: same day, terms, discount and VAT.
+      // Only what the desk changes differs on the replacement.
+      setPatientId(Number(replacing.patient.id));
+      const work = dateOnly(replacing.procedure_date);
+      setProcedureDate(work);
+      const due = dateOnly(replacing.due_date);
+      setDueDate(due && due !== work ? due : "");
+      setDiscount(replacing.discount_amount > 0 ? String(replacing.discount_amount) : "");
+      setDiscountReason(replacing.discount_reason ?? "");
+      setVatPercent(replacing.vat_percent > 0 ? String(replacing.vat_percent) : "");
+      setNotes(replacing.notes ?? "");
+    } else if (initialPatientId) {
+      setPatientId(initialPatientId);
+    }
+  }, [open, initialPatientId, replacing, reset]);
 
-  /** The patient's unbilled completed work becomes the starting lines. */
+  /**
+   * The patient's unbilled plan work becomes the starting lines — after the
+   * replaced bill's own lines when there is one, which come first and ticked.
+   */
   useEffect(() => {
     // Lines belong to one patient: drop the previous patient's before
     // loading, so they can never show (or be issued) under another name.
@@ -121,28 +201,35 @@ export function NewInvoiceModal({
         const records: BillableRecord[] = Array.isArray(json.plan_unbilled)
           ? json.plan_unbilled
           : [];
-        setLines(
-          records.map((r) => ({
-            key: `rec-${r.id}`,
-            recordId: Number(r.id),
-            procedure: r.title,
-            tooth: r.tooth_number ?? '',
-            // The price the plan carries; the chart is where it was set. An
-            // unpriced line stays empty and unticked: a list price the chart
-            // never set must not end up on the bill unnoticed.
-            amount: r.quoted_amount == null ? '' : String(r.quoted_amount),
-            included: r.quoted_amount != null,
-            // Planned work bills as readily as completed work: a patient
-            // paying for a crown before it is cut is the ordinary case.
-            hint:
-              (r.state === 'done'
-                ? r.treatment_date
-                  ? `Done ${formatDateBeirut(r.treatment_date)}`
-                  : 'Done'
-                : 'Planned, not done yet') +
-              (r.quoted_amount == null ? ' · not priced on the chart' : ''),
-          })),
-        );
+        // Done work first, then what is still in progress: the desk bills
+        // what was done today and sees the rest below it.
+        const ordered = [
+          ...records.filter((r) => r.state === "done"),
+          ...records.filter((r) => r.state !== "done"),
+        ];
+        const fromPlan: DraftLine[] = ordered.map((r) => ({
+          key: `rec-${r.id}`,
+          recordId: Number(r.id),
+          procedure: r.title,
+          tooth: r.tooth_number ?? "",
+          // The price the quote carries. An unpriced line stays empty and
+          // unticked: a figure the quote never set must not end up on the
+          // bill unnoticed. When replacing, other plan work starts unticked
+          // too: the bill is being corrected, not extended, unless the desk
+          // says so.
+          amount: r.quoted_amount == null ? "" : String(r.quoted_amount),
+          included: r.quoted_amount != null && !replacing,
+          // Work in progress bills as readily as done work: a patient paying
+          // for a crown before it is cut is the ordinary case.
+          hint:
+            (r.state === "done"
+              ? r.treatment_date
+                ? `Done ${formatDateBeirut(r.treatment_date)}`
+                : "Done"
+              : "In progress — planned, not done yet") +
+            (r.quoted_amount == null ? " · not priced on the quote" : ""),
+        }));
+        setLines(replacing ? [...linesOfReplaced(replacing), ...fromPlan] : fromPlan);
       } catch {
         if (!cancelled) toast.error("Could not load this patient's unbilled work.");
       } finally {
@@ -152,7 +239,7 @@ export function NewInvoiceModal({
     return () => {
       cancelled = true;
     };
-  }, [open, patientId]);
+  }, [open, patientId, replacing]);
 
   const setLine = (key: string, patch: Partial<DraftLine>) =>
     setLines((prev) => prev.map((l) => (l.key === key ? { ...l, ...patch } : l)));
@@ -188,12 +275,14 @@ export function NewInvoiceModal({
   const draftDiscount = parseFloat(discount) || 0;
   // The server's rule (invoice-math.ts): VAT is charged after the discount,
   // each figure rounded to cents.
-  const round2 = (n: number) => Math.round(n * 100) / 100;
   const draftVat = parseFloat(vatPercent) || 0;
   const taxable = Math.max(0, round2(subtotal - draftDiscount));
   const vatAmount = round2((taxable * draftVat) / 100);
   const total = round2(taxable + vatAmount);
   const patient = patients.find((p) => p.id === patientId) ?? null;
+  const patientLabel = replacing
+    ? `${replacing.patient.users.first_name} ${replacing.patient.users.last_name}`
+    : (patient?.label ?? "patient");
 
   const submit = async () => {
     setError("");
@@ -212,35 +301,62 @@ export function NewInvoiceModal({
       return setError("VAT must be between 0% and 100%.");
     if (dueDate && dueDate < procedureDate)
       return setError("The due date cannot be before the work date.");
+    if (replacing && reason.trim().length < 3)
+      return setError("Say why the bill is replaced; it is kept on the cancelled one.");
+
+    const body = {
+      procedure_date: procedureDate,
+      ...(dueDate ? { due_date: dueDate } : {}),
+      ...(draftDiscount > 0
+        ? {
+            discount_amount: draftDiscount,
+            discount_reason: discountReason.trim(),
+          }
+        : {}),
+      ...(draftVat > 0 ? { vat_percent: draftVat } : {}),
+      ...(notes.trim() ? { notes: notes.trim() } : {}),
+      // Prepaid money pays the bill as it is issued, so nobody has to move it
+      // by hand afterwards; what the prepayment does not cover is received on
+      // the Payments page. (Replacing moves the old bill's money across by
+      // default on the server.)
+      ...(replacing ? {} : { pay_from_balance: true }),
+      line_items: included.map((l) => ({
+        ...(l.recordId ? { record_id: l.recordId } : {}),
+        procedure_name: l.procedure,
+        amount: parseFloat(l.amount),
+        ...(l.tooth ? { tooth_number: l.tooth } : {}),
+      })),
+    };
 
     setSaving(true);
     try {
-      const res = await apiFetch("/api/billing/invoices", {
-        method: "POST",
-        body: JSON.stringify({
-          patient_id: patientId,
-          procedure_date: procedureDate,
-          ...(dueDate ? { due_date: dueDate } : {}),
-          ...(draftDiscount > 0
-            ? {
-                discount_amount: draftDiscount,
-                discount_reason: discountReason.trim(),
-              }
-            : {}),
-          ...(draftVat > 0 ? { vat_percent: draftVat } : {}),
-          ...(notes.trim() ? { notes: notes.trim() } : {}),
-          line_items: included.map((l) => ({
-            ...(l.recordId ? { record_id: l.recordId } : {}),
-            procedure_name: l.procedure,
-            amount: parseFloat(l.amount),
-            ...(l.tooth ? { tooth_number: l.tooth } : {}),
-          })),
-        }),
-      });
-      if (!res.ok) throw new Error(await readError(res, "Could not issue the invoice."));
-      const invoice = normalizeInvoice(await res.json());
-      toast.success(`Invoice ${invoice.invoice_number} issued.`);
-      onCreated(invoice);
+      if (replacing) {
+        const res = await apiFetch(`/api/billing/invoices/${replacing.id}/replace`, {
+          method: "POST",
+          body: JSON.stringify({ ...body, reason: reason.trim() }),
+        });
+        if (!res.ok) throw new Error(await readError(res, "Could not replace the bill."));
+        const answer = await res.json();
+        const invoice = normalizeInvoice(answer.invoice);
+        const drawn = (answer.paid_from_balance ?? []) as { amount: number | string }[];
+        onCreated(invoice, {
+          paidFromBalance: round2(drawn.reduce((s, m) => s + Number(m.amount), 0)),
+          replaced: normalizeInvoice(answer.cancelled),
+        });
+      } else {
+        const res = await apiFetch("/api/billing/invoices", {
+          method: "POST",
+          body: JSON.stringify({ patient_id: patientId, ...body }),
+        });
+        if (!res.ok) throw new Error(await readError(res, "Could not issue the invoice."));
+        const invoice = normalizeInvoice(await res.json());
+        onCreated(invoice, {
+          paidFromBalance: round2(
+            (invoice.paid_from_balance ?? []).reduce((s, m) => s + m.amount, 0),
+          ),
+          replaced: null,
+        });
+      }
       onClose();
     } catch (e) {
       setError((e as Error).message);
@@ -259,8 +375,8 @@ export function NewInvoiceModal({
       <Modal isOpen={open} onClose={onClose} title="New bill: choose the patient" maxWidth="max-w-lg">
         <div className="space-y-3">
           <p className="text-sm text-gray-500">
-            Their completed, unbilled chart work is loaded for you to tick; you can
-            add any other charge on top.
+            Their done and in-progress work is loaded for you to tick, at the
+            prices the quote set; you can add any other charge on top.
           </p>
           <input
             type="text"
@@ -297,23 +413,41 @@ export function NewInvoiceModal({
     <Modal
       isOpen={open}
       onClose={onClose}
-      title={`New bill — ${patient?.label ?? "patient"}`}
+      title={
+        replacing
+          ? `${MONEY_WORD.replaceBill} ${replacing.invoice_number} — ${patientLabel}`
+          : `New bill — ${patientLabel}`
+      }
       maxWidth="max-w-2xl"
     >
       <div className="max-h-[75vh] space-y-4 overflow-y-auto pr-1">
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-sm text-gray-500">
-            Ticked chart work is attached to this invoice, so it can never be
-            billed twice.
-          </p>
-          <button
-            type="button"
-            onClick={() => setPatientId(null)}
-            className="shrink-0 text-xs font-medium text-brand hover:underline"
-          >
-            Change patient
-          </button>
-        </div>
+        {replacing ? (
+          <div className="space-y-1 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            <p>
+              <strong>{replacing.invoice_number}</strong> will be cancelled with your
+              reason and this bill issued in its place; the two will name each other.
+            </p>
+            <p>
+              {replacing.amount_paid > 0
+                ? `$${money(replacing.amount_paid)} received on it goes back to the patient's receipts and is used on this bill. Nothing is refunded.`
+                : "Nothing was received on it, so no money moves."}
+            </p>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm text-gray-500">
+              Ticked chart work is attached to this invoice, so it can never be
+              billed twice.
+            </p>
+            <button
+              type="button"
+              onClick={() => setPatientId(null)}
+              className="shrink-0 text-xs font-medium text-brand hover:underline"
+            >
+              Change patient
+            </button>
+          </div>
+        )}
 
         {loadingWork ? (
           <p className="py-6 text-center text-sm text-gray-500">Loading unbilled work…</p>
@@ -353,7 +487,9 @@ export function NewInvoiceModal({
               </div>
             )}
             {/* One plan, one list. Each row says whether the work is done or
-                still only planned; both are billable. */}
+                still only planned; both are billable. A line off the replaced
+                bill says so, and comes off this bill if unticked — its work
+                goes back to the plan, unbilled. */}
             {orderedLines.map((l) => (
               <div
                 key={l.key}
@@ -366,7 +502,7 @@ export function NewInvoiceModal({
                   aria-label={`Bill ${l.procedure}`}
                 />
                 <div className="min-w-0 flex-1">
-                  {l.recordId ? (
+                  {l.recordId || l.fromReplaced ? (
                     <p className="truncate text-sm text-gray-800">
                       {l.procedure}
                       {l.tooth && (
@@ -408,7 +544,7 @@ export function NewInvoiceModal({
                   onChange={(e) => setLine(l.key, { amount: e.target.value })}
                   className="w-28 rounded-lg border border-gray-200 px-3 py-2 text-right text-gray-900"
                 />
-                {!l.recordId && (
+                {!l.recordId && !l.fromReplaced && (
                   <button
                     type="button"
                     onClick={() => removeLine(l.key)}
@@ -498,6 +634,18 @@ export function NewInvoiceModal({
           />
         </FormField>
 
+        {replacing && (
+          <FormField label="Why the bill is replaced *">
+            <input
+              type="text"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="e.g. Second crown not needed; first crown is a ceramic one"
+              className={inputClass}
+            />
+          </FormField>
+        )}
+
         <div className="space-y-0.5 text-right text-sm text-gray-700">
           {(draftDiscount > 0 || vatAmount > 0) && (
             <>
@@ -511,6 +659,11 @@ export function NewInvoiceModal({
             </>
           )}
           <p className="font-semibold text-gray-900">Total to bill: ${money(total)}</p>
+          {!replacing && (
+            <p className="text-xs text-gray-500">
+              Money the patient has {MONEY_WORD.prepaid.toLowerCase()} pays it as it is issued; the rest is received on the Payments page.
+            </p>
+          )}
         </div>
 
         {error && (
@@ -524,7 +677,13 @@ export function NewInvoiceModal({
             Cancel
           </Button>
           <Button onClick={submit} disabled={saving || loadingWork || included.length === 0}>
-            {saving ? "Issuing…" : `Issue invoice ($${money(total)})`}
+            {saving
+              ? replacing
+                ? "Replacing…"
+                : "Issuing…"
+              : replacing
+                ? `${MONEY_WORD.replaceBill} ($${money(total)})`
+                : `Issue invoice ($${money(total)})`}
           </Button>
         </div>
       </div>

@@ -2,7 +2,9 @@
   "name": "dentalclinic",
   "private": true,
   "scripts": {
+    "setup": "npm run install:all && cd ../BrightsmileClinicBack/client-app/backend && npm install && npx prisma generate && cd ../../super-admin-app/backend && npm install && npm run prisma:generate",
     "dev": "npm run dev:client-app",
+    "dev:all": "concurrently -n clinic-api,clinic-ui,platform-api,platform-ui -c magenta,cyan,green,yellow \"cd ../BrightsmileClinicBack/client-app/backend && npm run start:dev\" \"cd client-app/frontend && npm run dev\" \"cd ../BrightsmileClinicBack/super-admin-app/backend && npm run start:dev\" \"cd super-admin-app/frontend && npm run dev\"",
     "install:all": "cd client-app/frontend && npm install && cd ../../super-admin-app/frontend && npm install",
     "docker:up": "docker compose up --build",
     "docker:down": "docker compose down",

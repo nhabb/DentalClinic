@@ -172,6 +172,35 @@ export const ENDPOINTS = {
     APPLY_RECEIPT: (id: string | number) => `/api/billing/payments/${id}/allocations`,
     /** POST - Cancel an invoice; its receipts are released, `refund: true` hands the money back (billing:edit) */
     CANCEL_INVOICE: (id: string | number) => `/api/billing/invoices/${id}/void`,
+    /** POST - Cancel an invoice and issue a corrected one in its place, paid from the balance; the two point at each other (billing:create + billing:edit) */
+    REPLACE_INVOICE: (id: string | number) => `/api/billing/invoices/${id}/replace`,
+    /** POST - Receive a payment: a receipt, paid onto the ticked bills (`invoice_ids`) oldest due first, the rest kept prepaid (billing:create) */
+    RECEIVE_PAYMENT: (patientId: string | number) => `/api/billing/patients/${patientId}/payments`,
+    /** POST - Refund prepaid money, newest receipt first, with a reason (billing:edit) */
+    REFUND_PREPAID: (patientId: string | number) => `/api/billing/patients/${patientId}/credit-refunds`,
+    /** GET - Who is holding prepaid money: patient, total held, receipts, since; ?page ?search ?with_counts */
+    PREPAID: "/api/billing/prepaid",
+    /** POST - Use prepaid money on one invoice, oldest receipt first; body { amount? }. A correction, not a desk act (billing:edit) */
+    PAY_FROM_BALANCE: (id: string | number) => `/api/billing/invoices/${id}/pay-from-balance`,
+  },
+
+  // ============================================
+  // QUOTES (the plan, priced)
+  // ============================================
+  QUOTES: {
+    /** GET - Every patient's plan, newest first */
+    LIST: "/api/quotes",
+    /** GET - One patient's plan with its lines, figures and sent history */
+    FOR_PATIENT: (patientId: string | number) => `/api/quotes/patients/${patientId}`,
+    /** PATCH - Price one line of the plan; refused once the line is on a bill (billing:create) */
+    PRICE_LINE: (quoteId: string | number, recordId: string | number) =>
+      `/api/quotes/${quoteId}/lines/${recordId}/price`,
+    /** POST - Give the plan to the patient: a dated record of what they were handed (billing:create) */
+    SEND: (quoteId: string | number) => `/api/quotes/${quoteId}/send`,
+    /** POST - Record that the patient agreed (billing:create) */
+    ACCEPT: (quoteId: string | number) => `/api/quotes/${quoteId}/accept`,
+    /** PATCH - A note on the plan (billing:create) */
+    NOTES: (quoteId: string | number) => `/api/quotes/${quoteId}/notes`,
   },
 
   // ============================================

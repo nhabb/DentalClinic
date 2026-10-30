@@ -56,6 +56,7 @@
     "expenses": "Expenses",
     "payments": "Payments",
     "billing": "Billing",
+    "quotes": "Quotes",
     "roles": "Roles & access"
   },
   "continueLogin": {
@@ -371,10 +372,17 @@
     "billed": "Billed",
     "paid": "Paid",
     "unpaid": "Unpaid",
-    "creditOnAccount": "Credit on account",
+    "prepaid": "Prepaid",
     "billTotal": "Bill total",
     "acrossTheClinic": "Across the clinic",
-    "bills": "Bills"
+    "bills": "Bills",
+    "replaceBill": "Replace bill",
+    "replaces": "Replaces",
+    "replacedBy": "Replaced by",
+    "quote": "Quote",
+    "quoteTotal": "Quote total",
+    "receivePayment": "Receive payment",
+    "refund": "Refund"
   },
   "billing": {
     "invoicesCount": "invoices",

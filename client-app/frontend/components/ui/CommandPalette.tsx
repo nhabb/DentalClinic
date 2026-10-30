@@ -38,11 +38,11 @@ const NAV_COMMANDS: NavCommand[] = [
     keywords: ["take payment", "till", "takings", "receipts", "cash"],
   },
   {
-    key: "plans",
-    label: "Treatment plans",
+    key: "quotes",
+    label: "Quotes",
     icon: FaFileInvoiceDollar,
-    href: "/admin/billing?view=plans",
-    keywords: ["quotes", "estimates", "plan"],
+    href: "/admin/quotes",
+    keywords: ["treatment plans", "estimates", "plan", "price"],
   },
   { key: "expenses", label: "Expenses", icon: FaMoneyBillWave, href: "/admin/expenses" },
 ];

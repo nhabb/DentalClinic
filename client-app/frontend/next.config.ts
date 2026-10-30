@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import path from "node:path";
 
 /**
  * Where /api/* is forwarded. The browser only ever talks to this site, so the
@@ -16,6 +17,8 @@ const apiTarget = (
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  // This app lives inside the DentalClinic monorepo; keep its build rooted here.
+  turbopack: { root: path.resolve(__dirname) },
 
   async rewrites() {
     if (!apiTarget) return [];

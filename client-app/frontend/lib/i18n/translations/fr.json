@@ -56,6 +56,7 @@
     "expenses": "Dépenses",
     "payments": "Paiements",
     "billing": "Facturation",
+    "quotes": "Devis",
     "roles": "Rôles et accès"
   },
   "continueLogin": {
@@ -371,10 +372,17 @@
     "billed": "Facturé",
     "paid": "Payé",
     "unpaid": "Impayé",
-    "creditOnAccount": "Crédit sur le compte",
+    "prepaid": "Prépayé",
     "billTotal": "Total de la facture",
     "acrossTheClinic": "Dans toute la clinique",
-    "bills": "Factures"
+    "bills": "Factures",
+    "replaceBill": "Remplacer la facture",
+    "replaces": "Remplace",
+    "replacedBy": "Remplacée par",
+    "quote": "Devis",
+    "quoteTotal": "Total du devis",
+    "receivePayment": "Encaisser un paiement",
+    "refund": "Rembourser"
   },
   "billing": {
     "invoicesCount": "factures",

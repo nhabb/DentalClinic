@@ -33,6 +33,12 @@ items 1 to 10 are independent of each other. Status marks: `[ ]` open, `[x]` don
 > counted only allocated money (now `total_applied`, beside `total_received`
 > and `credit_held`). No database change was needed for any of it.
 
+> **Status, 2026-10-29.** A bill is paid from the patient's balance as it is issued (`pay_from_balance`, on by default), and a bill whose lines no longer match the plan is **replaced** in one step (`POST /billing/invoices/:id/replace`): cancelled with the reason, its receipts released and re-applied to the corrected bill, the two linked by `replaces_invoice_id`. That closes the "plan changed after billing" gap and item 9: a goodwill reduction is a replacement with a discount and a reason, so no credit memo is needed. Account: the Money section of `CLAUDE.md`.
+
+> **Status, 2026-10-30.** The four stages got one screen each: the chart plans with no prices, the new Quote page prices (`PATCH /quotes/:id/lines/:recordId/price`, `billing:create`, so the secretary can price what the doctor planned), Billing issues bills **unpaid**, and Payments does two explicit acts — take money onto the balance, pay a bill from it (`POST /billing/invoices/:id/pay-from-balance`). Item 0's "one door" became four doors, one per act; item 8's sales receipt is deliberately not a screen any more (API-only via `pay_from_balance: true`).
+>
+> **Status, 2026-10-30, evening.** The two explicit acts were not understandable at the desk ("how do I take money from the balance into the bill?"), so the screens went back to recording what happens and letting the bookkeeping follow: **Receive payment** (one dialog: amount, method, date, the patient's unpaid bills ticked, the money on them oldest first, the rest "stays prepaid") and **Refund** (prepaid money only, patient-level). Bills use prepaid money as they are issued again (`pay_from_balance: true` from the builder), a Prepaid tab lists who is holding money, and the money file carries the acts everywhere, opening on a one-sentence summary. The word "balance" is gone from every screen; it is "prepaid". Backend: `invoice_ids` on the receive route, `receipt` in its answer, per-receipt credit refunds, `GET /billing/prepaid`. Account: the "Two money screens, five acts" section of `CLAUDE.md`.
+
 ## Document model (QuickBooks mapping)
 
 The clinic's billing follows the QuickBooks document model, which splits every
@@ -259,7 +265,7 @@ outstanding, even for an instant. No new table is needed: it is an invoice paid 
 full on its issue date, and the print already says Receipt once an invoice is paid.
 Add a flag only if reporting has to separate point-of-sale from billed revenue.
 
-## 9. [ ] Credit memo: reduce a bill after it is issued
+## 9. [x] Credit memo: reduce a bill after it is issued (closed 2026-10-29 by Replace bill)
 
 **Gap:** once an invoice is issued, the only way to reduce it is to void the whole
 thing. A patient disputing one line, or goodwill given after the fact, has no

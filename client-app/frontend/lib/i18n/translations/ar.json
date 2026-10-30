@@ -56,6 +56,7 @@
     "expenses": "المصروفات",
     "payments": "المدفوعات",
     "billing": "الفواتير",
+    "quotes": "عروض الأسعار",
     "roles": "الأدوار والصلاحيات"
   },
   "continueLogin": {
@@ -371,10 +372,17 @@
     "billed": "مفوتر",
     "paid": "مدفوع",
     "unpaid": "غير مدفوع",
-    "creditOnAccount": "رصيد في الحساب",
+    "prepaid": "مدفوع مسبقًا",
     "billTotal": "إجمالي الفاتورة",
     "acrossTheClinic": "على مستوى العيادة",
-    "bills": "الفواتير"
+    "bills": "الفواتير",
+    "replaceBill": "استبدال الفاتورة",
+    "replaces": "تحل محل",
+    "replacedBy": "استُبدلت بـ",
+    "quote": "عرض السعر",
+    "quoteTotal": "إجمالي عرض السعر",
+    "receivePayment": "استلام دفعة",
+    "refund": "استرداد"
   },
   "billing": {
     "invoicesCount": "فواتير",
