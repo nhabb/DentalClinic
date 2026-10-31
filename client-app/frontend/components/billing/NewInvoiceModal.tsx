@@ -11,6 +11,7 @@ import { FormField, inputClass } from "@/components/ui/FormField";
 import { Avatar } from "@/components/ui/Avatar";
 import { clinicToday, money, readError } from "./quote-doc";
 import { MONEY_WORD } from "./money-words";
+import { replacementLines } from "./replace-bill";
 import {
   Invoice,
   normalizeInvoice,
@@ -96,31 +97,23 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
 const dateOnly = (d: string | null | undefined) => (d ? d.slice(0, 10) : "");
 
 /**
- * The lines of the bill being replaced, as draft lines. A line keeps only its
- * figures, so its chart record is found among the records the bill holds by
- * procedure and tooth — each record paired once — and goes back out as
- * `record_id`; a line with no match was a free charge and stays one.
+ * The lines of the bill being replaced, as draft lines. The pairing of a line
+ * with its chart record is shared with the quote drawer's reissue
+ * (`replace-bill.ts`), so both send the same bill back the same way.
  */
 function linesOfReplaced(inv: Invoice): DraftLine[] {
-  const spare = [...inv.records];
-  return inv.line_items.map((li, i) => {
-    const at = spare.findIndex(
-      (r) => r.title === li.procedure_name && (r.tooth_number ?? "") === (li.tooth_number ?? ""),
-    );
-    const record = at >= 0 ? spare.splice(at, 1)[0] : null;
-    return {
-      key: record ? `rec-${record.id}` : `old-${li.id ?? i}`,
-      recordId: record ? record.id : null,
-      procedure: li.procedure_name,
-      tooth: li.tooth_number ?? "",
-      amount: String(li.amount),
-      included: true,
-      hint: record
-        ? `On ${inv.invoice_number} · re-billed as it stands unless you change it`
-        : `Charge on ${inv.invoice_number} · re-billed as it stands`,
-      fromReplaced: true,
-    };
-  });
+  return replacementLines(inv).map((l) => ({
+    key: l.recordId ? `rec-${l.recordId}` : `old-${l.lineId}`,
+    recordId: l.recordId,
+    procedure: l.procedure,
+    tooth: l.tooth,
+    amount: String(l.amount),
+    included: true,
+    hint: l.recordId
+      ? `On ${inv.invoice_number} · re-billed as it stands unless you change it`
+      : `Charge on ${inv.invoice_number} · re-billed as it stands`,
+    fromReplaced: true,
+  }));
 }
 
 export function NewInvoiceModal({

@@ -12,6 +12,7 @@ import {
   FaPrint,
 } from "react-icons/fa";
 import { apiFetch } from "@/lib/api/client";
+import { ReissueBillModal, type Reissue } from "./ReissueBillModal";
 import { cn, formatDateBeirut } from "@/lib/utils";
 import { usePermissions } from "@/lib/permissions";
 import { Badge } from "@/components/ui/Badge";
@@ -85,6 +86,10 @@ export function QuoteDrawer({ patient, isOpen, onClose, onChanged }: Props) {
   const [saving, setSaving] = useState<Set<string>>(new Set());
   const [notes, setNotes] = useState("");
   const [showSends, setShowSends] = useState(false);
+  /** A billed line given a new price: the bill is reissued with it, after a confirm. */
+  const [reissue, setReissue] = useState<Reissue | null>(null);
+  /** Bumped when a reissue is cancelled, so the billed price boxes show the bill's price again. */
+  const [lockedNonce, setLockedNonce] = useState(0);
 
   /**
    * The order the lines are shown in, fixed when the drawer opens: unpriced
@@ -320,6 +325,7 @@ export function QuoteDrawer({ patient, isOpen, onClose, onChanged }: Props) {
     ) : undefined;
 
   return (
+    <>
     <Drawer
       isOpen={isOpen}
       onClose={onClose}
@@ -412,30 +418,60 @@ export function QuoteDrawer({ patient, isOpen, onClose, onChanged }: Props) {
                     </div>
                   </div>
                   <Badge tone={PLAN_STATE_TONE[l.state]}>{PLAN_STATE_LABEL[l.state]}</Badge>
-                  {l.locked ? (
+                  {l.locked && canReplace && l.invoice_id ? (
+                    /* A billed line can still take a new price here: typing
+                       one reissues the bill with it, after a confirm that
+                       shows what moves. The lock says why it is not a plain
+                       save; the arrows lead to the full Replace bill when
+                       more than the price must change. */
+                    <span className="inline-flex items-center gap-1">
+                      <FaLock
+                        className="text-[10px] text-ink-400"
+                        title={`On ${l.invoice_number ?? "a bill"} — a new price reissues that bill`}
+                      />
+                      <span className="text-ink-400">$</span>
+                      <input
+                        key={`${key}-${l.amount ?? ""}-${lockedNonce}`}
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        data-price
+                        defaultValue={l.amount ?? ""}
+                        onBlur={(e) => {
+                          const amount = parseFloat(e.target.value);
+                          if (!Number.isFinite(amount) || amount < 0) return;
+                          if (l.amount != null && Math.abs(l.amount - amount) < 0.005) return;
+                          setReissue({ line: l, amount });
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            focusNextPrice(e.currentTarget);
+                          }
+                        }}
+                        aria-label={`Price for ${l.procedure}, on ${l.invoice_number ?? "a bill"}`}
+                        className="w-24 rounded-lg border border-honey-200 bg-honey-50/40 px-2 py-1 text-end text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-brand/30"
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          router.push(`/admin/billing?patient=${patient.id}&replace=${l.invoice_id}`)
+                        }
+                        className="press rounded-lg px-1 py-1 text-xs text-ink-400 hover:bg-honey-50 hover:text-ink-900"
+                        title={`Replace ${l.invoice_number ?? "the bill"} on the Billing page (change, add or drop lines)`}
+                      >
+                        <FaExchangeAlt className="text-[10px]" />
+                      </button>
+                    </span>
+                  ) : l.locked ? (
                     <span className="flex items-center gap-1.5">
                       <span className="w-20 text-end text-sm font-semibold tabular-nums text-ink-900">
                         {l.amount == null ? "—" : `$${money(l.amount)}`}
                       </span>
-                      {canReplace && l.invoice_id ? (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            router.push(
-                              `/admin/billing?patient=${patient.id}&replace=${l.invoice_id}`,
-                            )
-                          }
-                          className="press inline-flex items-center gap-1 rounded-lg px-1.5 py-1 text-xs text-ink-500 hover:bg-honey-50 hover:text-ink-900"
-                          title={`On ${l.invoice_number ?? "a bill"} — its price belongs to that bill. Replace the bill to change it.`}
-                        >
-                          <FaLock className="text-[10px]" /> <FaExchangeAlt className="text-[10px]" />
-                        </button>
-                      ) : (
-                        <FaLock
-                          className="text-[10px] text-ink-400"
-                          title={`On ${l.invoice_number ?? "a bill"}: its price belongs to that bill`}
-                        />
-                      )}
+                      <FaLock
+                        className="text-[10px] text-ink-400"
+                        title={`On ${l.invoice_number ?? "a bill"}: its price belongs to that bill`}
+                      />
                     </span>
                   ) : canPrice ? (
                     <span className="inline-flex items-center gap-1">
@@ -524,5 +560,29 @@ export function QuoteDrawer({ patient, isOpen, onClose, onChanged }: Props) {
         </div>
       )}
     </Drawer>
+
+      <ReissueBillModal
+        reissue={reissue}
+        onClose={() => {
+          setReissue(null);
+          setLockedNonce((n) => n + 1);
+        }}
+        onDone={({ invoice, cancelled, paidFromPrepaid }) => {
+          setReissue(null);
+          const moved =
+            paidFromPrepaid > 0
+              ? ` $${money(paidFromPrepaid)} moved onto it;`
+              : "";
+          const owed =
+            invoice.remaining_amount > 0
+              ? ` $${money(invoice.remaining_amount)} ${MONEY_WORD.unpaid.toLowerCase()}.`
+              : " Paid in full.";
+          toast.success(
+            `${cancelled.invoice_number} cancelled, ${invoice.invoice_number} issued at $${money(invoice.total_amount)}.${moved}${owed}`,
+          );
+          void load(true).then(() => onChanged?.());
+        }}
+      />
+    </>
   );
 }
