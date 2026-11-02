@@ -72,13 +72,16 @@ export type MoneyFile = {
 export function useMoneyFile(patientId: number) {
   const [file, setFile] = useState<MoneyFile | null>(null);
   const [loading, setLoading] = useState(true);
+  /** A silent re-read is on its way: the page says so instead of looking stuck. */
+  const [refreshing, setRefreshing] = useState(false);
   const [missing, setMissing] = useState(false);
   /** Price saves in flight: a silent reload must not undo one. */
   const inFlight = useRef(0);
 
   const load = useCallback(
     async (silent = false) => {
-      if (!silent) setLoading(true);
+      if (silent) setRefreshing(true);
+      else setLoading(true);
       try {
         const [pRes, sRes, iRes, rRes] = await Promise.all([
           apiFetch(`/api/patients/${patientId}`),
@@ -131,7 +134,8 @@ export function useMoneyFile(patientId: number) {
       } catch {
         if (!silent) toast.error("Could not reach the server.");
       } finally {
-        if (!silent) setLoading(false);
+        if (silent) setRefreshing(false);
+        else setLoading(false);
       }
     },
     [patientId],
@@ -149,6 +153,7 @@ export function useMoneyFile(patientId: number) {
   return {
     file,
     loading,
+    refreshing,
     missing,
     /** Re-read everything; `silent` keeps the page as it is while it loads. */
     reload: load,

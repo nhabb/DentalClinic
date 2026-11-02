@@ -44,7 +44,7 @@ export default function PatientMoneyPage() {
   const handleLogout = useSignOut();
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  const { file, loading, missing, reload, setPlan, inFlight } = useMoneyFile(patientId);
+  const { file, loading, refreshing, missing, reload, setPlan, inFlight } = useMoneyFile(patientId);
 
   /** The two money acts, owned here so both sections share one dialog each. */
   const [receiving, setReceiving] = useState<{ invoiceId: number | null } | null>(null);
@@ -96,7 +96,16 @@ export default function PatientMoneyPage() {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <AdminPageHeader
-          eyebrow="Money file"
+          eyebrow={
+            refreshing ? (
+              <span className="inline-flex items-center gap-1.5 text-brand-700">
+                <span className="size-1.5 animate-pulse rounded-full bg-brand-500" aria-hidden />
+                Money file · updating
+              </span>
+            ) : (
+              "Money file"
+            )
+          }
           title={file?.patient.label ?? (loading ? "…" : "Patient")}
           subtitle="Plan and quote, bills, payments and history, in one place"
           actions={[
