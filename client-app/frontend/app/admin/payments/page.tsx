@@ -40,7 +40,6 @@ import {
   RefundPrepaidModal,
   type RefundablePatient,
 } from "@/components/billing/RefundPrepaidModal";
-import { PatientDrawer } from "@/components/billing/PatientDrawer";
 import {
   normalizeReceipt,
   printReceipt,
@@ -161,8 +160,6 @@ export default function PaymentsPage() {
   const [patients, setPatients] = useState<PatientOption[]>([]);
   const [pickSearch, setPickSearch] = useState("");
 
-  /** One patient's money file, the same drawer the billing page opens. */
-  const [drawerPatient, setDrawerPatient] = useState<PatientOption | null>(null);
   const [moneyMoved, setMoneyMoved] = useState(0);
 
   const range = windowRange(window_);
@@ -250,68 +247,18 @@ export default function PaymentsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [moneyMoved]);
 
-  /** The patient's name, from the lists already loaded or from the API. */
-  const nameOf = useCallback(
-    async (id: number): Promise<string> => {
-      const known =
-        owed.find((r) => r.patient_id === id)?.patient_name ??
-        taken.find((r) => r.patient_id === id)?.patient_name ??
-        prepaid.find((r) => r.patient_id === id)?.patient_name;
-      if (known) return known;
-      const res = await apiFetch(`/api/patients/${id}`);
-      if (!res.ok) throw new Error();
-      const p = await res.json();
-      return p?.users ? `${p.users.first_name} ${p.users.last_name}`.trim() : `Patient #${id}`;
-    },
-    [owed, taken, prepaid],
-  );
-
-  /** What they have prepaid right now, for the refund dialog. */
-  const prepaidOf = async (id: number): Promise<number> => {
-    const res = await apiFetch(`/api/billing/patients/${id}/ledger`);
-    if (!res.ok) throw new Error();
-    return num((await res.json())?.credit_balance);
-  };
-
   /**
-   * `/admin/payments?patient=<id>` opens that patient’s money file;
-   * `&receive=<invoiceId|1>` opens the receive dialog on it (for that bill,
-   * or for whatever they owe) and `&refund=1` the refund dialog — where
-   * Billing sends the desk, since money is received here.
-   *
-   * Read inside the effect and not in a lazy initial state: the page is
-   * server-rendered first, where there is no window, and hydration would
-   * keep that empty answer.
+   * An old link carrying `?patient=<id>` (with `receive=` or `refund=`) lands
+   * on that patient's money page, which carries both acts.
    */
-  const [deepLinkDone, setDeepLinkDone] = useState(false);
   useEffect(() => {
-    if (deepLinkDone || isLoading) return;
-    setDeepLinkDone(true);
     const params = new URLSearchParams(window.location.search);
     const wanted = Number(params.get("patient"));
     if (!wanted) return;
-    const receive = Number(params.get("receive"));
-    const refund = params.get("refund") === "1";
-    window.history.replaceState(null, "", "/admin/payments");
-
-    void (async () => {
-      try {
-        const label = await nameOf(wanted);
-        const patient = { id: wanted, label };
-        setDrawerPatient(patient);
-        if (receive) {
-          setReceiving({ patient, invoiceId: receive > 1 ? receive : null });
-        } else if (refund && canRefund) {
-          const held = await prepaidOf(wanted);
-          if (held > 0) setRefunding({ ...patient, prepaid: held });
-          else toast.info(`${label} has nothing ${MONEY_WORD.prepaid.toLowerCase()} to refund.`);
-        }
-      } catch {
-        toast.error("That patient could not be opened.");
-      }
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deepLinkDone, isLoading]);
+    params.delete("patient");
+    const rest = params.toString();
+    router.replace(`/admin/billing/patient/${wanted}${rest ? `?${rest}` : ""}`);
+  }, [router]);
 
   const fetchPatients = useCallback(async () => {
     try {
@@ -345,7 +292,8 @@ export default function PaymentsPage() {
     .filter((p) => p.label.toLowerCase().includes(pickSearch.trim().toLowerCase()))
     .slice(0, 50);
 
-  const openFile = (id: number, label: string) => setDrawerPatient({ id, label });
+  /** A row opens the patient's money page: plan, bills, payments, history. */
+  const openFile = (id: number) => router.push(`/admin/billing/patient/${id}`);
 
   return (
     <div className="flex min-h-screen bg-white">
@@ -527,11 +475,11 @@ export default function PaymentsPage() {
                             key={r.id}
                             tabIndex={0}
                             aria-label={`Open the money file of ${r.patient_name}`}
-                            onClick={() => openFile(r.patient_id, r.patient_name)}
+                            onClick={() => openFile(r.patient_id)}
                             onKeyDown={(e) => {
                               if (e.key === "Enter" || e.key === " ") {
                                 e.preventDefault();
-                                openFile(r.patient_id, r.patient_name);
+                                openFile(r.patient_id);
                               }
                             }}
                             className="cursor-pointer transition-colors hover:bg-brand-50/60 focus-visible:bg-brand-50/60 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-400"
@@ -598,7 +546,7 @@ export default function PaymentsPage() {
                   <ul className="divide-y divide-ink-100 overflow-hidden rounded-2xl border border-ink-200 bg-card">
                     {taken.map((r) => {
                       const held = r.figures?.held ?? 0;
-                      const open = () => openFile(r.patient_id, r.patient_name);
+                      const open = () => openFile(r.patient_id);
                       return (
                         <li
                           key={r.id}
@@ -710,11 +658,11 @@ export default function PaymentsPage() {
                             key={r.patient_id}
                             tabIndex={0}
                             aria-label={`Open the money file of ${r.patient_name}`}
-                            onClick={() => openFile(r.patient_id, r.patient_name)}
+                            onClick={() => openFile(r.patient_id)}
                             onKeyDown={(e) => {
                               if (e.key === "Enter" || e.key === " ") {
                                 e.preventDefault();
-                                openFile(r.patient_id, r.patient_name);
+                                openFile(r.patient_id);
                               }
                             }}
                             className="cursor-pointer transition-colors hover:bg-brand-50/60 focus-visible:bg-brand-50/60 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-400"
@@ -755,22 +703,6 @@ export default function PaymentsPage() {
           )}
         </main>
       </div>
-
-      {/* ── One patient's money file, the same drawer Billing opens ─────────── */}
-      {drawerPatient && (
-        <PatientDrawer
-          patient={drawerPatient}
-          isOpen={!!drawerPatient}
-          onClose={() => setDrawerPatient(null)}
-          onReceivePayment={(invoiceId) =>
-            setReceiving({ patient: drawerPatient, invoiceId: invoiceId ?? null })
-          }
-          onRefundPrepaid={(held) => setRefunding({ ...drawerPatient, prepaid: held })}
-          onViewInvoice={() => router.push(`/admin/billing?patient=${drawerPatient.id}`)}
-          onChanged={refresh}
-          refreshToken={moneyMoved}
-        />
-      )}
 
       {/* ── Who is paying, when no bill was named ───────────────────────────── */}
       <Modal

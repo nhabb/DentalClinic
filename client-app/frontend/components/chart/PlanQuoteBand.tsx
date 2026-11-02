@@ -64,10 +64,10 @@ export function PlanQuoteBand({ patientId, plan }: PlanQuoteBandProps) {
       <Button
         size="sm"
         variant="outline"
-        title="Price the plan, give it to the patient, record that they agreed"
-        onClick={() => router.push(`/admin/quotes?patient=${patientId}`)}
+        title="Price the plan, give it to the patient, bill it and receive payments: one page"
+        onClick={() => router.push(`/admin/billing/patient/${patientId}`)}
       >
-        <FaFileInvoiceDollar className="me-1.5" /> Open {MONEY_WORD.quote.toLowerCase()}
+        <FaFileInvoiceDollar className="me-1.5" /> {MONEY_WORD.quote} and money
       </Button>
     </div>
   );

@@ -1,11 +1,10 @@
 "use client";
 
-import { toast } from 'sonner';
+import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api/client";
 import { formatDateBeirut } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/i18n";
 import { ShowMore } from "@/components/ui/ShowMore";
 import { useDebounced, usePagedList } from "@/lib/api/paged";
@@ -14,8 +13,6 @@ import AdminSidebar from "@/components/ui/AdminSidebar";
 import { StatsCard } from "@/components/ui/StatsCard";
 import { AdminPageHeader } from "@/components/ui/AdminPageHeader";
 import { ListToolbar } from "@/components/ui/ListToolbar";
-import { Modal } from "@/components/ui/Modal";
-import { FormField, inputClass } from "@/components/ui/FormField";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Avatar } from "@/components/ui/Avatar";
@@ -26,39 +23,32 @@ import {
   MONEY_WORD,
   type InvoiceStatus,
 } from "@/components/billing/money-words";
-import { CONFIRM_PASSWORD_HEADER, PasswordConfirmModal } from "@/components/billing/PasswordConfirmModal";
 import { NewInvoiceModal, type IssueOutcome } from "@/components/billing/NewInvoiceModal";
-import { PAYMENT_METHODS } from "@/components/billing/payment-methods";
-import { PatientDrawer, type PatientDrawerTab } from "@/components/billing/PatientDrawer";
 import {
   daysOverdue,
-  Invoice,
-  InvoicePayment,
-  normalizeInvoice as normalizeInvoiceDoc,
-  printInvoice,
+  type Invoice,
+  normalizeInvoice,
 } from "@/components/billing/invoice-doc";
 import {
   FaFileInvoiceDollar,
   FaCheckCircle,
   FaClock,
   FaHashtag,
-  FaEye,
-  FaPlus,
-  FaTrash,
   FaChartLine,
-  FaPrint,
-  FaExchangeAlt,
 } from "react-icons/fa";
 import { useSignOut } from "@/lib/auth/useSignOut";
 import { fetchAllPatients } from "@/lib/api/patients";
 
-/** The invoice shape, its printing and its aging live in one shared module. */
-type TreatmentInvoice = Invoice;
+/*
+ * Billing: the register of every bill in the clinic, and the one place a
+ * bill is started for a patient who has not been picked yet (New bill, then
+ * choose the patient). Everything about one patient's money — their plan and
+ * quote, their bills with the corrections a bill can take, their payments —
+ * lives on that patient's money page, which a row opens.
+ */
+
 type PatientOption = { id: number; label: string };
 
-// ─── Status badge ─────────────────────────────────────────────────────────────
-
-/** A bill’s status, in the words and tones the whole app uses. */
 function StatusBadge({ status }: { status: string }) {
   const known = status as InvoiceStatus;
   return (
@@ -68,34 +58,18 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
 export default function BillingPage() {
   const router = useRouter();
   const { t } = useTranslation();
+  const { can } = usePermissions();
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [patients, setPatients] = useState<PatientOption[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("All");
-
-  // This page is the one door for money: bills are built here and payments
-  // taken here. The chart only records the clinical work.
   const [showBuilder, setShowBuilder] = useState(false);
-  const [builderPatientId, setBuilderPatientId] = useState<number | null>(null);
-  /** The bill the builder is replacing, when it was opened for that. */
-  const [replacingInvoice, setReplacingInvoice] = useState<TreatmentInvoice | null>(null);
 
-  // View / payment modal
-  const { can } = usePermissions();
-  const [showViewModal, setShowViewModal] = useState(false);
-  const [selectedInvoice, setSelectedInvoice] = useState<TreatmentInvoice | null>(null);
-  /** The patient whose money file is open, and where it opened. */
-  const [drawerPatient, setDrawerPatient] = useState<PatientOption | null>(null);
-  const [drawerTab, setDrawerTab] = useState<PatientDrawerTab>("timeline");
-  /** Bumped whenever money moves, so an open money file redraws with it. */
-  const [moneyMoved, setMoneyMoved] = useState(0);
   /** The clinic's own figures, from the server — not a sum of one page of rows. */
   const [clinicFigures, setClinicFigures] = useState<{
     billed: number;
@@ -105,54 +79,29 @@ export default function BillingPage() {
     creditHeld: number;
   } | null>(null);
 
-  // Invoices or quotes
-
-  // Cancel form (inside the invoice modal). Cancelling returns the money on
-  // the bill to its receipts; ticking "refund" also hands it back.
-  const [voidReason, setVoidReason] = useState("");
-  const [voidRefund, setVoidRefund] = useState(false);
-  const [voidRefundMethod, setVoidRefundMethod] = useState("cash");
-  const [voiding, setVoiding] = useState(false);
-  const [voidError, setVoidError] = useState("");
-
-  // Deleting money records: admin only, password re-entered in a modal.
-  const [confirm, setConfirm] = useState<{ kind: "invoice" | "payment"; id: number; label: string } | null>(null);
-  const [confirmBusy, setConfirmBusy] = useState(false);
-  const [confirmError, setConfirmError] = useState("");
-
-  // ── Fetch helpers ────────────────────────────────────────────────────────────
-
-  const normalizeInvoice = normalizeInvoiceDoc;
-
   // The API searches, filters and counts the bills; the screen shows ten at a time.
   const bq = useDebounced(searchQuery.trim());
-  const list = usePagedList<TreatmentInvoice, { status: Partial<Record<string, number>> }>({
+  const list = usePagedList<Invoice, { status: Partial<Record<string, number>> }>({
     path: "/api/billing/invoices",
     params: { search: bq, status: selectedStatus === "All" ? undefined : selectedStatus.toLowerCase() },
-    map: normalizeInvoiceDoc,
+    map: normalizeInvoice,
     withCounts: true,
   });
   const invoices = list.rows;
-  const fetchInvoices = list.reload;
 
   const fetchPatients = async () => {
     try {
-      const list = await fetchAllPatients();
+      const all = await fetchAllPatients();
       setPatients(
-        list.map((p: any) => ({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        all.map((p: any) => ({
           id: Number(p.id),
           label: `${p.users?.first_name ?? ""} ${p.users?.last_name ?? ""}`.trim(),
-        }))
+        })),
       );
-    } catch { /* silent */ }
+    } catch { /* the builder shows its own empty state */ }
   };
 
-  /**
-   * The clinic's four figures come from the server, where they are defined
-   * once. They used to be reduced over the loaded page of invoices, so a
-   * clinic with more bills than the page fetched showed a wrong total under a
-   * confident label.
-   */
   const fetchClinicFigures = async () => {
     try {
       const res = await apiFetch("/api/billing/kpis");
@@ -165,71 +114,34 @@ export default function BillingPage() {
         bills: Number(all.total_invoices ?? 0),
         creditHeld: Number(all.total_credit_held ?? 0),
       });
-    } catch { /* the loaded-rows fallback stands */ }
+    } catch { /* the dashes stand */ }
   };
 
   useEffect(() => {
-    Promise.all([fetchPatients(), fetchClinicFigures()]).finally(() =>
-      setIsLoading(false),
-    );
+    Promise.all([fetchPatients(), fetchClinicFigures()]).finally(() => setIsLoading(false));
   }, []);
 
   /**
-   * What the address bar can say. `view` picks the register; `patient` opens
-   * that patient's money file (the common case, and what the chart links to);
-   * `new=bill` is the old behaviour of `?patient=`, kept addressable.
+   * Old links. `?patient=<id>` (with `replace=`, `new=bill`) and
+   * `?view=plans` all land on the patient's money page, which carries every
+   * act; a bare `?view=plans` goes to the Quotes list.
    */
-  const [deepLinkDone, setDeepLinkDone] = useState(false);
-
   useEffect(() => {
-    // Read the query here and not in a lazy initial state: this page is
-    // server-rendered first, so an initializer would run where there is no
-    // window and hydration would keep that empty answer. It also waits for
-    // the lists, so a link carrying only an id can still find the name.
-    if (deepLinkDone || isLoading) return;
-    setDeepLinkDone(true);
     const params = new URLSearchParams(window.location.search);
     const wanted = Number(params.get("patient"));
-    // Quotes have their own page now; an old plans link lands there.
-    if (params.get("view") === "plans") {
-      router.replace(`/admin/quotes${wanted ? `?patient=${wanted}` : ""}`);
-      return;
+    if (wanted) {
+      params.delete("patient");
+      params.delete("view");
+      const rest = params.toString();
+      router.replace(`/admin/billing/patient/${wanted}${rest ? `?${rest}` : ""}`);
+    } else if (params.get("view") === "plans") {
+      router.replace("/admin/quotes");
     }
+  }, [router]);
 
-    const replaceId = Number(params.get("replace"));
-    if (replaceId) {
-      // The chart's way out of a frozen price: open the builder on that bill.
-      void (async () => {
-        const res = await apiFetch(`/api/billing/invoices/${replaceId}`);
-        if (res.ok) openReplace(normalizeInvoice(await res.json()));
-        else toast.error("That bill could not be opened.");
-      })();
-    } else if (wanted) {
-      if (params.get("new") === "bill") {
-        setReplacingInvoice(null);
-        setBuilderPatientId(wanted);
-        setShowBuilder(true);
-      } else {
-        openMoneyFile(wanted, "timeline");
-      }
-    }
-    if (params.toString()) window.history.replaceState(null, "", "/admin/billing");
-  }, [deepLinkDone, isLoading]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  /** Money moved: the list, the clinic figures and any open money file follow. */
-  const refreshMoney = async () => {
-    await Promise.all([fetchInvoices(), fetchClinicFigures()]);
-    setMoneyMoved((n) => n + 1);
-  };
-
-  /**
-   * A new bill is listed at once, and the toast says what happened to the
-   * money: prepaid money pays it as it is issued, and whatever is left is
-   * received on the Payments page, one click away.
-   */
+  /** A new bill is listed at once; the toast opens the patient's page. */
   const handleInvoiceCreated = async (invoice: Invoice, outcome: IssueOutcome) => {
-    setReplacingInvoice(null);
-    await refreshMoney();
+    await Promise.all([list.reload(), fetchClinicFigures()]);
     const drawn =
       outcome.paidFromBalance > 0
         ? ` $${outcome.paidFromBalance.toFixed(2)} paid from their ${MONEY_WORD.prepaid.toLowerCase()} money.`
@@ -238,47 +150,14 @@ export default function BillingPage() {
       invoice.remaining_amount > 0
         ? ` $${invoice.remaining_amount.toFixed(2)} ${MONEY_WORD.unpaid.toLowerCase()}.`
         : " Paid in full.";
-    toast.success(
-      outcome.replaced
-        ? `${outcome.replaced.invoice_number} cancelled. ${invoice.invoice_number} issued in its place.${drawn}${owed}`
-        : `${invoice.invoice_number} issued.${drawn}${owed}`,
-      {
-        action:
-          can("billing:create") && invoice.remaining_amount > 0
-            ? {
-                label: MONEY_WORD.receivePayment,
-                onClick: () =>
-                  router.push(`/admin/payments?patient=${invoice.patient.id}&receive=${invoice.id}`),
-              }
-            : undefined,
+    toast.success(`${invoice.invoice_number} issued.${drawn}${owed}`, {
+      action: {
+        label: "Open",
+        onClick: () => router.push(`/admin/billing/patient/${invoice.patient.id}?bill=${invoice.id}`),
       },
-    );
+    });
   };
 
-  /**
-   * Replace a bill: the builder opens on its lines, discount and VAT; issuing
-   * cancels it and moves its money onto the new bill in one step. The detail
-   * dialog closes first — the builder is a dialog too.
-   */
-  const openReplace = (inv: TreatmentInvoice) => {
-    setShowViewModal(false);
-    setSelectedInvoice(null);
-    setReplacingInvoice(inv);
-    setBuilderPatientId(Number(inv.patient.id));
-    setShowBuilder(true);
-  };
-
-  /** Open one bill's detail by id: the other end of a replacement link. */
-  const openInvoiceById = async (id: number) => {
-    const res = await apiFetch(`/api/billing/invoices/${id}`);
-    if (!res.ok) return toast.error("That bill could not be opened.");
-    openViewModal(normalizeInvoice(await res.json()));
-  };
-
-
-  // ── Filtering + stats ────────────────────────────────────────────────────────
-
-  const filtered = invoices;
   const byStatus = list.counts?.status ?? {};
   const invoiceStatusCounts: Record<string, number> = {
     All: Object.values(byStatus).reduce<number>((a, n) => a + (n ?? 0), 0),
@@ -290,136 +169,10 @@ export default function BillingPage() {
   const hasInvoiceFilters = !!searchQuery.trim() || selectedStatus !== "All";
   const clearInvoiceFilters = () => { setSearchQuery(""); setSelectedStatus("All"); };
 
+  const openPatient = (inv: Invoice) =>
+    router.push(`/admin/billing/patient/${inv.patient.id}?bill=${inv.id}`);
 
-  // ── Void (cancel) ───────────────────────────────────────────────────────────
-
-  const handleVoid = async () => {
-    if (!selectedInvoice) return;
-    setVoidError("");
-    if (voidReason.trim().length < 3) { setVoidError("Say why this invoice is cancelled."); return; }
-    const paid = selectedInvoice.amount_paid;
-    const what =
-      paid > 0
-        ? voidRefund
-          ? ` The $${paid.toFixed(2)} received on it will be refunded.`
-          : ` The $${paid.toFixed(2)} received on it goes back to the patient's receipts, still theirs.`
-        : "";
-    if (!window.confirm(`Cancel invoice ${selectedInvoice.invoice_number}? It stays on record as cancelled and is no longer owed.${what}`)) return;
-    setVoiding(true);
-    try {
-      const res = await apiFetch(`/api/billing/invoices/${selectedInvoice.id}/void`, {
-        method: "POST",
-        body: JSON.stringify({
-          reason: voidReason.trim(),
-          ...(paid > 0 && voidRefund ? { refund: true, refund_method: voidRefundMethod } : {}),
-        }),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.message ?? "Failed to cancel the invoice");
-      }
-      const body = await res.json();
-      const normalized = normalizeInvoice(body);
-      await refreshMoney();
-      const released = (body.released_receipts ?? []) as { document_number: string }[];
-      const refunds = (body.refunds ?? []) as { document_number: string }[];
-      toast.success(
-        refunds.length > 0
-          ? `Invoice cancelled. Refunded: ${refunds.map((r) => r.document_number).join(", ")}.`
-          : released.length > 0
-            ? `Invoice cancelled. The money is open again on ${released.map((r) => r.document_number).join(", ")}.`
-            : "Invoice cancelled.",
-      );
-      setSelectedInvoice(normalized);
-      setVoidReason("");
-      setVoidRefund(false);
-    } catch (e: any) {
-      setVoidError(e.message ?? "Something went wrong.");
-    } finally {
-      setVoiding(false);
-    }
-  };
-
-  // ── Delete (admin + password) ───────────────────────────────────────────────
-
-  const requestDeleteInvoice = (inv: TreatmentInvoice) => {
-    setConfirmError("");
-    setConfirm({ kind: "invoice", id: inv.id, label: `Invoice ${inv.invoice_number} for ${inv.patient.users.first_name} ${inv.patient.users.last_name}` });
-  };
-  const requestDeletePayment = (p: InvoicePayment) => {
-    setConfirmError("");
-    setConfirm({ kind: "payment", id: p.id, label: `${p.kind === "refund" ? "Refund" : "Payment"} of ${p.amount.toFixed(2)}` });
-  };
-
-  const handleConfirmedDelete = async (password: string) => {
-    if (!confirm) return;
-    setConfirmBusy(true);
-    setConfirmError("");
-    const path = confirm.kind === "invoice" ? `/api/billing/invoices/${confirm.id}` : `/api/billing/payments/${confirm.id}`;
-    try {
-      const res = await apiFetch(path, { method: "DELETE", headers: { [CONFIRM_PASSWORD_HEADER]: password } });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        setConfirmError(err.message ?? "The deletion was refused.");
-        return;
-      }
-      if (confirm.kind === "invoice") {
-        void refreshMoney();
-        setShowViewModal(false);
-        setSelectedInvoice(null);
-        toast.success("Invoice deleted.");
-      } else {
-        const normalized = normalizeInvoice(await res.json());
-        await refreshMoney();
-        setSelectedInvoice(normalized);
-        toast.success("Removed.");
-      }
-      setConfirm(null);
-    } catch {
-      setConfirmError("The deletion could not be completed.");
-    } finally {
-      setConfirmBusy(false);
-    }
-  };
-
-  /**
-   * Open a patient's money file. The name is looked up where it is already
-   * known — the patient list, then the bills on screen — so a deep link that
-   * carries only an id still opens with a name on it.
-   */
-  const openMoneyFile = (id: number, tab: PatientDrawerTab = "timeline") => {
-    const fromList = patients.find((p) => Number(p.id) === Number(id))?.label;
-    const fromBill = invoices.find((i) => Number(i.patient.id) === Number(id))?.patient.users;
-    setDrawerTab(tab);
-    setDrawerPatient({
-      id,
-      label:
-        fromList ||
-        (fromBill ? `${fromBill.first_name} ${fromBill.last_name}` : `Patient #${id}`),
-    });
-  };
-
-  /** Clicking a bill row opens the money file of the patient it bills. */
-  const openHistory = (invoice: TreatmentInvoice) => {
-    setDrawerTab("timeline");
-    setDrawerPatient({
-      id: Number(invoice.patient.id),
-      label: `${invoice.patient.users.first_name} ${invoice.patient.users.last_name}`,
-    });
-  };
-
-  const openViewModal = (invoice: TreatmentInvoice) => {
-    setSelectedInvoice(invoice);
-    setVoidRefund(false);
-    setVoidReason("");
-    setVoidError("");
-    setShowViewModal(true);
-  };
-
-  /** A printable invoice / receipt: number, terms, lines, discount, what was paid and what is owed. */
   const handleLogout = useSignOut();
-
-  // ── Render ────────────────────────────────────────────────────────────────────
 
   return (
     <div className="min-h-screen bg-white flex">
@@ -428,8 +181,8 @@ export default function BillingPage() {
       <div className="flex-1 flex flex-col min-w-0">
         <AdminPageHeader
           title={t("billing.title")}
-          subtitle={t("billing.subtitle")}
-          onAdd={can("billing:create") ? () => { setReplacingInvoice(null); setBuilderPatientId(null); setShowBuilder(true); } : undefined}
+          subtitle="Every bill in the clinic. Open one to work on that patient's money."
+          onAdd={can("billing:create") ? () => setShowBuilder(true) : undefined}
           addLabel="New bill"
           actions={[
             { key: "dashboard", label: t("billing.goToDashboard"), icon: <FaChartLine />, href: "/admin" },
@@ -442,56 +195,21 @@ export default function BillingPage() {
             <LoadingSpinner />
           ) : (
             <>
-              {/* Across the clinic. The scope is said once, here, which is
-                  what lets these four words mean the same thing in a
-                  patient’s file without being synonyms of themselves. */}
               <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-ink-400">
                 {MONEY_WORD.acrossTheClinic}
               </p>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-3">
-                <StatsCard
-                  icon={FaFileInvoiceDollar}
-                  iconBgClass="bg-blue-100"
-                  iconColorClass="text-blue-600"
-                  value={clinicMoney(clinicFigures?.billed)}
-                  label={MONEY_WORD.billed}
-                />
-                <StatsCard
-                  icon={FaCheckCircle}
-                  iconBgClass="bg-green-100"
-                  iconColorClass="text-green-600"
-                  value={clinicMoney(clinicFigures?.paid)}
-                  label={MONEY_WORD.paid}
-                />
-                <StatsCard
-                  icon={FaClock}
-                  iconBgClass="bg-yellow-100"
-                  iconColorClass="text-yellow-600"
-                  value={clinicMoney(clinicFigures?.unpaid)}
-                  label={MONEY_WORD.unpaid}
-                />
-                <StatsCard
-                  icon={FaHashtag}
-                  iconBgClass="bg-purple-100"
-                  iconColorClass="text-purple-600"
-                  value={clinicFigures ? String(clinicFigures.bills) : "—"}
-                  label={MONEY_WORD.bills}
-                />
+                <StatsCard icon={FaFileInvoiceDollar} iconBgClass="bg-blue-100" iconColorClass="text-blue-600" value={clinicMoney(clinicFigures?.billed)} label={MONEY_WORD.billed} />
+                <StatsCard icon={FaCheckCircle} iconBgClass="bg-green-100" iconColorClass="text-green-600" value={clinicMoney(clinicFigures?.paid)} label={MONEY_WORD.paid} />
+                <StatsCard icon={FaClock} iconBgClass="bg-yellow-100" iconColorClass="text-yellow-600" value={clinicMoney(clinicFigures?.unpaid)} label={MONEY_WORD.unpaid} />
+                <StatsCard icon={FaHashtag} iconBgClass="bg-purple-100" iconColorClass="text-purple-600" value={clinicFigures ? String(clinicFigures.bills) : "—"} label={MONEY_WORD.bills} />
               </div>
-
-              {/* Billed minus Paid is not Unpaid while anyone is holding
-                  credit, so the fourth figure is named rather than left for
-                  the reader to discover by subtracting. */}
               <p className="mb-8 text-xs text-ink-500">
                 {clinicFigures && clinicFigures.creditHeld > 0
                   ? `Of what came in, $${clinicFigures.creditHeld.toFixed(2)} is ${MONEY_WORD.prepaid.toLowerCase()} — money no bill has claimed yet. The Payments page lists who holds it.`
                   : `${MONEY_WORD.billed} less ${MONEY_WORD.paid.toLowerCase()} is what is ${MONEY_WORD.unpaid.toLowerCase()}; nobody has ${MONEY_WORD.prepaid.toLowerCase()} money.`}
               </p>
 
-              {/* One register: bills. Quotes have their own page, one stage
-                  earlier; a patient's plan is still readable in their money
-                  file beside their bills and payments. */}
-              <>
               <ListToolbar
                 search={{ value: searchQuery, onChange: setSearchQuery, placeholder: t("billing.searchPlaceholder") }}
                 shown={list.total}
@@ -517,22 +235,17 @@ export default function BillingPage() {
                 ]}
               />
 
-              {/* Table */}
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                {list.loading && filtered.length === 0 ? (
+                {list.loading && invoices.length === 0 ? (
                   <div className="space-y-2 p-5">{[0, 1, 2].map((i) => <div key={i} className="h-12 animate-pulse rounded-xl bg-gray-100" />)}</div>
-                ) : filtered.length === 0 ? (
-                  <EmptyState
-                    icon={FaFileInvoiceDollar}
-                    title={t("billing.noInvoices")}
-                    description={t("billing.noInvoicesDesc")}
-                  />
+                ) : invoices.length === 0 ? (
+                  <EmptyState icon={FaFileInvoiceDollar} title={t("billing.noInvoices")} description={t("billing.noInvoicesDesc")} />
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead className="bg-gray-50/80 border-b border-gray-200">
                         <tr>
-                          {["Invoice", t("billing.colPatient"), t("billing.colDate"), "Due", t("billing.colProcedures"), MONEY_WORD.billTotal, MONEY_WORD.paid, MONEY_WORD.unpaid, t("billing.colStatus"), ""].map((h) => (
+                          {["Bill", t("billing.colPatient"), t("billing.colDate"), "Due", t("billing.colProcedures"), MONEY_WORD.billTotal, MONEY_WORD.paid, MONEY_WORD.unpaid, t("billing.colStatus")].map((h) => (
                             <th key={h} className="px-5 py-3 text-start text-[11px] font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
                               {h}
                             </th>
@@ -540,18 +253,16 @@ export default function BillingPage() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-100 stagger">
-                        {filtered.map((inv) => (
-                          /* The whole row is the way into that patient's history;
-                             the action cell stops the click from reaching it. */
+                        {invoices.map((inv) => (
                           <tr
                             key={inv.id}
                             tabIndex={0}
-                            aria-label={`Open the history of ${inv.patient.users.first_name} ${inv.patient.users.last_name}`}
-                            onClick={() => openHistory(inv)}
+                            aria-label={`Open the money page of ${inv.patient.users.first_name} ${inv.patient.users.last_name} on ${inv.invoice_number}`}
+                            onClick={() => openPatient(inv)}
                             onKeyDown={(e) => {
                               if (e.key === "Enter" || e.key === " ") {
                                 e.preventDefault();
-                                openHistory(inv);
+                                openPatient(inv);
                               }
                             }}
                             className="cursor-pointer transition-colors hover:bg-brand-50/60 focus-visible:bg-brand-50/60 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-400"
@@ -565,9 +276,7 @@ export default function BillingPage() {
                                 </span>
                               </div>
                             </td>
-                            <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
-                              {formatDateBeirut(inv.procedure_date)}
-                            </td>
+                            <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{formatDateBeirut(inv.procedure_date)}</td>
                             <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
                               {formatDateBeirut(inv.due_date)}
                               {daysOverdue(inv) > 0 && (
@@ -595,340 +304,31 @@ export default function BillingPage() {
                                 </span>
                               )}
                             </td>
-                            <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                              <div className="flex items-center gap-1">
-                                <button
-                                  onClick={() => openViewModal(inv)}
-                                  className="p-2 text-brand hover:bg-blue-50 rounded-lg transition-colors"
-                                  title={t("billing.viewInvoice")}
-                                >
-                                  <FaEye />
-                                </button>
-                                {can("billing:delete") && (
-                                <button
-                                  onClick={() => requestDeleteInvoice(inv)}
-                                  disabled={inv.invoice_payments.length > 0}
-                                  className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-30"
-                                  title={inv.invoice_payments.length > 0 ? "Has payments: cancel it instead of deleting" : "Delete invoice (admin, password required)"}
-                                >
-                                  <FaTrash className="text-sm" />
-                                </button>
-                                )}
-                              </div>
-                            </td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
                 )}
-                <ShowMore shown={filtered.length} total={list.total} loading={list.loadingMore} onClick={list.loadMore} />
+                <ShowMore shown={invoices.length} total={list.total} loading={list.loadingMore} onClick={list.loadMore} />
               </div>
-              </>
             </>
           )}
         </main>
       </div>
 
-      {/* ── One patient's money file, opened from a row in either register ──── */}
-      {/* A drawer, and rendered before the dialogs: the list stays visible
-          behind it, and a bill, a payment or the builder opened from inside
-          it stacks over it as a proper centred dialog. */}
-      {drawerPatient && (
-        <PatientDrawer
-          patient={drawerPatient}
-          isOpen={!!drawerPatient}
-          onClose={() => setDrawerPatient(null)}
-          initialTab={drawerTab}
-          onViewInvoice={(inv) => openViewModal(inv)}
-          onReplaceInvoice={openReplace}
-          /* Money is received on the Payments page, but the file carries the
-             act everywhere: one click lands there with the dialog open. No
-             plan acts: the plan is priced and agreed on the Quotes page. */
-          onReceivePayment={(invoiceId) =>
-            router.push(
-              `/admin/payments?patient=${drawerPatient.id}&receive=${invoiceId ?? 1}`,
-            )
-          }
-          onRefundPrepaid={() =>
-            router.push(`/admin/payments?patient=${drawerPatient.id}&refund=1`)
-          }
-          onNewBill={() => {
-            setReplacingInvoice(null);
-            setBuilderPatientId(Number(drawerPatient.id));
-            setShowBuilder(true);
-          }}
-          onChanged={() => void refreshMoney()}
-          refreshToken={moneyMoved}
-        />
-      )}
-
-      {/* ── Invoice detail: read it, print it, correct it ─────────────────────── */}
-      {selectedInvoice && (
-        <Modal
-          isOpen={showViewModal}
-          onClose={() => { setShowViewModal(false); setSelectedInvoice(null); }}
-          title={`Invoice ${selectedInvoice.invoice_number} — ${selectedInvoice.patient.users.first_name} ${selectedInvoice.patient.users.last_name}`}
-          maxWidth="max-w-2xl"
-        >
-          <div className="space-y-5 max-h-[75vh] overflow-y-auto pr-1">
-            {/* Info row */}
-            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-              <span><strong>{t("billing.dateLabel")}</strong> {formatDateBeirut(selectedInvoice.procedure_date)}</span>
-              <span>
-                <strong>Due:</strong> {formatDateBeirut(selectedInvoice.due_date)}
-                {daysOverdue(selectedInvoice) > 0 && (
-                  <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-semibold text-red-700">{daysOverdue(selectedInvoice)} days overdue</span>
-                )}
-              </span>
-              <span><strong>{t("billing.statusLabel")}</strong> <StatusBadge status={selectedInvoice.status} /></span>
-              {selectedInvoice.status !== "cancelled" && selectedInvoice.remaining_amount > 0 && (
-                <span className="ms-auto text-xs text-ink-500">
-                  Money is received on the Payments page.
-                </span>
-              )}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  // The file is a drawer under this dialog, so close the
-                  // dialog rather than stacking one on the other.
-                  setShowViewModal(false);
-                  openHistory(selectedInvoice);
-                }}
-                title="Every bill, every payment and the plan behind them"
-              >
-                Money file
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => router.push(`/admin/patients?patient=${selectedInvoice.patient.id}&tab=chart`)}
-                className={selectedInvoice.remaining_amount > 0 ? "" : "ml-auto"}
-                title="See the clinical work this bills"
-              >
-                Open the chart
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => printInvoice(selectedInvoice)}>
-                <FaPrint className="mr-2" /> {selectedInvoice.status === "paid" ? "Print receipt" : "Print"}
-              </Button>
-              {can("billing:create") && can("billing:edit") && selectedInvoice.status !== "cancelled" && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => openReplace(selectedInvoice)}
-                  title="Cancel this bill and issue a corrected one in its place; money on it moves across"
-                >
-                  <FaExchangeAlt className="mr-2" /> {MONEY_WORD.replaceBill}
-                </Button>
-              )}
-            </div>
-            {selectedInvoice.status === "cancelled" && (
-              <p className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
-                <strong>Cancelled</strong>{selectedInvoice.cancelled_at ? ` on ${formatDateBeirut(selectedInvoice.cancelled_at)}` : ""}: {selectedInvoice.cancel_reason}
-                {selectedInvoice.replaced_by && (
-                  <>
-                    {" "}
-                    <button
-                      type="button"
-                      className="font-medium text-brand hover:underline"
-                      onClick={() => void openInvoiceById(selectedInvoice.replaced_by!.id)}
-                    >
-                      Open {selectedInvoice.replaced_by.invoice_number}
-                    </button>
-                  </>
-                )}
-              </p>
-            )}
-            {selectedInvoice.replaces && (
-              <p className="rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-sm text-brand-900">
-                {MONEY_WORD.replaces} <strong>{selectedInvoice.replaces.invoice_number}</strong>, which was cancelled when this bill was issued.{" "}
-                <button
-                  type="button"
-                  className="font-medium text-brand hover:underline"
-                  onClick={() => void openInvoiceById(selectedInvoice.replaces!.id)}
-                >
-                  Open it
-                </button>
-              </p>
-            )}
-
-            {selectedInvoice.notes && (
-              <p className="text-sm text-gray-600 bg-gray-50 rounded-lg px-3 py-2 italic">{selectedInvoice.notes}</p>
-            )}
-
-            {/* Line items table */}
-            <div>
-              <h4 className="font-semibold text-gray-800 mb-2">{t("billing.procedures")}</h4>
-              <table className="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-3 py-2 text-left font-medium text-gray-600">{t("billing.procedureCol")}</th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-600">{t("billing.amountCol")}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {selectedInvoice.line_items.map((li) => (
-                    <tr key={li.id}>
-                      <td className="px-3 py-2 text-gray-800">
-                        {li.procedure_name}
-                        {li.tooth_number && (
-                          <span className="ml-2 rtl:ml-0 rtl:mr-2 inline-block px-1.5 py-0.5 rounded bg-blue-50 text-brand text-xs font-semibold">
-                            {t("dentalChart.toothCol")} {li.tooth_number}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-3 py-2 text-right text-gray-800">${li.amount.toFixed(2)}</td>
-                    </tr>
-                  ))}
-                  {(selectedInvoice.discount_amount > 0 || selectedInvoice.vat_amount > 0) && (
-                    <tr className="text-gray-600">
-                      <td className="px-3 py-2">Subtotal</td>
-                      <td className="px-3 py-2 text-right">${selectedInvoice.subtotal.toFixed(2)}</td>
-                    </tr>
-                  )}
-                  {selectedInvoice.discount_amount > 0 && (
-                    <tr className="text-gray-600">
-                      <td className="px-3 py-2">Discount{selectedInvoice.discount_reason && <span className="ml-2 text-xs italic text-gray-500">{selectedInvoice.discount_reason}</span>}</td>
-                      <td className="px-3 py-2 text-right">−${selectedInvoice.discount_amount.toFixed(2)}</td>
-                    </tr>
-                  )}
-                  {selectedInvoice.vat_amount > 0 && (
-                    <tr className="text-gray-600">
-                      <td className="px-3 py-2">VAT {selectedInvoice.vat_percent}%</td>
-                      <td className="px-3 py-2 text-right">${selectedInvoice.vat_amount.toFixed(2)}</td>
-                    </tr>
-                  )}
-                  <tr className="bg-gray-50 font-semibold">
-                    <td className="px-3 py-2">{t("billing.total")}</td>
-                    <td className="px-3 py-2 text-right">${selectedInvoice.total_amount.toFixed(2)}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            {/* Payment summary pills */}
-            <div className="grid grid-cols-3 gap-3 text-center">
-              <div className="bg-blue-50 rounded-xl p-3">
-                <p className="text-xs text-blue-600 font-medium">{MONEY_WORD.billTotal}</p>
-                <p className="text-lg font-bold text-blue-800">${selectedInvoice.total_amount.toFixed(2)}</p>
-              </div>
-              <div className="bg-green-50 rounded-xl p-3">
-                <p className="text-xs text-green-600 font-medium">{MONEY_WORD.paid}</p>
-                <p className="text-lg font-bold text-green-800">${selectedInvoice.amount_paid.toFixed(2)}</p>
-              </div>
-              <div className="bg-red-50 rounded-xl p-3">
-                <p className="text-xs text-red-600 font-medium">{MONEY_WORD.unpaid}</p>
-                <p className="text-lg font-bold text-red-800">${selectedInvoice.remaining_amount.toFixed(2)}</p>
-              </div>
-            </div>
-
-            {/* Payment history */}
-            {selectedInvoice.invoice_payments.length > 0 && (
-              <div>
-                <h4 className="font-semibold text-gray-800 mb-2">{t("billing.paymentHistory")}</h4>
-                <div className="space-y-2">
-                  {selectedInvoice.invoice_payments.map((p) => (
-                    <div key={p.id} className={`flex items-center justify-between text-sm rounded-lg px-3 py-2 ${p.kind === "refund" ? "bg-red-50" : "bg-gray-50"}`}>
-                      <div>
-                        <span className={`font-medium ${p.kind === "refund" ? "text-red-700" : "text-gray-800"}`}>
-                          {p.kind === "refund" ? "−" : ""}${p.amount.toFixed(2)}
-                        </span>
-                        {p.document_number && <span className="ml-2 font-mono text-xs text-gray-600">{p.document_number}</span>}
-                        {p.kind === "refund" && <span className="ml-2 text-xs font-semibold uppercase text-red-600">refund</span>}
-                        <span className="ml-2 text-gray-500 capitalize">{p.payment_method}</span>
-                        {p.reason && <span className="ml-2 text-gray-500 italic">{p.reason}</span>}
-                        {p.notes && <span className="ml-2 text-gray-400 italic">{p.notes}</span>}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-gray-400">{formatDateBeirut(p.payment_date)}</span>
-                        {can("billing:delete") && selectedInvoice.status !== "cancelled" && (
-                          <button
-                            type="button"
-                            onClick={() => requestDeletePayment(p)}
-                            className="p-1 text-red-300 hover:text-red-600 rounded"
-                            title="Remove this row (admin, password required)"
-                          >
-                            <FaTrash className="text-xs" />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Void — the invoice is not owed; it stays on record as cancelled */}
-            {can("billing:edit") && selectedInvoice.status !== "cancelled" && (
-              <details className="border-t border-gray-200 pt-4">
-                <summary className="cursor-pointer font-semibold text-gray-800">Cancel this invoice</summary>
-                <div className="mt-3 space-y-3">
-                  <p className="text-sm text-gray-600">The invoice stays on record, marked cancelled with your reason, and is no longer counted as owed. Chart work billed on it can be billed again. To change what is on it, use <strong>{MONEY_WORD.replaceBill}</strong> instead: it cancels and reissues in one step.</p>
-                  {selectedInvoice.amount_paid > 0 && (
-                    <div className="space-y-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-                      <p>
-                        ${selectedInvoice.amount_paid.toFixed(2)} was received on it. Cancelling is not refunding: that money goes back to the patient&apos;s receipts, open to use on another bill.
-                      </p>
-                      <label className="flex items-center gap-2">
-                        <input type="checkbox" checked={voidRefund} onChange={(e) => setVoidRefund(e.target.checked)} />
-                        <span>Also hand the ${selectedInvoice.amount_paid.toFixed(2)} back to the patient (refund)</span>
-                      </label>
-                      {voidRefund && (
-                        <FormField label="Handed back by *">
-                          <select value={voidRefundMethod} onChange={(e) => setVoidRefundMethod(e.target.value)} className={inputClass}>
-                            {PAYMENT_METHODS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
-                          </select>
-                        </FormField>
-                      )}
-                    </div>
-                  )}
-                  <FormField label="Reason *">
-                    <input type="text" placeholder="Why this invoice is cancelled" value={voidReason} onChange={(e) => setVoidReason(e.target.value)} className={inputClass} />
-                  </FormField>
-                  {voidError && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{voidError}</p>}
-                  <Button variant="destructive" onClick={handleVoid} disabled={voiding} className="w-full">
-                    {voiding ? "Cancelling…" : voidRefund && selectedInvoice.amount_paid > 0 ? "Cancel and refund" : "Cancel invoice"}
-                  </Button>
-                </div>
-              </details>
-            )}
-          </div>
-        </Modal>
-      )}
-
-      {/* ── New bill: the one place an invoice is created ─────────────────────── */}
+      {/* New bill for a patient not yet chosen: the builder asks who first. */}
       <NewInvoiceModal
         open={showBuilder}
-        onClose={() => {
-          setShowBuilder(false);
-          setReplacingInvoice(null);
-        }}
+        onClose={() => setShowBuilder(false)}
         patients={patients}
-        initialPatientId={builderPatientId}
-        replacing={replacingInvoice}
         onCreated={handleInvoiceCreated}
-      />
-
-
-      <PasswordConfirmModal
-        open={!!confirm}
-        title={confirm?.kind === "payment" ? "Remove this payment row" : "Delete this invoice"}
-        description={confirm ? `${confirm.label} will be removed permanently. Prefer a refund or a cancellation when money was actually received.` : ""}
-        busy={confirmBusy}
-        error={confirmError}
-        onConfirm={handleConfirmedDelete}
-        onClose={() => { if (!confirmBusy) setConfirm(null); }}
       />
     </div>
   );
 }
 
-/**
- * A clinic figure, or a dash while /billing/kpis has not answered. It used to
- * fall back to sums of the 200 loaded rows, a second definition of the same
- * figure that is wrong as soon as the clinic has more invoices than that.
- */
+/** A clinic figure, or a dash while /billing/kpis has not answered. */
 function clinicMoney(value: number | undefined): string {
   return value === undefined ? "—" : `$${value.toFixed(2)}`;
 }

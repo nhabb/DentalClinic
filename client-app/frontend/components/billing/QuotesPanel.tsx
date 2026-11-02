@@ -1,11 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import { FaTooth } from "react-icons/fa";
 import { apiFetch } from "@/lib/api/client";
 import { formatDateBeirut } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { ListToolbar } from "@/components/ui/ListToolbar";
@@ -46,7 +44,6 @@ export function QuotesPanel({
   /** Open that patient's quote. */
   onOpenPatient: (patient: PatientOption) => void;
 }) {
-  const router = useRouter();
   const [rows, setRows] = useState<PlanRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -141,28 +138,9 @@ export function QuotesPanel({
                   <td className="px-4 py-3 text-gray-600">
                     {r.accepted_at ? formatDateBeirut(r.accepted_at) : "—"}
                   </td>
-                  <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                    <div className="flex justify-end gap-1.5">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() =>
-                          onOpenPatient({ id: Number(r.patient_id), label: nameOf(r) })
-                        }
-                      >
-                        Open
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        title="Plan the work on the chart"
-                        onClick={() =>
-                          router.push(`/admin/patients?patient=${r.patient_id}&tab=chart`)
-                        }
-                      >
-                        Chart
-                      </Button>
-                    </div>
+                  <td className="px-4 py-3 text-end text-xs text-ink-400">
+                    {/* The row itself opens the patient's money page. */}
+                    Open ›
                   </td>
                 </tr>
               ))}
