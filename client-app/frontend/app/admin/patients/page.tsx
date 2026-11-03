@@ -48,6 +48,7 @@ import {
   FaAllergies,
   FaNotesMedical,
   FaCheckCircle,
+  FaUndo,
   FaLock,
   FaEdit,
   FaIdCard,
@@ -476,6 +477,7 @@ export default function PatientsPage() {
   const [completeDate, setCompleteDate] = useState(new Date().toISOString().split("T")[0]);
   const [completing, setCompleting] = useState(false);
   const [removingRecordId, setRemovingRecordId] = useState<number | null>(null);
+  const [reopeningRecordId, setReopeningRecordId] = useState<number | null>(null);
   const { can } = usePermissions();
 
   // Bumped whenever the plan changed.
@@ -1101,10 +1103,14 @@ export default function PatientsPage() {
 
   // ── Complete planned work / remove ─────────────────────────────────────────
 
-  /** Planned work is what the chart can mark as done. */
-  // Work already on a bill is not "to do": billing it up front is a real
-  // flow, so a billed row can be planned, but it must not be selectable.
-  const isCompletable = (h: ChartHistoryEntry) => h.status === "planned" && !h.billed;
+  /**
+   * Planned work is what the chart can mark as done, on a bill or not: a
+   * prepaid plan is billed first and finished later, and the bill holds the
+   * price, not the progress. Completing a billed row leaves it on its bill.
+   */
+  const isCompletable = (h: ChartHistoryEntry) => h.status === "planned";
+  /** Done work can go back on the plan: ticked by mistake, or to be redone. */
+  const isReopenable = (h: ChartHistoryEntry) => h.status === "completed";
 
   const toggleCompleteSelection = (id: number) =>
     setCompleteSelection((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -1148,6 +1154,32 @@ export default function PatientsPage() {
       toast.error(t("dentalChart.completeFailed"));
     } finally {
       setCompleting(false);
+    }
+  };
+
+  const handleReopenRecord = async (h: ChartHistoryEntry) => {
+    if (!selectedPatient) return;
+    if (!window.confirm([h.procedure + (h.tooth ? ` (${h.tooth})` : ""), t("dentalChart.reopenConfirm")].join(": "))) return;
+    setReopeningRecordId(h.id);
+    try {
+      const res = await apiFetch("/api/patient-work/reopen", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ patient_id: selectedPatient.id, items: [{ record_id: h.id }] }),
+      });
+      if (!res.ok) {
+        toast.error(await readApiError(res, t("dentalChart.reopenFailed")));
+        return;
+      }
+      const data = await res.json();
+      if (data?.chart) setChart(mapChart(data.chart));
+      setPlanToken((n) => n + 1);
+      fetchPatientHistory(selectedPatient.id);
+      toast.success(t("dentalChart.reopenedToast"));
+    } catch {
+      toast.error(t("dentalChart.reopenFailed"));
+    } finally {
+      setReopeningRecordId(null);
     }
   };
 
@@ -2255,9 +2287,10 @@ export default function PatientsPage() {
                                     {/*
                                       No money on the chart. This column only
                                       says whether the work is on a bill, which
-                                      is what locks the row: a billed row can
+                                      is what locks the price: a billed row can
                                       be neither deleted here nor re-priced on
                                       the Quote page until that bill is replaced.
+                                      Its progress (planned / done) stays free.
                                     */}
                                     <td className="py-2.5 px-3 text-gray-600 whitespace-nowrap">
                                       {h.billed ? (
@@ -2284,6 +2317,23 @@ export default function PatientsPage() {
                                             onClick={() => openCompleteModal([h.id])}
                                           >
                                             <FaCheckCircle className="mr-1" /> {t("dentalChart.complete")}
+                                          </Button>
+                                        )}
+                                        {can("records:edit") && isReopenable(h) && (
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="h-7 px-2 text-xs text-amber-700 border-amber-300 hover:bg-amber-50 whitespace-nowrap"
+                                            disabled={reopeningRecordId === h.id}
+                                            title={t("dentalChart.reopenHint")}
+                                            onClick={() => handleReopenRecord(h)}
+                                          >
+                                            {reopeningRecordId === h.id ? (
+                                              <span className="mr-1 inline-block w-3 h-3 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                                            ) : (
+                                              <FaUndo className="mr-1" />
+                                            )}
+                                            {t("dentalChart.reopen")}
                                           </Button>
                                         )}
                                         {can("records:delete") && (h.status === "planned" || h.status === "missing") && !h.billed && (

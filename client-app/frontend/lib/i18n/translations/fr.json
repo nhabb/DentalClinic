@@ -609,7 +609,7 @@
     "markCompleted": "Marquer comme réalisé",
     "complete": "Réaliser",
     "completeTitle": "Réaliser les actes planifiés",
-    "completeHint": "Ceci marque le travail planifié comme effectué. Aucun montant ici : le devis se fait sur la page des devis et la facturation sur la page de facturation.",
+    "completeHint": "Ceci marque le travail planifié comme effectué. Aucun montant ici : un acte déjà facturé reste sur sa facture au même prix ; le reste se chiffre sur le devis et se facture depuis le dossier financier.",
     "completedToast": "Actes marqués comme réalisés.",
     "completeFailed": "Impossible de réaliser les actes.",
     "removePlan": "Supprimer",
@@ -617,7 +617,12 @@
     "removed": "Élément supprimé.",
     "removeFailed": "Impossible de supprimer l'élément.",
     "modelCredit": "Modèle 3D : University of Dundee, School of Dentistry (CC BY 4.0)",
-    "selectAllPlanned": "Sélectionner tout le travail planifié"
+    "selectAllPlanned": "Sélectionner tout le travail planifié",
+    "reopen": "Remettre en planifié",
+    "reopenHint": "Remet cet acte dans le plan : marqué réalisé par erreur, ou à refaire. Son prix et sa facture, le cas échéant, ne changent pas.",
+    "reopenConfirm": "Remettre cet acte dans le plan ? Il ne comptera plus comme réalisé. Son prix et sa facture, le cas échéant, ne changent pas.",
+    "reopenedToast": "Acte remis dans le plan.",
+    "reopenFailed": "Impossible de remettre l'acte dans le plan."
   },
   "setPassword": {
     "title": "Définir votre mot de passe",

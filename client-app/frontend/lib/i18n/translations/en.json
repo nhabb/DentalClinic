@@ -609,7 +609,7 @@
     "markCompleted": "Mark as completed",
     "complete": "Complete",
     "completeTitle": "Complete planned work",
-    "completeHint": "This marks the planned work as done. No money is involved: price the plan on the quotes page and bill completed work on the billing page.",
+    "completeHint": "This marks the planned work as done. No money is involved: a row already on a bill stays on it at the same price; price the rest on the quote and bill it from the money file.",
     "completedToast": "Work marked as completed.",
     "completeFailed": "Could not complete the work.",
     "removePlan": "Remove",
@@ -617,7 +617,12 @@
     "removed": "Item removed.",
     "removeFailed": "Could not remove the item.",
     "modelCredit": "3D model: University of Dundee, School of Dentistry (CC BY 4.0)",
-    "selectAllPlanned": "Select all planned work"
+    "selectAllPlanned": "Select all planned work",
+    "reopen": "Back to planned",
+    "reopenHint": "Put this work back on the plan: it was marked done by mistake, or it has to be redone. Its price and its bill, if any, stay as they are.",
+    "reopenConfirm": "Put back on the plan? It will no longer count as done. Its price and its bill, if any, are not changed.",
+    "reopenedToast": "Work put back on the plan.",
+    "reopenFailed": "Could not put the work back on the plan."
   },
   "setPassword": {
     "title": "Set Your Password",
