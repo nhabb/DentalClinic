@@ -2,17 +2,19 @@
 
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/Badge";
-import { money } from "@/components/billing/quote-doc";
+import { money, type Plan } from "@/components/billing/quote-doc";
+import { formatDateBeirut } from "@/lib/utils";
 import { MONEY_WORD } from "@/components/billing/money-words";
 import { daysOverdue, isLive, type Invoice } from "@/components/billing/invoice-doc";
 import type { MoneyFigures, PlanFigures } from "./useMoneyFile";
 
 /*
- * Where this patient stands, in one sentence and three figures.
+ * Where this patient stands, in one sentence and four figures.
  *
  * The sentence is what a person reads first: "Billed $1,750.00, paid
  * $1,150.00, owes $600.00 on 1 bill · $200.00 prepaid". Under it, the three
- * figures the owner asked for and nothing else: Total paid (every dollar
+ * figures the owner asked for and nothing else: Quote total (what the whole
+ * plan comes to at the quote's prices, and whether the patient agreed), Total paid (every dollar
  * received, split into what is on bills and what is prepaid), Billed (with
  * how much of it is paid, as a bar, and what is still unpaid) and Not yet
  * billed (what of the plan has no bill). Every figure is the server's; this
@@ -28,13 +30,13 @@ function Figure({
 }: {
   label: string;
   value: string;
-  accent: "leaf" | "brand" | "clay";
+  accent: "ink" | "leaf" | "brand" | "clay";
   /** One plain line under the figure saying what it is made of. */
   detail?: React.ReactNode;
   badges?: React.ReactNode;
 }) {
-  const rail = { leaf: "bg-leaf-500", brand: "bg-brand-500", clay: "bg-clay-500" }[accent];
-  const text = { leaf: "text-leaf-800", brand: "text-brand-800", clay: "text-clay-800" }[accent];
+  const rail = { ink: "bg-ink-300", leaf: "bg-leaf-500", brand: "bg-brand-500", clay: "bg-clay-500" }[accent];
+  const text = { ink: "text-ink-900", leaf: "text-leaf-800", brand: "text-brand-800", clay: "text-clay-800" }[accent];
   return (
     <div className="relative min-w-0 flex-1 overflow-hidden rounded-2xl border border-ink-200/70 bg-ink-50/60 px-4 py-3">
       <span aria-hidden className={cn("absolute inset-y-0 start-0 w-1", rail)} />
@@ -100,10 +102,13 @@ export function summarySentence(
 export function MoneySummary({
   figures,
   planFigures,
+  plan,
   invoices,
 }: {
   figures: MoneyFigures;
   planFigures: PlanFigures | null;
+  /** The plan itself, for how many lines it has and whether the patient agreed. */
+  plan: Plan | null;
   invoices: Invoice[];
 }) {
   const prepaid = figures.credit_held;
@@ -124,6 +129,25 @@ export function MoneySummary({
         {summarySentence(figures, planFigures, invoices)}
       </p>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch sm:gap-3">
+        <Figure
+          label={MONEY_WORD.quoteTotal}
+          value={`$${money(planValue)}`}
+          accent="ink"
+          detail={
+            plan && plan.lines.length > 0
+              ? `${plan.lines.length} ${plan.lines.length === 1 ? "line" : "lines"} · ${
+                  plan.accepted_at
+                    ? `agreed ${formatDateBeirut(plan.accepted_at)}${plan.agreement_stale ? ", changed since" : ""}`
+                    : "not agreed yet"
+                }`
+              : "nothing planned yet"
+          }
+          badges={
+            planFigures && planFigures.unpriced_lines > 0 ? (
+              <Badge tone="honey">{planFigures.unpriced_lines} not priced</Badge>
+            ) : null
+          }
+        />
         <Figure
           label={`Total ${MONEY_WORD.paid.toLowerCase()}`}
           value={`$${money(figures.received)}`}
@@ -174,11 +198,6 @@ export function MoneySummary({
                 ? `of the $${money(planValue)} plan`
                 : `the whole $${money(planValue)} plan is billed`
               : "nothing planned yet"
-          }
-          badges={
-            planFigures && planFigures.unpriced_lines > 0 ? (
-              <Badge tone="honey">{planFigures.unpriced_lines} not priced</Badge>
-            ) : null
           }
         />
       </div>

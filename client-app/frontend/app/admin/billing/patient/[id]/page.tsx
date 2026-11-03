@@ -140,6 +140,7 @@ export default function PatientMoneyPage() {
                     <MoneySummary
                       figures={file.figures}
                       planFigures={file.planFigures}
+                      plan={file.plan}
                       invoices={file.invoices}
                     />
                   )}
