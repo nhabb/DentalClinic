@@ -1,6 +1,5 @@
 "use client";
 
-import { FaChevronRight } from "react-icons/fa";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/Badge";
 import { money } from "@/components/billing/quote-doc";
@@ -9,46 +8,40 @@ import { daysOverdue, isLive, type Invoice } from "@/components/billing/invoice-
 import type { MoneyFigures, PlanFigures } from "./useMoneyFile";
 
 /*
- * Where this patient stands, in one sentence and one chain.
+ * Where this patient stands, in one sentence and three figures.
  *
- * The sentence is what a person reads first: "Owes $70 on 1 bill, one overdue
- * by 18 days · $200 prepaid". The chain under it is Plan total → Billed →
- * Paid, each stage carrying what has not moved on from it as a badge, and
- * Prepaid beside the chain, dashed, because money paid ahead is not a stage
- * the work goes through. Every figure is the server's; this only says them.
+ * The sentence is what a person reads first: "Billed $1,750.00, paid
+ * $1,150.00, owes $600.00 on 1 bill · $200.00 prepaid". Under it, the three
+ * figures the owner asked for and nothing else: Total paid (every dollar
+ * received, split into what is on bills and what is prepaid), Billed (with
+ * how much of it is paid, as a bar, and what is still unpaid) and Not yet
+ * billed (what of the plan has no bill). Every figure is the server's; this
+ * only says them.
  */
 
-function FlowStage({
-  stage,
+function Figure({
+  label,
   value,
   accent,
   detail,
-  leak,
-  outside = false,
+  badges,
 }: {
-  stage: string;
+  label: string;
   value: string;
-  accent: "ink" | "brand" | "leaf";
-  /** One plain line under the figure saying what it is of. */
+  accent: "leaf" | "brand" | "clay";
+  /** One plain line under the figure saying what it is made of. */
   detail?: React.ReactNode;
-  leak?: React.ReactNode;
-  /** Not a stage of the chain: drawn dashed, set a little apart. */
-  outside?: boolean;
+  badges?: React.ReactNode;
 }) {
-  const rail = { ink: "bg-ink-300", brand: "bg-brand-500", leaf: "bg-leaf-500" }[accent];
-  const text = { ink: "text-ink-900", brand: "text-brand-800", leaf: "text-leaf-800" }[accent];
+  const rail = { leaf: "bg-leaf-500", brand: "bg-brand-500", clay: "bg-clay-500" }[accent];
+  const text = { leaf: "text-leaf-800", brand: "text-brand-800", clay: "text-clay-800" }[accent];
   return (
-    <div
-      className={cn(
-        "relative min-w-0 flex-1 overflow-hidden rounded-2xl border px-4 py-3",
-        outside ? "border-dashed border-brand-200 bg-brand-50/30 sm:ms-2" : "border-ink-200/70 bg-ink-50/60",
-      )}
-    >
+    <div className="relative min-w-0 flex-1 overflow-hidden rounded-2xl border border-ink-200/70 bg-ink-50/60 px-4 py-3">
       <span aria-hidden className={cn("absolute inset-y-0 start-0 w-1", rail)} />
-      <div className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">{stage}</div>
+      <div className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">{label}</div>
       <div className={cn("mt-0.5 text-xl font-bold tabular-nums", text)}>{value}</div>
       {detail && <div className="mt-0.5 text-xs text-ink-600">{detail}</div>}
-      <div className="mt-1.5 min-h-[1.25rem]">{leak}</div>
+      {badges && <div className="mt-1.5 flex flex-wrap gap-1">{badges}</div>}
     </div>
   );
 }
@@ -66,21 +59,15 @@ function PaidBar({ paid, billed }: { paid: number; billed: number }) {
       aria-valuemax={100}
       aria-label={`${pct}% of what was billed is paid`}
     >
-      <div className={cn("h-full rounded-full", pct >= 100 ? "bg-leaf-500" : "bg-leaf-400")} style={{ width: `${pct}%` }} />
+      <div
+        className={cn("h-full rounded-full", pct >= 100 ? "bg-leaf-500" : "bg-leaf-400")}
+        style={{ width: `${pct}%` }}
+      />
     </div>
   );
 }
 
-function FlowArrow() {
-  return (
-    <FaChevronRight
-      aria-hidden
-      className="hidden shrink-0 self-center text-ink-300 rtl:-scale-x-100 sm:block"
-    />
-  );
-}
-
-/** The one-sentence summary, from the same figures as the chain. */
+/** The one-sentence summary, from the same figures as the cards. */
 export function summarySentence(
   figures: MoneyFigures,
   planFigures: PlanFigures | null,
@@ -121,81 +108,76 @@ export function MoneySummary({
 }) {
   const prepaid = figures.credit_held;
   const billCount = invoices.filter(isLive).length;
+  const unbilled = planFigures?.unbilled_value ?? 0;
+  const planValue = planFigures?.plan_value ?? 0;
+
+  const paidDetail =
+    figures.received <= 0
+      ? "nothing received yet"
+      : prepaid > 0
+        ? `$${money(figures.applied)} on bills · $${money(prepaid)} ${MONEY_WORD.prepaid.toLowerCase()}`
+        : "all of it on bills";
+
   return (
     <section className="space-y-3">
       <p className="text-base font-semibold text-ink-900">
         {summarySentence(figures, planFigures, invoices)}
       </p>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch sm:gap-3">
-        <FlowStage
-          stage={MONEY_WORD.planTotal}
-          value={`$${money(planFigures?.plan_value ?? 0)}`}
-          accent="ink"
-          leak={
-            planFigures && planFigures.unpriced_lines > 0 ? (
-              <Badge tone="honey">{planFigures.unpriced_lines} not priced</Badge>
-            ) : null
-          }
-        />
-        <FlowArrow />
-        <FlowStage
-          stage={MONEY_WORD.billed}
-          value={`$${money(figures.billed)}`}
-          accent="brand"
-          detail={
-            figures.billed > 0
-              ? `on ${billCount} ${billCount === 1 ? "bill" : "bills"}`
-              : "no bill issued yet"
-          }
-          leak={
-            planFigures && planFigures.unbilled_value > 0 ? (
-              <Badge tone="clay">
-                ${money(planFigures.unbilled_value)} {MONEY_WORD.notYetBilled.toLowerCase()}
+        <Figure
+          label={`Total ${MONEY_WORD.paid.toLowerCase()}`}
+          value={`$${money(figures.received)}`}
+          accent="leaf"
+          detail={paidDetail}
+          badges={
+            prepaid > 0 && figures.due_now > 0 ? (
+              <Badge tone="honey">
+                {MONEY_WORD.prepaid} while ${money(figures.due_now)} is {MONEY_WORD.unpaid.toLowerCase()}
               </Badge>
             ) : null
           }
         />
-        <FlowArrow />
-        <FlowStage
-          stage={MONEY_WORD.paid}
-          value={`$${money(figures.applied)}`}
-          accent="leaf"
+        <Figure
+          label={MONEY_WORD.billed}
+          value={`$${money(figures.billed)}`}
+          accent="brand"
           detail={
             figures.billed > 0 ? (
               <>
-                of the ${money(figures.billed)} billed
-                {prepaid > 0 && ` · $${money(figures.received)} received in all`}
+                on {billCount} {billCount === 1 ? "bill" : "bills"} · ${money(figures.applied)}{" "}
+                {MONEY_WORD.paid.toLowerCase()}
                 <PaidBar paid={figures.applied} billed={figures.billed} />
               </>
             ) : (
-              "nothing to pay yet"
+              "no bill issued yet"
             )
           }
-          leak={
-            <span className="flex flex-wrap gap-1">
-              {figures.due_now > 0 ? (
+          badges={
+            figures.billed > 0 ? (
+              figures.due_now > 0 ? (
                 <Badge tone="brick">
                   ${money(figures.due_now)} {MONEY_WORD.unpaid.toLowerCase()}
                 </Badge>
               ) : (
                 <Badge tone="leaf">Nothing {MONEY_WORD.unpaid.toLowerCase()}</Badge>
-              )}
-            </span>
+              )
+            ) : null
           }
         />
-        <FlowStage
-          stage={MONEY_WORD.prepaid}
-          value={`$${money(prepaid)}`}
-          accent="brand"
-          outside
+        <Figure
+          label={MONEY_WORD.notYetBilled}
+          value={`$${money(unbilled)}`}
+          accent="clay"
           detail={
-            prepaid > 0
-              ? "received ahead, on no bill yet; it pays their next bill as it is issued"
-              : "nothing paid ahead"
+            planValue > 0
+              ? unbilled > 0
+                ? `of the $${money(planValue)} plan`
+                : `the whole $${money(planValue)} plan is billed`
+              : "nothing planned yet"
           }
-          leak={
-            prepaid > 0 && figures.due_now > 0 ? (
-              <Badge tone="honey">while ${money(figures.due_now)} is {MONEY_WORD.unpaid.toLowerCase()}</Badge>
+          badges={
+            planFigures && planFigures.unpriced_lines > 0 ? (
+              <Badge tone="honey">{planFigures.unpriced_lines} not priced</Badge>
             ) : null
           }
         />
