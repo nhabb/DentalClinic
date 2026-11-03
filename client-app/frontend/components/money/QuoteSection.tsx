@@ -8,6 +8,7 @@ import {
   FaClipboardList,
   FaLock,
   FaPaperPlane,
+  FaPen,
   FaPrint,
   FaTooth,
 } from "react-icons/fa";
@@ -19,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { FormField, inputClass } from "@/components/ui/FormField";
 import { money, printPlan, readError, type Plan, type PlanLine } from "@/components/billing/quote-doc";
 import { MONEY_WORD, PLAN_STATE_LABEL, PLAN_STATE_TONE } from "@/components/billing/money-words";
-import { ReissueBillModal, type Reissue } from "@/components/quotes/ReissueBillModal";
+import { ReissueBillModal, type PriceChange, type Reissue } from "@/components/quotes/ReissueBillModal";
 import { SectionCard } from "./SectionCard";
 
 /*
@@ -29,16 +30,19 @@ import { SectionCard } from "./SectionCard";
  * no amount. This is where each line gets its price, where the plan is given
  * to the patient and where their agreement is recorded.
  *
- * Pricing is optimistic: the row updates at once, the save lands behind it,
- * nothing is disabled, Enter moves to the next price box. A line on a bill
- * keeps a price box too: a new price reissues that bill with it, after a
- * confirm that shows what moves.
+ * Pricing is Edit → type → Save. Nothing is saved while typing: the desk
+ * presses Edit prices, changes as many lines as it likes, Enter moving down
+ * the boxes, and presses Save once. Unbilled lines are saved together; lines
+ * on a bill are collected per bill and that bill is reissued once with all
+ * of its new prices, after one confirm that shows what moves. It used to save
+ * each box as it was left and open the reissue confirm for every billed
+ * price, which made the desk wait on every line.
  */
 
 type Props = {
   patient: { id: number; label: string };
   plan: Plan | null;
-  /** Change the plan in place (a price typed); the reload confirms it. */
+  /** Change the plan in place (a price saved); the reload confirms it. */
   setPlan: (update: (plan: Plan) => Plan) => void;
   /** Re-read the whole file after an act. */
   reload: (silent?: boolean) => Promise<void>;
@@ -46,9 +50,11 @@ type Props = {
   inFlight: MutableRefObject<number>;
 };
 
-/** The plan with one line's price changed and the line-only totals recomputed. */
-const withAmount = (p: Plan, recordId: string, amount: number | null): Plan => {
-  const lines = p.lines.map((l) => (String(l.record_id) === recordId ? { ...l, amount } : l));
+/** The plan with some lines' prices changed and the line-only totals recomputed. */
+const withAmounts = (p: Plan, amounts: Map<string, number | null>): Plan => {
+  const lines = p.lines.map((l) =>
+    amounts.has(String(l.record_id)) ? { ...l, amount: amounts.get(String(l.record_id)) ?? null } : l,
+  );
   const priced = lines.filter((l) => l.amount != null);
   return {
     ...p,
@@ -62,6 +68,15 @@ const withAmount = (p: Plan, recordId: string, amount: number | null): Plan => {
   };
 };
 
+/** What a typed box means: unchanged, a new price, or nonsense. */
+const readBox = (line: PlanLine, text: string | undefined): { amount: number } | "same" | "invalid" => {
+  if (text === undefined || text.trim() === "") return "same";
+  const amount = parseFloat(text);
+  if (!Number.isFinite(amount) || amount < 0) return "invalid";
+  if (line.amount != null && Math.abs(line.amount - amount) < 0.005) return "same";
+  return { amount };
+};
+
 export function QuoteSection({ patient, plan, setPlan, reload, inFlight }: Props) {
   const router = useRouter();
   const { can } = usePermissions();
@@ -69,17 +84,20 @@ export function QuoteSection({ patient, plan, setPlan, reload, inFlight }: Props
   const canReplace = canPrice && can("billing:edit");
 
   const [busy, setBusy] = useState(false);
-  const [saving, setSaving] = useState<Set<string>>(new Set());
+  const [editing, setEditing] = useState(false);
+  /** What is typed in each price box while editing, by record id. */
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
   const [notes, setNotes] = useState<string | null>(null);
   const [showSends, setShowSends] = useState(false);
-  const [reissue, setReissue] = useState<Reissue | null>(null);
-  const [lockedNonce, setLockedNonce] = useState(0);
+  /** Bills waiting to be reissued with their new prices, one confirm each. */
+  const [reissues, setReissues] = useState<Reissue[]>([]);
   const listRef = useRef<HTMLUListElement>(null);
 
   /**
    * The order the lines are shown in, fixed the first time they are seen:
-   * unpriced first. A list that re-sorts itself as each price lands moves
-   * the next row out from under the cursor.
+   * unpriced first. A list that re-sorts itself as prices land moves the
+   * next row out from under the cursor.
    */
   const orderRef = useRef<string[] | null>(null);
   const lines = useMemo(() => {
@@ -94,6 +112,40 @@ export function QuoteSection({ patient, plan, setPlan, reload, inFlight }: Props
     const at = (id: string) => rank.get(id) ?? Number.MAX_SAFE_INTEGER;
     return [...all].sort((a, b) => at(String(a.record_id)) - at(String(b.record_id)));
   }, [plan]);
+
+  const canEditLine = (l: PlanLine) => (l.locked ? canReplace && !!l.invoice_id : canPrice);
+
+  /** The changes typed so far, read off the boxes. */
+  const changes = useMemo(() => {
+    const out: PriceChange[] = [];
+    let invalid = 0;
+    for (const l of lines) {
+      if (!canEditLine(l)) continue;
+      const read = readBox(l, drafts[String(l.record_id)]);
+      if (read === "invalid") invalid += 1;
+      else if (read !== "same") out.push({ line: l, amount: read.amount });
+    }
+    return { list: out, invalid };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lines, drafts, canPrice, canReplace]);
+
+  const newQuoteTotal = useMemo(() => {
+    const changed = new Map(changes.list.map((c) => [String(c.line.record_id), c.amount]));
+    return lines.reduce((s, l) => {
+      const amount = changed.get(String(l.record_id)) ?? l.amount;
+      return s + (amount ?? 0);
+    }, 0);
+  }, [lines, changes]);
+
+  const startEditing = () => {
+    setDrafts({});
+    setEditing(true);
+  };
+
+  const stopEditing = () => {
+    setDrafts({});
+    setEditing(false);
+  };
 
   const act = async (path: string, init: RequestInit, done: string, fallback: string) => {
     setBusy(true);
@@ -114,42 +166,98 @@ export function QuoteSection({ patient, plan, setPlan, reload, inFlight }: Props
     }
   };
 
-  const priceLine = async (line: PlanLine, raw: string) => {
+  /**
+   * Save every change at once. Unbilled lines are priced together, shown at
+   * once and saved behind; billed lines are grouped per bill, and each bill
+   * is then reissued through one confirm.
+   */
+  const save = async () => {
     if (!plan?.quote_id) return;
-    if (raw.trim() === "") return;
-    const amount = parseFloat(raw);
-    if (!Number.isFinite(amount) || amount < 0) {
-      toast.error("Enter a price of 0 or more.");
+    if (changes.invalid > 0) {
+      toast.error("Every price must be a number of 0 or more.");
       return;
     }
-    if (line.amount != null && Math.abs(line.amount - amount) < 0.005) return;
-    const key = String(line.record_id);
-    const before = line.amount;
+    if (changes.list.length === 0) {
+      stopEditing();
+      return;
+    }
     const quoteId = plan.quote_id;
+    const free = changes.list.filter((c) => !c.line.locked);
+    const billed = changes.list.filter((c) => c.line.locked && c.line.invoice_id);
 
-    setPlan((p) => withAmount(p, key, amount));
-    setSaving((s) => new Set(s).add(key));
-    inFlight.current += 1;
+    setSaving(true);
     try {
-      const res = await apiFetch(`/api/quotes/${quoteId}/lines/${line.record_id}/price`, {
-        method: "PATCH",
-        body: JSON.stringify({ amount }),
-      });
-      if (!res.ok) {
-        toast.error(await readError(res, "Could not price that line."));
-        setPlan((p) => withAmount(p, key, before));
+      if (free.length > 0) {
+        const before = new Map(free.map((c) => [String(c.line.record_id), c.line.amount]));
+        setPlan((p) => withAmounts(p, new Map(free.map((c) => [String(c.line.record_id), c.amount]))));
+        inFlight.current += 1;
+        const failed = new Map<string, number | null>();
+        try {
+          await Promise.all(
+            free.map(async (c) => {
+              const key = String(c.line.record_id);
+              try {
+                const res = await apiFetch(`/api/quotes/${quoteId}/lines/${c.line.record_id}/price`, {
+                  method: "PATCH",
+                  body: JSON.stringify({ amount: c.amount }),
+                });
+                if (!res.ok) {
+                  toast.error(await readError(res, `Could not price ${c.line.procedure}.`));
+                  failed.set(key, before.get(key) ?? null);
+                }
+              } catch {
+                toast.error(`Could not reach the server; ${c.line.procedure} was not priced.`);
+                failed.set(key, before.get(key) ?? null);
+              }
+            }),
+          );
+        } finally {
+          inFlight.current -= 1;
+        }
+        if (failed.size > 0) setPlan((p) => withAmounts(p, failed));
+        // What landed is no longer a draft; what failed stays in its box.
+        setDrafts((d) => {
+          const next = { ...d };
+          for (const c of free) if (!failed.has(String(c.line.record_id))) delete next[String(c.line.record_id)];
+          return next;
+        });
+        if (failed.size === 0 && billed.length === 0) toast.success("Prices saved.");
       }
-    } catch {
-      toast.error("Could not reach the server; that price was not saved.");
-      setPlan((p) => withAmount(p, key, before));
+
+      if (billed.length > 0) {
+        const byBill = new Map<string, Reissue>();
+        for (const c of billed) {
+          const id = String(c.line.invoice_id);
+          const group = byBill.get(id) ?? {
+            invoiceId: c.line.invoice_id as number | string,
+            invoiceNumber: c.line.invoice_number ?? null,
+            changes: [],
+          };
+          group.changes.push(c);
+          byBill.set(id, group);
+        }
+        setReissues([...byBill.values()]);
+      } else {
+        if (inFlight.current === 0) await reload(true);
+        stopEditing();
+      }
     } finally {
-      inFlight.current -= 1;
-      setSaving((s) => {
-        const next = new Set(s);
-        next.delete(key);
-        return next;
-      });
-      if (inFlight.current === 0) await reload(true);
+      setSaving(false);
+    }
+  };
+
+  /** A bill was reissued: its lines are no longer drafts; on to the next bill, or done. */
+  const reissued = (done: Reissue) => {
+    setDrafts((d) => {
+      const next = { ...d };
+      for (const c of done.changes) delete next[String(c.line.record_id)];
+      return next;
+    });
+    const rest = reissues.filter((r) => r !== done);
+    setReissues(rest);
+    if (rest.length === 0) {
+      void reload(true);
+      stopEditing();
     }
   };
 
@@ -158,10 +266,11 @@ export function QuoteSection({ patient, plan, setPlan, reload, inFlight }: Props
       listRef.current?.querySelectorAll<HTMLInputElement>("input[data-price]") ?? [],
     );
     const next = inputs[inputs.indexOf(from) + 1];
-    from.blur();
     if (next) {
       next.focus();
       next.select();
+    } else {
+      from.blur();
     }
   };
 
@@ -190,10 +299,15 @@ export function QuoteSection({ patient, plan, setPlan, reload, inFlight }: Props
   const acts =
     plan && lines.length > 0 ? (
       <>
+        {canPrice && plan.quote_id && !editing && (
+          <Button size="sm" variant="outline" disabled={busy} onClick={startEditing}>
+            <FaPen /> Edit prices
+          </Button>
+        )}
         {canPrice && plan.quote_id && (
           <Button
             size="sm"
-            disabled={busy}
+            disabled={busy || editing}
             onClick={() =>
               void act(
                 `/api/quotes/${plan.quote_id}/send`,
@@ -210,7 +324,7 @@ export function QuoteSection({ patient, plan, setPlan, reload, inFlight }: Props
           <Button
             size="sm"
             variant={plan.agreement_stale ? "accent" : "outline"}
-            disabled={busy}
+            disabled={busy || editing}
             onClick={() =>
               void act(
                 `/api/quotes/${plan.quote_id}/accept`,
@@ -223,11 +337,18 @@ export function QuoteSection({ patient, plan, setPlan, reload, inFlight }: Props
             <FaCheck /> {plan.accepted_at ? "Agree again" : "Patient agreed"}
           </Button>
         )}
-        <Button size="sm" variant="ghost" onClick={() => printPlan(plan, patient.label)} disabled={busy}>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => printPlan(plan, patient.label)}
+          disabled={busy || editing}
+        >
           <FaPrint /> Print
         </Button>
       </>
     ) : undefined;
+
+  const changedKeys = new Set(changes.list.map((c) => String(c.line.record_id)));
 
   return (
     <>
@@ -278,22 +399,32 @@ export function QuoteSection({ patient, plan, setPlan, reload, inFlight }: Props
               </div>
             </div>
 
-            {plan.agreement_stale && (
+            {plan.agreement_stale && !editing && (
               <p className="rounded-xl bg-honey-50 px-3 py-2 text-xs font-medium text-honey-800 ring-1 ring-inset ring-honey-200">
                 The plan has changed since the patient agreed to it. Give them the new quote and
                 record that they agreed again.
               </p>
             )}
 
+            {editing && (
+              <p className="text-xs text-ink-500">
+                Type the new prices, Enter moves to the next line, then press Save. A line on a
+                bill (lock) is saved by reissuing that bill with its new prices, after a confirm.
+              </p>
+            )}
+
             <ul ref={listRef} className="divide-y divide-ink-100 overflow-hidden rounded-2xl border border-ink-200">
               {lines.map((l) => {
                 const key = String(l.record_id);
+                const changed = changedKeys.has(key);
+                const invalid = editing && readBox(l, drafts[key]) === "invalid";
                 return (
                   <li
                     key={key}
                     className={cn(
                       "flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2.5",
-                      l.amount == null && "bg-honey-50/40",
+                      l.amount == null && !editing && "bg-honey-50/40",
+                      changed && "bg-brand-50/40",
                     )}
                   >
                     <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-ink-100 text-[11px] font-bold tabular-nums text-ink-600">
@@ -305,91 +436,103 @@ export function QuoteSection({ patient, plan, setPlan, reload, inFlight }: Props
                         {l.date ? formatDateBeirut(l.date) : "No date"}
                         {l.invoice_number && ` · ${l.invoice_number}`}
                         {l.amount == null && !l.locked && " · not priced yet"}
+                        {changed && l.amount != null && ` · was $${money(l.amount)}`}
                       </div>
                     </div>
                     <Badge tone={PLAN_STATE_TONE[l.state]}>{PLAN_STATE_LABEL[l.state]}</Badge>
-                    {l.locked && canReplace && l.invoice_id ? (
+                    {editing && canEditLine(l) ? (
                       <span className="inline-flex items-center gap-1">
-                        <FaLock
-                          className="text-[10px] text-ink-400"
-                          title={`On ${l.invoice_number ?? "a bill"} — a new price reissues that bill`}
-                        />
-                        <span className="text-ink-400">$</span>
-                        <input
-                          key={`${key}-${l.amount ?? ""}-${lockedNonce}`}
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          data-price
-                          defaultValue={l.amount ?? ""}
-                          onBlur={(e) => {
-                            const amount = parseFloat(e.target.value);
-                            if (!Number.isFinite(amount) || amount < 0) return;
-                            if (l.amount != null && Math.abs(l.amount - amount) < 0.005) return;
-                            setReissue({ line: l, amount });
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              focusNextPrice(e.currentTarget);
-                            }
-                          }}
-                          aria-label={`Price for ${l.procedure}, on ${l.invoice_number ?? "a bill"}`}
-                          className="w-24 rounded-lg border border-honey-200 bg-honey-50/40 px-2 py-1 text-end text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-brand/30"
-                        />
-                      </span>
-                    ) : l.locked ? (
-                      <span className="flex items-center gap-1.5">
-                        <span className="w-20 text-end text-sm font-semibold tabular-nums text-ink-900">
-                          {l.amount == null ? "—" : `$${money(l.amount)}`}
-                        </span>
-                        <FaLock
-                          className="text-[10px] text-ink-400"
-                          title={`On ${l.invoice_number ?? "a bill"}: its price belongs to that bill`}
-                        />
-                      </span>
-                    ) : canPrice ? (
-                      <span className="inline-flex items-center gap-1">
-                        <span
-                          className={cn("w-3 text-[10px]", saving.has(key) ? "text-ink-400" : "text-leaf-600")}
-                          aria-live="polite"
-                          title={saving.has(key) ? "Saving" : l.amount != null ? "Saved" : undefined}
-                        >
-                          {saving.has(key) ? "…" : l.amount != null ? "✓" : ""}
-                        </span>
+                        {l.locked && (
+                          <FaLock
+                            className="text-[10px] text-ink-400"
+                            title={`On ${l.invoice_number ?? "a bill"} — a new price reissues that bill`}
+                          />
+                        )}
                         <span className="text-ink-400">$</span>
                         <input
                           type="number"
                           min="0"
                           step="0.01"
                           data-price
-                          defaultValue={l.amount ?? ""}
+                          value={drafts[key] ?? (l.amount ?? "")}
                           placeholder="0.00"
-                          onBlur={(e) => void priceLine(l, e.target.value)}
+                          onChange={(e) => setDrafts((d) => ({ ...d, [key]: e.target.value }))}
                           onKeyDown={(e) => {
                             if (e.key === "Enter") {
                               e.preventDefault();
                               focusNextPrice(e.currentTarget);
                             }
                           }}
-                          aria-label={`Price for ${l.procedure}`}
-                          className="w-24 rounded-lg border border-ink-200 px-2 py-1 text-end text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-brand/30"
+                          aria-label={`Price for ${l.procedure}${l.locked ? `, on ${l.invoice_number ?? "a bill"}` : ""}`}
+                          className={cn(
+                            "w-24 rounded-lg border px-2 py-1 text-end text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-brand/30",
+                            invalid
+                              ? "border-red-300 bg-red-50"
+                              : l.locked
+                                ? "border-honey-200 bg-honey-50/40"
+                                : "border-ink-200",
+                          )}
                         />
                       </span>
                     ) : (
-                      <span
-                        className={cn(
-                          "w-20 text-end text-sm font-semibold tabular-nums",
-                          l.amount == null ? "text-honey-700" : "text-ink-900",
+                      <span className="flex items-center gap-1.5">
+                        <span
+                          className={cn(
+                            "w-20 text-end text-sm font-semibold tabular-nums",
+                            l.amount == null ? "text-honey-700" : "text-ink-900",
+                          )}
+                        >
+                          {l.amount == null ? "Unpriced" : `$${money(l.amount)}`}
+                        </span>
+                        {l.locked && (
+                          <FaLock
+                            className="text-[10px] text-ink-400"
+                            title={`On ${l.invoice_number ?? "a bill"}: its price belongs to that bill`}
+                          />
                         )}
-                      >
-                        {l.amount == null ? "Unpriced" : `$${money(l.amount)}`}
                       </span>
                     )}
                   </li>
                 );
               })}
             </ul>
+
+            {editing && (
+              <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-brand-200 bg-brand-50/60 px-4 py-3">
+                <div className="min-w-0 flex-1 text-sm">
+                  {changes.list.length === 0 ? (
+                    <span className="text-ink-600">No price changed yet.</span>
+                  ) : (
+                    <>
+                      <span className="font-medium text-ink-900">
+                        {changes.list.length} price{changes.list.length === 1 ? "" : "s"} changed
+                      </span>
+                      <span className="text-ink-600">
+                        {" "}
+                        · {MONEY_WORD.quoteTotal} ${money(plan.totals.plan)} → ${money(newQuoteTotal)}
+                      </span>
+                      {changes.list.some((c) => c.line.locked) && (
+                        <span className="block text-xs text-ink-500">
+                          {changes.list.filter((c) => c.line.locked).length} on a bill: that bill is
+                          reissued with the new prices when you save.
+                        </span>
+                      )}
+                    </>
+                  )}
+                  {changes.invalid > 0 && (
+                    <span className="block text-xs text-red-600">
+                      {changes.invalid} price{changes.invalid === 1 ? " is" : "s are"} not a number of 0 or more.
+                    </span>
+                  )}
+                </div>
+                <Button size="sm" variant="ghost" onClick={stopEditing} disabled={saving}>
+                  Cancel
+                </Button>
+                <Button size="sm" onClick={() => void save()} disabled={saving || changes.invalid > 0}>
+                  <FaCheck /> {saving ? "Saving…" : changes.list.length === 0 ? "Done" : "Save"}
+                </Button>
+              </div>
+            )}
 
             <FormField label="Note on the quote">
               <input
@@ -432,13 +575,13 @@ export function QuoteSection({ patient, plan, setPlan, reload, inFlight }: Props
       </SectionCard>
 
       <ReissueBillModal
-        reissue={reissue}
+        reissue={reissues[0] ?? null}
         onClose={() => {
-          setReissue(null);
-          setLockedNonce((n) => n + 1);
+          // "Not now": the bill is not reissued; its new prices stay in the
+          // boxes so the desk can save again or cancel the edit.
+          setReissues((q) => q.slice(1));
         }}
         onDone={({ invoice, cancelled, paidFromPrepaid }) => {
-          setReissue(null);
           const moved = paidFromPrepaid > 0 ? ` $${money(paidFromPrepaid)} moved onto it;` : "";
           const owed =
             invoice.remaining_amount > 0
@@ -447,7 +590,7 @@ export function QuoteSection({ patient, plan, setPlan, reload, inFlight }: Props
           toast.success(
             `${cancelled.invoice_number} cancelled, ${invoice.invoice_number} issued at $${money(invoice.total_amount)}.${moved}${owed}`,
           );
-          void reload(true);
+          if (reissues[0]) reissued(reissues[0]);
         }}
       />
     </>
