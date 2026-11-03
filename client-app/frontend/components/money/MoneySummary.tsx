@@ -21,11 +21,14 @@ function FlowStage({
   stage,
   value,
   accent,
+  detail,
   leak,
 }: {
   stage: string;
   value: string;
   accent: "ink" | "brand" | "leaf";
+  /** One plain line under the figure saying what it is of. */
+  detail?: React.ReactNode;
   leak?: React.ReactNode;
 }) {
   const rail = { ink: "bg-ink-300", brand: "bg-brand-500", leaf: "bg-leaf-500" }[accent];
@@ -35,7 +38,26 @@ function FlowStage({
       <span aria-hidden className={cn("absolute inset-y-0 start-0 w-1", rail)} />
       <div className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">{stage}</div>
       <div className={cn("mt-0.5 text-xl font-bold tabular-nums", text)}>{value}</div>
-      <div className="mt-1 min-h-[1.25rem]">{leak}</div>
+      {detail && <div className="mt-0.5 text-xs text-ink-600">{detail}</div>}
+      <div className="mt-1.5 min-h-[1.25rem]">{leak}</div>
+    </div>
+  );
+}
+
+/** How much of what was billed has been paid, as a bar the eye reads at once. */
+function PaidBar({ paid, billed }: { paid: number; billed: number }) {
+  if (billed <= 0) return null;
+  const pct = Math.max(0, Math.min(100, Math.round((paid / billed) * 100)));
+  return (
+    <div
+      className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-ink-200/70"
+      role="progressbar"
+      aria-valuenow={pct}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-label={`${pct}% of what was billed is paid`}
+    >
+      <div className={cn("h-full rounded-full", pct >= 100 ? "bg-leaf-500" : "bg-leaf-400")} style={{ width: `${pct}%` }} />
     </div>
   );
 }
@@ -59,14 +81,16 @@ export function summarySentence(
   const late = owed.filter((i) => daysOverdue(i) > 0);
   const parts: string[] = [];
   if (figures.due_now > 0) {
+    // Billed, paid, owed: the three numbers a person wants, in that order,
+    // so "owes" is never read without the two it comes from.
     parts.push(
-      `Owes $${money(figures.due_now)} on ${owed.length} ${owed.length === 1 ? "bill" : "bills"}` +
+      `${MONEY_WORD.billed} ${money(figures.billed)}, ${MONEY_WORD.paid.toLowerCase()} ${money(figures.applied)}, owes ${money(figures.due_now)} on ${owed.length} ${owed.length === 1 ? "bill" : "bills"}` +
         (late.length > 0
           ? `, ${late.length === 1 ? "one" : late.length} overdue by ${Math.max(...late.map(daysOverdue))} days`
           : ""),
     );
   } else if (figures.billed > 0) {
-    parts.push("Every bill is paid");
+    parts.push(`${MONEY_WORD.billed} ${money(figures.billed)} and paid in full`);
   } else {
     parts.push("Nothing billed yet");
   }
@@ -87,6 +111,7 @@ export function MoneySummary({
   invoices: Invoice[];
 }) {
   const prepaid = figures.credit_held;
+  const billCount = invoices.filter(isLive).length;
   return (
     <section className="space-y-3">
       <p className="text-base font-semibold text-ink-900">
@@ -106,8 +131,13 @@ export function MoneySummary({
         <FlowArrow />
         <FlowStage
           stage={MONEY_WORD.billed}
-          value={`$${money(figures.billed)}`}
+          value={`${money(figures.billed)}`}
           accent="brand"
+          detail={
+            figures.billed > 0
+              ? `on ${billCount} ${billCount === 1 ? "bill" : "bills"}`
+              : "no bill issued yet"
+          }
           leak={
             planFigures && planFigures.unbilled_value > 0 ? (
               <Badge tone="clay">
@@ -119,8 +149,18 @@ export function MoneySummary({
         <FlowArrow />
         <FlowStage
           stage={MONEY_WORD.paid}
-          value={`$${money(figures.applied)}`}
+          value={`${money(figures.applied)}`}
           accent="leaf"
+          detail={
+            figures.billed > 0 ? (
+              <>
+                of the ${money(figures.billed)} billed
+                <PaidBar paid={figures.applied} billed={figures.billed} />
+              </>
+            ) : (
+              "nothing to pay yet"
+            )
+          }
           leak={
             <span className="flex flex-wrap gap-1">
               {figures.due_now > 0 ? (
