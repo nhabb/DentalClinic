@@ -13,8 +13,9 @@ import type { MoneyFigures, PlanFigures } from "./useMoneyFile";
  *
  * The sentence is what a person reads first: "Owes $70 on 1 bill, one overdue
  * by 18 days · $200 prepaid". The chain under it is Plan total → Billed →
- * Paid, each stage carrying what has not moved on from it as a badge. Every
- * figure is the server's; this only says them.
+ * Paid, each stage carrying what has not moved on from it as a badge, and
+ * Prepaid beside the chain, dashed, because money paid ahead is not a stage
+ * the work goes through. Every figure is the server's; this only says them.
  */
 
 function FlowStage({
@@ -23,6 +24,7 @@ function FlowStage({
   accent,
   detail,
   leak,
+  outside = false,
 }: {
   stage: string;
   value: string;
@@ -30,11 +32,18 @@ function FlowStage({
   /** One plain line under the figure saying what it is of. */
   detail?: React.ReactNode;
   leak?: React.ReactNode;
+  /** Not a stage of the chain: drawn dashed, set a little apart. */
+  outside?: boolean;
 }) {
   const rail = { ink: "bg-ink-300", brand: "bg-brand-500", leaf: "bg-leaf-500" }[accent];
   const text = { ink: "text-ink-900", brand: "text-brand-800", leaf: "text-leaf-800" }[accent];
   return (
-    <div className="relative min-w-0 flex-1 overflow-hidden rounded-2xl border border-ink-200/70 bg-ink-50/60 px-4 py-3">
+    <div
+      className={cn(
+        "relative min-w-0 flex-1 overflow-hidden rounded-2xl border px-4 py-3",
+        outside ? "border-dashed border-brand-200 bg-brand-50/30 sm:ms-2" : "border-ink-200/70 bg-ink-50/60",
+      )}
+    >
       <span aria-hidden className={cn("absolute inset-y-0 start-0 w-1", rail)} />
       <div className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">{stage}</div>
       <div className={cn("mt-0.5 text-xl font-bold tabular-nums", text)}>{value}</div>
@@ -84,13 +93,13 @@ export function summarySentence(
     // Billed, paid, owed: the three numbers a person wants, in that order,
     // so "owes" is never read without the two it comes from.
     parts.push(
-      `${MONEY_WORD.billed} ${money(figures.billed)}, ${MONEY_WORD.paid.toLowerCase()} ${money(figures.applied)}, owes ${money(figures.due_now)} on ${owed.length} ${owed.length === 1 ? "bill" : "bills"}` +
+      `${MONEY_WORD.billed} $${money(figures.billed)}, ${MONEY_WORD.paid.toLowerCase()} $${money(figures.applied)}, owes $${money(figures.due_now)} on ${owed.length} ${owed.length === 1 ? "bill" : "bills"}` +
         (late.length > 0
           ? `, ${late.length === 1 ? "one" : late.length} overdue by ${Math.max(...late.map(daysOverdue))} days`
           : ""),
     );
   } else if (figures.billed > 0) {
-    parts.push(`${MONEY_WORD.billed} ${money(figures.billed)} and paid in full`);
+    parts.push(`${MONEY_WORD.billed} $${money(figures.billed)} and paid in full`);
   } else {
     parts.push("Nothing billed yet");
   }
@@ -131,7 +140,7 @@ export function MoneySummary({
         <FlowArrow />
         <FlowStage
           stage={MONEY_WORD.billed}
-          value={`${money(figures.billed)}`}
+          value={`$${money(figures.billed)}`}
           accent="brand"
           detail={
             figures.billed > 0
@@ -149,12 +158,13 @@ export function MoneySummary({
         <FlowArrow />
         <FlowStage
           stage={MONEY_WORD.paid}
-          value={`${money(figures.applied)}`}
+          value={`$${money(figures.applied)}`}
           accent="leaf"
           detail={
             figures.billed > 0 ? (
               <>
                 of the ${money(figures.billed)} billed
+                {prepaid > 0 && ` · $${money(figures.received)} received in all`}
                 <PaidBar paid={figures.applied} billed={figures.billed} />
               </>
             ) : (
@@ -170,12 +180,23 @@ export function MoneySummary({
               ) : (
                 <Badge tone="leaf">Nothing {MONEY_WORD.unpaid.toLowerCase()}</Badge>
               )}
-              {prepaid > 0 && (
-                <Badge tone="brand">
-                  ${money(prepaid)} {MONEY_WORD.prepaid.toLowerCase()}
-                </Badge>
-              )}
             </span>
+          }
+        />
+        <FlowStage
+          stage={MONEY_WORD.prepaid}
+          value={`$${money(prepaid)}`}
+          accent="brand"
+          outside
+          detail={
+            prepaid > 0
+              ? "received ahead, on no bill yet; it pays their next bill as it is issued"
+              : "nothing paid ahead"
+          }
+          leak={
+            prepaid > 0 && figures.due_now > 0 ? (
+              <Badge tone="honey">while ${money(figures.due_now)} is {MONEY_WORD.unpaid.toLowerCase()}</Badge>
+            ) : null
           }
         />
       </div>
