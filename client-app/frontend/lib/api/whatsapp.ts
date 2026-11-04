@@ -87,27 +87,45 @@ export type RuleTrigger =
   | { type: "weekly"; weekday: number }
   | { type: "once"; date: string };
 
-export interface RuleFilters {
+/**
+ * A condition: one fact about the patient, compared one way (mirrors FIELDS / OPS
+ * in custom-rules.ts on the API). The kind of the field decides the operators
+ * and the shape of `value`:
+ *   number   eq ne gt gte lt lte between          value: number, or [low, high]
+ *   past     within not_within before after never ever   value: days, or "YYYY-MM-DD"
+ *   future   within not_within none any           value: days ahead
+ *   choice   in not_in                            value: string[]
+ *   text     is is_not contains not_contains set not_set   value: string
+ *   history  had never_had (+ within_days)        value: string[] (procedures, doctor ids)
+ */
+export type FieldKind = "number" | "past" | "future" | "choice" | "text" | "history";
+export type FieldKey =
+  | "age" | "visits" | "no_shows" | "cancellations" | "owed" | "unpaid_bills" | "overdue_days" | "paid_total" | "planned_work"
+  | "last_visit" | "first_visit" | "registered" | "last_missed" | "last_message" | "last_payment"
+  | "next_booking" | "birthday"
+  | "gender" | "language" | "birth_month" | "marital_status" | "planned_procedure"
+  | "nationality" | "city" | "governate" | "occupation" | "insurance"
+  | "procedure" | "doctor";
+export type ConditionValue = number | string | string[] | [number, number];
+export interface Condition {
+  field: FieldKey;
+  op: string;
+  value: ConditionValue | null;
+  within_days: number | null;
+}
+/** A group inside the list: any one of these holds, or all of them do. */
+export type ConditionGroup = { any: Condition[] } | { all: Condition[] };
+export type ConditionItem = Condition | ConditionGroup;
+export const isGroup = (c: ConditionItem): c is ConditionGroup => "any" in c || "all" in c;
+export const groupItems = (g: ConditionGroup): Condition[] => ("any" in g ? g.any : g.all);
+export const groupMatch = (g: ConditionGroup): Match => ("any" in g ? "any" : "all");
+/** How the top-level conditions combine. */
+export type Match = "all" | "any";
+
+/** The clinic's own lists a condition can pick from. */
+export interface RuleVocabulary {
   procedures: string[];
-  procedures_within_months: number | null;
-  min_age: number | null;
-  max_age: number | null;
-  languages: string[];
-  owes_money: boolean | null;
-  skip_if_booked: boolean;
-  seen_within_months: number | null;
-  not_seen_for_months: number | null;
-  gender: string | null;
-  not_procedures: string[];
-  min_visits: number | null;
-  max_visits: number | null;
-  birth_months: number[];
-  joined_within_months: number | null;
-  joined_before_months: number | null;
-  missed_within_months: number | null;
-  has_planned_work: boolean | null;
-  not_messaged_within_days: number | null;
-  no_booking_within_days: number | null;
+  doctors: { id: string; name: string }[];
 }
 
 /** When the rule may fire at all, and how many it may reach at once. */
@@ -121,7 +139,9 @@ export interface RuleLimits {
 export interface RuleDefinition {
   trigger: RuleTrigger;
   audience: "patients" | "staff";
-  filters: RuleFilters;
+  /** With match "all" every item holds (a group inside when any of its conditions does); with "any" one is enough (a group inside when all of its hold). */
+  conditions: ConditionItem[];
+  match: Match;
   limits: RuleLimits;
 }
 
@@ -268,6 +288,7 @@ export const deleteCustomReminder = (id: number | string) =>
   request<{ deleted: true }>(`/api/whatsapp/custom-reminders/${id}`, json("DELETE"));
 export const draftCustomReminder = (text: string) =>
   request<ReminderDraft>("/api/whatsapp/custom-reminders/draft", json("POST", { text }));
+export const fetchRuleVocabulary = () => request<RuleVocabulary>("/api/whatsapp/custom-reminders/vocabulary");
 
 export const runNow = () => request<RunResult>("/api/whatsapp/run", json("POST", {}));
 export const retryMessage = (id: number | string) =>

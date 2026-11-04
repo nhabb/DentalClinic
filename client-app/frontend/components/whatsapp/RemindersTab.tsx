@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { FaCheck, FaChevronDown, FaMagic, FaPaperPlane, FaPlus, FaSyncAlt, FaTimes, FaTrash, FaUndo } from "react-icons/fa";
 import { Badge } from "@/components/ui/Badge";
@@ -17,18 +17,21 @@ import {
   createCustomReminder,
   deleteCustomReminder,
   draftCustomReminder,
+  fetchRuleVocabulary,
   refreshTemplates,
   saveRule,
   saveTemplate,
   submitTemplates,
   updateCustomReminder,
+  type ConditionItem,
   type CustomReminder,
+  type Match,
   type CustomReminderInput,
   type DateField,
   type MessageLanguage,
   type RuleDefinition,
-  type RuleFilters,
   type RuleLimits,
+  type RuleVocabulary,
   type RuleTrigger,
   type TriggerType,
   type RuleInput,
@@ -39,6 +42,7 @@ import {
   type WhatsAppTemplate,
 } from "@/lib/api/whatsapp";
 import type { WhatsAppFile } from "./useWhatsApp";
+import { Chips, ConditionBuilder } from "./ConditionBuilder";
 import {
   BODY_MAX,
   CARD_KINDS,
@@ -53,7 +57,6 @@ import {
   RULE_TITLE,
   RULES_OF_CARD,
   DATE_FIELD_TITLE,
-  EMPTY_FILTERS,
   EMPTY_LIMITS,
   MONTHS,
   TRIGGER_HINT,
@@ -506,81 +509,6 @@ function triggerOf(f: TriggerForm): RuleTrigger {
   }
 }
 
-/** The conditions the form shows as rows; each one is a group of filter fields. */
-type Condition =
-  | "procedures"
-  | "not_procedures"
-  | "age"
-  | "gender"
-  | "languages"
-  | "owes_money"
-  | "planned_work"
-  | "visits"
-  | "seen"
-  | "joined"
-  | "missed"
-  | "birth_months"
-  | "skip_if_booked"
-  | "no_booking_within"
-  | "not_messaged";
-const CONDITION_TITLE: Record<Condition, string> = {
-  procedures: "Had a procedure",
-  not_procedures: "Never had a procedure",
-  age: "Age",
-  gender: "Gender",
-  languages: "Language",
-  owes_money: "Money owed",
-  planned_work: "Planned work",
-  visits: "Number of visits",
-  seen: "Last seen",
-  joined: "When they joined",
-  missed: "Missed an appointment",
-  birth_months: "Born in",
-  skip_if_booked: "Skip if already booked",
-  no_booking_within: "Skip if booked soon",
-  not_messaged: "Skip if messaged recently",
-};
-function conditionsOf(f: RuleFilters): Condition[] {
-  const out: Condition[] = [];
-  if (f.procedures.length) out.push("procedures");
-  if (f.not_procedures.length) out.push("not_procedures");
-  if (f.min_age !== null || f.max_age !== null) out.push("age");
-  if (f.gender !== null) out.push("gender");
-  if (f.languages.length) out.push("languages");
-  if (f.owes_money !== null) out.push("owes_money");
-  if (f.has_planned_work !== null) out.push("planned_work");
-  if (f.min_visits !== null || f.max_visits !== null) out.push("visits");
-  if (f.seen_within_months !== null || f.not_seen_for_months !== null) out.push("seen");
-  if (f.joined_within_months !== null || f.joined_before_months !== null) out.push("joined");
-  if (f.missed_within_months !== null) out.push("missed");
-  if (f.birth_months.length) out.push("birth_months");
-  if (f.skip_if_booked) out.push("skip_if_booked");
-  if (f.no_booking_within_days !== null) out.push("no_booking_within");
-  if (f.not_messaged_within_days !== null) out.push("not_messaged");
-  return out;
-}
-/** A row of chips the user toggles: procedures, months, weekdays. */
-function Chips<T extends string | number>({ options, value, onChange, label }: { options: [T, string][]; value: T[]; onChange: (v: T[]) => void; label: (v: T) => string }) {
-  return (
-    <span className="flex flex-wrap gap-1">
-      {options.map(([v]) => {
-        const on = value.includes(v);
-        return (
-          <button
-            key={String(v)}
-            type="button"
-            onClick={() => onChange(on ? value.filter((x) => x !== v) : [...value, v])}
-            className={cn("press rounded-full border px-2 py-0.5 text-xs", on ? "border-brand-500 bg-brand-50 text-brand-800" : "border-ink-200 bg-card text-ink-600")}
-            aria-pressed={on}
-          >
-            {label(v)}
-          </button>
-        );
-      })}
-    </span>
-  );
-}
-
 function CustomReminderModal({
   reminder,
   onClose,
@@ -593,10 +521,15 @@ function CustomReminderModal({
   const [name, setName] = useState(reminder?.name ?? "");
   const [trigger, setTrigger] = useState<TriggerForm>(() => triggerForm(reminder?.definition.trigger));
   const [audience, setAudience] = useState<"patients" | "staff">(reminder?.definition.audience ?? "patients");
-  const [filters, setFilters] = useState<RuleFilters>(() => ({ ...EMPTY_FILTERS, ...(reminder?.definition.filters ?? {}) }));
-  const [conditions, setConditions] = useState<Condition[]>(() => conditionsOf(reminder?.definition.filters ?? EMPTY_FILTERS));
-  const [seenMode, setSeenMode] = useState<"within" | "not_for">(reminder?.definition.filters.not_seen_for_months ? "not_for" : "within");
-  const [joinedMode, setJoinedMode] = useState<"within" | "before">(reminder?.definition.filters.joined_before_months ? "before" : "within");
+  const [conditions, setConditions] = useState<ConditionItem[]>(() => reminder?.definition.conditions ?? []);
+  const [match, setMatch] = useState<Match>(reminder?.definition.match ?? "all");
+  const [vocabulary, setVocabulary] = useState<RuleVocabulary | null>(null);
+  // The clinic's own lists (its doctors, the procedure names) for the condition rows.
+  useEffect(() => {
+    fetchRuleVocabulary()
+      .then(setVocabulary)
+      .catch(() => setVocabulary({ procedures: [...PROCEDURES], doctors: [] }));
+  }, []);
   const [limits, setLimits] = useState<RuleLimits>(() => ({ ...EMPTY_LIMITS, ...(reminder?.definition.limits ?? {}) }));
   const [atTime, setAtTime] = useState(reminder?.at_time ?? "10:00");
   const [bodyEn, setBodyEn] = useState("");
@@ -612,48 +545,14 @@ function CustomReminderModal({
   const definition: RuleDefinition = {
     trigger: triggerOf(trigger),
     audience: effectiveAudience,
-    filters: effectiveAudience === "staff" ? EMPTY_FILTERS : filters,
+    conditions: effectiveAudience === "staff" ? [] : conditions,
+    match,
     limits,
   };
   const params = paramsOfRule(definition);
   const enCheck = bodyEn.trim() ? validateBody(bodyEn, params) : {};
   const arCheck = bodyAr.trim() ? validateBody(bodyAr, params) : {};
   const setT = (patch: Partial<TriggerForm>) => setTrigger((t) => ({ ...t, ...patch }));
-  const setF = (patch: Partial<RuleFilters>) => setFilters((f) => ({ ...f, ...patch }));
-
-  const addCondition = (c: Condition) => {
-    if (!c || conditions.includes(c)) return;
-    setConditions((list) => [...list, c]);
-    if (c === "skip_if_booked") setF({ skip_if_booked: true });
-    if (c === "owes_money") setF({ owes_money: true });
-    if (c === "seen") setF({ seen_within_months: 12, not_seen_for_months: null });
-    if (c === "gender") setF({ gender: "female" });
-    if (c === "planned_work") setF({ has_planned_work: true });
-    if (c === "visits") setF({ min_visits: 1 });
-    if (c === "joined") setF({ joined_within_months: 3, joined_before_months: null });
-    if (c === "missed") setF({ missed_within_months: 3 });
-    if (c === "no_booking_within") setF({ no_booking_within_days: 14 });
-    if (c === "not_messaged") setF({ not_messaged_within_days: 7 });
-  };
-  const removeCondition = (c: Condition) => {
-    setConditions((list) => list.filter((x) => x !== c));
-    if (c === "procedures") setF({ procedures: [], procedures_within_months: null });
-    if (c === "age") setF({ min_age: null, max_age: null });
-    if (c === "languages") setF({ languages: [] });
-    if (c === "owes_money") setF({ owes_money: null });
-    if (c === "skip_if_booked") setF({ skip_if_booked: false });
-    if (c === "seen") setF({ seen_within_months: null, not_seen_for_months: null });
-    if (c === "not_procedures") setF({ not_procedures: [] });
-    if (c === "gender") setF({ gender: null });
-    if (c === "planned_work") setF({ has_planned_work: null });
-    if (c === "visits") setF({ min_visits: null, max_visits: null });
-    if (c === "joined") setF({ joined_within_months: null, joined_before_months: null });
-    if (c === "missed") setF({ missed_within_months: null });
-    if (c === "birth_months") setF({ birth_months: [] });
-    if (c === "no_booking_within") setF({ no_booking_within_days: null });
-    if (c === "not_messaged") setF({ not_messaged_within_days: null });
-  };
-
   /** One sentence in, the whole form out; the admin still reads it and presses Add. */
   const draft = async () => {
     if (wish.trim().length < 5) return setError("Describe the reminder in a few words first.");
@@ -665,10 +564,8 @@ function CustomReminderModal({
       setName(d.name);
       setTrigger(triggerForm(d.definition.trigger));
       setAudience(d.definition.audience);
-      setFilters({ ...EMPTY_FILTERS, ...d.definition.filters });
-      setConditions(conditionsOf(d.definition.filters));
-      setSeenMode(d.definition.filters.not_seen_for_months ? "not_for" : "within");
-      setJoinedMode(d.definition.filters.joined_before_months ? "before" : "within");
+      setConditions(d.definition.conditions);
+      setMatch(d.definition.match ?? "all");
       setLimits({ ...EMPTY_LIMITS, ...d.definition.limits });
       setAtTime(d.at_time);
       setBodyEn(d.body_en);
@@ -931,175 +828,7 @@ function CustomReminderModal({
             <p className="text-xs text-ink-500">Every doctor with a mobile number on their account, in the clinic&apos;s language.</p>
           ) : (
             <>
-              {conditions.map((c) => (
-                <div key={c} className="flex flex-wrap items-center gap-2 rounded-xl bg-ink-50 px-3 py-2 text-sm text-ink-700">
-                  <span className="font-medium text-ink-900">{CONDITION_TITLE[c]}:</span>
-                  {c === "procedures" && (
-                    <>
-                      <span className="flex flex-wrap gap-1">
-                        {PROCEDURES.map((p) => {
-                          const on = filters.procedures.includes(p);
-                          return (
-                            <button
-                              key={p}
-                              type="button"
-                              onClick={() => setF({ procedures: on ? filters.procedures.filter((x) => x !== p) : [...filters.procedures, p] })}
-                              className={cn("press rounded-full border px-2 py-0.5 text-xs", on ? "border-brand-500 bg-brand-50 text-brand-800" : "border-ink-200 bg-card text-ink-600")}
-                              aria-pressed={on}
-                            >
-                              {p}
-                            </button>
-                          );
-                        })}
-                      </span>
-                      <span>in the last</span>
-                      {num(filters.procedures_within_months ?? "", 1, 240, (v) => setF({ procedures_within_months: numOrNull(v) }))}
-                      <span>months (empty: ever)</span>
-                    </>
-                  )}
-                  {c === "age" && (
-                    <>
-                      <span>from</span>
-                      {num(filters.min_age ?? "", 0, 120, (v) => setF({ min_age: numOrNull(v) }))}
-                      <span>to</span>
-                      {num(filters.max_age ?? "", 0, 120, (v) => setF({ max_age: numOrNull(v) }))}
-                      <span>years (either may be empty)</span>
-                    </>
-                  )}
-                  {c === "languages" &&
-                    (["en", "ar", "fr"] as const).map((l) => {
-                      const on = filters.languages.includes(l);
-                      return (
-                        <button
-                          key={l}
-                          type="button"
-                          onClick={() => setF({ languages: on ? filters.languages.filter((x) => x !== l) : [...filters.languages, l] })}
-                          className={cn("press rounded-full border px-2 py-0.5 text-xs", on ? "border-brand-500 bg-brand-50 text-brand-800" : "border-ink-200 bg-card text-ink-600")}
-                          aria-pressed={on}
-                        >
-                          {{ en: "English", ar: "Arabic", fr: "French" }[l]}
-                        </button>
-                      );
-                    })}
-                  {c === "owes_money" && (
-                    <select value={filters.owes_money ? "yes" : "no"} onChange={(e) => setF({ owes_money: e.target.value === "yes" })} className={cn(inputClass, "w-48")}>
-                      <option value="yes">only patients who owe money</option>
-                      <option value="no">only patients who owe nothing</option>
-                    </select>
-                  )}
-                  {c === "skip_if_booked" && <span>patients with an appointment already booked are left out</span>}
-                  {c === "not_procedures" && (
-                    <Chips options={PROCEDURES.map((p) => [p, p] as [string, string])} value={filters.not_procedures} onChange={(v) => setF({ not_procedures: v })} label={(p) => p} />
-                  )}
-                  {c === "gender" && (
-                    <select value={filters.gender ?? "female"} onChange={(e) => setF({ gender: e.target.value })} className={cn(inputClass, "w-40")}>
-                      <option value="female">women only</option>
-                      <option value="male">men only</option>
-                    </select>
-                  )}
-                  {c === "planned_work" && (
-                    <select value={filters.has_planned_work ? "yes" : "no"} onChange={(e) => setF({ has_planned_work: e.target.value === "yes" })} className={cn(inputClass, "w-64")}>
-                      <option value="yes">only patients with planned work still to do</option>
-                      <option value="no">only patients with no planned work left</option>
-                    </select>
-                  )}
-                  {c === "visits" && (
-                    <>
-                      <span>from</span>
-                      {num(filters.min_visits ?? "", 0, 1000, (v) => setF({ min_visits: numOrNull(v) }))}
-                      <span>to</span>
-                      {num(filters.max_visits ?? "", 0, 1000, (v) => setF({ max_visits: numOrNull(v) }))}
-                      <span>completed visits (either may be empty; 0 = never came yet)</span>
-                    </>
-                  )}
-                  {c === "joined" && (
-                    <>
-                      <select
-                        value={joinedMode}
-                        onChange={(e) => {
-                          const mode = e.target.value as "within" | "before";
-                          setJoinedMode(mode);
-                          const n = filters.joined_within_months ?? filters.joined_before_months ?? 3;
-                          setF(mode === "within" ? { joined_within_months: n, joined_before_months: null } : { joined_within_months: null, joined_before_months: n });
-                        }}
-                        className={cn(inputClass, "w-48")}
-                      >
-                        <option value="within">joined in the last</option>
-                        <option value="before">joined more than</option>
-                      </select>
-                      {num(
-                        (joinedMode === "within" ? filters.joined_within_months : filters.joined_before_months) ?? "",
-                        1,
-                        240,
-                        (v) => setF(joinedMode === "within" ? { joined_within_months: numOrNull(v) } : { joined_before_months: numOrNull(v) }),
-                      )}
-                      <span>months{joinedMode === "before" ? " ago" : ""}</span>
-                    </>
-                  )}
-                  {c === "missed" && (
-                    <>
-                      <span>did not come to an appointment in the last</span>
-                      {num(filters.missed_within_months ?? "", 1, 240, (v) => setF({ missed_within_months: numOrNull(v) }))}
-                      <span>months</span>
-                    </>
-                  )}
-                  {c === "birth_months" && (
-                    <Chips options={MONTHS.map((m, i) => [i + 1, m] as [number, string])} value={filters.birth_months} onChange={(v) => setF({ birth_months: v })} label={(m) => MONTHS[m - 1]} />
-                  )}
-                  {c === "no_booking_within" && (
-                    <>
-                      <span>patients with an appointment in the next</span>
-                      {num(filters.no_booking_within_days ?? "", 1, 365, (v) => setF({ no_booking_within_days: numOrNull(v) }))}
-                      <span>days are left out</span>
-                    </>
-                  )}
-                  {c === "not_messaged" && (
-                    <>
-                      <span>patients the clinic messaged on WhatsApp in the last</span>
-                      {num(filters.not_messaged_within_days ?? "", 1, 365, (v) => setF({ not_messaged_within_days: numOrNull(v) }))}
-                      <span>days are left out</span>
-                    </>
-                  )}
-                  {c === "seen" && (
-                    <>
-                      <select
-                        value={seenMode}
-                        onChange={(e) => {
-                          const mode = e.target.value as "within" | "not_for";
-                          setSeenMode(mode);
-                          const n = filters.seen_within_months ?? filters.not_seen_for_months ?? 12;
-                          setF(mode === "within" ? { seen_within_months: n, not_seen_for_months: null } : { seen_within_months: null, not_seen_for_months: n });
-                        }}
-                        className={cn(inputClass, "w-44")}
-                      >
-                        <option value="within">seen in the last</option>
-                        <option value="not_for">not seen for</option>
-                      </select>
-                      {num(
-                        (seenMode === "within" ? filters.seen_within_months : filters.not_seen_for_months) ?? "",
-                        1,
-                        240,
-                        (v) => setF(seenMode === "within" ? { seen_within_months: numOrNull(v) } : { not_seen_for_months: numOrNull(v) }),
-                      )}
-                      <span>months</span>
-                    </>
-                  )}
-                  <button type="button" onClick={() => removeCondition(c)} className="ms-auto press rounded-lg p-1 text-ink-400 hover:bg-brick-50 hover:text-brick-700" aria-label={`Remove ${CONDITION_TITLE[c]}`}>
-                    <FaTimes className="text-xs" />
-                  </button>
-                </div>
-              ))}
-              <select value="" onChange={(e) => addCondition(e.target.value as Condition)} className={cn(inputClass, "max-w-xs")} aria-label="Add a condition">
-                <option value="">+ Add a condition…</option>
-                {(Object.keys(CONDITION_TITLE) as Condition[])
-                  .filter((c) => !conditions.includes(c))
-                  .map((c) => (
-                    <option key={c} value={c}>
-                      {CONDITION_TITLE[c]}
-                    </option>
-                  ))}
-              </select>
-              {conditions.length === 0 && <p className="text-xs text-ink-500">Every patient the trigger concerns. Patients who asked for no WhatsApp are always skipped.</p>}
+              <ConditionBuilder value={conditions} match={match} onChange={setConditions} onMatch={setMatch} vocabulary={vocabulary} />
             </>
           )}
         </section>

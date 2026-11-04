@@ -8,8 +8,9 @@ import type {
   TemplateKind,
   WhatsAppMessage,
   DateField,
+  FieldKey,
+  FieldKind,
   RuleDefinition,
-  RuleFilters,
   RuleLimits,
   TriggerType,
 } from "@/lib/api/whatsapp";
@@ -107,28 +108,71 @@ export const DATE_FIELD_TITLE: Record<DateField, string> = {
 };
 export const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 export const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-export const EMPTY_FILTERS: RuleFilters = {
-  procedures: [],
-  procedures_within_months: null,
-  min_age: null,
-  max_age: null,
-  languages: [],
-  owes_money: null,
-  skip_if_booked: false,
-  seen_within_months: null,
-  not_seen_for_months: null,
-  gender: null,
-  not_procedures: [],
-  min_visits: null,
-  max_visits: null,
-  birth_months: [],
-  joined_within_months: null,
-  joined_before_months: null,
-  missed_within_months: null,
-  has_planned_work: null,
-  not_messaged_within_days: null,
-  no_booking_within_days: null,
+
+/**
+ * The facts a condition can be about, in the order the menu shows them
+ * (mirrors FIELDS in custom-rules.ts on the API): the kind decides the
+ * operators and the value control, the group is the menu heading.
+ */
+export interface FieldWords {
+  kind: FieldKind;
+  label: string;
+  group: "Visits" | "Money" | "Treatment" | "About them" | "Messages";
+  /** number: what is counted; past/future: nothing (the control picks days / weeks / months). */
+  unit?: string;
+  /** choice: value → label; "procedures" and "doctors" come from the vocabulary. */
+  options?: [string, string][] | "procedures" | "doctors";
+}
+export const LANGUAGE_WORD: Record<string, string> = { en: "English", ar: "Arabic", fr: "French" };
+export const FIELD_WORDS: Record<FieldKey, FieldWords> = {
+  last_visit: { kind: "past", label: "Last visit", group: "Visits" },
+  first_visit: { kind: "past", label: "First visit", group: "Visits" },
+  registered: { kind: "past", label: "Joined the clinic", group: "Visits" },
+  visits: { kind: "number", label: "Number of visits", group: "Visits", unit: "visits" },
+  next_booking: { kind: "future", label: "Next appointment", group: "Visits" },
+  last_missed: { kind: "past", label: "Last missed appointment", group: "Visits" },
+  no_shows: { kind: "number", label: "Missed appointments", group: "Visits", unit: "missed" },
+  cancellations: { kind: "number", label: "Cancelled appointments", group: "Visits", unit: "cancelled" },
+  doctor: { kind: "history", label: "Seen by a doctor", group: "Visits", options: "doctors" },
+  owed: { kind: "number", label: "Money owed", group: "Money", unit: "" },
+  unpaid_bills: { kind: "number", label: "Unpaid bills", group: "Money", unit: "bills" },
+  overdue_days: { kind: "number", label: "Days overdue (oldest bill)", group: "Money", unit: "days" },
+  paid_total: { kind: "number", label: "Money paid in all", group: "Money", unit: "" },
+  last_payment: { kind: "past", label: "Last payment", group: "Money" },
+  procedure: { kind: "history", label: "Had a procedure", group: "Treatment", options: "procedures" },
+  planned_procedure: { kind: "choice", label: "Planned procedure", group: "Treatment", options: "procedures" },
+  planned_work: { kind: "number", label: "Planned procedures still to do", group: "Treatment", unit: "procedures" },
+  age: { kind: "number", label: "Age", group: "About them", unit: "years" },
+  gender: { kind: "choice", label: "Gender", group: "About them", options: [["male", "Male"], ["female", "Female"]] },
+  language: { kind: "choice", label: "Language", group: "About them", options: [["en", "English"], ["ar", "Arabic"], ["fr", "French"]] },
+  birthday: { kind: "future", label: "Birthday", group: "About them" },
+  birth_month: { kind: "choice", label: "Birth month", group: "About them", options: MONTHS.map((m, i) => [String(i + 1), m]) },
+  marital_status: {
+    kind: "choice",
+    label: "Marital status",
+    group: "About them",
+    options: [["single", "Single"], ["married", "Married"], ["divorced", "Divorced"], ["widowed", "Widowed"], ["other", "Other"]],
+  },
+  nationality: { kind: "text", label: "Nationality", group: "About them" },
+  city: { kind: "text", label: "City", group: "About them" },
+  governate: { kind: "text", label: "Governate", group: "About them" },
+  occupation: { kind: "text", label: "Occupation", group: "About them" },
+  insurance: { kind: "text", label: "Insurance provider", group: "About them" },
+  last_message: { kind: "past", label: "Last WhatsApp message from us", group: "Messages" },
 };
+export const FIELD_GROUPS: FieldWords["group"][] = ["Visits", "Money", "Treatment", "About them", "Messages"];
+
+/** The operators of each kind, in words, in the order the menu shows them. */
+export const OP_WORDS: Record<FieldKind, [string, string][]> = {
+  number: [["gte", "at least"], ["lte", "at most"], ["gt", "more than"], ["lt", "less than"], ["eq", "exactly"], ["ne", "anything but"], ["between", "between"]],
+  past: [["within", "in the last"], ["not_within", "not in the last"], ["before", "before"], ["after", "after"], ["never", "never happened"], ["ever", "happened at some point"]],
+  future: [["within", "in the next"], ["not_within", "not in the next"], ["none", "none"], ["any", "any"]],
+  choice: [["in", "is one of"], ["not_in", "is not"]],
+  text: [["is", "is"], ["is_not", "is not"], ["contains", "contains"], ["not_contains", "does not contain"], ["set", "is filled in"], ["not_set", "is empty"]],
+  history: [["had", "had"], ["never_had", "never had"]],
+};
+/** Operators that take no value. */
+export const BARE_OPS = ["never", "ever", "none", "any", "set", "not_set"];
 export const EMPTY_LIMITS: RuleLimits = { send_weekdays: [], active_from: null, active_until: null, max_per_run: null };
 
 /** What {{1}}.. stand for in a rule's wording (mirrors paramsOfRule on the API). */
