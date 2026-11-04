@@ -122,6 +122,18 @@ export const groupMatch = (g: ConditionGroup): Match => ("any" in g ? "any" : "a
 /** How the top-level conditions combine. */
 export type Match = "all" | "any";
 
+/** The audience as a query the assistant wrote, explained for the clinic (the SQL runs on the API under its read-only boundary). */
+export interface AudienceQuery {
+  sql: string;
+  summary: string;
+  steps: string[];
+}
+/** Who an audience query reaches today. */
+export interface AudiencePreview {
+  count: number;
+  sample: string[];
+}
+
 /** The clinic's own lists a condition can pick from. */
 export interface RuleVocabulary {
   procedures: string[];
@@ -142,6 +154,8 @@ export interface RuleDefinition {
   /** With match "all" every item holds (a group inside when any of its conditions does); with "any" one is enough (a group inside when all of its hold). */
   conditions: ConditionItem[];
   match: Match;
+  /** Set when the assistant wrote the audience as a query; the conditions still apply on top. */
+  audience_query: AudienceQuery | null;
   limits: RuleLimits;
 }
 
@@ -289,6 +303,22 @@ export const deleteCustomReminder = (id: number | string) =>
 export const draftCustomReminder = (text: string) =>
   request<ReminderDraft>("/api/whatsapp/custom-reminders/draft", json("POST", { text }));
 export const fetchRuleVocabulary = () => request<RuleVocabulary>("/api/whatsapp/custom-reminders/vocabulary");
+
+/** One turn of the conversation that builds a reminder; the client keeps the transcript. */
+export interface ChatTurn {
+  role: "user" | "assistant";
+  content: string;
+}
+export type ChatProposal = ReminderDraft & { audience: (AudienceQuery & AudiencePreview) | null };
+export interface ChatReply {
+  kind: "question" | "proposal";
+  text: string;
+  draft?: ChatProposal;
+}
+export const chatCustomReminder = (messages: ChatTurn[]) =>
+  request<ChatReply>("/api/whatsapp/custom-reminders/chat", json("POST", { messages }));
+export const previewAudience = (sql: string) =>
+  request<AudiencePreview>("/api/whatsapp/custom-reminders/audience-preview", json("POST", { sql }));
 
 export const runNow = () => request<RunResult>("/api/whatsapp/run", json("POST", {}));
 export const retryMessage = (id: number | string) =>

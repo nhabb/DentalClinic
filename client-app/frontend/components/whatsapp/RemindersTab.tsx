@@ -16,13 +16,15 @@ import { errorText } from "@/lib/api/request";
 import {
   createCustomReminder,
   deleteCustomReminder,
-  draftCustomReminder,
   fetchRuleVocabulary,
   refreshTemplates,
   saveRule,
   saveTemplate,
   submitTemplates,
   updateCustomReminder,
+  type AudiencePreview,
+  type AudienceQuery,
+  type ChatProposal,
   type ConditionItem,
   type CustomReminder,
   type Match,
@@ -43,6 +45,7 @@ import {
 } from "@/lib/api/whatsapp";
 import type { WhatsAppFile } from "./useWhatsApp";
 import { Chips, ConditionBuilder } from "./ConditionBuilder";
+import { AudienceCard, ReminderChat } from "./ReminderChat";
 import {
   BODY_MAX,
   CARD_KINDS,
@@ -523,6 +526,8 @@ function CustomReminderModal({
   const [audience, setAudience] = useState<"patients" | "staff">(reminder?.definition.audience ?? "patients");
   const [conditions, setConditions] = useState<ConditionItem[]>(() => reminder?.definition.conditions ?? []);
   const [match, setMatch] = useState<Match>(reminder?.definition.match ?? "all");
+  const [audienceQuery, setAudienceQuery] = useState<AudienceQuery | null>(reminder?.definition.audience_query ?? null);
+  const [audiencePreview, setAudiencePreview] = useState<AudiencePreview | null>(null);
   const [vocabulary, setVocabulary] = useState<RuleVocabulary | null>(null);
   // The clinic's own lists (its doctors, the procedure names) for the condition rows.
   useEffect(() => {
@@ -534,8 +539,6 @@ function CustomReminderModal({
   const [atTime, setAtTime] = useState(reminder?.at_time ?? "10:00");
   const [bodyEn, setBodyEn] = useState("");
   const [bodyAr, setBodyAr] = useState("");
-  const [wish, setWish] = useState("");
-  const [drafting, setDrafting] = useState(false);
   const [draftNote, setDraftNote] = useState<{ tone: "leaf" | "honey"; text: string } | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -547,39 +550,36 @@ function CustomReminderModal({
     audience: effectiveAudience,
     conditions: effectiveAudience === "staff" ? [] : conditions,
     match,
+    audience_query: effectiveAudience === "staff" ? null : audienceQuery,
     limits,
   };
   const params = paramsOfRule(definition);
   const enCheck = bodyEn.trim() ? validateBody(bodyEn, params) : {};
   const arCheck = bodyAr.trim() ? validateBody(bodyAr, params) : {};
   const setT = (patch: Partial<TriggerForm>) => setTrigger((t) => ({ ...t, ...patch }));
-  /** One sentence in, the whole form out; the admin still reads it and presses Add. */
-  const draft = async () => {
-    if (wish.trim().length < 5) return setError("Describe the reminder in a few words first.");
-    setError("");
-    setDraftNote(null);
-    setDrafting(true);
-    try {
-      const d = await draftCustomReminder(wish);
-      setName(d.name);
-      setTrigger(triggerForm(d.definition.trigger));
-      setAudience(d.definition.audience);
-      setConditions(d.definition.conditions);
-      setMatch(d.definition.match ?? "all");
-      setLimits({ ...EMPTY_LIMITS, ...d.definition.limits });
-      setAtTime(d.at_time);
-      setBodyEn(d.body_en);
-      setBodyAr(d.body_ar);
-      setDraftNote(
-        d.unsupported
-          ? { tone: "honey", text: `${d.unsupported} Filled in: ${d.summary}.` }
-          : { tone: "leaf", text: `Understood as: ${d.summary}. Check the parts below, change anything, then add it.` },
-      );
-    } catch (err) {
-      setError(errorText(err, "The assistant could not draft it; fill the form by hand."));
-    } finally {
-      setDrafting(false);
+  /** A proposal from the conversation fills the whole form; the admin still reads it and presses Add. */
+  const takeProposal = (d: ChatProposal, note: string) => {
+    setName(d.name);
+    setTrigger(triggerForm(d.definition.trigger));
+    setAudience(d.definition.audience);
+    setConditions(d.definition.conditions);
+    setMatch(d.definition.match ?? "all");
+    setLimits({ ...EMPTY_LIMITS, ...d.definition.limits });
+    setAtTime(d.at_time);
+    setBodyEn(d.body_en);
+    setBodyAr(d.body_ar);
+    if (d.audience) {
+      setAudienceQuery({ sql: d.audience.sql, summary: d.audience.summary, steps: d.audience.steps });
+      setAudiencePreview({ count: d.audience.count, sample: d.audience.sample });
+    } else {
+      setAudienceQuery(null);
+      setAudiencePreview(null);
     }
+    setDraftNote(
+      d.unsupported
+        ? { tone: "honey", text: `${d.unsupported} Filled in: ${d.summary}.` }
+        : { tone: "leaf", text: `${note} Filled in as: ${d.summary}. Check the parts below, change anything, then add it.` },
+    );
   };
 
   const save = async () => {
@@ -631,14 +631,14 @@ function CustomReminderModal({
       isOpen
       onClose={() => !saving && onClose()}
       title={reminder ? "Edit the reminder" : "A reminder of your own"}
-      description={reminder ? "Change any part. If the new parts fill different placeholders, the wording starts again from the suggested one." : "Say it in a sentence and let the assistant fill the parts, or fill them yourself."}
+      description={reminder ? "Change any part. If the new parts fill different placeholders, the wording starts again from the suggested one." : "Tell the assistant what you want and answer its questions, or fill the parts yourself."}
       maxWidth="max-w-2xl"
       footer={
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose} disabled={saving}>
             Cancel
           </Button>
-          <Button onClick={() => void save()} disabled={saving || drafting}>
+          <Button onClick={() => void save()} disabled={saving}>
             {saving ? "Saving…" : reminder ? "Save" : "Add reminder"}
           </Button>
         </div>
@@ -646,32 +646,12 @@ function CustomReminderModal({
     >
       <div className="space-y-5">
         {!reminder && (
-          <div className="rounded-2xl border border-brand-200 bg-brand-50/60 p-3">
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-800" htmlFor="reminder-wish">
-              Describe it in your words
-            </label>
-            <textarea
-              id="reminder-wish"
-              value={wish}
-              onChange={(e) => setWish(e.target.value)}
-              rows={2}
-              className={cn(inputClass, "resize-y")}
-              placeholder="Three months after every implant for patients over 60, unless they already booked · A gift a week before their birthday · Every Monday, remind the doctors to check the stock"
-              autoFocus
-            />
-            <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-              <span className="text-xs text-ink-500">Drafting sends and saves nothing; you check the parts below.</span>
-              <Button size="sm" variant="outline" onClick={() => void draft()} disabled={drafting || wish.trim().length < 5}>
-                <FaMagic className="me-2" />
-                {drafting ? "Drafting…" : "Draft it for me"}
-              </Button>
-            </div>
+          <>
+            <ReminderChat onProposal={takeProposal} />
             {draftNote && (
-              <p className={cn("mt-2 rounded-lg px-3 py-2 text-xs ring-1 ring-inset", draftNote.tone === "leaf" ? "bg-leaf-50 text-leaf-800 ring-leaf-200" : "bg-honey-50 text-honey-800 ring-honey-200")}>
-                {draftNote.text}
-              </p>
+              <p className={cn("rounded-lg px-3 py-2 text-xs ring-1 ring-inset", draftNote.tone === "leaf" ? "bg-leaf-50 text-leaf-800 ring-leaf-200" : "bg-honey-50 text-honey-800 ring-honey-200")}>{draftNote.text}</p>
             )}
-          </div>
+          </>
         )}
 
         <FormField label="Name" required hint="For your own eyes, e.g. After root canal">
@@ -828,7 +808,26 @@ function CustomReminderModal({
             <p className="text-xs text-ink-500">Every doctor with a mobile number on their account, in the clinic&apos;s language.</p>
           ) : (
             <>
-              <ConditionBuilder value={conditions} match={match} onChange={setConditions} onMatch={setMatch} vocabulary={vocabulary} />
+              {audienceQuery ? (
+                <>
+                  <AudienceCard
+                    audience={audienceQuery}
+                    preview={audiencePreview}
+                    onClear={() => {
+                      setAudienceQuery(null);
+                      setAudiencePreview(null);
+                    }}
+                  />
+                  {conditions.length > 0 && (
+                    <>
+                      <p className="text-xs text-ink-500">And, on top of that, only patients who match:</p>
+                      <ConditionBuilder value={conditions} match={match} onChange={setConditions} onMatch={setMatch} vocabulary={vocabulary} />
+                    </>
+                  )}
+                </>
+              ) : (
+                <ConditionBuilder value={conditions} match={match} onChange={setConditions} onMatch={setMatch} vocabulary={vocabulary} />
+              )}
             </>
           )}
         </section>
