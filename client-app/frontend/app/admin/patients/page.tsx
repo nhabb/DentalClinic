@@ -293,6 +293,20 @@ const emptyNewPatient = {
   allergies: "",
   insurance: "",
   notes: "",
+  occupation: "",
+  employer: "",
+  workPhone: "",
+  emergencyName: "",
+  emergencyPhone: "",
+  emergencyRelationship: "",
+  emergency2Name: "",
+  emergency2Phone: "",
+  emergency2Relationship: "",
+  nationalId: "",
+  maritalStatus: "",
+  nationality: "",
+  preferredLanguage: "",
+  whatsappOptOut: false,
 };
 
 /** One patient row, as every screen in this page expects it. */
@@ -891,6 +905,20 @@ export default function PatientsPage() {
           ...(newPatient.allergies.trim() ? { allergies: newPatient.allergies.trim() } : {}),
           ...(newPatient.insurance.trim() ? { insurance_provider: newPatient.insurance.trim() } : {}),
           ...(newPatient.notes.trim() ? { medical_notes: newPatient.notes.trim() } : {}),
+          ...(newPatient.occupation.trim() ? { occupation: newPatient.occupation.trim() } : {}),
+          ...(newPatient.employer.trim() ? { employer: newPatient.employer.trim() } : {}),
+          ...(newPatient.workPhone.trim() ? { work_phone: newPatient.workPhone.trim() } : {}),
+          ...(newPatient.emergencyName.trim() ? { emergency_contact_name: newPatient.emergencyName.trim() } : {}),
+          ...(newPatient.emergencyPhone.trim() ? { emergency_contact_phone: newPatient.emergencyPhone.trim() } : {}),
+          ...(newPatient.emergencyRelationship.trim() ? { emergency_contact_relationship: newPatient.emergencyRelationship.trim() } : {}),
+          ...(newPatient.emergency2Name.trim() ? { emergency_contact_2_name: newPatient.emergency2Name.trim() } : {}),
+          ...(newPatient.emergency2Phone.trim() ? { emergency_contact_2_phone: newPatient.emergency2Phone.trim() } : {}),
+          ...(newPatient.emergency2Relationship.trim() ? { emergency_contact_2_relationship: newPatient.emergency2Relationship.trim() } : {}),
+          ...(newPatient.nationalId.trim() ? { national_id: newPatient.nationalId.trim() } : {}),
+          ...(newPatient.maritalStatus ? { marital_status: newPatient.maritalStatus } : {}),
+          ...(newPatient.nationality.trim() ? { nationality: newPatient.nationality.trim() } : {}),
+          ...(newPatient.preferredLanguage ? { preferred_language: newPatient.preferredLanguage } : {}),
+          ...(newPatient.whatsappOptOut ? { whatsapp_opt_out: true } : {}),
         }),
       });
       if (!res.ok) {
@@ -2917,6 +2945,125 @@ export default function PatientsPage() {
                   className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 resize-none"
                 />
               </div>
+
+              {/* ── Work ─────────────────────────────────────────────────── */}
+              <FieldGroup title="Work">
+                <div className="grid grid-cols-2 gap-4">
+                  <TextField
+                    label="Occupation"
+                    value={newPatient.occupation}
+                    onChange={(v) => setNewPatient((f) => ({ ...f, occupation: v }))}
+                    placeholder="e.g. Teacher"
+                  />
+                  <TextField
+                    label="Employer"
+                    value={newPatient.employer}
+                    onChange={(v) => setNewPatient((f) => ({ ...f, employer: v }))}
+                  />
+                </div>
+                <TextField
+                  label="Work phone"
+                  type="tel"
+                  value={newPatient.workPhone}
+                  onChange={(v) => setNewPatient((f) => ({ ...f, workPhone: v }))}
+                  placeholder="+961 1 000 000"
+                />
+              </FieldGroup>
+
+              {/* ── Emergency contacts ───────────────────────────────────── */}
+              <FieldGroup title="In an emergency, call">
+                <div className="grid grid-cols-3 gap-3">
+                  <TextField
+                    label="Name"
+                    value={newPatient.emergencyName}
+                    onChange={(v) => setNewPatient((f) => ({ ...f, emergencyName: v }))}
+                  />
+                  <TextField
+                    label="Phone"
+                    type="tel"
+                    value={newPatient.emergencyPhone}
+                    onChange={(v) => setNewPatient((f) => ({ ...f, emergencyPhone: v }))}
+                  />
+                  <TextField
+                    label="Relationship"
+                    value={newPatient.emergencyRelationship}
+                    onChange={(v) => setNewPatient((f) => ({ ...f, emergencyRelationship: v }))}
+                    placeholder="e.g. Spouse"
+                  />
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <TextField
+                    label="Second name"
+                    value={newPatient.emergency2Name}
+                    onChange={(v) => setNewPatient((f) => ({ ...f, emergency2Name: v }))}
+                  />
+                  <TextField
+                    label="Phone"
+                    type="tel"
+                    value={newPatient.emergency2Phone}
+                    onChange={(v) => setNewPatient((f) => ({ ...f, emergency2Phone: v }))}
+                  />
+                  <TextField
+                    label="Relationship"
+                    value={newPatient.emergency2Relationship}
+                    onChange={(v) => setNewPatient((f) => ({ ...f, emergency2Relationship: v }))}
+                    placeholder="e.g. Son"
+                  />
+                </div>
+              </FieldGroup>
+
+              {/* ── Identity ─────────────────────────────────────────────── */}
+              <FieldGroup title="Identity">
+                <div className="grid grid-cols-2 gap-4">
+                  <TextField
+                    label="National ID / civil record"
+                    value={newPatient.nationalId}
+                    onChange={(v) => setNewPatient((f) => ({ ...f, nationalId: v }))}
+                  />
+                  <TextField
+                    label="Nationality"
+                    value={newPatient.nationality}
+                    onChange={(v) => setNewPatient((f) => ({ ...f, nationality: v }))}
+                    placeholder="e.g. Lebanese"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Marital status</label>
+                    <select
+                      value={newPatient.maritalStatus}
+                      onChange={(e) => setNewPatient((f) => ({ ...f, maritalStatus: e.target.value }))}
+                      className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
+                    >
+                      <option value="">Not recorded</option>
+                      {MARITAL_STATUSES.map((m) => (
+                        <option key={m.value} value={m.value}>{m.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Speaks</label>
+                    <select
+                      value={newPatient.preferredLanguage}
+                      onChange={(e) => setNewPatient((f) => ({ ...f, preferredLanguage: e.target.value }))}
+                      className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
+                    >
+                      <option value="">Not recorded</option>
+                      {PATIENT_LANGUAGES.map((l) => (
+                        <option key={l.value} value={l.value}>{l.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <Switch
+                      checked={!newPatient.whatsappOptOut}
+                      onChange={(on) => setNewPatient((f) => ({ ...f, whatsappOptOut: !on }))}
+                      label={t("patients.whatsappMessages")}
+                      description={t("patients.whatsappMessagesHint")}
+                    />
+                  </div>
+                </div>
+              </FieldGroup>
             </div>
             <div className="p-6 border-t border-gray-100 flex justify-end gap-3">
               <Button variant="outline" onClick={() => setShowAddPatientModal(false)} disabled={addPatientSaving}>
