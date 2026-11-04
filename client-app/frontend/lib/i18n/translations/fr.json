@@ -622,7 +622,12 @@
     "reopenHint": "Remet cet acte dans le plan : marqué réalisé par erreur, ou à refaire. Son prix et sa facture, le cas échéant, ne changent pas.",
     "reopenConfirm": "Remettre cet acte dans le plan ? Il ne comptera plus comme réalisé. Son prix et sa facture, le cas échéant, ne changent pas.",
     "reopenedToast": "Acte remis dans le plan.",
-    "reopenFailed": "Impossible de remettre l'acte dans le plan."
+    "reopenFailed": "Impossible de remettre l'acte dans le plan.",
+    "yourPassword": "Votre mot de passe *",
+    "passwordPlaceholder": "Ressaisissez votre mot de passe pour signer ce changement",
+    "passwordNeeded": "Ressaisissez votre mot de passe pour changer le statut.",
+    "signedNote": "Un changement de ce que le schéma dit avoir été réalisé est signé avec votre mot de passe et inscrit au journal d'audit à votre nom : qui, quand, quelle dent et quel acte, de quoi à quoi.",
+    "reopenTitle": "Remettre un acte dans le plan"
   },
   "setPassword": {
     "title": "Définir votre mot de passe",

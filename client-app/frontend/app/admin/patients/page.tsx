@@ -478,6 +478,11 @@ export default function PatientsPage() {
   const [completing, setCompleting] = useState(false);
   const [removingRecordId, setRemovingRecordId] = useState<number | null>(null);
   const [reopeningRecordId, setReopeningRecordId] = useState<number | null>(null);
+  /** Every status change is signed with the user's own password (X-Confirm-Password). */
+  const [completePassword, setCompletePassword] = useState("");
+  const [reopenTarget, setReopenTarget] = useState<ChartHistoryEntry | null>(null);
+  const [reopenPassword, setReopenPassword] = useState("");
+  const [reopenError, setReopenError] = useState("");
   const { can } = usePermissions();
 
   // Bumped whenever the plan changed.
@@ -1123,16 +1128,21 @@ export default function PatientsPage() {
     if (items.length === 0) return;
     setCompleteItems(items);
     setCompleteDate(new Date().toISOString().split("T")[0]);
+    setCompletePassword("");
     setShowCompleteModal(true);
   };
 
   const handleCompleteConfirm = async () => {
     if (!selectedPatient || completeItems.length === 0) return;
+    if (!completePassword) {
+      toast.error(t("dentalChart.passwordNeeded"));
+      return;
+    }
     setCompleting(true);
     try {
       const res = await apiFetch("/api/patient-work/complete", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Confirm-Password": completePassword },
         body: JSON.stringify({
           patient_id: selectedPatient.id,
           treatment_date: completeDate,
@@ -1157,18 +1167,29 @@ export default function PatientsPage() {
     }
   };
 
-  const handleReopenRecord = async (h: ChartHistoryEntry) => {
-    if (!selectedPatient) return;
-    if (!window.confirm([h.procedure + (h.tooth ? ` (${h.tooth})` : ""), t("dentalChart.reopenConfirm")].join(": "))) return;
+  const handleReopenRecord = (h: ChartHistoryEntry) => {
+    setReopenPassword("");
+    setReopenError("");
+    setReopenTarget(h);
+  };
+
+  const confirmReopen = async () => {
+    const h = reopenTarget;
+    if (!selectedPatient || !h) return;
+    if (!reopenPassword) {
+      setReopenError(t("dentalChart.passwordNeeded"));
+      return;
+    }
+    setReopenError("");
     setReopeningRecordId(h.id);
     try {
       const res = await apiFetch("/api/patient-work/reopen", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Confirm-Password": reopenPassword },
         body: JSON.stringify({ patient_id: selectedPatient.id, items: [{ record_id: h.id }] }),
       });
       if (!res.ok) {
-        toast.error(await readApiError(res, t("dentalChart.reopenFailed")));
+        setReopenError(await readApiError(res, t("dentalChart.reopenFailed")));
         return;
       }
       const data = await res.json();
@@ -1176,8 +1197,9 @@ export default function PatientsPage() {
       setPlanToken((n) => n + 1);
       fetchPatientHistory(selectedPatient.id);
       toast.success(t("dentalChart.reopenedToast"));
+      setReopenTarget(null);
     } catch {
-      toast.error(t("dentalChart.reopenFailed"));
+      setReopenError(t("dentalChart.reopenFailed"));
     } finally {
       setReopeningRecordId(null);
     }
@@ -2547,6 +2569,74 @@ export default function PatientsPage() {
         </div>
       )}
 
+      {/* Back to planned: one record, signed with the user's password */}
+      {reopenTarget && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[70] p-4 animate-fade-in"
+          onClick={(e) => { if (e.target === e.currentTarget && reopeningRecordId === null) setReopenTarget(null); }}
+        >
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-scale-in">
+            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+              <h2 className="text-xl font-bold text-gray-900">{t("dentalChart.reopenTitle")}</h2>
+              <button onClick={() => setReopenTarget(null)} className="p-2 hover:bg-gray-100 rounded-lg" disabled={reopeningRecordId !== null}>
+                <FaTimes className="text-gray-500" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="flex items-center gap-3 rounded-xl border border-gray-100 px-4 py-2.5">
+                <span className="inline-block w-8 shrink-0 text-brand font-bold">{reopenTarget.tooth || "—"}</span>
+                <p className="min-w-0 flex-1 truncate text-sm font-medium text-gray-900">{reopenTarget.procedure}</p>
+                <span className="shrink-0 text-xs text-gray-500">
+                  {t("dentalChart.completed")} → {t("dentalChart.plannedStatus")}
+                </span>
+              </div>
+              <p className="text-sm text-gray-600">{t("dentalChart.reopenConfirm")}</p>
+              <div className="space-y-2 rounded-xl border border-gray-200 bg-gray-50 px-3 py-3">
+                <p className="flex items-start gap-2 text-xs text-gray-700">
+                  <FaLock className="mt-0.5 shrink-0 text-gray-400" aria-hidden />
+                  <span>{t("dentalChart.signedNote")}</span>
+                </p>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">{t("dentalChart.yourPassword")}</label>
+                  <input
+                    type="password"
+                    autoComplete="current-password"
+                    autoFocus
+                    value={reopenPassword}
+                    onChange={(e) => setReopenPassword(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter" && reopeningRecordId === null) void confirmReopen(); }}
+                    placeholder={t("dentalChart.passwordPlaceholder")}
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
+                  />
+                </div>
+              </div>
+              {reopenError && (
+                <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{reopenError}</p>
+              )}
+            </div>
+            <div className="p-6 border-t border-gray-100 flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setReopenTarget(null)} disabled={reopeningRecordId !== null}>
+                {t("common.cancel")}
+              </Button>
+              <Button
+                className="bg-amber-600 hover:bg-amber-700"
+                disabled={reopeningRecordId !== null || !reopenPassword}
+                onClick={() => void confirmReopen()}
+              >
+                {reopeningRecordId !== null ? (
+                  <><span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />Saving...</>
+                ) : (
+                  <>
+                    <FaUndo className="mr-2 rtl:mr-0 rtl:ml-2" />
+                    {t("dentalChart.reopen")}
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Complete Planned Work Modal */}
       {showCompleteModal && (
         <div
@@ -2585,12 +2675,30 @@ export default function PatientsPage() {
                   className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                 />
               </div>
+              <div className="space-y-2 rounded-xl border border-gray-200 bg-gray-50 px-3 py-3">
+                <p className="flex items-start gap-2 text-xs text-gray-700">
+                  <FaLock className="mt-0.5 shrink-0 text-gray-400" aria-hidden />
+                  <span>{t("dentalChart.signedNote")}</span>
+                </p>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">{t("dentalChart.yourPassword")}</label>
+                  <input
+                    type="password"
+                    autoComplete="current-password"
+                    value={completePassword}
+                    onChange={(e) => setCompletePassword(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter" && !completing) void handleCompleteConfirm(); }}
+                    placeholder={t("dentalChart.passwordPlaceholder")}
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
+                  />
+                </div>
+              </div>
             </div>
             <div className="p-6 border-t border-gray-100 flex justify-end gap-3">
               <Button variant="outline" onClick={() => setShowCompleteModal(false)} disabled={completing}>
                 {t("common.cancel")}
               </Button>
-              <Button className="bg-green-600 hover:bg-green-700" disabled={completing} onClick={handleCompleteConfirm}>
+              <Button className="bg-green-600 hover:bg-green-700" disabled={completing || !completePassword} onClick={handleCompleteConfirm}>
                 {completing ? (
                   <><span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />Saving...</>
                 ) : (

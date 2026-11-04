@@ -622,7 +622,12 @@
     "reopenHint": "Put this work back on the plan: it was marked done by mistake, or it has to be redone. Its price and its bill, if any, stay as they are.",
     "reopenConfirm": "Put back on the plan? It will no longer count as done. Its price and its bill, if any, are not changed.",
     "reopenedToast": "Work put back on the plan.",
-    "reopenFailed": "Could not put the work back on the plan."
+    "reopenFailed": "Could not put the work back on the plan.",
+    "yourPassword": "Your password *",
+    "passwordPlaceholder": "Re-enter your password to sign this change",
+    "passwordNeeded": "Re-enter your password to change the status.",
+    "signedNote": "A change to what the chart says was done is signed with your password and written to the audit log under your name: who, when, which tooth and procedure, from what to what.",
+    "reopenTitle": "Put work back on the plan"
   },
   "setPassword": {
     "title": "Set Your Password",
