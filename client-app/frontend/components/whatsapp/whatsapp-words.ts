@@ -7,6 +7,7 @@ import type {
   RuleKind,
   TemplateKind,
   WhatsAppMessage,
+  CustomTrigger,
 } from "@/lib/api/whatsapp";
 
 /*
@@ -17,7 +18,7 @@ import type {
  */
 
 /** The five built-in cards of the Reminders tab, in the order they are shown. */
-export const CARD_KINDS: Exclude<TemplateKind, "custom">[] = [
+export const CARD_KINDS: Exclude<TemplateKind, "custom" | "birthday">[] = [
   "appointment_reminder",
   "booking_confirmation",
   "unpaid_bill",
@@ -26,7 +27,7 @@ export const CARD_KINDS: Exclude<TemplateKind, "custom">[] = [
 ];
 
 /** The rules each card controls. */
-export const RULES_OF_CARD: Record<Exclude<TemplateKind, "custom">, RuleKind[]> = {
+export const RULES_OF_CARD: Record<Exclude<TemplateKind, "custom" | "birthday">, RuleKind[]> = {
   appointment_reminder: ["appointment_day_before", "appointment_morning_of"],
   booking_confirmation: ["booking_confirmation"],
   unpaid_bill: ["unpaid_bill"],
@@ -41,6 +42,7 @@ export const KIND_TITLE: Record<TemplateKind, string> = {
   recall: "Check-up recall",
   staff_daily: "Doctor's daily schedule",
   custom: "Your own reminder",
+  birthday: "Birthday greeting",
 };
 
 export const KIND_DESCRIPTION: Record<TemplateKind, string> = {
@@ -50,6 +52,7 @@ export const KIND_DESCRIPTION: Record<TemplateKind, string> = {
   recall: "When a patient has not visited for a while, inviting them to book a check-up.",
   staff_daily: "Every morning, each doctor with appointments that day gets their list.",
   custom: "A number of days after a procedure on the chart, in your own words.",
+  birthday: "On the patient's birthday each year, in your own words.",
 };
 
 export const RULE_TITLE: Record<RuleKind, string> = {
@@ -70,6 +73,22 @@ export const KIND_RECIPIENTS: Record<TemplateKind, string> = {
   recall: "Patients with no visit for the set months and nothing booked, in their language.",
   staff_daily: "Every doctor with a mobile number on their account, in the clinic's language.",
   custom: "The patient the procedure was done for, in their language. Once per procedure, never twice.",
+  birthday: "Every patient whose birthday it is, in their language. Once a year each.",
+};
+
+/** The two things a reminder of the clinic's own can start from. */
+export const TRIGGER_TITLE: Record<CustomTrigger, string> = {
+  procedure: "After a procedure",
+  birthday: "On the patient's birthday",
+};
+export const TRIGGER_HINT: Record<CustomTrigger, string> = {
+  procedure: "A set time after work is marked done on the chart, once per procedure.",
+  birthday: "Every year on the day, for a greeting or a gift.",
+};
+/** What {{1}}.. stand for in a reminder's wording, by trigger (mirrors PARAMS_BY_KIND on the API). */
+export const TRIGGER_PARAMS: Record<CustomTrigger, string[]> = {
+  procedure: ["patient_name", "procedure", "date", "clinic"],
+  birthday: ["patient_name", "clinic"],
 };
 
 /** What each {{n}} stands for, in words, per kind. */

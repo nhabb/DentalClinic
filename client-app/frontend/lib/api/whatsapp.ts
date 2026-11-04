@@ -51,7 +51,7 @@ export interface TestResult {
   connection: WhatsAppConnection;
 }
 
-export type TemplateKind = "appointment_reminder" | "booking_confirmation" | "unpaid_bill" | "recall" | "staff_daily" | "custom";
+export type TemplateKind = "appointment_reminder" | "booking_confirmation" | "unpaid_bill" | "recall" | "staff_daily" | "custom" | "birthday";
 export type MessageLanguage = "en" | "ar";
 export type MetaStatus = "draft" | "pending" | "approved" | "rejected" | "paused";
 
@@ -73,12 +73,17 @@ export interface WhatsAppTemplate {
   custom_reminder_id: number | string | null;
 }
 
-/** A reminder the clinic defines: N days after a procedure on the chart. */
+/** What starts a reminder the clinic defines. */
+export type CustomTrigger = "procedure" | "birthday";
+
+/** A reminder the clinic defines: N days after a procedure on the chart, or on the patient's birthday. */
 export interface CustomReminder {
   id: number | string;
   name: string;
-  /** The chart procedure it follows, or null for any. */
+  trigger: CustomTrigger;
+  /** procedure trigger: the chart procedure it follows, or null for any. */
   procedure: string | null;
+  /** procedure trigger: days after the treatment date; 0 for a birthday. */
   delay_days: number;
   at_time: string | null;
   skip_if_booked: boolean;
@@ -87,11 +92,30 @@ export interface CustomReminder {
 
 export interface CustomReminderInput {
   name: string;
+  trigger?: CustomTrigger;
   procedure?: string | null;
-  delay_days: number;
+  delay_days?: number;
   at_time?: string;
   skip_if_booked?: boolean;
   enabled?: boolean;
+  /** The wording to start with (on create); the suggested one when omitted. */
+  body_en?: string;
+  body_ar?: string;
+}
+
+/** What the AI made of a sentence: the fields of the form plus a wording, nothing saved. */
+export interface ReminderDraft {
+  name: string;
+  trigger: CustomTrigger;
+  procedure: string | null;
+  delay_days: number;
+  at_time: string;
+  skip_if_booked: boolean;
+  body_en: string;
+  body_ar: string;
+  summary: string;
+  /** Set when the wish needs something the system cannot do; the fields hold the closest it can. */
+  unsupported?: string;
 }
 
 export type RuleKind =
@@ -198,6 +222,8 @@ export const updateCustomReminder = (id: number | string, input: Partial<CustomR
   request<CustomReminder>(`/api/whatsapp/custom-reminders/${id}`, json("PUT", input));
 export const deleteCustomReminder = (id: number | string) =>
   request<{ deleted: true }>(`/api/whatsapp/custom-reminders/${id}`, json("DELETE"));
+export const draftCustomReminder = (text: string) =>
+  request<ReminderDraft>("/api/whatsapp/custom-reminders/draft", json("POST", { text }));
 
 export const runNow = () => request<RunResult>("/api/whatsapp/run", json("POST", {}));
 export const retryMessage = (id: number | string) =>

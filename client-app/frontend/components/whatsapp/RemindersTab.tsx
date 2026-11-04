@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { FaCheck, FaChevronDown, FaPaperPlane, FaPlus, FaSyncAlt, FaTrash, FaUndo } from "react-icons/fa";
+import { FaCheck, FaChevronDown, FaMagic, FaPaperPlane, FaPlus, FaSyncAlt, FaTrash, FaUndo } from "react-icons/fa";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/button";
 import { FormField, inputClass } from "@/components/ui/FormField";
@@ -16,6 +16,7 @@ import { errorText } from "@/lib/api/request";
 import {
   createCustomReminder,
   deleteCustomReminder,
+  draftCustomReminder,
   refreshTemplates,
   saveRule,
   saveTemplate,
@@ -23,6 +24,7 @@ import {
   updateCustomReminder,
   type CustomReminder,
   type CustomReminderInput,
+  type CustomTrigger,
   type MessageLanguage,
   type RuleInput,
   type RuleKind,
@@ -45,6 +47,9 @@ import {
   REJECTION_REASONS,
   RULE_TITLE,
   RULES_OF_CARD,
+  TRIGGER_HINT,
+  TRIGGER_PARAMS,
+  TRIGGER_TITLE,
   renderPreview,
   validateBody,
 } from "./whatsapp-words";
@@ -81,6 +86,7 @@ export function RemindersTab({ file, canEdit, canSend, running, lastRun, onRun, 
   const [submitting, setSubmitting] = useState(false);
   const [checking, setChecking] = useState(false);
   const [open, setOpen] = useState<TemplateKind | null>(() => (file.rules.some((r) => r.enabled) ? null : "appointment_reminder"));
+  const [editing, setEditing] = useState<CustomReminder | "new" | null>(null);
 
   const submitAll = async () => {
     setSubmitting(true);
@@ -140,12 +146,19 @@ export function RemindersTab({ file, canEdit, canSend, running, lastRun, onRun, 
             )}
           </div>
         </div>
-        {canSend && (
-          <Button size="sm" onClick={onRun} disabled={running || !connected}>
-            <FaPaperPlane className="me-2" />
-            {running ? "Sending…" : "Send what is due now"}
-          </Button>
-        )}
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
+          {canEdit && (
+            <Button size="sm" variant="outline" onClick={() => setEditing("new")}>
+              <FaPlus className="me-2" /> Add a reminder
+            </Button>
+          )}
+          {canSend && (
+            <Button size="sm" onClick={onRun} disabled={running || !connected}>
+              <FaPaperPlane className="me-2" />
+              {running ? "Sending…" : "Send what is due now"}
+            </Button>
+          )}
+        </div>
       </div>
 
       {!connected && (
@@ -199,6 +212,8 @@ export function RemindersTab({ file, canEdit, canSend, running, lastRun, onRun, 
         onTemplate={onTemplate}
         onTemplates={onTemplates}
         onReloadTemplates={onReloadTemplates}
+        editing={editing}
+        onEdit={setEditing}
       />
     </div>
   );
@@ -233,6 +248,8 @@ function CustomRemindersSection({
   onTemplate,
   onTemplates,
   onReloadTemplates,
+  editing,
+  onEdit,
 }: {
   reminders: CustomReminder[];
   templates: WhatsAppTemplate[];
@@ -242,8 +259,10 @@ function CustomRemindersSection({
   onTemplate: (t: WhatsAppTemplate) => void;
   onTemplates: (t: WhatsAppTemplate[]) => void;
   onReloadTemplates: () => void;
+  /** The reminder being edited, "new" for one being added (the + button is in the bar above). */
+  editing: CustomReminder | "new" | null;
+  onEdit: (e: CustomReminder | "new" | null) => void;
 }) {
-  const [editing, setEditing] = useState<CustomReminder | "new" | null>(null);
   const [open, setOpen] = useState<string | null>(null);
 
   const remove = async (r: CustomReminder) => {
@@ -271,24 +290,17 @@ function CustomRemindersSection({
 
   return (
     <section className="space-y-3">
-      <div className="flex flex-wrap items-end justify-between gap-2 pt-2">
-        <div>
-          <h3 className="text-sm font-semibold text-ink-900">Your own reminders</h3>
-          <p className="text-xs text-ink-500">
-            A message a set time after a procedure on the chart, in your words: one week after every root canal, six months after a
-            cleaning. Each goes once per procedure, never twice.
-          </p>
-        </div>
-        {canEdit && (
-          <Button size="sm" variant="outline" onClick={() => setEditing("new")}>
-            <FaPlus className="me-2" /> Add a reminder
-          </Button>
-        )}
+      <div className="pt-2">
+        <h3 className="text-sm font-semibold text-ink-900">Your own reminders</h3>
+        <p className="text-xs text-ink-500">
+          In your words, on your trigger: one week after every root canal, six months after a cleaning, a gift on the patient&apos;s
+          birthday. Describe it in a sentence and the assistant drafts it; you check and save.
+        </p>
       </div>
 
       {reminders.length === 0 ? (
         <p className="rounded-2xl border border-dashed border-ink-200 px-4 py-6 text-center text-sm text-ink-500">
-          No reminders of your own yet.
+          No reminders of your own yet.{canEdit ? " Use “Add a reminder” above." : ""}
         </p>
       ) : (
         reminders.map((r) => {
@@ -310,9 +322,11 @@ function CustomRemindersSection({
                 <button type="button" onClick={() => setOpen(isOpen ? null : String(r.id))} className="min-w-0 flex-1 text-start" aria-expanded={isOpen}>
                   <span className="flex flex-wrap items-center gap-2">
                     <span className="text-sm text-ink-700">
-                      {delayText(r.delay_days)} after {r.procedure ? `every ${r.procedure.toLowerCase()}` : "any procedure"}
+                      {r.trigger === "birthday"
+                        ? "On the patient's birthday, every year"
+                        : `${delayText(r.delay_days)} after ${r.procedure ? `every ${r.procedure.toLowerCase()}` : "any procedure"}`}
                       {r.at_time ? `, at ${r.at_time}` : ""}
-                      {r.skip_if_booked ? " · not if already booked" : ""}
+                      {r.trigger === "procedure" && r.skip_if_booked ? " · not if already booked" : ""}
                     </span>
                     <Badge tone={ready.tone} dot size="sm">
                       {r.enabled ? (ready.tone === "leaf" ? "Ready" : ready.tone === "honey" ? "Partly ready" : "Not ready") : "Off"}
@@ -321,7 +335,7 @@ function CustomRemindersSection({
                 </button>
                 {canEdit && (
                   <span className="flex shrink-0 items-center gap-1">
-                    <Button size="sm" variant="ghost" onClick={() => setEditing(r)}>
+                    <Button size="sm" variant="ghost" onClick={() => onEdit(r)}>
                       Edit
                     </Button>
                     <button type="button" onClick={() => void remove(r)} className="press rounded-lg p-2 text-ink-400 hover:bg-brick-50 hover:text-brick-700" aria-label="Remove">
@@ -340,7 +354,7 @@ function CustomRemindersSection({
                   </p>
                   <div>
                     <h4 className="mb-1 text-xs font-semibold uppercase tracking-wide text-ink-500">Who receives it</h4>
-                    <p className="text-sm text-ink-700">{KIND_RECIPIENTS.custom}</p>
+                    <p className="text-sm text-ink-700">{KIND_RECIPIENTS[r.trigger === "birthday" ? "birthday" : "custom"]}</p>
                   </div>
                   <div>
                     <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-500">Wording</h4>
@@ -356,14 +370,14 @@ function CustomRemindersSection({
       {editing && (
         <CustomReminderModal
           reminder={editing === "new" ? null : editing}
-          onClose={() => setEditing(null)}
+          onClose={() => onEdit(null)}
           onSaved={(saved, created) => {
             onChange(created ? [...reminders, saved] : reminders.map((x) => (String(x.id) === String(saved.id) ? saved : x)));
             if (created) {
               onReloadTemplates();
               setOpen(String(saved.id));
             }
-            setEditing(null);
+            onEdit(null);
           }}
         />
       )}
@@ -380,33 +394,84 @@ function CustomReminderModal({
   onClose: () => void;
   onSaved: (saved: CustomReminder, created: boolean) => void;
 }) {
-  const initial = reminder ? splitDelay(reminder.delay_days) : { amount: 7, unit: "days" as Unit };
+  const initial = reminder && reminder.trigger === "procedure" ? splitDelay(reminder.delay_days) : { amount: 7, unit: "days" as Unit };
+  const [trigger, setTrigger] = useState<CustomTrigger>(reminder?.trigger ?? "procedure");
   const [name, setName] = useState(reminder?.name ?? "");
   const [procedure, setProcedure] = useState(reminder?.procedure ?? "");
   const [amount, setAmount] = useState(initial.amount);
   const [unit, setUnit] = useState<Unit>(initial.unit);
   const [atTime, setAtTime] = useState(reminder?.at_time ?? "10:00");
   const [skipIfBooked, setSkipIfBooked] = useState(reminder?.skip_if_booked ?? false);
+  const [bodyEn, setBodyEn] = useState("");
+  const [bodyAr, setBodyAr] = useState("");
+  const [wish, setWish] = useState("");
+  const [drafting, setDrafting] = useState(false);
+  const [draftNote, setDraftNote] = useState<{ tone: "leaf" | "honey"; text: string } | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const perUnit = UNITS.find(([u]) => u === unit)?.[1] ?? 1;
   const days = Math.max(1, Math.round(amount)) * perUnit;
+  const params = TRIGGER_PARAMS[trigger];
+  const enCheck = bodyEn.trim() ? validateBody(bodyEn, params) : {};
+  const arCheck = bodyAr.trim() ? validateBody(bodyAr, params) : {};
+
+  /** One sentence in, the whole form out; the admin still reads it and presses Add. */
+  const draft = async () => {
+    if (wish.trim().length < 5) return setError("Describe the reminder in a few words first.");
+    setError("");
+    setDraftNote(null);
+    setDrafting(true);
+    try {
+      const d = await draftCustomReminder(wish);
+      setTrigger(d.trigger);
+      setName(d.name);
+      setProcedure(d.procedure ?? "");
+      if (d.trigger === "procedure") {
+        const split = splitDelay(d.delay_days);
+        setAmount(split.amount);
+        setUnit(split.unit);
+      }
+      setAtTime(d.at_time);
+      setSkipIfBooked(d.skip_if_booked);
+      setBodyEn(d.body_en);
+      setBodyAr(d.body_ar);
+      setDraftNote(
+        d.unsupported
+          ? { tone: "honey", text: d.unsupported }
+          : { tone: "leaf", text: d.summary ? `Drafted: ${d.summary} Check it below, change anything, then add it.` : "Drafted. Check it below, change anything, then add it." },
+      );
+    } catch (err) {
+      setError(errorText(err, "The assistant could not draft it; fill the form by hand."));
+    } finally {
+      setDrafting(false);
+    }
+  };
 
   const save = async () => {
     setError("");
     if (!name.trim()) return setError("Give the reminder a name.");
-    if (!Number.isFinite(amount) || amount < 1) return setError("The delay must be at least 1.");
-    if (days > 730) return setError("The delay can be at most two years.");
+    if (trigger === "procedure") {
+      if (!Number.isFinite(amount) || amount < 1) return setError("The delay must be at least 1.");
+      if (days > 730) return setError("The delay can be at most two years.");
+    }
+    if (enCheck.error) return setError(`English wording: ${enCheck.error}`);
+    if (arCheck.error) return setError(`Arabic wording: ${arCheck.error}`);
     const input: CustomReminderInput = {
       name: name.trim(),
-      procedure: procedure || null,
-      delay_days: days,
       at_time: atTime || "10:00",
-      skip_if_booked: skipIfBooked,
+      ...(trigger === "procedure" ? { procedure: procedure || null, delay_days: days, skip_if_booked: skipIfBooked } : {}),
     };
     setSaving(true);
     try {
-      const saved = reminder ? await updateCustomReminder(reminder.id, input) : await createCustomReminder({ ...input, enabled: true });
+      const saved = reminder
+        ? await updateCustomReminder(reminder.id, input)
+        : await createCustomReminder({
+            ...input,
+            trigger,
+            enabled: true,
+            ...(bodyEn.trim() ? { body_en: bodyEn.trim() } : {}),
+            ...(bodyAr.trim() ? { body_ar: bodyAr.trim() } : {}),
+          });
       toast.success(reminder ? "Reminder saved." : "Reminder added. Now check its wording and submit it to WhatsApp.");
       onSaved(saved, !reminder);
     } catch (err) {
@@ -416,56 +481,142 @@ function CustomReminderModal({
     }
   };
 
+  const placeholderHint = params.map((p, i) => `{{${i + 1}}} ${PLACEHOLDER_LABEL[p]?.toLowerCase() ?? p}`).join(" · ");
+
   return (
     <Modal
       isOpen
       onClose={() => !saving && onClose()}
       title={reminder ? "Edit the reminder" : "A reminder of your own"}
-      description="It goes to the patient a set time after the procedure is marked done on their chart, once per procedure."
-      maxWidth="max-w-md"
+      description={reminder ? TRIGGER_HINT[reminder.trigger] : "Say it in a sentence and let the assistant draft it, or fill the form yourself."}
+      maxWidth="max-w-lg"
       footer={
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose} disabled={saving}>
             Cancel
           </Button>
-          <Button onClick={() => void save()} disabled={saving}>
+          <Button onClick={() => void save()} disabled={saving || drafting}>
             {saving ? "Saving…" : reminder ? "Save" : "Add reminder"}
           </Button>
         </div>
       }
     >
       <div className="space-y-4">
+        {!reminder && (
+          <div className="rounded-2xl border border-brand-200 bg-brand-50/60 p-3">
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-800" htmlFor="reminder-wish">
+              Describe it in your words
+            </label>
+            <textarea
+              id="reminder-wish"
+              value={wish}
+              onChange={(e) => setWish(e.target.value)}
+              rows={2}
+              className={cn(inputClass, "resize-y")}
+              placeholder="A week after every root canal, ask how they feel · On their birthday, offer a free cleaning"
+              autoFocus
+            />
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+              <span className="text-xs text-ink-500">Drafting sends and saves nothing; you check the result below.</span>
+              <Button size="sm" variant="outline" onClick={() => void draft()} disabled={drafting || wish.trim().length < 5}>
+                <FaMagic className="me-2" />
+                {drafting ? "Drafting…" : "Draft it for me"}
+              </Button>
+            </div>
+            {draftNote && (
+              <p className={cn("mt-2 rounded-lg px-3 py-2 text-xs ring-1 ring-inset", draftNote.tone === "leaf" ? "bg-leaf-50 text-leaf-800 ring-leaf-200" : "bg-honey-50 text-honey-800 ring-honey-200")}>
+                {draftNote.text}
+              </p>
+            )}
+          </div>
+        )}
+
         <FormField label="Name" required hint="For your own eyes, e.g. After root canal">
-          <input value={name} onChange={(e) => setName(e.target.value)} className={inputClass} autoFocus />
+          <input value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
         </FormField>
-        <FormField label="After which procedure" hint="Matches what the chart records; leave it as any to follow every procedure">
-          <select value={procedure} onChange={(e) => setProcedure(e.target.value)} className={inputClass}>
-            <option value="">Any procedure</option>
-            {PROCEDURES.map((p) => (
-              <option key={p} value={p}>
-                {p}
-              </option>
-            ))}
-          </select>
-        </FormField>
-        <div className="grid grid-cols-3 gap-3">
-          <FormField label="How long after" required>
-            <input type="number" min={1} value={amount} onChange={(e) => setAmount(Number(e.target.value))} className={inputClass} />
-          </FormField>
-          <FormField label=" ">
-            <select value={unit} onChange={(e) => setUnit(e.target.value as Unit)} className={inputClass}>
-              {UNITS.map(([u]) => (
-                <option key={u} value={u}>
-                  {u}
-                </option>
+
+        <div>
+          <div className="mb-1 text-sm font-medium text-ink-800">When it goes out</div>
+          {reminder ? (
+            <p className="text-sm text-ink-600">{TRIGGER_TITLE[reminder.trigger]}. The trigger cannot change; add a new reminder for another one.</p>
+          ) : (
+            <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Trigger">
+              {(Object.keys(TRIGGER_TITLE) as CustomTrigger[]).map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  role="radio"
+                  aria-checked={trigger === t}
+                  onClick={() => setTrigger(t)}
+                  className={cn(
+                    "press rounded-xl border px-3 py-2 text-start transition-colors",
+                    trigger === t ? "border-brand-500 bg-brand-50 ring-1 ring-brand-500" : "border-ink-200 hover:bg-ink-50",
+                  )}
+                >
+                  <span className="block text-sm font-medium text-ink-900">{TRIGGER_TITLE[t]}</span>
+                  <span className="block text-xs text-ink-500">{TRIGGER_HINT[t]}</span>
+                </button>
               ))}
-            </select>
-          </FormField>
-          <FormField label="At (clinic time)">
-            <input type="time" value={atTime} onChange={(e) => setAtTime(e.target.value)} className={inputClass} />
-          </FormField>
+            </div>
+          )}
         </div>
-        <Switch checked={skipIfBooked} onChange={setSkipIfBooked} label="Skip patients who already have an appointment booked" size="sm" />
+
+        {trigger === "procedure" && (
+          <>
+            <FormField label="After which procedure" hint="Matches what the chart records; leave it as any to follow every procedure">
+              <select value={procedure} onChange={(e) => setProcedure(e.target.value)} className={inputClass}>
+                <option value="">Any procedure</option>
+                {PROCEDURES.map((p) => (
+                  <option key={p} value={p}>
+                    {p}
+                  </option>
+                ))}
+              </select>
+            </FormField>
+            <div className="grid grid-cols-3 gap-3">
+              <FormField label="How long after" required>
+                <input type="number" min={1} value={amount} onChange={(e) => setAmount(Number(e.target.value))} className={inputClass} />
+              </FormField>
+              <FormField label=" ">
+                <select value={unit} onChange={(e) => setUnit(e.target.value as Unit)} className={inputClass}>
+                  {UNITS.map(([u]) => (
+                    <option key={u} value={u}>
+                      {u}
+                    </option>
+                  ))}
+                </select>
+              </FormField>
+              <FormField label="At (clinic time)">
+                <input type="time" value={atTime} onChange={(e) => setAtTime(e.target.value)} className={inputClass} />
+              </FormField>
+            </div>
+            <Switch checked={skipIfBooked} onChange={setSkipIfBooked} label="Skip patients who already have an appointment booked" size="sm" />
+          </>
+        )}
+        {trigger === "birthday" && (
+          <FormField label="At (clinic time)" hint="Patients with no birth date on file are not reached">
+            <input type="time" value={atTime} onChange={(e) => setAtTime(e.target.value)} className={cn(inputClass, "max-w-[10rem]")} />
+          </FormField>
+        )}
+
+        {!reminder && (
+          <div className="space-y-3">
+            <div>
+              <div className="text-sm font-medium text-ink-800">Wording</div>
+              <p className="text-xs text-ink-500">
+                Leave empty to start from the suggested wording; you can edit, preview and submit it to WhatsApp after adding. Placeholders:{" "}
+                {placeholderHint}.
+              </p>
+            </div>
+            <FormField label="English" error={enCheck.error} hint={enCheck.warning}>
+              <textarea value={bodyEn} onChange={(e) => setBodyEn(e.target.value)} rows={3} className={cn(inputClass, "resize-y", enCheck.error && "border-brick-400")} maxLength={BODY_MAX} />
+            </FormField>
+            <FormField label="العربية" error={arCheck.error} hint={arCheck.warning}>
+              <textarea value={bodyAr} onChange={(e) => setBodyAr(e.target.value)} rows={3} dir="rtl" className={cn(inputClass, "resize-y", arCheck.error && "border-brick-400")} maxLength={BODY_MAX} />
+            </FormField>
+          </div>
+        )}
+
         {error && <p className="rounded-lg border border-brick-200 bg-brick-50 px-3 py-2 text-sm text-brick-800">{error}</p>}
       </div>
     </Modal>
