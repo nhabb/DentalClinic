@@ -10,6 +10,7 @@ import type {
   DateField,
   RuleDefinition,
   RuleFilters,
+  RuleLimits,
   TriggerType,
 } from "@/lib/api/whatsapp";
 
@@ -116,7 +117,19 @@ export const EMPTY_FILTERS: RuleFilters = {
   skip_if_booked: false,
   seen_within_months: null,
   not_seen_for_months: null,
+  gender: null,
+  not_procedures: [],
+  min_visits: null,
+  max_visits: null,
+  birth_months: [],
+  joined_within_months: null,
+  joined_before_months: null,
+  missed_within_months: null,
+  has_planned_work: null,
+  not_messaged_within_days: null,
+  no_booking_within_days: null,
 };
+export const EMPTY_LIMITS: RuleLimits = { send_weekdays: [], active_from: null, active_until: null, max_per_run: null };
 
 /** What {{1}}.. stand for in a rule's wording (mirrors paramsOfRule on the API). */
 export function paramsOfRule(def: RuleDefinition): string[] {

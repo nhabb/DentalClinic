@@ -97,12 +97,32 @@ export interface RuleFilters {
   skip_if_booked: boolean;
   seen_within_months: number | null;
   not_seen_for_months: number | null;
+  gender: string | null;
+  not_procedures: string[];
+  min_visits: number | null;
+  max_visits: number | null;
+  birth_months: number[];
+  joined_within_months: number | null;
+  joined_before_months: number | null;
+  missed_within_months: number | null;
+  has_planned_work: boolean | null;
+  not_messaged_within_days: number | null;
+  no_booking_within_days: number | null;
+}
+
+/** When the rule may fire at all, and how many it may reach at once. */
+export interface RuleLimits {
+  send_weekdays: number[];
+  active_from: string | null;
+  active_until: string | null;
+  max_per_run: number | null;
 }
 
 export interface RuleDefinition {
   trigger: RuleTrigger;
   audience: "patients" | "staff";
   filters: RuleFilters;
+  limits: RuleLimits;
 }
 
 /** A reminder the clinic defines, built from parts. */
