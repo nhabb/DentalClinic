@@ -14,6 +14,7 @@ export const ADMIN_SCREEN_PERMISSION: Readonly<Record<string, string>> = {
   "/admin/billing": "billing:read",
   "/admin/payments": "billing:read",
   "/admin/roles": "staff:read",
+  "/admin/whatsapp": "whatsapp:read",
 };
 
 /** The permission a path needs, or null when any staff member may open it. */

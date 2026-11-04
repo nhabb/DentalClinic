@@ -57,7 +57,8 @@
     "payments": "Payments",
     "billing": "Billing",
     "quotes": "Quotes",
-    "roles": "Roles & access"
+    "roles": "Roles & access",
+    "whatsapp": "WhatsApp"
   },
   "continueLogin": {
     "title": "Complete Your Profile",
@@ -564,7 +565,11 @@
     "copyFailed": "Could not copy the link.",
     "inviteNeedsEmail": "This patient has no email address. Add one first.",
     "inviteFailed": "Could not send the setup link.",
-    "noPortalAccess": "Password not set yet"
+    "noPortalAccess": "Password not set yet",
+    "whatsappMessages": "WhatsApp messages",
+    "whatsappMessagesHint": "Reminders and confirmations go to this number. Switch off if the patient asked not to receive them.",
+    "whatsappOff": "WhatsApp messages off",
+    "whatsappOn": "Receives WhatsApp reminders"
   },
   "dentalChart": {
     "tab": "Dental Chart",
@@ -717,7 +722,10 @@
     "accessDesc": "Staff accounts, roles and what each role may do",
     "openAccess": "Manage roles & access",
     "readOnly": "Your role can view these details but not change them.",
-    "loadFailed": "Could not load the settings."
+    "loadFailed": "Could not load the settings.",
+    "whatsapp": "WhatsApp reminders",
+    "whatsappDesc": "Connect the clinic's number and choose what patients and doctors receive",
+    "openWhatsapp": "Open WhatsApp"
   },
   "expenses": {
     "tableShows": "Table shows",
@@ -1096,5 +1104,12 @@
     "s5Body": "If we change the cookies we use, we will update this page and its date. If a change needs your consent, the cookie banner will ask you again.",
     "changeChoice": "Change the cookies you allow on this browser.",
     "contactBody": "Questions about cookies or your data? Contact us at contact@brightsmile.com or call +961 1 234 567."
+  },
+  "whatsapp": {
+    "subtitle": "Reminders and messages from the clinic's number",
+    "tabConnection": "Connection",
+    "tabReminders": "Reminders",
+    "tabMessages": "Messages",
+    "loadFailed": "Could not load the WhatsApp settings."
   }
 }

@@ -18,8 +18,7 @@ import {
   FaMoneyBillWave,
   FaFileInvoiceDollar,
   FaBars,
-  FaEllipsisH,
-} from "react-icons/fa";
+  FaEllipsisH, FaWhatsapp } from "react-icons/fa";
 import { cn } from "@/lib/utils";
 
 type ActivePage =
@@ -32,6 +31,7 @@ type ActivePage =
   | "expenses"
   | "billing"
   | "payments"
+  | "whatsapp"
   | "roles";
 
 type Props = {
@@ -57,6 +57,7 @@ const navItems = [
   { id: "expenses",     href: "/admin/expenses",     icon: FaMoneyBillWave,     labelKey: "nav.expenses"     },
   { id: "billing",      href: "/admin/billing",      icon: FaFileInvoiceDollar, labelKey: "nav.billing"      },
   { id: "payments",     href: "/admin/payments",     icon: FaCashRegister,      labelKey: "nav.payments"     },
+  { id: "whatsapp",     href: "/admin/whatsapp",     icon: FaWhatsapp,          labelKey: "nav.whatsapp"     },
 ] as const;
 
 // The per-section analytics pages are not listed here: each section's own

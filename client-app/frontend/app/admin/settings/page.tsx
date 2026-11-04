@@ -19,8 +19,7 @@ import {
   FaTrash,
   FaUserShield,
   FaEdit,
-  FaChevronRight,
-} from "react-icons/fa";
+  FaChevronRight, FaWhatsapp } from "react-icons/fa";
 import AdminSidebar from "@/components/ui/AdminSidebar";
 import { AdminPageHeader } from "@/components/ui/AdminPageHeader";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
@@ -114,6 +113,7 @@ export default function SettingsPage() {
                 canDelete={can("branches:delete")}
                 onChanged={load}
               />
+              {can("whatsapp:read") && <WhatsAppCard />}
               {can("staff:read") && <AccessCard />}
             </div>
           )}
@@ -478,6 +478,28 @@ function BranchesCard({
 }
 
 // ── Roles & access: a way into the page that handles it ───────────────────────
+
+function WhatsAppCard() {
+  const { t } = useTranslation();
+  return (
+    <Link href="/admin/whatsapp" className="group block">
+      <Card interactive>
+        <CardHeader
+          icon={<FaWhatsapp />}
+          title={t("settings.whatsapp")}
+          subtitle={t("settings.whatsappDesc")}
+          action={
+            <span className="flex items-center gap-2 text-sm font-medium text-brand-700">
+              {t("settings.openWhatsapp")}
+              <FaChevronRight className="size-3 transition-transform group-hover:translate-x-0.5 rtl:rotate-180" />
+            </span>
+          }
+          className="border-b-0"
+        />
+      </Card>
+    </Link>
+  );
+}
 
 function AccessCard() {
   const { t } = useTranslation();

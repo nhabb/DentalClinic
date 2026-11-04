@@ -28,6 +28,8 @@ const TYPE_BAR: Record<string, string> = {
   appointment_completed: "bg-accent-blue-500",
   appointment_cancelled: "bg-brick-500",
   appointment_no_show: "bg-honey-500",
+  whatsapp_failed: "bg-brick-500",
+  whatsapp_connection_error: "bg-brick-500",
 };
 
 const POLL_MS = 60_000;

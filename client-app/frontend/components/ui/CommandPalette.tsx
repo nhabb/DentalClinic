@@ -13,8 +13,7 @@ import {
   FaMoneyBillWave,
   FaFileInvoiceDollar,
   FaPlus,
-  FaSearch,
-} from "react-icons/fa";
+  FaSearch, FaWhatsapp } from "react-icons/fa";
 
 interface NavCommand {
   key: string;
@@ -36,6 +35,13 @@ const NAV_COMMANDS: NavCommand[] = [
     icon: FaMoneyBillWave,
     href: "/admin/payments",
     keywords: ["take payment", "till", "takings", "receipts", "cash"],
+  },
+  {
+    key: "whatsapp",
+    label: "WhatsApp reminders",
+    icon: FaWhatsapp,
+    href: "/admin/whatsapp",
+    keywords: ["reminders", "messages", "whatsapp", "sms"],
   },
   {
     key: "quotes",

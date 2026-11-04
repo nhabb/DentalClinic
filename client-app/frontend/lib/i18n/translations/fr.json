@@ -57,7 +57,8 @@
     "payments": "Paiements",
     "billing": "Facturation",
     "quotes": "Devis",
-    "roles": "Rôles et accès"
+    "roles": "Rôles et accès",
+    "whatsapp": "WhatsApp"
   },
   "continueLogin": {
     "title": "Complétez votre profil",
@@ -564,7 +565,11 @@
     "copyFailed": "Impossible de copier le lien.",
     "inviteNeedsEmail": "Ce patient n'a pas d'adresse e-mail. Ajoutez-en une d'abord.",
     "inviteFailed": "Impossible d'envoyer le lien.",
-    "noPortalAccess": "Mot de passe non défini"
+    "noPortalAccess": "Mot de passe non défini",
+    "whatsappMessages": "Messages WhatsApp",
+    "whatsappMessagesHint": "Les rappels et confirmations vont à ce numéro. Désactivez si le patient a demandé à ne pas en recevoir.",
+    "whatsappOff": "Messages WhatsApp désactivés",
+    "whatsappOn": "Reçoit les rappels WhatsApp"
   },
   "dentalChart": {
     "tab": "Schéma dentaire",
@@ -717,7 +722,10 @@
     "accessDesc": "Comptes du personnel, rôles et droits de chaque rôle",
     "openAccess": "Gérer les rôles et accès",
     "readOnly": "Votre rôle peut consulter ces informations sans les modifier.",
-    "loadFailed": "Impossible de charger les paramètres."
+    "loadFailed": "Impossible de charger les paramètres.",
+    "whatsapp": "Rappels WhatsApp",
+    "whatsappDesc": "Connecter le numéro de la clinique et choisir ce que reçoivent patients et médecins",
+    "openWhatsapp": "Ouvrir WhatsApp"
   },
   "expenses": {
     "tableShows": "Le tableau affiche",
@@ -1096,5 +1104,12 @@
     "s5Body": "Si nous modifions les cookies utilisés, nous mettrons à jour cette page et sa date. Si un changement nécessite votre consentement, le bandeau vous le redemandera.",
     "changeChoice": "Modifier les cookies autorisés sur ce navigateur.",
     "contactBody": "Des questions sur les cookies ou vos données ? Écrivez-nous à contact@brightsmile.com ou appelez le +961 1 234 567."
+  },
+  "whatsapp": {
+    "subtitle": "Rappels et messages depuis le numéro de la clinique",
+    "tabConnection": "Connexion",
+    "tabReminders": "Rappels",
+    "tabMessages": "Messages",
+    "loadFailed": "Impossible de charger les paramètres WhatsApp."
   }
 }

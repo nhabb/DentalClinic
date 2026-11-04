@@ -1,5 +1,6 @@
 "use client";
 import { confirmPasswordHeaders } from "@/components/billing/PasswordConfirmModal";
+import { Switch } from "@/components/ui/Switch";
 import { apiFetch } from '@/lib/api/client';
 import { toast } from 'sonner';
 
@@ -100,6 +101,8 @@ interface Patient {
   maritalStatus: string;
   nationality: string;
   preferredLanguage: string;
+  /** The patient asked for no WhatsApp messages; reminders are skipped. */
+  whatsappOptOut: boolean;
   photoUrl?: string;
   /** Account was created by staff and the patient has not chosen a password yet. */
   mustSetPassword: boolean;
@@ -348,6 +351,7 @@ function mapPatientRow(
     maritalStatus: p.marital_status || "",
     nationality: p.nationality || "",
     preferredLanguage: p.preferred_language || "",
+    whatsappOptOut: p.whatsapp_opt_out === true,
     photoUrl: userEmbed?.avatar_url || user?.avatar_url || getStoredPhoto(userEmbed?.email || user?.email || ""),
     mustSetPassword: userEmbed?.must_set_password === true || user?.must_set_password === true,
   };
@@ -438,6 +442,7 @@ export default function PatientsPage() {
     maritalStatus: "",
     nationality: "",
     preferredLanguage: "",
+    whatsappOptOut: false,
   });
   const [editPatientSaving, setEditPatientSaving] = useState(false);
 
@@ -746,6 +751,7 @@ export default function PatientsPage() {
       maritalStatus: patient.maritalStatus,
       nationality: patient.nationality,
       preferredLanguage: patient.preferredLanguage,
+      whatsappOptOut: patient.whatsappOptOut,
     });
     setShowEditPatientModal(true);
   };
@@ -781,6 +787,7 @@ export default function PatientsPage() {
           marital_status: blank(f.maritalStatus),
           nationality: blank(f.nationality),
           preferred_language: blank(f.preferredLanguage),
+          whatsapp_opt_out: f.whatsappOptOut,
         }),
       });
       if (!profile.ok) {
@@ -822,6 +829,7 @@ export default function PatientsPage() {
         maritalStatus: f.maritalStatus,
         nationality: f.nationality,
         preferredLanguage: f.preferredLanguage,
+        whatsappOptOut: f.whatsappOptOut,
       };
       setSelectedPatient(updatedPatient);
       list.setRows((prev) => prev.map((p) => p.id === selectedPatient.id ? updatedPatient : p));
@@ -1847,6 +1855,7 @@ export default function PatientsPage() {
                               "Speaks",
                               PATIENT_LANGUAGES.find((l) => l.value === selectedPatient.preferredLanguage)?.label,
                             ],
+                            ["WhatsApp", selectedPatient.whatsappOptOut ? t("patients.whatsappOff") : selectedPatient.phone ? t("patients.whatsappOn") : undefined],
                           ] as [string, string | undefined][]
                         )
                           .filter(([, value]) => !!value)
@@ -3113,6 +3122,14 @@ export default function PatientsPage() {
                         <option key={l.value} value={l.value}>{l.label}</option>
                       ))}
                     </select>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <Switch
+                      checked={!editPatientForm.whatsappOptOut}
+                      onChange={(on) => setEditPatientForm((f) => ({ ...f, whatsappOptOut: !on }))}
+                      label={t("patients.whatsappMessages")}
+                      description={t("patients.whatsappMessagesHint")}
+                    />
                   </div>
                 </div>
               </FieldGroup>

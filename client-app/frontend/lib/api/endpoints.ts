@@ -276,6 +276,30 @@ export const ENDPOINTS = {
   // ADMIN - SETTINGS
   // ============================================
   // The /admin/settings page; wrappers in lib/api/settings.ts.
+  WHATSAPP: {
+    /** GET (whatsapp:read); PUT (whatsapp:edit) phone_number_id, waba_id, access_token, app_secret, default_country_code, default_language; DELETE (whatsapp:edit) */
+    CONNECTION: "/api/whatsapp/connection",
+    /** POST (whatsapp:send) { to? } - check with Meta, send hello_world */
+    TEST: "/api/whatsapp/connection/test",
+    /** GET - every wording with Meta's status */
+    TEMPLATES: "/api/whatsapp/templates",
+    /** PUT (whatsapp:edit) { body } */
+    TEMPLATE: (id: string | number) => `/api/whatsapp/templates/${id}`,
+    /** POST (whatsapp:edit) { ids? } - submit drafts to Meta */
+    TEMPLATES_SUBMIT: "/api/whatsapp/templates/submit",
+    /** POST (whatsapp:edit) - read Meta's verdicts */
+    TEMPLATES_REFRESH: "/api/whatsapp/templates/refresh-status",
+    /** GET - every rule */
+    RULES: "/api/whatsapp/rules",
+    /** PUT (whatsapp:edit) { enabled?, at_time?, days_after_due?, repeat_every_days?, months_since_visit?, max_per_run? } */
+    RULE: (kind: string) => `/api/whatsapp/rules/${kind}`,
+    /** GET ?status ?kind ?search ?from ?to ?page ?limit ?with_counts - the log */
+    MESSAGES: "/api/whatsapp/messages",
+    /** POST (whatsapp:send) - send what is due now */
+    RUN: "/api/whatsapp/run",
+    /** POST (whatsapp:send) */
+    MESSAGE_RETRY: (id: string | number) => `/api/whatsapp/messages/${id}/retry`,
+  },
   SETTINGS: {
     /** GET; PATCH (clinic:settings) - name, legal name, contact, timezone, currency */
     ORGANIZATION: "/api/organizations/me",
