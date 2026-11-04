@@ -37,6 +37,7 @@ const KINDS = [
   ["unpaid_bill", "Bill reminders"],
   ["recall", "Check-up recalls"],
   ["staff_daily", "Doctors' days"],
+  ["custom", "Your own reminders"],
 ] as const;
 type Window = "today" | "week" | "month" | "all";
 
@@ -244,7 +245,7 @@ export function MessagesTable({ enabled, connected, anyRuleOn, canSend, status, 
                       </div>
                     </td>
                     <td className="px-4 py-2.5 text-ink-800">
-                      {KIND_SHORT[m.kind] ?? m.kind}
+                      {m.kind === "custom" && m.custom_reminder_name ? m.custom_reminder_name : (KIND_SHORT[m.kind] ?? m.kind)}
                       {m.appointment_date && (
                         <Link href={`/admin/appointments?date=${m.appointment_date}`} className="block text-xs text-brand-700 hover:underline">
                           Appointment on {formatDateBeirut(m.appointment_date)}

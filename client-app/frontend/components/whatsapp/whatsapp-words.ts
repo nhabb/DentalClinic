@@ -1,6 +1,7 @@
 import type { BadgeTone } from "@/components/ui/Badge";
 import type {
   MessageLanguage,
+  MessageKind,
   MessageStatus,
   MetaStatus,
   RuleKind,
@@ -15,8 +16,8 @@ import type {
  * a number. English here; nav, tab and patient-file labels are i18n keys.
  */
 
-/** The five cards of the Reminders tab, in the order they are shown. */
-export const CARD_KINDS: TemplateKind[] = [
+/** The five built-in cards of the Reminders tab, in the order they are shown. */
+export const CARD_KINDS: Exclude<TemplateKind, "custom">[] = [
   "appointment_reminder",
   "booking_confirmation",
   "unpaid_bill",
@@ -25,7 +26,7 @@ export const CARD_KINDS: TemplateKind[] = [
 ];
 
 /** The rules each card controls. */
-export const RULES_OF_CARD: Record<TemplateKind, RuleKind[]> = {
+export const RULES_OF_CARD: Record<Exclude<TemplateKind, "custom">, RuleKind[]> = {
   appointment_reminder: ["appointment_day_before", "appointment_morning_of"],
   booking_confirmation: ["booking_confirmation"],
   unpaid_bill: ["unpaid_bill"],
@@ -39,6 +40,7 @@ export const KIND_TITLE: Record<TemplateKind, string> = {
   unpaid_bill: "Unpaid bill reminder",
   recall: "Check-up recall",
   staff_daily: "Doctor's daily schedule",
+  custom: "Your own reminder",
 };
 
 export const KIND_DESCRIPTION: Record<TemplateKind, string> = {
@@ -47,6 +49,7 @@ export const KIND_DESCRIPTION: Record<TemplateKind, string> = {
   unpaid_bill: "When a bill passes its due date, with the amount and bill number; repeats while unpaid.",
   recall: "When a patient has not visited for a while, inviting them to book a check-up.",
   staff_daily: "Every morning, each doctor with appointments that day gets their list.",
+  custom: "A number of days after a procedure on the chart, in your own words.",
 };
 
 export const RULE_TITLE: Record<RuleKind, string> = {
@@ -66,6 +69,7 @@ export const KIND_RECIPIENTS: Record<TemplateKind, string> = {
   unpaid_bill: "The patient who owes the bill, in their language.",
   recall: "Patients with no visit for the set months and nothing booked, in their language.",
   staff_daily: "Every doctor with a mobile number on their account, in the clinic's language.",
+  custom: "The patient the procedure was done for, in their language. Once per procedure, never twice.",
 };
 
 /** What each {{n}} stands for, in words, per kind. */
@@ -81,6 +85,7 @@ export const PLACEHOLDER_LABEL: Record<string, string> = {
   doctor_name: "Doctor name",
   count: "Number of appointments",
   list: "The day's list",
+  procedure: "Procedure",
 };
 
 /** Sample values for the preview, per language. */
@@ -96,6 +101,7 @@ export const SAMPLE: Record<string, Record<MessageLanguage, string>> = {
   doctor_name: { en: "Dr. Karim Nasser", ar: "د. كريم نصر" },
   count: { en: "4", ar: "4" },
   list: { en: "09:00 Maya Haddad (check-up) · 10:30 Ali Nasser (filling)", ar: "09:00 مايا حداد · 10:30 علي نصر" },
+  procedure: { en: "Root Canal", ar: "علاج العصب" },
 };
 
 /** The wording with its placeholders filled with sample values. */
@@ -241,7 +247,8 @@ export const COUNTRY_CODES: { code: string; label: string }[] = [
   { code: "1", label: "United States / Canada (+1)" },
 ];
 
-export const KIND_OF_RULE: Record<RuleKind, TemplateKind> = {
+export const KIND_OF_RULE: Record<MessageKind, TemplateKind> = {
+  custom: "custom",
   appointment_day_before: "appointment_reminder",
   appointment_morning_of: "appointment_reminder",
   booking_confirmation: "booking_confirmation",
@@ -250,7 +257,8 @@ export const KIND_OF_RULE: Record<RuleKind, TemplateKind> = {
   staff_daily: "staff_daily",
 };
 
-export const KIND_SHORT: Record<RuleKind, string> = {
+export const KIND_SHORT: Record<MessageKind, string> = {
+  custom: "Your reminder",
   appointment_day_before: "Appointment reminder",
   appointment_morning_of: "Appointment reminder",
   booking_confirmation: "Booking confirmation",

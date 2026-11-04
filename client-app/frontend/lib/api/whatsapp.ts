@@ -51,7 +51,7 @@ export interface TestResult {
   connection: WhatsAppConnection;
 }
 
-export type TemplateKind = "appointment_reminder" | "booking_confirmation" | "unpaid_bill" | "recall" | "staff_daily";
+export type TemplateKind = "appointment_reminder" | "booking_confirmation" | "unpaid_bill" | "recall" | "staff_daily" | "custom";
 export type MessageLanguage = "en" | "ar";
 export type MetaStatus = "draft" | "pending" | "approved" | "rejected" | "paused";
 
@@ -69,6 +69,29 @@ export interface WhatsAppTemplate {
   /** What each {{n}} stands for, in order. */
   params: string[];
   default_body: string;
+  /** The clinic's own reminder this wording belongs to; null for a built-in kind. */
+  custom_reminder_id: number | string | null;
+}
+
+/** A reminder the clinic defines: N days after a procedure on the chart. */
+export interface CustomReminder {
+  id: number | string;
+  name: string;
+  /** The chart procedure it follows, or null for any. */
+  procedure: string | null;
+  delay_days: number;
+  at_time: string | null;
+  skip_if_booked: boolean;
+  enabled: boolean;
+}
+
+export interface CustomReminderInput {
+  name: string;
+  procedure?: string | null;
+  delay_days: number;
+  at_time?: string;
+  skip_if_booked?: boolean;
+  enabled?: boolean;
 }
 
 export type RuleKind =
@@ -101,11 +124,13 @@ export interface RuleInput {
   max_per_run?: number;
 }
 
+export type MessageKind = RuleKind | "custom";
+
 export type MessageStatus = "queued" | "sent" | "delivered" | "read" | "failed" | "skipped";
 
 export interface WhatsAppMessage {
   id: number | string;
-  kind: RuleKind;
+  kind: MessageKind;
   recipient_kind: "patient" | "staff";
   to_name: string | null;
   to_phone: string | null;
@@ -115,6 +140,8 @@ export interface WhatsAppMessage {
   appointment_date: string | null;
   invoice_id: number | string | null;
   invoice_number: string | null;
+  custom_reminder_id: number | string | null;
+  custom_reminder_name: string | null;
   language: MessageLanguage | null;
   template_name: string | null;
   params: string[];
@@ -163,6 +190,14 @@ export const refreshTemplates = () =>
 export const fetchRules = () => request<WhatsAppRule[]>("/api/whatsapp/rules");
 export const saveRule = (kind: RuleKind, input: RuleInput) =>
   request<WhatsAppRule>(`/api/whatsapp/rules/${kind}`, json("PUT", input));
+
+export const fetchCustomReminders = () => request<CustomReminder[]>("/api/whatsapp/custom-reminders");
+export const createCustomReminder = (input: CustomReminderInput) =>
+  request<CustomReminder>("/api/whatsapp/custom-reminders", json("POST", input));
+export const updateCustomReminder = (id: number | string, input: Partial<CustomReminderInput>) =>
+  request<CustomReminder>(`/api/whatsapp/custom-reminders/${id}`, json("PUT", input));
+export const deleteCustomReminder = (id: number | string) =>
+  request<{ deleted: true }>(`/api/whatsapp/custom-reminders/${id}`, json("DELETE"));
 
 export const runNow = () => request<RunResult>("/api/whatsapp/run", json("POST", {}));
 export const retryMessage = (id: number | string) =>

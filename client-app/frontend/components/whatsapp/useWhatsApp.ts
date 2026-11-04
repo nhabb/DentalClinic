@@ -3,9 +3,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   fetchConnection,
+  fetchCustomReminders,
   fetchRules,
   fetchTemplates,
   refreshTemplates,
+  type CustomReminder,
   type WhatsAppConnection,
   type WhatsAppRule,
   type WhatsAppTemplate,
@@ -23,6 +25,7 @@ export interface WhatsAppFile {
   connection: WhatsAppConnection;
   templates: WhatsAppTemplate[];
   rules: WhatsAppRule[];
+  customReminders: CustomReminder[];
 }
 
 export function useWhatsApp() {
@@ -35,9 +38,14 @@ export function useWhatsApp() {
     const n = ++loads.current;
     if (!silent) setLoading(true);
     try {
-      const [connection, templates, rules] = await Promise.all([fetchConnection(), fetchTemplates(), fetchRules()]);
+      const [connection, templates, rules, customReminders] = await Promise.all([
+        fetchConnection(),
+        fetchTemplates(),
+        fetchRules(),
+        fetchCustomReminders(),
+      ]);
       if (n !== loads.current) return;
-      setFile({ connection, templates, rules });
+      setFile({ connection, templates, rules, customReminders });
       setFailed(false);
     } catch {
       if (n === loads.current) setFailed(true);
@@ -60,6 +68,17 @@ export function useWhatsApp() {
     setFile((f) =>
       f ? { ...f, templates: f.templates.map((t) => (String(t.id) === String(template.id) ? { ...t, ...template } : t)) } : f,
     );
+  }, []);
+  const setCustomReminders = useCallback((customReminders: CustomReminder[]) => {
+    setFile((f) => (f ? { ...f, customReminders } : f));
+  }, []);
+  const reloadTemplates = useCallback(async () => {
+    try {
+      const templates = await fetchTemplates();
+      setFile((f) => (f ? { ...f, templates } : f));
+    } catch {
+      /* the next full reload brings them */
+    }
   }, []);
   const setRule = useCallback((rule: WhatsAppRule) => {
     setFile((f) => (f ? { ...f, rules: f.rules.map((r) => (r.kind === rule.kind ? { ...r, ...rule } : r)) } : f));
@@ -90,5 +109,5 @@ export function useWhatsApp() {
     };
   }, [pending, connected, setTemplates]);
 
-  return { file, loading, failed, reload, setConnection, setTemplates, setTemplate, setRule };
+  return { file, loading, failed, reload, setConnection, setTemplates, setTemplate, setRule, setCustomReminders, reloadTemplates };
 }

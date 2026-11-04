@@ -41,7 +41,7 @@ export default function WhatsAppPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const signOut = useSignOut();
 
-  const { file, loading, failed, reload, setConnection, setTemplates, setTemplate, setRule } = useWhatsApp();
+  const { file, loading, failed, reload, setConnection, setTemplates, setTemplate, setRule, setCustomReminders, reloadTemplates } = useWhatsApp();
   const [tab, setTab] = useState<Tab | null>(null);
   const [running, setRunning] = useState(false);
   const [lastRun, setLastRun] = useState<{ at: Date; result: RunResult } | null>(null);
@@ -197,6 +197,9 @@ export default function WhatsAppPage() {
                       setMessagesStatus("failed");
                       goTo("messages", { status: "failed" });
                     }}
+                    customReminders={file.customReminders}
+                    onCustomReminders={setCustomReminders}
+                    onReloadTemplates={() => void reloadTemplates()}
                   />
                 </div>
               )}
