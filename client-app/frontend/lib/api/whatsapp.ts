@@ -51,7 +51,7 @@ export interface TestResult {
   connection: WhatsAppConnection;
 }
 
-export type TemplateKind = "appointment_reminder" | "booking_confirmation" | "unpaid_bill" | "recall" | "staff_daily" | "custom" | "birthday";
+export type TemplateKind = "appointment_reminder" | "booking_confirmation" | "unpaid_bill" | "recall" | "staff_daily" | "custom";
 export type MessageLanguage = "en" | "ar";
 export type MetaStatus = "draft" | "pending" | "approved" | "rejected" | "paused";
 
@@ -73,48 +73,72 @@ export interface WhatsAppTemplate {
   custom_reminder_id: number | string | null;
 }
 
-/** What starts a reminder the clinic defines. */
-export type CustomTrigger = "procedure" | "birthday";
+/** The parts a reminder of the clinic's own is built from (mirrors custom-rules.ts on the API). */
+export type TriggerType = "procedure" | "appointment" | "since_last_visit" | "date_on_file" | "unpaid_bill" | "yearly" | "monthly" | "weekly" | "once";
+export type DateField = "birthday" | "first_visit" | "registration";
+export type RuleTrigger =
+  | { type: "procedure"; procedure: string | null; days_after: number }
+  | { type: "appointment"; when: "before" | "after"; days: number }
+  | { type: "since_last_visit"; days: number; repeat_every_days: number | null }
+  | { type: "date_on_file"; field: DateField; days_offset: number }
+  | { type: "unpaid_bill"; days_overdue: number; repeat_every_days: number | null }
+  | { type: "yearly"; month: number; day: number }
+  | { type: "monthly"; day: number }
+  | { type: "weekly"; weekday: number }
+  | { type: "once"; date: string };
 
-/** A reminder the clinic defines: N days after a procedure on the chart, or on the patient's birthday. */
+export interface RuleFilters {
+  procedures: string[];
+  procedures_within_months: number | null;
+  min_age: number | null;
+  max_age: number | null;
+  languages: string[];
+  owes_money: boolean | null;
+  skip_if_booked: boolean;
+  seen_within_months: number | null;
+  not_seen_for_months: number | null;
+}
+
+export interface RuleDefinition {
+  trigger: RuleTrigger;
+  audience: "patients" | "staff";
+  filters: RuleFilters;
+}
+
+/** A reminder the clinic defines, built from parts. */
 export interface CustomReminder {
   id: number | string;
   name: string;
-  trigger: CustomTrigger;
-  /** procedure trigger: the chart procedure it follows, or null for any. */
-  procedure: string | null;
-  /** procedure trigger: days after the treatment date; 0 for a birthday. */
-  delay_days: number;
+  definition: RuleDefinition;
   at_time: string | null;
-  skip_if_booked: boolean;
   enabled: boolean;
+  /** What {{1}}.. stand for in its wording, from the trigger. */
+  params: string[];
+  /** The rule in one line, as the engine reads it. */
+  summary: string;
+  /** On an update: the new parts fill different placeholders, so the wording started again. */
+  wording_reset?: boolean;
 }
 
 export interface CustomReminderInput {
   name: string;
-  trigger?: CustomTrigger;
-  procedure?: string | null;
-  delay_days?: number;
+  definition: RuleDefinition;
   at_time?: string;
-  skip_if_booked?: boolean;
   enabled?: boolean;
   /** The wording to start with (on create); the suggested one when omitted. */
   body_en?: string;
   body_ar?: string;
 }
 
-/** What the AI made of a sentence: the fields of the form plus a wording, nothing saved. */
+/** What the AI made of a sentence: the parts of the form plus a wording, nothing saved. */
 export interface ReminderDraft {
   name: string;
-  trigger: CustomTrigger;
-  procedure: string | null;
-  delay_days: number;
+  definition: RuleDefinition;
   at_time: string;
-  skip_if_booked: boolean;
   body_en: string;
   body_ar: string;
   summary: string;
-  /** Set when the wish needs something the system cannot do; the fields hold the closest it can. */
+  /** Set when the wish needs something the parts cannot express; the closest rule is filled in. */
   unsupported?: string;
 }
 

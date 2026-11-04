@@ -7,7 +7,10 @@ import type {
   RuleKind,
   TemplateKind,
   WhatsAppMessage,
-  CustomTrigger,
+  DateField,
+  RuleDefinition,
+  RuleFilters,
+  TriggerType,
 } from "@/lib/api/whatsapp";
 
 /*
@@ -18,7 +21,7 @@ import type {
  */
 
 /** The five built-in cards of the Reminders tab, in the order they are shown. */
-export const CARD_KINDS: Exclude<TemplateKind, "custom" | "birthday">[] = [
+export const CARD_KINDS: Exclude<TemplateKind, "custom">[] = [
   "appointment_reminder",
   "booking_confirmation",
   "unpaid_bill",
@@ -27,7 +30,7 @@ export const CARD_KINDS: Exclude<TemplateKind, "custom" | "birthday">[] = [
 ];
 
 /** The rules each card controls. */
-export const RULES_OF_CARD: Record<Exclude<TemplateKind, "custom" | "birthday">, RuleKind[]> = {
+export const RULES_OF_CARD: Record<Exclude<TemplateKind, "custom">, RuleKind[]> = {
   appointment_reminder: ["appointment_day_before", "appointment_morning_of"],
   booking_confirmation: ["booking_confirmation"],
   unpaid_bill: ["unpaid_bill"],
@@ -42,7 +45,6 @@ export const KIND_TITLE: Record<TemplateKind, string> = {
   recall: "Check-up recall",
   staff_daily: "Doctor's daily schedule",
   custom: "Your own reminder",
-  birthday: "Birthday greeting",
 };
 
 export const KIND_DESCRIPTION: Record<TemplateKind, string> = {
@@ -51,8 +53,7 @@ export const KIND_DESCRIPTION: Record<TemplateKind, string> = {
   unpaid_bill: "When a bill passes its due date, with the amount and bill number; repeats while unpaid.",
   recall: "When a patient has not visited for a while, inviting them to book a check-up.",
   staff_daily: "Every morning, each doctor with appointments that day gets their list.",
-  custom: "A number of days after a procedure on the chart, in your own words.",
-  birthday: "On the patient's birthday each year, in your own words.",
+  custom: "A rule the clinic wrote, from parts: when, who and what, in your own words.",
 };
 
 export const RULE_TITLE: Record<RuleKind, string> = {
@@ -72,24 +73,75 @@ export const KIND_RECIPIENTS: Record<TemplateKind, string> = {
   unpaid_bill: "The patient who owes the bill, in their language.",
   recall: "Patients with no visit for the set months and nothing booked, in their language.",
   staff_daily: "Every doctor with a mobile number on their account, in the clinic's language.",
-  custom: "The patient the procedure was done for, in their language. Once per procedure, never twice.",
-  birthday: "Every patient whose birthday it is, in their language. Once a year each.",
+  custom: "The patients the rule describes, in their language. Once per subject (a procedure, a visit, a bill, a date), never twice.",
 };
 
-/** The two things a reminder of the clinic's own can start from. */
-export const TRIGGER_TITLE: Record<CustomTrigger, string> = {
+/** The triggers a reminder of the clinic's own can be built on. */
+export const TRIGGER_TITLE: Record<TriggerType, string> = {
   procedure: "After a procedure",
-  birthday: "On the patient's birthday",
+  appointment: "Around an appointment",
+  since_last_visit: "Since the last visit",
+  date_on_file: "A date on the patient's file, every year",
+  unpaid_bill: "An unpaid bill",
+  yearly: "A date every year",
+  monthly: "A day every month",
+  weekly: "A weekday every week",
+  once: "One date, once",
 };
-export const TRIGGER_HINT: Record<CustomTrigger, string> = {
-  procedure: "A set time after work is marked done on the chart, once per procedure.",
-  birthday: "Every year on the day, for a greeting or a gift.",
+export const TRIGGER_HINT: Record<TriggerType, string> = {
+  procedure: "A set time after work is marked done on the chart; once per procedure.",
+  appointment: "Before an upcoming appointment, or after a completed visit; once per appointment.",
+  since_last_visit: "When the last visit is that long ago and nothing newer happened; once, or again every N days while they stay away.",
+  date_on_file: "The birthday, the anniversary of the first visit, or of joining the clinic; once a year each, on the day or a few days around it.",
+  unpaid_bill: "When a bill passes its due date by that many days; once per bill, or again every N days while unpaid.",
+  yearly: "A fixed date each year: New Year, the clinic's anniversary. A holiday with a moving date is a \"one date, once\" rule.",
+  monthly: "The same day each month (1 to 28).",
+  weekly: "The same weekday each week, to patients or to the doctors.",
+  once: "A single date, then never again.",
 };
-/** What {{1}}.. stand for in a reminder's wording, by trigger (mirrors PARAMS_BY_KIND on the API). */
-export const TRIGGER_PARAMS: Record<CustomTrigger, string[]> = {
-  procedure: ["patient_name", "procedure", "date", "clinic"],
-  birthday: ["patient_name", "clinic"],
+export const DATE_FIELD_TITLE: Record<DateField, string> = {
+  birthday: "the patient's birthday",
+  first_visit: "the anniversary of the first visit",
+  registration: "the anniversary of joining the clinic",
 };
+export const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+export const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+export const EMPTY_FILTERS: RuleFilters = {
+  procedures: [],
+  procedures_within_months: null,
+  min_age: null,
+  max_age: null,
+  languages: [],
+  owes_money: null,
+  skip_if_booked: false,
+  seen_within_months: null,
+  not_seen_for_months: null,
+};
+
+/** What {{1}}.. stand for in a rule's wording (mirrors paramsOfRule on the API). */
+export function paramsOfRule(def: RuleDefinition): string[] {
+  switch (def.trigger.type) {
+    case "procedure":
+      return ["patient_name", "procedure", "date", "clinic"];
+    case "appointment":
+      return ["patient_name", "date", "time", "doctor", "clinic"];
+    case "since_last_visit":
+      return ["patient_name", "date", "clinic"];
+    case "date_on_file":
+      return ["patient_name", "clinic"];
+    case "unpaid_bill":
+      return ["patient_name", "amount", "bill_number", "clinic"];
+    default:
+      return def.audience === "staff" ? ["doctor_name", "date", "clinic"] : ["patient_name", "date", "clinic"];
+  }
+}
+
+/** Who a rule reaches, in one line. */
+export function recipientsOfRule(def: RuleDefinition): string {
+  return def.audience === "staff"
+    ? "Every doctor with a mobile number on their account, in the clinic's language."
+    : "The patients the rule describes, in their language (English or Arabic; French speakers get English). Patients who asked for no WhatsApp are skipped.";
+}
 
 /** What each {{n}} stands for, in words, per kind. */
 export const PLACEHOLDER_LABEL: Record<string, string> = {

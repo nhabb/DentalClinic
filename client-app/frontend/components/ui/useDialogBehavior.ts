@@ -8,12 +8,18 @@ import { useEffect, useRef } from "react";
  */
 export function useDialogBehavior(isOpen: boolean, onClose: () => void) {
   const panelRef = useRef<HTMLDivElement>(null);
+  // Read through a ref so the effect runs when the dialog opens, not on every
+  // render: a caller passing a fresh arrow function would otherwise move
+  // focus to the first control after each keystroke, and the next space
+  // would press that button instead of typing.
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     if (!isOpen) return;
 
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") onCloseRef.current();
     };
     document.addEventListener("keydown", onKey);
 
@@ -33,7 +39,7 @@ export function useDialogBehavior(isOpen: boolean, onClose: () => void) {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = previousOverflow;
     };
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   return panelRef;
 }

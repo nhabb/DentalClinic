@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { FaCheck, FaChevronDown, FaMagic, FaPaperPlane, FaPlus, FaSyncAlt, FaTrash, FaUndo } from "react-icons/fa";
+import { FaCheck, FaChevronDown, FaMagic, FaPaperPlane, FaPlus, FaSyncAlt, FaTimes, FaTrash, FaUndo } from "react-icons/fa";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/button";
 import { FormField, inputClass } from "@/components/ui/FormField";
@@ -24,8 +24,12 @@ import {
   updateCustomReminder,
   type CustomReminder,
   type CustomReminderInput,
-  type CustomTrigger,
+  type DateField,
   type MessageLanguage,
+  type RuleDefinition,
+  type RuleFilters,
+  type RuleTrigger,
+  type TriggerType,
   type RuleInput,
   type RuleKind,
   type RunResult,
@@ -47,9 +51,14 @@ import {
   REJECTION_REASONS,
   RULE_TITLE,
   RULES_OF_CARD,
+  DATE_FIELD_TITLE,
+  EMPTY_FILTERS,
+  MONTHS,
   TRIGGER_HINT,
-  TRIGGER_PARAMS,
   TRIGGER_TITLE,
+  WEEKDAYS,
+  paramsOfRule,
+  recipientsOfRule,
   renderPreview,
   validateBody,
 } from "./whatsapp-words";
@@ -234,10 +243,6 @@ function splitDelay(days: number): { amount: number; unit: Unit } {
   if (days % 7 === 0 && days >= 7) return { amount: days / 7, unit: "weeks" };
   return { amount: days, unit: "days" };
 }
-const delayText = (days: number) => {
-  const { amount, unit } = splitDelay(days);
-  return `${amount} ${amount === 1 ? unit.slice(0, -1) : unit}`;
-};
 
 function CustomRemindersSection({
   reminders,
@@ -293,8 +298,9 @@ function CustomRemindersSection({
       <div className="pt-2">
         <h3 className="text-sm font-semibold text-ink-900">Your own reminders</h3>
         <p className="text-xs text-ink-500">
-          In your words, on your trigger: one week after every root canal, six months after a cleaning, a gift on the patient&apos;s
-          birthday. Describe it in a sentence and the assistant drafts it; you check and save.
+          A rule from parts: when (after a procedure, around an appointment, since the last visit, a date on the file, a bill, a
+          calendar date), who (the patients it concerns, narrowed by procedure, age, language, money owed, bookings or last visit, or
+          the doctors) and what (your words). Describe it in a sentence and the assistant fills the parts; you check and save.
         </p>
       </div>
 
@@ -322,11 +328,8 @@ function CustomRemindersSection({
                 <button type="button" onClick={() => setOpen(isOpen ? null : String(r.id))} className="min-w-0 flex-1 text-start" aria-expanded={isOpen}>
                   <span className="flex flex-wrap items-center gap-2">
                     <span className="text-sm text-ink-700">
-                      {r.trigger === "birthday"
-                        ? "On the patient's birthday, every year"
-                        : `${delayText(r.delay_days)} after ${r.procedure ? `every ${r.procedure.toLowerCase()}` : "any procedure"}`}
+                      {r.summary}
                       {r.at_time ? `, at ${r.at_time}` : ""}
-                      {r.trigger === "procedure" && r.skip_if_booked ? " · not if already booked" : ""}
                     </span>
                     <Badge tone={ready.tone} dot size="sm">
                       {r.enabled ? (ready.tone === "leaf" ? "Ready" : ready.tone === "honey" ? "Partly ready" : "Not ready") : "Off"}
@@ -354,7 +357,7 @@ function CustomRemindersSection({
                   </p>
                   <div>
                     <h4 className="mb-1 text-xs font-semibold uppercase tracking-wide text-ink-500">Who receives it</h4>
-                    <p className="text-sm text-ink-700">{KIND_RECIPIENTS[r.trigger === "birthday" ? "birthday" : "custom"]}</p>
+                    <p className="text-sm text-ink-700">{recipientsOfRule(r.definition)}</p>
                   </div>
                   <div>
                     <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-500">Wording</h4>
@@ -385,6 +388,143 @@ function CustomRemindersSection({
   );
 }
 
+// ── The form: a sentence, or the parts by hand ────────────────────────────
+
+type Span = { amount: number; unit: Unit };
+const spanOf = (days: number): Span => splitDelay(Math.max(1, days));
+const daysOf = (s: Span) => Math.max(1, Math.round(s.amount)) * (UNITS.find(([u]) => u === s.unit)?.[1] ?? 1);
+const numOrNull = (v: string) => (v.trim() === "" ? null : Number(v));
+
+/** The trigger as the form holds it: every type's fields at once, so switching type keeps what was typed. */
+interface TriggerForm {
+  type: TriggerType;
+  procedure: string;
+  after: Span;
+  when: "before" | "after";
+  apptDays: string;
+  sinceVisit: Span;
+  repeatVisit: string;
+  field: DateField;
+  offsetDir: "on" | "before" | "after";
+  offsetDays: string;
+  overdue: string;
+  repeatBill: string;
+  month: number;
+  day: string;
+  weekday: number;
+  date: string;
+}
+
+const CALENDAR: TriggerType[] = ["yearly", "monthly", "weekly", "once"];
+
+function triggerForm(t?: RuleTrigger): TriggerForm {
+  const f: TriggerForm = {
+    type: "procedure",
+    procedure: "",
+    after: { amount: 7, unit: "days" },
+    when: "before",
+    apptDays: "1",
+    sinceVisit: { amount: 6, unit: "months" },
+    repeatVisit: "",
+    field: "birthday",
+    offsetDir: "on",
+    offsetDays: "7",
+    overdue: "3",
+    repeatBill: "7",
+    month: 1,
+    day: "1",
+    weekday: 1,
+    date: new Date().toISOString().slice(0, 10),
+  };
+  if (!t) return f;
+  f.type = t.type;
+  switch (t.type) {
+    case "procedure":
+      f.procedure = t.procedure ?? "";
+      f.after = spanOf(t.days_after);
+      break;
+    case "appointment":
+      f.when = t.when;
+      f.apptDays = String(t.days);
+      break;
+    case "since_last_visit":
+      f.sinceVisit = spanOf(t.days);
+      f.repeatVisit = t.repeat_every_days ? String(t.repeat_every_days) : "";
+      break;
+    case "date_on_file":
+      f.field = t.field;
+      f.offsetDir = t.days_offset === 0 ? "on" : t.days_offset < 0 ? "before" : "after";
+      f.offsetDays = String(Math.abs(t.days_offset) || 7);
+      break;
+    case "unpaid_bill":
+      f.overdue = String(t.days_overdue);
+      f.repeatBill = t.repeat_every_days ? String(t.repeat_every_days) : "";
+      break;
+    case "yearly":
+      f.month = t.month;
+      f.day = String(t.day);
+      break;
+    case "monthly":
+      f.day = String(t.day);
+      break;
+    case "weekly":
+      f.weekday = t.weekday;
+      break;
+    case "once":
+      f.date = t.date;
+      break;
+  }
+  return f;
+}
+
+function triggerOf(f: TriggerForm): RuleTrigger {
+  switch (f.type) {
+    case "procedure":
+      return { type: "procedure", procedure: f.procedure || null, days_after: daysOf(f.after) };
+    case "appointment":
+      return { type: "appointment", when: f.when, days: Number(f.apptDays) };
+    case "since_last_visit":
+      return { type: "since_last_visit", days: daysOf(f.sinceVisit), repeat_every_days: numOrNull(f.repeatVisit) };
+    case "date_on_file":
+      return {
+        type: "date_on_file",
+        field: f.field,
+        days_offset: f.offsetDir === "on" ? 0 : (f.offsetDir === "before" ? -1 : 1) * Number(f.offsetDays),
+      };
+    case "unpaid_bill":
+      return { type: "unpaid_bill", days_overdue: Number(f.overdue), repeat_every_days: numOrNull(f.repeatBill) };
+    case "yearly":
+      return { type: "yearly", month: f.month, day: Number(f.day) };
+    case "monthly":
+      return { type: "monthly", day: Number(f.day) };
+    case "weekly":
+      return { type: "weekly", weekday: f.weekday };
+    case "once":
+      return { type: "once", date: f.date };
+  }
+}
+
+/** The conditions the form shows as rows; each one is a group of filter fields. */
+type Condition = "procedures" | "age" | "languages" | "owes_money" | "skip_if_booked" | "seen";
+const CONDITION_TITLE: Record<Condition, string> = {
+  procedures: "Had a procedure",
+  age: "Age",
+  languages: "Language",
+  owes_money: "Money owed",
+  skip_if_booked: "Skip if already booked",
+  seen: "Last seen",
+};
+function conditionsOf(f: RuleFilters): Condition[] {
+  const out: Condition[] = [];
+  if (f.procedures.length) out.push("procedures");
+  if (f.min_age !== null || f.max_age !== null) out.push("age");
+  if (f.languages.length) out.push("languages");
+  if (f.owes_money !== null) out.push("owes_money");
+  if (f.skip_if_booked) out.push("skip_if_booked");
+  if (f.seen_within_months !== null || f.not_seen_for_months !== null) out.push("seen");
+  return out;
+}
+
 function CustomReminderModal({
   reminder,
   onClose,
@@ -394,14 +534,13 @@ function CustomReminderModal({
   onClose: () => void;
   onSaved: (saved: CustomReminder, created: boolean) => void;
 }) {
-  const initial = reminder && reminder.trigger === "procedure" ? splitDelay(reminder.delay_days) : { amount: 7, unit: "days" as Unit };
-  const [trigger, setTrigger] = useState<CustomTrigger>(reminder?.trigger ?? "procedure");
   const [name, setName] = useState(reminder?.name ?? "");
-  const [procedure, setProcedure] = useState(reminder?.procedure ?? "");
-  const [amount, setAmount] = useState(initial.amount);
-  const [unit, setUnit] = useState<Unit>(initial.unit);
+  const [trigger, setTrigger] = useState<TriggerForm>(() => triggerForm(reminder?.definition.trigger));
+  const [audience, setAudience] = useState<"patients" | "staff">(reminder?.definition.audience ?? "patients");
+  const [filters, setFilters] = useState<RuleFilters>(() => ({ ...EMPTY_FILTERS, ...(reminder?.definition.filters ?? {}) }));
+  const [conditions, setConditions] = useState<Condition[]>(() => conditionsOf(reminder?.definition.filters ?? EMPTY_FILTERS));
+  const [seenMode, setSeenMode] = useState<"within" | "not_for">(reminder?.definition.filters.not_seen_for_months ? "not_for" : "within");
   const [atTime, setAtTime] = useState(reminder?.at_time ?? "10:00");
-  const [skipIfBooked, setSkipIfBooked] = useState(reminder?.skip_if_booked ?? false);
   const [bodyEn, setBodyEn] = useState("");
   const [bodyAr, setBodyAr] = useState("");
   const [wish, setWish] = useState("");
@@ -409,11 +548,36 @@ function CustomReminderModal({
   const [draftNote, setDraftNote] = useState<{ tone: "leaf" | "honey"; text: string } | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const perUnit = UNITS.find(([u]) => u === unit)?.[1] ?? 1;
-  const days = Math.max(1, Math.round(amount)) * perUnit;
-  const params = TRIGGER_PARAMS[trigger];
+
+  const isCalendar = CALENDAR.includes(trigger.type);
+  const effectiveAudience = isCalendar ? audience : "patients";
+  const definition: RuleDefinition = {
+    trigger: triggerOf(trigger),
+    audience: effectiveAudience,
+    filters: effectiveAudience === "staff" ? EMPTY_FILTERS : filters,
+  };
+  const params = paramsOfRule(definition);
   const enCheck = bodyEn.trim() ? validateBody(bodyEn, params) : {};
   const arCheck = bodyAr.trim() ? validateBody(bodyAr, params) : {};
+  const setT = (patch: Partial<TriggerForm>) => setTrigger((t) => ({ ...t, ...patch }));
+  const setF = (patch: Partial<RuleFilters>) => setFilters((f) => ({ ...f, ...patch }));
+
+  const addCondition = (c: Condition) => {
+    if (!c || conditions.includes(c)) return;
+    setConditions((list) => [...list, c]);
+    if (c === "skip_if_booked") setF({ skip_if_booked: true });
+    if (c === "owes_money") setF({ owes_money: true });
+    if (c === "seen") setF({ seen_within_months: 12, not_seen_for_months: null });
+  };
+  const removeCondition = (c: Condition) => {
+    setConditions((list) => list.filter((x) => x !== c));
+    if (c === "procedures") setF({ procedures: [], procedures_within_months: null });
+    if (c === "age") setF({ min_age: null, max_age: null });
+    if (c === "languages") setF({ languages: [] });
+    if (c === "owes_money") setF({ owes_money: null });
+    if (c === "skip_if_booked") setF({ skip_if_booked: false });
+    if (c === "seen") setF({ seen_within_months: null, not_seen_for_months: null });
+  };
 
   /** One sentence in, the whole form out; the admin still reads it and presses Add. */
   const draft = async () => {
@@ -423,22 +587,19 @@ function CustomReminderModal({
     setDrafting(true);
     try {
       const d = await draftCustomReminder(wish);
-      setTrigger(d.trigger);
       setName(d.name);
-      setProcedure(d.procedure ?? "");
-      if (d.trigger === "procedure") {
-        const split = splitDelay(d.delay_days);
-        setAmount(split.amount);
-        setUnit(split.unit);
-      }
+      setTrigger(triggerForm(d.definition.trigger));
+      setAudience(d.definition.audience);
+      setFilters({ ...EMPTY_FILTERS, ...d.definition.filters });
+      setConditions(conditionsOf(d.definition.filters));
+      setSeenMode(d.definition.filters.not_seen_for_months ? "not_for" : "within");
       setAtTime(d.at_time);
-      setSkipIfBooked(d.skip_if_booked);
       setBodyEn(d.body_en);
       setBodyAr(d.body_ar);
       setDraftNote(
         d.unsupported
-          ? { tone: "honey", text: d.unsupported }
-          : { tone: "leaf", text: d.summary ? `Drafted: ${d.summary} Check it below, change anything, then add it.` : "Drafted. Check it below, change anything, then add it." },
+          ? { tone: "honey", text: `${d.unsupported} Filled in: ${d.summary}.` }
+          : { tone: "leaf", text: `Understood as: ${d.summary}. Check the parts below, change anything, then add it.` },
       );
     } catch (err) {
       setError(errorText(err, "The assistant could not draft it; fill the form by hand."));
@@ -450,28 +611,20 @@ function CustomReminderModal({
   const save = async () => {
     setError("");
     if (!name.trim()) return setError("Give the reminder a name.");
-    if (trigger === "procedure") {
-      if (!Number.isFinite(amount) || amount < 1) return setError("The delay must be at least 1.");
-      if (days > 730) return setError("The delay can be at most two years.");
-    }
     if (enCheck.error) return setError(`English wording: ${enCheck.error}`);
     if (arCheck.error) return setError(`Arabic wording: ${arCheck.error}`);
-    const input: CustomReminderInput = {
-      name: name.trim(),
-      at_time: atTime || "10:00",
-      ...(trigger === "procedure" ? { procedure: procedure || null, delay_days: days, skip_if_booked: skipIfBooked } : {}),
-    };
+    const input: CustomReminderInput = { name: name.trim(), definition, at_time: atTime || "10:00" };
     setSaving(true);
     try {
       const saved = reminder
         ? await updateCustomReminder(reminder.id, input)
         : await createCustomReminder({
             ...input,
-            trigger,
             enabled: true,
             ...(bodyEn.trim() ? { body_en: bodyEn.trim() } : {}),
             ...(bodyAr.trim() ? { body_ar: bodyAr.trim() } : {}),
           });
+      if (reminder && saved.wording_reset) toast.info("The reminder now fills different placeholders, so its wording starts again from the suggested one. Check it and submit it to WhatsApp.");
       toast.success(reminder ? "Reminder saved." : "Reminder added. Now check its wording and submit it to WhatsApp.");
       onSaved(saved, !reminder);
     } catch (err) {
@@ -482,14 +635,30 @@ function CustomReminderModal({
   };
 
   const placeholderHint = params.map((p, i) => `{{${i + 1}}} ${PLACEHOLDER_LABEL[p]?.toLowerCase() ?? p}`).join(" · ");
+  const num = (v: string | number, min: number, max: number, onChange: (s: string) => void, width = "w-20") => (
+    <input type="number" min={min} max={max} value={v} onChange={(e) => onChange(e.target.value)} className={cn(inputClass, width)} />
+  );
+  const span = (s: Span, onChange: (s: Span) => void) => (
+    <span className="inline-flex items-center gap-2">
+      {num(s.amount, 1, 999, (v) => onChange({ ...s, amount: Number(v) }))}
+      <select value={s.unit} onChange={(e) => onChange({ ...s, unit: e.target.value as Unit })} className={cn(inputClass, "w-28")}>
+        {UNITS.map(([u]) => (
+          <option key={u} value={u}>
+            {u}
+          </option>
+        ))}
+      </select>
+    </span>
+  );
+  const row = (children: React.ReactNode) => <div className="flex flex-wrap items-center gap-2 text-sm text-ink-700">{children}</div>;
 
   return (
     <Modal
       isOpen
       onClose={() => !saving && onClose()}
       title={reminder ? "Edit the reminder" : "A reminder of your own"}
-      description={reminder ? TRIGGER_HINT[reminder.trigger] : "Say it in a sentence and let the assistant draft it, or fill the form yourself."}
-      maxWidth="max-w-lg"
+      description={reminder ? "Change any part. If the new parts fill different placeholders, the wording starts again from the suggested one." : "Say it in a sentence and let the assistant fill the parts, or fill them yourself."}
+      maxWidth="max-w-2xl"
       footer={
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose} disabled={saving}>
@@ -501,7 +670,7 @@ function CustomReminderModal({
         </div>
       }
     >
-      <div className="space-y-4">
+      <div className="space-y-5">
         {!reminder && (
           <div className="rounded-2xl border border-brand-200 bg-brand-50/60 p-3">
             <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-800" htmlFor="reminder-wish">
@@ -513,11 +682,11 @@ function CustomReminderModal({
               onChange={(e) => setWish(e.target.value)}
               rows={2}
               className={cn(inputClass, "resize-y")}
-              placeholder="A week after every root canal, ask how they feel · On their birthday, offer a free cleaning"
+              placeholder="Three months after every implant for patients over 60, unless they already booked · A gift a week before their birthday · Every Monday, remind the doctors to check the stock"
               autoFocus
             />
             <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-              <span className="text-xs text-ink-500">Drafting sends and saves nothing; you check the result below.</span>
+              <span className="text-xs text-ink-500">Drafting sends and saves nothing; you check the parts below.</span>
               <Button size="sm" variant="outline" onClick={() => void draft()} disabled={drafting || wish.trim().length < 5}>
                 <FaMagic className="me-2" />
                 {drafting ? "Drafting…" : "Draft it for me"}
@@ -535,86 +704,272 @@ function CustomReminderModal({
           <input value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
         </FormField>
 
-        <div>
-          <div className="mb-1 text-sm font-medium text-ink-800">When it goes out</div>
-          {reminder ? (
-            <p className="text-sm text-ink-600">{TRIGGER_TITLE[reminder.trigger]}. The trigger cannot change; add a new reminder for another one.</p>
-          ) : (
-            <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Trigger">
-              {(Object.keys(TRIGGER_TITLE) as CustomTrigger[]).map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  role="radio"
-                  aria-checked={trigger === t}
-                  onClick={() => setTrigger(t)}
-                  className={cn(
-                    "press rounded-xl border px-3 py-2 text-start transition-colors",
-                    trigger === t ? "border-brand-500 bg-brand-50 ring-1 ring-brand-500" : "border-ink-200 hover:bg-ink-50",
-                  )}
-                >
-                  <span className="block text-sm font-medium text-ink-900">{TRIGGER_TITLE[t]}</span>
-                  <span className="block text-xs text-ink-500">{TRIGGER_HINT[t]}</span>
-                </button>
+        {/* ── When ── */}
+        <section className="space-y-3 rounded-2xl border border-ink-200 p-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-ink-500">When</h4>
+            <select value={trigger.type} onChange={(e) => setT({ type: e.target.value as TriggerType })} className={cn(inputClass, "max-w-xs")}>
+              {(Object.keys(TRIGGER_TITLE) as TriggerType[]).map((t) => (
+                <option key={t} value={t}>
+                  {TRIGGER_TITLE[t]}
+                </option>
               ))}
-            </div>
-          )}
-        </div>
-
-        {trigger === "procedure" && (
-          <>
-            <FormField label="After which procedure" hint="Matches what the chart records; leave it as any to follow every procedure">
-              <select value={procedure} onChange={(e) => setProcedure(e.target.value)} className={inputClass}>
-                <option value="">Any procedure</option>
-                {PROCEDURES.map((p) => (
-                  <option key={p} value={p}>
-                    {p}
-                  </option>
-                ))}
-              </select>
-            </FormField>
-            <div className="grid grid-cols-3 gap-3">
-              <FormField label="How long after" required>
-                <input type="number" min={1} value={amount} onChange={(e) => setAmount(Number(e.target.value))} className={inputClass} />
-              </FormField>
-              <FormField label=" ">
-                <select value={unit} onChange={(e) => setUnit(e.target.value as Unit)} className={inputClass}>
-                  {UNITS.map(([u]) => (
-                    <option key={u} value={u}>
-                      {u}
+            </select>
+          </div>
+          <p className="text-xs text-ink-500">{TRIGGER_HINT[trigger.type]}</p>
+          {trigger.type === "procedure" &&
+            row(
+              <>
+                {span(trigger.after, (after) => setT({ after }))}
+                <span>after</span>
+                <select value={trigger.procedure} onChange={(e) => setT({ procedure: e.target.value })} className={cn(inputClass, "max-w-xs")}>
+                  <option value="">any procedure</option>
+                  {PROCEDURES.map((p) => (
+                    <option key={p} value={p}>
+                      every {p.toLowerCase()}
                     </option>
                   ))}
                 </select>
-              </FormField>
-              <FormField label="At (clinic time)">
-                <input type="time" value={atTime} onChange={(e) => setAtTime(e.target.value)} className={inputClass} />
-              </FormField>
-            </div>
-            <Switch checked={skipIfBooked} onChange={setSkipIfBooked} label="Skip patients who already have an appointment booked" size="sm" />
-          </>
-        )}
-        {trigger === "birthday" && (
-          <FormField label="At (clinic time)" hint="Patients with no birth date on file are not reached">
-            <input type="time" value={atTime} onChange={(e) => setAtTime(e.target.value)} className={cn(inputClass, "max-w-[10rem]")} />
-          </FormField>
-        )}
+              </>,
+            )}
+          {trigger.type === "appointment" &&
+            row(
+              <>
+                {num(trigger.apptDays, 0, 365, (apptDays) => setT({ apptDays }))}
+                <span>day(s)</span>
+                <select value={trigger.when} onChange={(e) => setT({ when: e.target.value as "before" | "after" })} className={cn(inputClass, "w-40")}>
+                  <option value="before">before an appointment</option>
+                  <option value="after">after a visit</option>
+                </select>
+              </>,
+            )}
+          {trigger.type === "since_last_visit" &&
+            row(
+              <>
+                {span(trigger.sinceVisit, (sinceVisit) => setT({ sinceVisit }))}
+                <span>after the last visit, then again every</span>
+                {num(trigger.repeatVisit, 1, 365, (repeatVisit) => setT({ repeatVisit }))}
+                <span>day(s) (empty: once)</span>
+              </>,
+            )}
+          {trigger.type === "date_on_file" &&
+            row(
+              <>
+                <select value={trigger.offsetDir} onChange={(e) => setT({ offsetDir: e.target.value as TriggerForm["offsetDir"] })} className={cn(inputClass, "w-28")}>
+                  <option value="on">On</option>
+                  <option value="before">Before</option>
+                  <option value="after">After</option>
+                </select>
+                {trigger.offsetDir !== "on" && (
+                  <>
+                    {num(trigger.offsetDays, 1, 60, (offsetDays) => setT({ offsetDays }))}
+                    <span>day(s) {trigger.offsetDir}</span>
+                  </>
+                )}
+                <select value={trigger.field} onChange={(e) => setT({ field: e.target.value as DateField })} className={cn(inputClass, "w-44")}>
+                  {(Object.keys(DATE_FIELD_TITLE) as DateField[]).map((d) => (
+                    <option key={d} value={d}>
+                      {DATE_FIELD_TITLE[d]}
+                    </option>
+                  ))}
+                </select>
+                <span>, every year</span>
+              </>,
+            )}
+          {trigger.type === "unpaid_bill" &&
+            row(
+              <>
+                <span>When a bill is</span>
+                {num(trigger.overdue, 0, 365, (overdue) => setT({ overdue }))}
+                <span>day(s) overdue, then again every</span>
+                {num(trigger.repeatBill, 1, 365, (repeatBill) => setT({ repeatBill }))}
+                <span>day(s) (empty: once)</span>
+              </>,
+            )}
+          {trigger.type === "yearly" &&
+            row(
+              <>
+                <span>Every year on</span>
+                {num(trigger.day, 1, 31, (day) => setT({ day }))}
+                <select value={trigger.month} onChange={(e) => setT({ month: Number(e.target.value) })} className={cn(inputClass, "w-36")}>
+                  {MONTHS.map((m, i) => (
+                    <option key={m} value={i + 1}>
+                      {m}
+                    </option>
+                  ))}
+                </select>
+              </>,
+            )}
+          {trigger.type === "monthly" &&
+            row(
+              <>
+                <span>On day</span>
+                {num(trigger.day, 1, 28, (day) => setT({ day }))}
+                <span>of every month</span>
+              </>,
+            )}
+          {trigger.type === "weekly" &&
+            row(
+              <>
+                <span>Every</span>
+                <select value={trigger.weekday} onChange={(e) => setT({ weekday: Number(e.target.value) })} className={cn(inputClass, "w-36")}>
+                  {WEEKDAYS.map((w, i) => (
+                    <option key={w} value={i}>
+                      {w}
+                    </option>
+                  ))}
+                </select>
+              </>,
+            )}
+          {trigger.type === "once" &&
+            row(
+              <>
+                <span>Once, on</span>
+                <input type="date" value={trigger.date} onChange={(e) => setT({ date: e.target.value })} className={cn(inputClass, "w-44")} />
+              </>,
+            )}
+          {row(
+            <>
+              <span>at</span>
+              <input type="time" value={atTime} onChange={(e) => setAtTime(e.target.value)} className={cn(inputClass, "w-32")} />
+              <span className="text-ink-500">clinic time</span>
+            </>,
+          )}
+        </section>
 
+        {/* ── Who ── */}
+        <section className="space-y-3 rounded-2xl border border-ink-200 p-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-ink-500">Who</h4>
+            {isCalendar ? (
+              <select value={audience} onChange={(e) => setAudience(e.target.value as "patients" | "staff")} className={cn(inputClass, "max-w-xs")}>
+                <option value="patients">Patients</option>
+                <option value="staff">The doctors</option>
+              </select>
+            ) : (
+              <span className="text-sm text-ink-700">The patients it concerns</span>
+            )}
+          </div>
+          {effectiveAudience === "staff" ? (
+            <p className="text-xs text-ink-500">Every doctor with a mobile number on their account, in the clinic&apos;s language.</p>
+          ) : (
+            <>
+              {conditions.map((c) => (
+                <div key={c} className="flex flex-wrap items-center gap-2 rounded-xl bg-ink-50 px-3 py-2 text-sm text-ink-700">
+                  <span className="font-medium text-ink-900">{CONDITION_TITLE[c]}:</span>
+                  {c === "procedures" && (
+                    <>
+                      <span className="flex flex-wrap gap-1">
+                        {PROCEDURES.map((p) => {
+                          const on = filters.procedures.includes(p);
+                          return (
+                            <button
+                              key={p}
+                              type="button"
+                              onClick={() => setF({ procedures: on ? filters.procedures.filter((x) => x !== p) : [...filters.procedures, p] })}
+                              className={cn("press rounded-full border px-2 py-0.5 text-xs", on ? "border-brand-500 bg-brand-50 text-brand-800" : "border-ink-200 bg-card text-ink-600")}
+                              aria-pressed={on}
+                            >
+                              {p}
+                            </button>
+                          );
+                        })}
+                      </span>
+                      <span>in the last</span>
+                      {num(filters.procedures_within_months ?? "", 1, 240, (v) => setF({ procedures_within_months: numOrNull(v) }))}
+                      <span>months (empty: ever)</span>
+                    </>
+                  )}
+                  {c === "age" && (
+                    <>
+                      <span>from</span>
+                      {num(filters.min_age ?? "", 0, 120, (v) => setF({ min_age: numOrNull(v) }))}
+                      <span>to</span>
+                      {num(filters.max_age ?? "", 0, 120, (v) => setF({ max_age: numOrNull(v) }))}
+                      <span>years (either may be empty)</span>
+                    </>
+                  )}
+                  {c === "languages" &&
+                    (["en", "ar", "fr"] as const).map((l) => {
+                      const on = filters.languages.includes(l);
+                      return (
+                        <button
+                          key={l}
+                          type="button"
+                          onClick={() => setF({ languages: on ? filters.languages.filter((x) => x !== l) : [...filters.languages, l] })}
+                          className={cn("press rounded-full border px-2 py-0.5 text-xs", on ? "border-brand-500 bg-brand-50 text-brand-800" : "border-ink-200 bg-card text-ink-600")}
+                          aria-pressed={on}
+                        >
+                          {{ en: "English", ar: "Arabic", fr: "French" }[l]}
+                        </button>
+                      );
+                    })}
+                  {c === "owes_money" && (
+                    <select value={filters.owes_money ? "yes" : "no"} onChange={(e) => setF({ owes_money: e.target.value === "yes" })} className={cn(inputClass, "w-48")}>
+                      <option value="yes">only patients who owe money</option>
+                      <option value="no">only patients who owe nothing</option>
+                    </select>
+                  )}
+                  {c === "skip_if_booked" && <span>patients with an appointment already booked are left out</span>}
+                  {c === "seen" && (
+                    <>
+                      <select
+                        value={seenMode}
+                        onChange={(e) => {
+                          const mode = e.target.value as "within" | "not_for";
+                          setSeenMode(mode);
+                          const n = filters.seen_within_months ?? filters.not_seen_for_months ?? 12;
+                          setF(mode === "within" ? { seen_within_months: n, not_seen_for_months: null } : { seen_within_months: null, not_seen_for_months: n });
+                        }}
+                        className={cn(inputClass, "w-44")}
+                      >
+                        <option value="within">seen in the last</option>
+                        <option value="not_for">not seen for</option>
+                      </select>
+                      {num(
+                        (seenMode === "within" ? filters.seen_within_months : filters.not_seen_for_months) ?? "",
+                        1,
+                        240,
+                        (v) => setF(seenMode === "within" ? { seen_within_months: numOrNull(v) } : { not_seen_for_months: numOrNull(v) }),
+                      )}
+                      <span>months</span>
+                    </>
+                  )}
+                  <button type="button" onClick={() => removeCondition(c)} className="ms-auto press rounded-lg p-1 text-ink-400 hover:bg-brick-50 hover:text-brick-700" aria-label={`Remove ${CONDITION_TITLE[c]}`}>
+                    <FaTimes className="text-xs" />
+                  </button>
+                </div>
+              ))}
+              <select value="" onChange={(e) => addCondition(e.target.value as Condition)} className={cn(inputClass, "max-w-xs")} aria-label="Add a condition">
+                <option value="">+ Add a condition…</option>
+                {(Object.keys(CONDITION_TITLE) as Condition[])
+                  .filter((c) => !conditions.includes(c))
+                  .map((c) => (
+                    <option key={c} value={c}>
+                      {CONDITION_TITLE[c]}
+                    </option>
+                  ))}
+              </select>
+              {conditions.length === 0 && <p className="text-xs text-ink-500">Every patient the trigger concerns. Patients who asked for no WhatsApp are always skipped.</p>}
+            </>
+          )}
+        </section>
+
+        {/* ── What ── */}
         {!reminder && (
-          <div className="space-y-3">
-            <div>
-              <div className="text-sm font-medium text-ink-800">Wording</div>
-              <p className="text-xs text-ink-500">
-                Leave empty to start from the suggested wording; you can edit, preview and submit it to WhatsApp after adding. Placeholders:{" "}
-                {placeholderHint}.
-              </p>
-            </div>
+          <section className="space-y-3 rounded-2xl border border-ink-200 p-3">
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-ink-500">What</h4>
+            <p className="text-xs text-ink-500">
+              Leave empty to start from the suggested wording; you can edit, preview and submit it to WhatsApp after adding. Placeholders for this trigger:{" "}
+              {placeholderHint}.
+            </p>
             <FormField label="English" error={enCheck.error} hint={enCheck.warning}>
               <textarea value={bodyEn} onChange={(e) => setBodyEn(e.target.value)} rows={3} className={cn(inputClass, "resize-y", enCheck.error && "border-brick-400")} maxLength={BODY_MAX} />
             </FormField>
             <FormField label="العربية" error={arCheck.error} hint={arCheck.warning}>
               <textarea value={bodyAr} onChange={(e) => setBodyAr(e.target.value)} rows={3} dir="rtl" className={cn(inputClass, "resize-y", arCheck.error && "border-brick-400")} maxLength={BODY_MAX} />
             </FormField>
-          </div>
+          </section>
         )}
 
         {error && <p className="rounded-lg border border-brick-200 bg-brick-50 px-3 py-2 text-sm text-brick-800">{error}</p>}
