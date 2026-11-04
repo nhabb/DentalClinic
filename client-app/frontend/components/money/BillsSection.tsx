@@ -33,7 +33,7 @@ import {
 } from "@/components/billing/invoice-doc";
 import { NewInvoiceModal, type IssueOutcome } from "@/components/billing/NewInvoiceModal";
 import {
-  CONFIRM_PASSWORD_HEADER,
+  confirmPasswordHeaders,
   PasswordConfirmModal,
 } from "@/components/billing/PasswordConfirmModal";
 import { CancelBillModal } from "./CancelBillModal";
@@ -157,7 +157,7 @@ export function BillsSection({
     try {
       const res = await apiFetch(path, {
         method: "DELETE",
-        headers: { [CONFIRM_PASSWORD_HEADER]: password },
+        headers: confirmPasswordHeaders(password),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));

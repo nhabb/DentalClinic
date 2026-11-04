@@ -222,6 +222,12 @@ export function QuoteSection({ patient, plan, setPlan, reload, inFlight }: Props
           return next;
         });
         if (failed.size === 0 && billed.length === 0) toast.success("Prices saved.");
+        // A failed save stays in its box for the desk to retry: the editor
+        // does not close over it.
+        if (failed.size > 0 && billed.length === 0) {
+          if (inFlight.current === 0) await reload(true);
+          return;
+        }
       }
 
       if (billed.length > 0) {
@@ -578,8 +584,12 @@ export function QuoteSection({ patient, plan, setPlan, reload, inFlight }: Props
         reissue={reissues[0] ?? null}
         onClose={() => {
           // "Not now": the bill is not reissued; its new prices stay in the
-          // boxes so the desk can save again or cancel the edit.
-          setReissues((q) => q.slice(1));
+          // boxes so the desk can save again or cancel the edit. The unbilled
+          // prices already landed, so the plan is re-read once the queue is
+          // empty: the agreement may have gone stale on them.
+          const rest = reissues.slice(1);
+          setReissues(rest);
+          if (rest.length === 0) void reload(true);
         }}
         onDone={({ invoice, cancelled, paidFromPrepaid }) => {
           const moved = paidFromPrepaid > 0 ? ` $${money(paidFromPrepaid)} moved onto it;` : "";

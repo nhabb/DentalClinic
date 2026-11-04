@@ -47,6 +47,11 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
 
 const nameOf = (l: PlanLine) => `${l.procedure}${l.tooth ? ` (tooth ${l.tooth})` : ""}`;
 
+/** The API keeps a reason to 500 characters; a long list of lines is summed up instead. */
+const REASON_MAX = 500;
+const fitReason = (full: string, count: number) =>
+  full.length <= REASON_MAX ? full : `Repriced on the quote: ${count} lines at new prices`;
+
 /** "Veneers (tooth 25) $550 → $600, Crown (tooth 26) $500 → $450" */
 export const describeChanges = (changes: PriceChange[]) =>
   changes.map((c) => `${nameOf(c.line)} $${money(c.line.amount ?? 0)} → $${money(c.amount)}`).join(", ");
@@ -64,7 +69,7 @@ export function ReissueBillModal({ reissue, onClose, onDone }: Props) {
     setInvoice(null);
     setError("");
     setLoading(true);
-    setReason(`Repriced on the quote: ${describeChanges(reissue.changes)}`);
+    setReason(fitReason(`Repriced on the quote: ${describeChanges(reissue.changes)}`, reissue.changes.length));
     (async () => {
       try {
         const res = await apiFetch(`/api/billing/invoices/${reissue.invoiceId}`);

@@ -1,4 +1,5 @@
 "use client";
+import { confirmPasswordHeaders } from "@/components/billing/PasswordConfirmModal";
 import { apiFetch } from '@/lib/api/client';
 import { toast } from 'sonner';
 
@@ -1142,7 +1143,7 @@ export default function PatientsPage() {
     try {
       const res = await apiFetch("/api/patient-work/complete", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "X-Confirm-Password": completePassword },
+        headers: { "Content-Type": "application/json", ...confirmPasswordHeaders(completePassword) },
         body: JSON.stringify({
           patient_id: selectedPatient.id,
           treatment_date: completeDate,
@@ -1185,7 +1186,7 @@ export default function PatientsPage() {
     try {
       const res = await apiFetch("/api/patient-work/reopen", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "X-Confirm-Password": reopenPassword },
+        headers: { "Content-Type": "application/json", ...confirmPasswordHeaders(reopenPassword) },
         body: JSON.stringify({ patient_id: selectedPatient.id, items: [{ record_id: h.id }] }),
       });
       if (!res.ok) {

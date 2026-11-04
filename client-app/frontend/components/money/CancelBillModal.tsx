@@ -4,13 +4,12 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { FaBan, FaLock } from "react-icons/fa";
 import { apiFetch } from "@/lib/api/client";
-import { ensureSession } from "@/lib/auth/session";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/Modal";
 import { FormField, inputClass } from "@/components/ui/FormField";
 import { MONEY_WORD } from "@/components/billing/money-words";
 import { PAYMENT_METHODS } from "@/components/billing/payment-methods";
-import { CONFIRM_PASSWORD_HEADER } from "@/components/billing/PasswordConfirmModal";
+import { confirmPasswordHeaders } from "@/components/billing/PasswordConfirmModal";
 import { money, readError } from "@/components/billing/quote-doc";
 import type { Invoice } from "@/components/billing/invoice-doc";
 
@@ -23,7 +22,9 @@ import type { Invoice } from "@/components/billing/invoice-doc";
  * prepaid (nothing leaves the clinic; it pays their next bill), or handed
  * back now as a refund. Either way it is a clinic admin's act: they re-enter
  * their password, and the audit row records who, when, the amount, the
- * reason and where the money went, so a mistake can be traced later.
+ * reason and where the money went, so a mistake can be traced later. Who
+ * counts as an admin is the API's rule alone; this dialog shows the field to
+ * everyone and repeats the API's refusal in place.
  */
 
 interface Props {
@@ -32,14 +33,11 @@ interface Props {
   onCancelled: () => void;
 }
 
-const ADMIN_ROLES = new Set(["admin", "superadmin"]);
-
 export function CancelBillModal({ invoice, onClose, onCancelled }: Props) {
   const [reason, setReason] = useState("");
   const [refund, setRefund] = useState(false);
   const [method, setMethod] = useState("cash");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -50,19 +48,11 @@ export function CancelBillModal({ invoice, onClose, onCancelled }: Props) {
     setMethod("cash");
     setPassword("");
     setError("");
-    let gone = false;
-    void ensureSession().then((s) => {
-      if (!gone) setRole(s?.role ?? null);
-    });
-    return () => {
-      gone = true;
-    };
   }, [invoice]);
 
   if (!invoice) return null;
   const paid = invoice.amount_paid;
   const moneyOnIt = paid > 0;
-  const isAdmin = role !== null && ADMIN_ROLES.has(role);
   const receipts = Array.from(
     new Set(
       (invoice.invoice_payments ?? [])
@@ -79,7 +69,7 @@ export function CancelBillModal({ invoice, onClose, onCancelled }: Props) {
     try {
       const res = await apiFetch(`/api/billing/invoices/${invoice.id}/void`, {
         method: "POST",
-        headers: moneyOnIt ? { [CONFIRM_PASSWORD_HEADER]: password } : {},
+        headers: moneyOnIt ? confirmPasswordHeaders(password) : {},
         body: JSON.stringify({
           reason: reason.trim(),
           ...(moneyOnIt && refund ? { refund: true, refund_method: method } : {}),
@@ -188,23 +178,16 @@ export function CancelBillModal({ invoice, onClose, onCancelled }: Props) {
                 where the money went. Nothing here can be undone.
               </span>
             </p>
-            {role !== null && !isAdmin ? (
-              <p className="rounded-lg border border-brick-200 bg-brick-50 px-3 py-2 text-sm text-brick-800">
-                Only a clinic admin can cancel a bill that has money on it. Ask an admin to sign in and do
-                it, or cancel it from their account.
-              </p>
-            ) : (
-              <FormField label="Your password (clinic admin) *">
-                <input
-                  type="password"
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Re-enter your password to confirm"
-                  className={inputClass}
-                />
-              </FormField>
-            )}
+            <FormField label="Your password (clinic admin) *">
+              <input
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Re-enter your password to confirm"
+                className={inputClass}
+              />
+            </FormField>
           </div>
         )}
 
@@ -218,7 +201,7 @@ export function CancelBillModal({ invoice, onClose, onCancelled }: Props) {
           <Button
             variant="destructive"
             onClick={submit}
-            disabled={saving || (moneyOnIt && role !== null && !isAdmin)}
+            disabled={saving || (moneyOnIt && !password)}
           >
             <FaBan className="mr-2" />
             {saving

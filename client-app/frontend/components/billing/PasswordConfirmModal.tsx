@@ -5,8 +5,18 @@ import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/button";
 import { FormField, inputClass } from "@/components/ui/FormField";
 
-/** Header the API reads the admin's re-entered password from (ConfirmedAdminGuard). */
+/** Header the API reads the re-entered password from (ConfirmedAdminGuard, assertConfirmedPassword). */
 export const CONFIRM_PASSWORD_HEADER = "X-Confirm-Password";
+
+/**
+ * The header for a signed request. The password is percent-encoded: a
+ * browser refuses to send a header value outside Latin-1, and a password
+ * with Arabic letters, an accent or an emoji is ordinary here. The API
+ * decodes it (confirmPasswordFrom).
+ */
+export const confirmPasswordHeaders = (password: string): Record<string, string> => ({
+  [CONFIRM_PASSWORD_HEADER]: encodeURIComponent(password),
+});
 
 interface PasswordConfirmModalProps {
   open: boolean;
