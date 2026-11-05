@@ -89,6 +89,7 @@ export const TRIGGER_TITLE: Record<TriggerType, string> = {
   monthly: "A day every month",
   weekly: "A weekday every week",
   once: "One date, once",
+  query: "When the assistant's query finds them",
 };
 export const TRIGGER_HINT: Record<TriggerType, string> = {
   procedure: "A set time after work is marked done on the chart; once per procedure.",
@@ -100,6 +101,7 @@ export const TRIGGER_HINT: Record<TriggerType, string> = {
   monthly: "The same day each month (1 to 28).",
   weekly: "The same weekday each week, to patients or to the doctors.",
   once: "A single date, then never again.",
+  query: "Any event in the data: the assistant's query returns each patient with the day it is due and what it is about, and sends once per record (older than 30 days: never; still ahead: when it comes).",
 };
 export const DATE_FIELD_TITLE: Record<DateField, string> = {
   birthday: "the patient's birthday",
@@ -188,6 +190,8 @@ export function paramsOfRule(def: RuleDefinition): string[] {
       return ["patient_name", "clinic"];
     case "unpaid_bill":
       return ["patient_name", "amount", "bill_number", "clinic"];
+    case "query":
+      return ["patient_name", "date", "detail", "clinic"];
     default:
       return def.audience === "staff" ? ["doctor_name", "date", "clinic"] : ["patient_name", "date", "clinic"];
   }
@@ -214,6 +218,7 @@ export const PLACEHOLDER_LABEL: Record<string, string> = {
   count: "Number of appointments",
   list: "The day's list",
   procedure: "Procedure",
+  detail: "Detail from the query",
 };
 
 /** Sample values for the preview, per language. */

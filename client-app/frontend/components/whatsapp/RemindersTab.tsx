@@ -421,6 +421,7 @@ interface TriggerForm {
   day: string;
   weekday: number;
   date: string;
+  repeatQuery: string;
 }
 
 const CALENDAR: TriggerType[] = ["yearly", "monthly", "weekly", "once"];
@@ -443,6 +444,7 @@ function triggerForm(t?: RuleTrigger): TriggerForm {
     day: "1",
     weekday: 1,
     date: new Date().toISOString().slice(0, 10),
+    repeatQuery: "",
   };
   if (!t) return f;
   f.type = t.type;
@@ -481,6 +483,9 @@ function triggerForm(t?: RuleTrigger): TriggerForm {
     case "once":
       f.date = t.date;
       break;
+    case "query":
+      f.repeatQuery = t.repeat_every_days ? String(t.repeat_every_days) : "";
+      break;
   }
   return f;
 }
@@ -509,6 +514,8 @@ function triggerOf(f: TriggerForm): RuleTrigger {
       return { type: "weekly", weekday: f.weekday };
     case "once":
       return { type: "once", date: f.date };
+    case "query":
+      return { type: "query", repeat_every_days: numOrNull(f.repeatQuery) };
   }
 }
 
@@ -528,6 +535,8 @@ function CustomReminderModal({
   const [match, setMatch] = useState<Match>(reminder?.definition.match ?? "all");
   const [audienceQuery, setAudienceQuery] = useState<AudienceQuery | null>(reminder?.definition.audience_query ?? null);
   const [audiencePreview, setAudiencePreview] = useState<AudiencePreview | null>(null);
+  /** The other reminders of the same wish, added together with the first. */
+  const [extras, setExtras] = useState<ChatProposal[]>([]);
   const [vocabulary, setVocabulary] = useState<RuleVocabulary | null>(null);
   // The clinic's own lists (its doctors, the procedure names) for the condition rows.
   useEffect(() => {
@@ -575,10 +584,12 @@ function CustomReminderModal({
       setAudienceQuery(null);
       setAudiencePreview(null);
     }
+    setExtras(d.extra ?? []);
+    const more = d.extra?.length ? ` Also added with it: ${d.extra.map((e) => e.summary).join("; ")}.` : "";
     setDraftNote(
       d.unsupported
-        ? { tone: "honey", text: `${d.unsupported} Filled in: ${d.summary}.` }
-        : { tone: "leaf", text: `${note} Filled in as: ${d.summary}. Check the parts below, change anything, then add it.` },
+        ? { tone: "honey", text: `${d.unsupported} Filled in: ${d.summary}.${more}` }
+        : { tone: "leaf", text: `${note} Filled in as: ${d.summary}.${more} Check the parts below, change anything, then add it.` },
     );
   };
 
@@ -599,7 +610,25 @@ function CustomReminderModal({
             ...(bodyAr.trim() ? { body_ar: bodyAr.trim() } : {}),
           });
       if (reminder && saved.wording_reset) toast.info("The reminder now fills different placeholders, so its wording starts again from the suggested one. Check it and submit it to WhatsApp.");
-      toast.success(reminder ? "Reminder saved." : "Reminder added. Now check its wording and submit it to WhatsApp.");
+      // The other reminders of the same wish, each its own rule.
+      let added = 0;
+      for (const e of reminder ? [] : extras) {
+        try {
+          const extraSaved = await createCustomReminder({
+            name: e.name,
+            definition: e.definition,
+            at_time: e.at_time,
+            enabled: true,
+            body_en: e.body_en,
+            body_ar: e.body_ar,
+          });
+          onSaved(extraSaved, true);
+          added += 1;
+        } catch (err) {
+          toast.error(errorText(err, `Could not add "${e.name}".`));
+        }
+      }
+      toast.success(reminder ? "Reminder saved." : added > 0 ? `${added + 1} reminders added. Now check their wording and submit it to WhatsApp.` : "Reminder added. Now check its wording and submit it to WhatsApp.");
       onSaved(saved, !reminder);
     } catch (err) {
       setError(errorText(err, "Could not save the reminder."));
@@ -780,6 +809,14 @@ function CustomReminderModal({
               <>
                 <span>Once, on</span>
                 <input type="date" value={trigger.date} onChange={(e) => setT({ date: e.target.value })} className={cn(inputClass, "w-44")} />
+              </>,
+            )}
+          {trigger.type === "query" &&
+            row(
+              <>
+                <span>When the query under Who says it is due{audienceQuery ? "" : " (ask the assistant: it writes that query)"}, then again every</span>
+                {num(trigger.repeatQuery, 1, 365, (repeatQuery) => setT({ repeatQuery }))}
+                <span>day(s) (empty: once per record)</span>
               </>,
             )}
           {row(

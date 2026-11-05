@@ -74,7 +74,7 @@ export interface WhatsAppTemplate {
 }
 
 /** The parts a reminder of the clinic's own is built from (mirrors custom-rules.ts on the API). */
-export type TriggerType = "procedure" | "appointment" | "since_last_visit" | "date_on_file" | "unpaid_bill" | "yearly" | "monthly" | "weekly" | "once";
+export type TriggerType = "procedure" | "appointment" | "since_last_visit" | "date_on_file" | "unpaid_bill" | "yearly" | "monthly" | "weekly" | "once" | "query";
 export type DateField = "birthday" | "first_visit" | "registration";
 export type RuleTrigger =
   | { type: "procedure"; procedure: string | null; days_after: number }
@@ -85,7 +85,9 @@ export type RuleTrigger =
   | { type: "yearly"; month: number; day: number }
   | { type: "monthly"; day: number }
   | { type: "weekly"; weekday: number }
-  | { type: "once"; date: string };
+  | { type: "once"; date: string }
+  /** The audience query says when: each row is a patient with the day it is due, what it is about and a detail for the wording. */
+  | { type: "query"; repeat_every_days: number | null };
 
 /**
  * A condition: one fact about the patient, compared one way (mirrors FIELDS / OPS
@@ -309,7 +311,11 @@ export interface ChatTurn {
   role: "user" | "assistant";
   content: string;
 }
-export type ChatProposal = ReminderDraft & { audience: (AudienceQuery & AudiencePreview) | null };
+export type ChatProposal = ReminderDraft & {
+  audience: (AudienceQuery & AudiencePreview) | null;
+  /** The other reminders of the same wish, when it needs several (day 1, day 7, day 30...). */
+  extra: ChatProposal[];
+};
 export interface ChatReply {
   kind: "question" | "proposal";
   text: string;
