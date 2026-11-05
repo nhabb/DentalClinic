@@ -728,7 +728,7 @@
     "readOnly": "Your role can view these details but not change them.",
     "loadFailed": "Could not load the settings.",
     "whatsapp": "WhatsApp reminders",
-    "whatsappDesc": "Connect the clinic's number and choose what patients and doctors receive",
+    "whatsappDesc": "Choose which reminders patients and doctors receive, by WhatsApp or email, and when",
     "openWhatsapp": "Open WhatsApp"
   },
   "expenses": {

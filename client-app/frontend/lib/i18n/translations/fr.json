@@ -728,7 +728,7 @@
     "readOnly": "Votre rôle peut consulter ces informations sans les modifier.",
     "loadFailed": "Impossible de charger les paramètres.",
     "whatsapp": "Rappels WhatsApp",
-    "whatsappDesc": "Connecter le numéro de la clinique et choisir ce que reçoivent patients et médecins",
+    "whatsappDesc": "Choisissez les rappels que reçoivent patients et médecins, par WhatsApp ou e-mail, et quand",
     "openWhatsapp": "Ouvrir WhatsApp"
   },
   "expenses": {

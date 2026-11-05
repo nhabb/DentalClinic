@@ -48,6 +48,7 @@ import {
   type Organization,
 } from "@/lib/api/settings";
 import { BranchModal } from "./components/BranchModal";
+import { MessagingSection } from "./components/MessagingSection";
 
 const textareaClass = inputClass.replace("h-11", "min-h-24 py-2.5");
 
@@ -113,6 +114,7 @@ export default function SettingsPage() {
                 canDelete={can("branches:delete")}
                 onChanged={load}
               />
+              {can("whatsapp:read") && <MessagingSection canEdit={can("whatsapp:edit")} canSend={can("whatsapp:send")} />}
               {can("whatsapp:read") && <WhatsAppCard />}
               {can("staff:read") && <AccessCard />}
             </div>

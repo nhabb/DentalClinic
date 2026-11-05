@@ -17,8 +17,6 @@ import { useSignOut } from "@/lib/auth/useSignOut";
 import { runNow, type RunResult } from "@/lib/api/whatsapp";
 import { errorText } from "@/lib/api/request";
 import { useWhatsApp } from "@/components/whatsapp/useWhatsApp";
-import { ConnectionCard } from "@/components/whatsapp/ConnectionCard";
-import { EmailCard } from "@/components/whatsapp/EmailCard";
 import { RemindersTab } from "@/components/whatsapp/RemindersTab";
 import { MessagesTable } from "@/components/whatsapp/MessagesTable";
 
@@ -30,8 +28,10 @@ import { MessagesTable } from "@/components/whatsapp/MessagesTable";
  * state: the page is server-rendered first.
  */
 
-type Tab = "connection" | "reminders" | "messages";
-const TABS: Tab[] = ["connection", "reminders", "messages"];
+type Tab = "reminders" | "messages";
+const TABS: Tab[] = ["reminders", "messages"];
+/** Where the number and the email sender are set up: Settings, not here. */
+const MESSAGING_SETTINGS = "/admin/settings#messaging";
 
 export default function WhatsAppPage() {
   const { t } = useTranslation();
@@ -42,18 +42,22 @@ export default function WhatsAppPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const signOut = useSignOut();
 
-  const { file, loading, failed, reload, setConnection, setEmail, setTemplates, setTemplate, setRule, setCustomReminders, reloadTemplates } = useWhatsApp();
+  const { file, loading, failed, reload, setTemplates, setTemplate, setRule, setCustomReminders, reloadTemplates } = useWhatsApp();
   const [tab, setTab] = useState<Tab | null>(null);
   const [running, setRunning] = useState(false);
   const [lastRun, setLastRun] = useState<{ at: Date; result: RunResult } | null>(null);
   const [messagesStatus, setMessagesStatus] = useState<string>("");
 
-  // The tab from the address bar, else Connection until connected, then Reminders.
+  // The tab from the address bar, else Reminders. An old "connection" link goes to Settings, where connecting lives now.
   useEffect(() => {
     if (!file || tab !== null) return;
     const search = new URLSearchParams(window.location.search);
-    const wanted = search.get("tab") as Tab | null;
-    setTab(wanted && TABS.includes(wanted) ? wanted : file.connection.status === "connected" ? "reminders" : "connection");
+    const wanted = search.get("tab");
+    if (wanted === "connection") {
+      router.replace(MESSAGING_SETTINGS);
+      return;
+    }
+    setTab(wanted && (TABS as string[]).includes(wanted) ? (wanted as Tab) : "reminders");
     const status = search.get("status");
     if (status) setMessagesStatus(status);
   }, [file, tab]);
@@ -69,7 +73,7 @@ export default function WhatsAppPage() {
 
   const sendDueNow = async () => {
     if (!connected) {
-      toast.error("Connect the clinic's number first.");
+      toast.error("Connect the clinic's number first, under Settings.");
       return;
     }
     setRunning(true);
@@ -126,7 +130,7 @@ export default function WhatsAppPage() {
           } as HeaderAction,
         ]
       : []),
-    { key: "settings", label: t("nav.settings"), icon: <FaCog />, href: "/admin/settings" },
+    { key: "settings", label: "Connection settings", icon: <FaCog />, href: MESSAGING_SETTINGS },
   ];
 
   const pendingCount = file?.templates.filter((x) => x.meta_status === "pending").length ?? 0;
@@ -163,27 +167,10 @@ export default function WhatsAppPage() {
                 value={tab}
                 onChange={(v) => goTo(v)}
                 items={[
-                  { id: "connection", label: t("whatsapp.tabConnection"), dot: file.connection.status === "error" },
                   { id: "reminders", label: t("whatsapp.tabReminders"), count: pendingCount || undefined, dot: draftCount > 0 && connected },
                   { id: "messages", label: t("whatsapp.tabMessages"), dot: (lastRun?.result.failed ?? 0) > 0 },
                 ]}
               />
-              {tab === "connection" && (
-                <div role="tabpanel" id="panel-connection" aria-labelledby="tab-connection">
-                  <div className="space-y-6">
-                    <ConnectionCard
-                      connection={file.connection}
-                      onChange={(c) => {
-                        setConnection(c);
-                        void reload(true);
-                      }}
-                      canEdit={canEdit}
-                      canSend={canSend}
-                    />
-                    <EmailCard email={file.email} onChange={setEmail} canEdit={canEdit} canSend={canSend} />
-                  </div>
-                </div>
-              )}
               {tab === "reminders" && (
                 <div role="tabpanel" id="panel-reminders" aria-labelledby="tab-reminders">
                   <RemindersTab
@@ -196,7 +183,7 @@ export default function WhatsAppPage() {
                     onTemplates={setTemplates}
                     onTemplate={setTemplate}
                     onRule={setRule}
-                    onConnect={() => goTo("connection")}
+                    onConnect={() => router.push(MESSAGING_SETTINGS)}
                     onSeeFailed={() => {
                       setMessagesStatus("failed");
                       goTo("messages", { status: "failed" });
@@ -217,7 +204,7 @@ export default function WhatsAppPage() {
                     status={messagesStatus}
                     onStatus={setMessagesStatus}
                     runKey={lastRun?.at.getTime() ?? 0}
-                    onConnect={() => goTo("connection")}
+                    onConnect={() => router.push(MESSAGING_SETTINGS)}
                     onReminders={() => goTo("reminders")}
                     onRun={() => void sendDueNow()}
                   />
