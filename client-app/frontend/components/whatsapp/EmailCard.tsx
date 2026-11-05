@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { FaCheckCircle, FaChevronDown, FaEnvelope, FaExclamationTriangle, FaEye, FaEyeSlash, FaPaperPlane } from "react-icons/fa";
+import { FaCheckCircle, FaEnvelope, FaExclamationTriangle, FaEye, FaEyeSlash, FaPaperPlane } from "react-icons/fa";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { FormField, inputClass } from "@/components/ui/FormField";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { Modal } from "@/components/ui/Modal";
 import { cn, formatDateBeirut } from "@/lib/utils";
 import { errorText } from "@/lib/api/request";
 import { deleteEmailSettings, saveEmailSettings, testEmail, type EmailSettings, type EmailSettingsInput } from "@/lib/api/whatsapp";
+import { EmailGoodToKnow, EmailTroubles, GmailSteps, HostingSteps, OutlookSteps, WhichOption } from "./EmailHelp";
 
 /*
  * Email as a second channel. The clinic gives the name patients see as the
@@ -105,10 +106,10 @@ function EmailForm({ email, canEdit, onSaved, onCancel }: { email: EmailSettings
           </p>
         )}
         <fieldset disabled={!canEdit || saving} className="grid gap-4 sm:grid-cols-2">
-          <FormField label="Sender name" required hint="What patients see as the sender, e.g. your clinic name.">
+          <FormField label="Sender name" required hint="What patients see in their inbox as the sender, for example your clinic name. No address needed here.">
             <input value={fromName} onChange={(e) => setFromName(e.target.value)} className={inputClass} maxLength={80} />
           </FormField>
-          <FormField label="Replies go to" hint="Optional. When a patient answers the email, it lands here.">
+          <FormField label="Replies go to" hint="Optional. When a patient hits Reply, the answer lands in this mailbox. Use the address your desk reads.">
             <input type="email" value={replyTo} onChange={(e) => setReplyTo(e.target.value)} className={inputClass} dir="ltr" placeholder="desk@yourclinic.com" />
           </FormField>
           <div className="sm:col-span-2">
@@ -116,22 +117,22 @@ function EmailForm({ email, canEdit, onSaved, onCancel }: { email: EmailSettings
           </div>
           {own && (
             <>
-              <FormField label="Sender address" required hint="The mailbox the emails come from, on your server.">
+              <FormField label="Sender address" required hint="The address the emails are sent from, on your provider. Patients see it next to the sender name.">
                 <input type="email" value={fromEmail} onChange={(e) => setFromEmail(e.target.value)} className={inputClass} dir="ltr" placeholder="reminders@yourclinic.com" />
               </FormField>
-              <FormField label="Mail server (SMTP host)" required hint="e.g. smtp.gmail.com, smtp.office365.com">
+              <FormField label="Mail server (SMTP host)" required hint="Your provider calls it the outgoing server or SMTP server. Gmail: smtp.gmail.com · Microsoft 365: smtp.office365.com · others: see the help below.">
                 <input value={host} onChange={(e) => setHost(e.target.value)} className={inputClass} dir="ltr" />
               </FormField>
-              <FormField label="Port" hint="587 (STARTTLS) or 465 (TLS).">
+              <FormField label="Port" hint="The door on the server. 587 works almost everywhere; use 465 only if your provider's page says so (then switch TLS on).">
                 <input type="number" min={1} max={65535} value={port} onChange={(e) => setPort(e.target.value)} className={cn(inputClass, "w-32")} />
               </FormField>
               <div className="flex items-end pb-1">
                 <Switch checked={secure} onChange={setSecure} label="TLS from the first byte (port 465)" size="sm" />
               </div>
-              <FormField label="Login" hint="Usually the sender address itself.">
+              <FormField label="Login" hint="Almost always your full email address.">
                 <input value={user} onChange={(e) => setUser(e.target.value)} className={inputClass} dir="ltr" autoComplete="off" />
               </FormField>
-              <FormField label="Password" hint={email.has_smtp_password ? "Saved and hidden. Leave empty to keep it." : "For Gmail, an app password, not your account password."}>
+              <FormField label="Password" hint={email.has_smtp_password ? "Saved and hidden. Leave empty to keep it." : "Gmail, Yahoo and Zoho want an app password made in your account's security page, not your sign-in password. Outlook and most hosting providers take the mailbox password."}>
                 <div className="relative">
                   <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} className={cn(inputClass, "pe-10")} dir="ltr" autoComplete="new-password" />
                   <button type="button" onClick={() => setShowPassword((v) => !v)} className="absolute inset-y-0 end-2 text-ink-400 hover:text-ink-700" aria-label={showPassword ? "Hide" : "Show"}>
@@ -143,6 +144,13 @@ function EmailForm({ email, canEdit, onSaved, onCancel }: { email: EmailSettings
           )}
         </fieldset>
         {error && <p className="rounded-lg border border-brick-200 bg-brick-50 px-3 py-2 text-sm text-brick-800">{error}</p>}
+        <div className="space-y-2">
+          <WhichOption platformAvailable={email.uses_platform_mail} />
+          <GmailSteps />
+          <OutlookSteps />
+          <HostingSteps />
+          <EmailTroubles />
+        </div>
         <div className="flex flex-wrap justify-end gap-2">
           {onCancel && (
             <Button variant="outline" onClick={onCancel} disabled={saving}>
@@ -164,7 +172,6 @@ function EmailPanel({ email, onChange, canEdit, canSend, onEdit }: { email: Emai
   const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null);
   const [confirmRemove, setConfirmRemove] = useState(false);
   const [removing, setRemoving] = useState(false);
-  const [more, setMore] = useState(false);
 
   const runTest = async () => {
     setTesting(true);
@@ -249,18 +256,17 @@ function EmailPanel({ email, onChange, canEdit, canSend, onEdit }: { email: Emai
           </div>
           {result && <p className={cn("mt-2 text-sm", result.ok ? "text-leaf-800" : "text-brick-800")}>{result.text}</p>}
         </div>
-        <button type="button" onClick={() => setMore((v) => !v)} className="inline-flex items-center gap-1 text-xs text-ink-500 hover:text-ink-700" aria-expanded={more}>
-          <FaChevronDown className={cn("size-3 transition-transform", more && "rotate-180")} aria-hidden />
-          How email reminders work
-        </button>
-        {more && (
-          <ul className="list-disc space-y-1 ps-5 text-xs text-ink-600">
-            <li>Each reminder chooses its channels under Reminders: WhatsApp, email, or both. An email uses the same wording as WhatsApp, with the placeholders filled in, and needs no approval.</li>
-            <li>The address comes from the patient file. A patient with no email, or who asked for no emails, is skipped and the reason shows in Messages.</li>
-            <li>Every email is logged in Messages like a WhatsApp message, and can be retried.</li>
-            <li>Sending from your own server keeps the emails on your domain, so they are less likely to land in spam. For Gmail use an app password; for Outlook, SMTP AUTH must be on for the mailbox.</li>
-          </ul>
-        )}
+        <div className="space-y-2">
+          <EmailGoodToKnow />
+          <EmailTroubles />
+          {!email.uses_platform_mail && (
+            <>
+              <GmailSteps />
+              <OutlookSteps />
+              <HostingSteps />
+            </>
+          )}
+        </div>
         {canEdit && (
           <div className="flex flex-wrap justify-end gap-2">
             <Button variant="outline" size="sm" onClick={() => setConfirmRemove(true)}>
