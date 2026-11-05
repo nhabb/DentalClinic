@@ -168,6 +168,7 @@ export interface CustomReminder {
   definition: RuleDefinition;
   at_time: string | null;
   enabled: boolean;
+  channels: Channels;
   /** What {{1}}.. stand for in its wording, from the trigger. */
   params: string[];
   /** The rule in one line, as the engine reads it. */
@@ -181,6 +182,7 @@ export interface CustomReminderInput {
   definition: RuleDefinition;
   at_time?: string;
   enabled?: boolean;
+  channels?: Channels;
   /** The wording to start with (on create); the suggested one when omitted. */
   body_en?: string;
   body_ar?: string;
@@ -206,10 +208,14 @@ export type RuleKind =
   | "recall"
   | "staff_daily";
 
+/** How a reminder goes out. */
+export type Channels = "whatsapp" | "email" | "both";
+
 export interface WhatsAppRule {
   id: number | string;
   kind: RuleKind;
   enabled: boolean;
+  channels: Channels;
   at_time: string | null;
   days_after_due: number | null;
   repeat_every_days: number | null;
@@ -221,6 +227,7 @@ export interface WhatsAppRule {
 
 export interface RuleInput {
   enabled?: boolean;
+  channels?: Channels;
   at_time?: string;
   days_after_due?: number;
   repeat_every_days?: number;
@@ -238,6 +245,9 @@ export interface WhatsAppMessage {
   recipient_kind: "patient" | "staff";
   to_name: string | null;
   to_phone: string | null;
+  /** whatsapp | email: the channel this row went by. */
+  channel: "whatsapp" | "email";
+  to_email: string | null;
   patient_id: number | string | null;
   user_id: number | string | null;
   appointment_id: number | string | null;
@@ -273,6 +283,42 @@ export interface RunResult {
 }
 
 export const fetchConnection = () => request<WhatsAppConnection>("/api/whatsapp/connection");
+
+/** The clinic's email sender (never its mail password). */
+export interface EmailSettings {
+  configured: boolean;
+  enabled: boolean;
+  from_name: string | null;
+  reply_to: string | null;
+  from_email: string | null;
+  smtp_host: string | null;
+  smtp_port: number | null;
+  smtp_secure: boolean;
+  smtp_user: string | null;
+  has_smtp_password: boolean;
+  /** No own server: the platform's mail server sends with the clinic's name. */
+  uses_platform_mail: boolean;
+  last_test_at: string | null;
+  last_test_ok: boolean | null;
+  last_error: string | null;
+  dry_run: boolean;
+}
+export interface EmailSettingsInput {
+  from_name: string;
+  reply_to?: string;
+  from_email?: string;
+  smtp_host?: string;
+  smtp_port?: number;
+  smtp_secure?: boolean;
+  smtp_user?: string;
+  smtp_password?: string;
+  enabled?: boolean;
+}
+export const fetchEmailSettings = () => request<EmailSettings>("/api/whatsapp/email");
+export const saveEmailSettings = (input: EmailSettingsInput) => request<EmailSettings>("/api/whatsapp/email", json("PUT", input));
+export const deleteEmailSettings = () => request<EmailSettings>("/api/whatsapp/email", json("DELETE"));
+export const testEmail = (to?: string) =>
+  request<{ ok: boolean; message: string; code?: string; email: EmailSettings }>("/api/whatsapp/email/test", json("POST", to ? { to } : {}));
 export const saveConnection = (input: ConnectionInput) =>
   request<WhatsAppConnection>("/api/whatsapp/connection", json("PUT", input));
 export const disconnectWhatsApp = () =>

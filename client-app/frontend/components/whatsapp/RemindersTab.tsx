@@ -24,6 +24,7 @@ import {
   updateCustomReminder,
   type AudiencePreview,
   type AudienceQuery,
+  type Channels,
   type ChatProposal,
   type ConditionItem,
   type CustomReminder,
@@ -46,6 +47,7 @@ import {
 import type { WhatsAppFile } from "./useWhatsApp";
 import { Chips, ConditionBuilder } from "./ConditionBuilder";
 import { AudienceCard, ReminderChat } from "./ReminderChat";
+import { CHANNEL_WORDS, ChannelPicker } from "./ChannelPicker";
 import {
   BODY_MAX,
   CARD_KINDS,
@@ -338,6 +340,7 @@ function CustomRemindersSection({
                     <span className="text-sm text-ink-700">
                       {r.summary}
                       {r.at_time ? `, at ${r.at_time}` : ""}
+                      <span className="text-ink-400"> · by {CHANNEL_WORDS[r.channels ?? "whatsapp"]}</span>
                     </span>
                     <Badge tone={ready.tone} dot size="sm">
                       {r.enabled ? (ready.tone === "leaf" ? "Ready" : ready.tone === "honey" ? "Partly ready" : "Not ready") : "Off"}
@@ -534,6 +537,7 @@ function CustomReminderModal({
   const [conditions, setConditions] = useState<ConditionItem[]>(() => reminder?.definition.conditions ?? []);
   const [match, setMatch] = useState<Match>(reminder?.definition.match ?? "all");
   const [audienceQuery, setAudienceQuery] = useState<AudienceQuery | null>(reminder?.definition.audience_query ?? null);
+  const [channels, setChannels] = useState<Channels>(reminder?.channels ?? "whatsapp");
   const [audiencePreview, setAudiencePreview] = useState<AudiencePreview | null>(null);
   /** The other reminders of the same wish, added together with the first. */
   const [extras, setExtras] = useState<ChatProposal[]>([]);
@@ -598,7 +602,7 @@ function CustomReminderModal({
     if (!name.trim()) return setError("Give the reminder a name.");
     if (enCheck.error) return setError(`English wording: ${enCheck.error}`);
     if (arCheck.error) return setError(`Arabic wording: ${arCheck.error}`);
-    const input: CustomReminderInput = { name: name.trim(), definition, at_time: atTime || "10:00" };
+    const input: CustomReminderInput = { name: name.trim(), definition, at_time: atTime || "10:00", channels };
     setSaving(true);
     try {
       const saved = reminder
@@ -683,9 +687,16 @@ function CustomReminderModal({
           </>
         )}
 
-        <FormField label="Name" required hint="For your own eyes, e.g. After root canal">
-          <input value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
-        </FormField>
+        <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
+          <FormField label="Name" required hint="For your own eyes, e.g. After root canal">
+            <input value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
+          </FormField>
+          <FormField label="Send by" hint="WhatsApp, email, or both.">
+            <div className="pt-1.5">
+              <ChannelPicker value={channels} onChange={setChannels} size="md" />
+            </div>
+          </FormField>
+        </div>
 
         {/* ── When ── */}
         <section className="space-y-3 rounded-2xl border border-ink-200 p-3">
@@ -1057,6 +1068,7 @@ function RuleRow({ rule, canEdit, onRule }: { rule: WhatsAppRule; canEdit: boole
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-xl border border-ink-200 bg-ink-50/40 px-3 py-2.5">
       <Switch checked={rule.enabled} onChange={(next) => void apply({ enabled: next }, { enabled: next })} disabled={!canEdit || saving} label={RULE_TITLE[rule.kind]} size="sm" />
+      <ChannelPicker value={rule.channels ?? "whatsapp"} onChange={(channels) => void apply({ channels }, { channels })} disabled={!canEdit || saving} />
       <div className="flex flex-1 flex-wrap items-center gap-2 text-sm text-ink-700">
         {rule.kind === "booking_confirmation" && <span className="text-ink-500">Sent right away when an appointment is booked.</span>}
         {(rule.kind === "appointment_day_before" || rule.kind === "appointment_morning_of" || rule.kind === "staff_daily") && uses("at_time") && (

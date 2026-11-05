@@ -281,6 +281,10 @@ export const ENDPOINTS = {
     CONNECTION: "/api/whatsapp/connection",
     /** POST (whatsapp:send) { to? } - check with Meta, send hello_world */
     TEST: "/api/whatsapp/connection/test",
+    /** GET (whatsapp:read); PUT (whatsapp:edit) from_name, reply_to, own SMTP; DELETE (whatsapp:edit) - the email sender for reminders */
+    EMAIL: "/api/whatsapp/email",
+    /** POST (whatsapp:send) { to? } - send a test email */
+    EMAIL_TEST: "/api/whatsapp/email/test",
     /** GET - every wording with Meta's status */
     TEMPLATES: "/api/whatsapp/templates",
     /** PUT (whatsapp:edit) { body } */

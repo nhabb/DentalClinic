@@ -327,6 +327,9 @@ export const MESSAGE_STATUS_MEANING: Record<MessageStatus, string> = {
 };
 
 export const SKIP_REASON_TEXT: Record<string, string> = {
+  email_opt_out: "The patient asked for no reminder emails.",
+  no_email: "No email address on the patient file.",
+  email_not_configured: "No email sender is set up under Connection.",
   opted_out: "The patient asked for no WhatsApp messages.",
   bad_phone: "The saved number cannot be read as a phone number.",
   no_template: "No wording exists for this reminder.",

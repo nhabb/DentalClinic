@@ -103,6 +103,8 @@ interface Patient {
   preferredLanguage: string;
   /** The patient asked for no WhatsApp messages; reminders are skipped. */
   whatsappOptOut: boolean;
+  /** The patient asked for no reminder emails. */
+  emailOptOut: boolean;
   photoUrl?: string;
   /** Account was created by staff and the patient has not chosen a password yet. */
   mustSetPassword: boolean;
@@ -307,6 +309,7 @@ const emptyNewPatient = {
   nationality: "",
   preferredLanguage: "",
   whatsappOptOut: false,
+  emailOptOut: false,
 };
 
 /** One patient row, as every screen in this page expects it. */
@@ -366,6 +369,7 @@ function mapPatientRow(
     nationality: p.nationality || "",
     preferredLanguage: p.preferred_language || "",
     whatsappOptOut: p.whatsapp_opt_out === true,
+    emailOptOut: p.email_opt_out === true,
     photoUrl: userEmbed?.avatar_url || user?.avatar_url || getStoredPhoto(userEmbed?.email || user?.email || ""),
     mustSetPassword: userEmbed?.must_set_password === true || user?.must_set_password === true,
   };
@@ -457,6 +461,7 @@ export default function PatientsPage() {
     nationality: "",
     preferredLanguage: "",
     whatsappOptOut: false,
+  emailOptOut: false,
   });
   const [editPatientSaving, setEditPatientSaving] = useState(false);
 
@@ -766,6 +771,7 @@ export default function PatientsPage() {
       nationality: patient.nationality,
       preferredLanguage: patient.preferredLanguage,
       whatsappOptOut: patient.whatsappOptOut,
+      emailOptOut: patient.emailOptOut,
     });
     setShowEditPatientModal(true);
   };
@@ -802,6 +808,7 @@ export default function PatientsPage() {
           nationality: blank(f.nationality),
           preferred_language: blank(f.preferredLanguage),
           whatsapp_opt_out: f.whatsappOptOut,
+          email_opt_out: f.emailOptOut,
         }),
       });
       if (!profile.ok) {
@@ -844,6 +851,7 @@ export default function PatientsPage() {
         nationality: f.nationality,
         preferredLanguage: f.preferredLanguage,
         whatsappOptOut: f.whatsappOptOut,
+        emailOptOut: f.emailOptOut,
       };
       setSelectedPatient(updatedPatient);
       list.setRows((prev) => prev.map((p) => p.id === selectedPatient.id ? updatedPatient : p));
@@ -919,6 +927,7 @@ export default function PatientsPage() {
           ...(newPatient.nationality.trim() ? { nationality: newPatient.nationality.trim() } : {}),
           ...(newPatient.preferredLanguage ? { preferred_language: newPatient.preferredLanguage } : {}),
           ...(newPatient.whatsappOptOut ? { whatsapp_opt_out: true } : {}),
+          ...(newPatient.emailOptOut ? { email_opt_out: true } : {}),
         }),
       });
       if (!res.ok) {
@@ -1884,6 +1893,7 @@ export default function PatientsPage() {
                               PATIENT_LANGUAGES.find((l) => l.value === selectedPatient.preferredLanguage)?.label,
                             ],
                             ["WhatsApp", selectedPatient.whatsappOptOut ? t("patients.whatsappOff") : selectedPatient.phone ? t("patients.whatsappOn") : undefined],
+                            ["Email", selectedPatient.emailOptOut ? t("patients.emailOff") : selectedPatient.email ? t("patients.emailOn") : undefined],
                           ] as [string, string | undefined][]
                         )
                           .filter(([, value]) => !!value)
@@ -3061,6 +3071,14 @@ export default function PatientsPage() {
                       label={t("patients.whatsappMessages")}
                       description={t("patients.whatsappMessagesHint")}
                     />
+                    <div className="mt-3">
+                      <Switch
+                        checked={!newPatient.emailOptOut}
+                        onChange={(on) => setNewPatient((f) => ({ ...f, emailOptOut: !on }))}
+                        label={t("patients.emailReminders")}
+                        description={t("patients.emailRemindersHint")}
+                      />
+                    </div>
                   </div>
                 </div>
               </FieldGroup>
@@ -3277,6 +3295,14 @@ export default function PatientsPage() {
                       label={t("patients.whatsappMessages")}
                       description={t("patients.whatsappMessagesHint")}
                     />
+                    <div className="mt-3">
+                      <Switch
+                        checked={!editPatientForm.emailOptOut}
+                        onChange={(on) => setEditPatientForm((f) => ({ ...f, emailOptOut: !on }))}
+                        label={t("patients.emailReminders")}
+                        description={t("patients.emailRemindersHint")}
+                      />
+                    </div>
                   </div>
                 </div>
               </FieldGroup>

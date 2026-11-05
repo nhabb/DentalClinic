@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { FaInbox, FaQuestionCircle, FaRedo, FaSyncAlt, FaUserMd, FaWhatsapp } from "react-icons/fa";
+import { FaEnvelope, FaInbox, FaQuestionCircle, FaRedo, FaSyncAlt, FaUserMd, FaWhatsapp } from "react-icons/fa";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -241,7 +241,15 @@ export function MessagesTable({ enabled, connected, anyRuleOn, canSend, status, 
                         )}
                       </div>
                       <div className="font-mono text-xs text-ink-500" dir="ltr">
-                        {m.to_phone ? `+${m.to_phone}` : "no valid number"}
+                        {m.channel === "email" ? (
+                          <span className="inline-flex items-center gap-1">
+                            <FaEnvelope className="text-ink-400" aria-hidden /> {m.to_email ?? "no email on file"}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1">
+                            <FaWhatsapp className="text-ink-400" aria-hidden /> {m.to_phone ? `+${m.to_phone}` : "no valid number"}
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="px-4 py-2.5 text-ink-800">

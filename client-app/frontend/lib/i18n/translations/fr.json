@@ -569,7 +569,11 @@
     "whatsappMessages": "Messages WhatsApp",
     "whatsappMessagesHint": "Les rappels et confirmations vont à ce numéro. Désactivez si le patient a demandé à ne pas en recevoir.",
     "whatsappOff": "Messages WhatsApp désactivés",
-    "whatsappOn": "Reçoit les rappels WhatsApp"
+    "whatsappOn": "Reçoit les rappels WhatsApp",
+    "emailReminders": "Rappels par e-mail",
+    "emailRemindersHint": "Les rappels et confirmations vont aussi à cette adresse e-mail quand un rappel est réglé sur e-mail. Désactivez si le patient a demandé à ne pas les recevoir.",
+    "emailOff": "Rappels par e-mail désactivés",
+    "emailOn": "Reçoit les rappels par e-mail"
   },
   "dentalChart": {
     "tab": "Schéma dentaire",

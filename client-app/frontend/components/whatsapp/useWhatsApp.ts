@@ -3,11 +3,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   fetchConnection,
+  fetchEmailSettings,
   fetchCustomReminders,
   fetchRules,
   fetchTemplates,
   refreshTemplates,
   type CustomReminder,
+  type EmailSettings,
   type WhatsAppConnection,
   type WhatsAppRule,
   type WhatsAppTemplate,
@@ -23,6 +25,7 @@ const POLL_MS = 60_000;
 
 export interface WhatsAppFile {
   connection: WhatsAppConnection;
+  email: EmailSettings;
   templates: WhatsAppTemplate[];
   rules: WhatsAppRule[];
   customReminders: CustomReminder[];
@@ -38,14 +41,15 @@ export function useWhatsApp() {
     const n = ++loads.current;
     if (!silent) setLoading(true);
     try {
-      const [connection, templates, rules, customReminders] = await Promise.all([
+      const [connection, email, templates, rules, customReminders] = await Promise.all([
         fetchConnection(),
+        fetchEmailSettings(),
         fetchTemplates(),
         fetchRules(),
         fetchCustomReminders(),
       ]);
       if (n !== loads.current) return;
-      setFile({ connection, templates, rules, customReminders });
+      setFile({ connection, email, templates, rules, customReminders });
       setFailed(false);
     } catch {
       if (n === loads.current) setFailed(true);
@@ -58,6 +62,9 @@ export function useWhatsApp() {
     void reload();
   }, [reload]);
 
+  const setEmail = useCallback((email: EmailSettings) => {
+    setFile((f) => (f ? { ...f, email } : f));
+  }, []);
   const setConnection = useCallback((connection: WhatsAppConnection) => {
     setFile((f) => (f ? { ...f, connection } : f));
   }, []);
@@ -109,5 +116,5 @@ export function useWhatsApp() {
     };
   }, [pending, connected, setTemplates]);
 
-  return { file, loading, failed, reload, setConnection, setTemplates, setTemplate, setRule, setCustomReminders, reloadTemplates };
+  return { file, loading, failed, reload, setConnection, setEmail, setTemplates, setTemplate, setRule, setCustomReminders, reloadTemplates };
 }

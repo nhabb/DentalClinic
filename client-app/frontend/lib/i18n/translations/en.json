@@ -569,7 +569,11 @@
     "whatsappMessages": "WhatsApp messages",
     "whatsappMessagesHint": "Reminders and confirmations go to this number. Switch off if the patient asked not to receive them.",
     "whatsappOff": "WhatsApp messages off",
-    "whatsappOn": "Receives WhatsApp reminders"
+    "whatsappOn": "Receives WhatsApp reminders",
+    "emailReminders": "Email reminders",
+    "emailRemindersHint": "Appointment reminders and confirmations also go to this email address when a reminder is set to email. Switch off if the patient asked not to receive them.",
+    "emailOff": "Email reminders off",
+    "emailOn": "Receives email reminders"
   },
   "dentalChart": {
     "tab": "Dental Chart",

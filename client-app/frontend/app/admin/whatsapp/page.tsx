@@ -18,6 +18,7 @@ import { runNow, type RunResult } from "@/lib/api/whatsapp";
 import { errorText } from "@/lib/api/request";
 import { useWhatsApp } from "@/components/whatsapp/useWhatsApp";
 import { ConnectionCard } from "@/components/whatsapp/ConnectionCard";
+import { EmailCard } from "@/components/whatsapp/EmailCard";
 import { RemindersTab } from "@/components/whatsapp/RemindersTab";
 import { MessagesTable } from "@/components/whatsapp/MessagesTable";
 
@@ -41,7 +42,7 @@ export default function WhatsAppPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const signOut = useSignOut();
 
-  const { file, loading, failed, reload, setConnection, setTemplates, setTemplate, setRule, setCustomReminders, reloadTemplates } = useWhatsApp();
+  const { file, loading, failed, reload, setConnection, setEmail, setTemplates, setTemplate, setRule, setCustomReminders, reloadTemplates } = useWhatsApp();
   const [tab, setTab] = useState<Tab | null>(null);
   const [running, setRunning] = useState(false);
   const [lastRun, setLastRun] = useState<{ at: Date; result: RunResult } | null>(null);
@@ -169,15 +170,18 @@ export default function WhatsAppPage() {
               />
               {tab === "connection" && (
                 <div role="tabpanel" id="panel-connection" aria-labelledby="tab-connection">
-                  <ConnectionCard
-                    connection={file.connection}
-                    onChange={(c) => {
-                      setConnection(c);
-                      void reload(true);
-                    }}
-                    canEdit={canEdit}
-                    canSend={canSend}
-                  />
+                  <div className="space-y-6">
+                    <ConnectionCard
+                      connection={file.connection}
+                      onChange={(c) => {
+                        setConnection(c);
+                        void reload(true);
+                      }}
+                      canEdit={canEdit}
+                      canSend={canSend}
+                    />
+                    <EmailCard email={file.email} onChange={setEmail} canEdit={canEdit} canSend={canSend} />
+                  </div>
                 </div>
               )}
               {tab === "reminders" && (
